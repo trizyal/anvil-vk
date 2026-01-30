@@ -8,3 +8,4 @@
 - volk @ 1.4.304
 - vk-bootstrap @ v1.4.341
 - VulkanMemoryAllocator @ v3.3.0
+- glfw @ 3.4
