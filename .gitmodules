@@ -4,3 +4,6 @@
 [submodule "External/volk"]
 	path = External/volk
 	url = git@github.com:zeux/volk.git
+[submodule "External/vk-bootstrap"]
+	path = External/vk-bootstrap
+	url = git@github.com:charles-lunarg/vk-bootstrap.git
