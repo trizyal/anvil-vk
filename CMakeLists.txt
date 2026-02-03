@@ -90,6 +90,8 @@ target_include_directories(VulkanMemoryAllocator INTERFACE
 # --------------------------------------------------
 add_executable(anvil-vk
         Source/main.cpp
+        Source/VulkanUtilities/anvilVkHandle.cpp
+        Source/VulkanUtilities/anvilVkHandle.hpp
         # add other .cpp files here
 )
 
