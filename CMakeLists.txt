@@ -62,6 +62,13 @@ elseif(UNIX)
 endif()
 
 # --------------------------------------------------
+# Shaderc configuration
+# --------------------------------------------------
+set(SHADERC_SKIP_TESTS ON CACHE BOOL "" FORCE)
+set(SHADERC_SKIP_EXAMPLES ON CACHE BOOL "" FORCE)
+set(SHADERC_SKIP_COPYRIGHT_CHECK ON CACHE BOOL "" FORCE)
+
+# --------------------------------------------------
 # External libraries
 # --------------------------------------------------
 add_subdirectory(external/Vulkan-Headers)
@@ -70,6 +77,7 @@ set(CMAKE_DISABLE_FIND_PACKAGE_Vulkan ON) # ?
 unset(ENV{VULKAN_SDK}) # ?
 #set(VOLK_USE_ENV_VULKAN_SDK OFF CACHE BOOL "Ignore Vulkan SDK env variable") #?
 
+add_subdirectory(external/shaderc)
 add_subdirectory(external/volk)
 add_subdirectory(external/glfw)
 add_subdirectory(external/vk-bootstrap)
@@ -100,6 +108,8 @@ add_executable(anvil-vk
         source/core/AnvilWindow.h
         source/vulkan/AnvilVulkanContext.cpp
         source/vulkan/AnvilVulkanContext.h
+        source/utilities/AnvilFileIO.cpp
+        source/utilities/AnvilFileIO.h
         # add other .cpp files here
 )
 
@@ -124,6 +134,7 @@ endif()
 # --------------------------------------------------
 target_link_libraries(anvil-vk PRIVATE
         glfw
+        shaderc_combined
         volk
         vk-bootstrap::vk-bootstrap
         VulkanMemoryAllocator
