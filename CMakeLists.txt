@@ -64,15 +64,15 @@ endif()
 # --------------------------------------------------
 # External libraries
 # --------------------------------------------------
-add_subdirectory(External/Vulkan-Headers)
+add_subdirectory(external/Vulkan-Headers)
 
 set(CMAKE_DISABLE_FIND_PACKAGE_Vulkan ON) # ?
 unset(ENV{VULKAN_SDK}) # ?
 #set(VOLK_USE_ENV_VULKAN_SDK OFF CACHE BOOL "Ignore Vulkan SDK env variable") #?
 
-add_subdirectory(External/volk)
-add_subdirectory(External/glfw)
-add_subdirectory(External/vk-bootstrap)
+add_subdirectory(external/volk)
+add_subdirectory(external/glfw)
+add_subdirectory(external/vk-bootstrap)
 
 # Volk uses Vulkan-Headers instead of find_package(Vulkan)
 target_link_libraries(volk PUBLIC Vulkan::Headers)
@@ -82,7 +82,7 @@ target_link_libraries(volk PUBLIC Vulkan::Headers)
 # --------------------------------------------------
 add_library(VulkanMemoryAllocator INTERFACE)
 target_include_directories(VulkanMemoryAllocator INTERFACE
-        External/VulkanMemoryAllocator/include
+        external/VulkanMemoryAllocator/include
 )
 
 # --------------------------------------------------
@@ -90,8 +90,6 @@ target_include_directories(VulkanMemoryAllocator INTERFACE
 # --------------------------------------------------
 add_executable(anvil-vk
         Source/main.cpp
-        Source/VulkanUtilities/anvilVkHandle.cpp
-        Source/VulkanUtilities/anvilVkHandle.hpp
         # add other .cpp files here
 )
 

@@ -1,15 +1,15 @@
 [submodule "External/Vulkan-Headers"]
-	path = External/Vulkan-Headers
+	path = external/Vulkan-Headers
 	url = git@github.com:KhronosGroup/Vulkan-Headers.git
 [submodule "External/volk"]
-	path = External/volk
+	path = external/volk
 	url = git@github.com:zeux/volk.git
 [submodule "External/vk-bootstrap"]
-	path = External/vk-bootstrap
+	path = external/vk-bootstrap
 	url = git@github.com:charles-lunarg/vk-bootstrap.git
 [submodule "External/VulkanMemoryAllocator"]
-	path = External/VulkanMemoryAllocator
+	path = external/VulkanMemoryAllocator
 	url = git@github.com:GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
 [submodule "External/glfw"]
-	path = External/glfw
+	path = external/glfw
 	url = git@github.com:glfw/glfw.git
