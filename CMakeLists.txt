@@ -85,11 +85,21 @@ target_include_directories(VulkanMemoryAllocator INTERFACE
         external/VulkanMemoryAllocator/include
 )
 
+include_directories(
+        source/core
+        source/vulkan
+)
+
 # --------------------------------------------------
 # Application target
 # --------------------------------------------------
 add_executable(anvil-vk
         Source/main.cpp
+        source/vulkan/AnvilDeletionQueue.h
+        source/core/AnvilWindow.cpp
+        source/core/AnvilWindow.h
+        source/vulkan/AnvilVulkanContext.cpp
+        source/vulkan/AnvilVulkanContext.h
         # add other .cpp files here
 )
 

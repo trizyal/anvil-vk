@@ -9,17 +9,6 @@
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
-struct AnvilWindow
-{
-    GLFWwindow* glfw_window;
-    vkb::Instance instance;
-    vkb::InstanceDispatchTable instance_dispatch_table;
-    vkb::Device device;
-    vkb::DispatchTable dispatch_table;
-    vkb::Swapchain swapchain;
-    VkSurfaceKHR surface;
-};
-
 int main() {
     // --------------------------------------------------
     // Initialize GLFW
