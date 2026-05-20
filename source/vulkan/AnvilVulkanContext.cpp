@@ -10,6 +10,7 @@ void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
     // Initialise Volk
     if (volkInitialize() != VK_SUCCESS)
     {
+        // TODO: Print detailed error message
         throw std::runtime_error("Failed to initialise Volk.");
     }
 
@@ -24,6 +25,7 @@ void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
 
     if (!vkbInstanceResult)
     {
+        // TODO: Print detailed error message
         throw std::runtime_error("Failed to create Vulkan instance: " + vkbInstanceResult.error().message());
     }
 
@@ -53,6 +55,7 @@ void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
 
     if (!vkbPhysicalDeviceResult)
     {
+        // TODO: Refactor to output detailed failure reasons vector
         const auto& err = vkbPhysicalDeviceResult.detailed_failure_reasons();
         throw std::runtime_error("Failed to select physical device:\n" + err[0]);
     }
@@ -67,6 +70,7 @@ void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
 
     if (!vkbDeviceResult)
     {
+        // TODO: Print detailed error message
         throw std::runtime_error("Failed to build device.");
     }
 
@@ -97,6 +101,7 @@ void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
 
     if (vmaCreateAllocator(&allocatorCreateInfo, &anvilAllocator) != VK_SUCCESS)
     {
+        // TODO: Print detailed error message
         throw std::runtime_error("Failed to create Vulkan Memory Allocator.");
     }
 
