@@ -8,17 +8,17 @@
 class AnvilWindow
 {
 private:
-    std::string anvilTitle;
     GLFWwindow* glfwWindow;
     uint32_t width;
     uint32_t height;
+    std::string anvilTitle;
 
 public:
-    AnvilWindow(uint32_t inWidth, uint32_t inHeight, const std::string& inTitle);
+    AnvilWindow(uint32_t inWidth, uint32_t inHeight, std::string inTitle);
     ~AnvilWindow();
 
     bool bShouldClose() const;
-    void pollEvents() const;
+    static void pollEvents();
 
     std::string getWindowTitle() const;
     GLFWwindow* getGLFWWindow() const;

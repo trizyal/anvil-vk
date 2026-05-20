@@ -8,9 +8,9 @@ struct AnvilDeletionQueue
 {
     std::deque<std::function<void()>> deletors;
 
-    void push(std::function<void()>&& function)
+    void pushFunction(std::function<void()>&& function)
     {
-        deletors.push_back(function);
+        deletors.push_back(std::move(function));
     }
 
     void flush()
