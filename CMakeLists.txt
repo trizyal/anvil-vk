@@ -115,6 +115,15 @@ elseif (UNIX)
 endif ()
 
 # --------------------------------------------------
+# SPIRV-Reflect
+# --------------------------------------------------
+add_library(spirv-reflect STATIC
+        ${EXTERNAL_DIR}/SPIRV-Reflect/spirv_reflect.h
+        ${EXTERNAL_DIR}/SPIRV-Reflect/spirv_reflect.c
+)
+target_include_directories(spirv-reflect SYSTEM PUBLIC ${EXTERNAL}/SPIRV-Reflect)
+
+# --------------------------------------------------
 # Application target
 # --------------------------------------------------
 # Use the automated source list here

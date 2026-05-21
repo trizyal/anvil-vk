@@ -7,3 +7,4 @@
 - glfw @ 3.4 (Feb 2024)
 - shaderc @ v2026.2 (April 2026)
   - `python utils/git-sync-deps`
+- SPIRV-Reflect @ vulkan-sdk-1.4.350.0 (May 2026)
