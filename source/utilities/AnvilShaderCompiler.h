@@ -6,22 +6,16 @@
 
 #include <volk.h>
 
+#include "AnvilShaderTypes.h"
+
 namespace AnvilShaderCompiler
 {
-    enum ShaderType : uint8_t
-    {
-        ST_Vertex      = 0,
-        ST_Fragment    = 1,
-        ST_Compute    = 2,
-
-        ST_MAX          = 3
-    };
-
+    extern bool DumpDebugSPIRV;
 
     std::vector<uint32_t> CompileGLSLToSPIRV(
         const std::string& glslSource,
         const std::string& shaderName,
-        ShaderType shaderType
+        AnvilShaderTypes::ShaderType shaderType
     );
 
     VkShaderModule CreateShaderModule(
