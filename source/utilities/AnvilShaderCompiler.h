@@ -15,7 +15,7 @@ namespace AnvilShaderCompiler
     std::vector<uint32_t> CompileGLSLToSPIRV(
         const std::string& glslSource,
         const std::string& shaderName,
-        AnvilShaders::ShaderType shaderType
+        AnvilShaders::ShaderType inShaderType
     );
 
     // Extract bindings and push constants

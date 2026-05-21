@@ -4,9 +4,8 @@
 #include <string>
 #include <vector>
 
-class AnvilFileIO
+namespace AnvilFileIO
 {
-public:
     static std::vector<char> readFile(const std::string &filename);
 };
 

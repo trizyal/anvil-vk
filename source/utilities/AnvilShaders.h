@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include <volk.h>
+#include <shaderc/shaderc.h>
 
 namespace AnvilShaders
 {
@@ -36,6 +37,8 @@ namespace AnvilShaders
         std::filesystem::file_time_type lastCompileTime;
         ShaderType shaderType;
     };
+
+    shaderc_shader_kind ConvertToShadercKind(ShaderType inShaderType);
 }
 
 #endif //ANVIL_VK_SHADERS_H
