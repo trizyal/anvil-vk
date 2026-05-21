@@ -1,5 +1,5 @@
-#ifndef ANVIL_VK_SHADERTYPES_H
-#define ANVIL_VK_SHADERTYPES_H
+#ifndef ANVIL_VK_SHADERS_H
+#define ANVIL_VK_SHADERS_H
 
 #include <string>
 #include <vector>
@@ -7,7 +7,7 @@
 
 #include <volk.h>
 
-namespace AnvilShaderTypes
+namespace AnvilShaders
 {
     enum ShaderType : uint8_t
     {
@@ -38,4 +38,4 @@ namespace AnvilShaderTypes
     };
 }
 
-#endif //ANVIL_VK_SHADERTYPES_H
+#endif //ANVIL_VK_SHADERS_H

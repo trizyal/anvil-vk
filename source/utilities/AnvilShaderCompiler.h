@@ -6,7 +6,7 @@
 
 #include <volk.h>
 
-#include "AnvilShaderTypes.h"
+#include "AnvilShaders.h"
 
 namespace AnvilShaderCompiler
 {
@@ -15,11 +15,22 @@ namespace AnvilShaderCompiler
     std::vector<uint32_t> CompileGLSLToSPIRV(
         const std::string& glslSource,
         const std::string& shaderName,
-        AnvilShaderTypes::ShaderType shaderType
+        AnvilShaders::ShaderType shaderType
     );
 
-    VkShaderModule CreateShaderModule(
+    // Extract bindings and push constants
+    AnvilShaders::ShaderReflectionData CreateShaderReflectionData(
+        const std::vector<uint32_t>& spirvCode
+    );
+
+    AnvilShaders::CompiledShader LoadShader(
         const VkDevice& device,
+        const std::string& filePath,
+        AnvilShaders::ShaderType shaderType
+    );
+
+    void DumpSPIRV(
+        const std::string& originalPath,
         const std::vector<uint32_t>& spirvCode
     );
 } // namespace AnvilShaderCompiler
