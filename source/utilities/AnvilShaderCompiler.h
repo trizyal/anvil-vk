@@ -28,6 +28,6 @@ namespace AnvilShaderCompiler
         const VkDevice& device,
         const std::vector<uint32_t>& spirvCode
     );
-}
+} // namespace AnvilShaderCompiler
 
 #endif //ANVIL_VK_SHADERCOMPILER_H
