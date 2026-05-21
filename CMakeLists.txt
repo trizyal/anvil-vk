@@ -3,6 +3,23 @@ cmake_minimum_required(VERSION 3.21)
 project(anvil-vk LANGUAGES C CXX)
 
 # --------------------------------------------------
+# Project Directory Variables
+# --------------------------------------------------
+set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
+set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
+set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
+
+# --------------------------------------------------
+# Automated Source File Collection
+# --------------------------------------------------
+file(GLOB_RECURSE APP_SOURCES
+    "${SOURCE_DIR}/*.cpp"
+    "${SOURCE_DIR}/*.c"
+    "${SOURCE_DIR}/*.h"
+    "${SOURCE_DIR}/*.hpp"
+)
+
+# --------------------------------------------------
 # Git submodules (optional but safe)
 # --------------------------------------------------
 find_package(Git QUIET)
@@ -28,10 +45,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Prevent find_package(Vulkan) from looking for system SDKs
 set(CMAKE_DISABLE_FIND_PACKAGE_Vulkan ON)
+unset(ENV{VULKAN_SDK})
 
 # --------------------------------------------------
-# GLFW configuration (MUST be before add_subdirectory)
+# GLFW configuration
 # --------------------------------------------------
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -62,25 +81,12 @@ elseif(UNIX)
 endif()
 
 # --------------------------------------------------
-# Shaderc configuration
-# --------------------------------------------------
-set(SHADERC_SKIP_TESTS ON CACHE BOOL "" FORCE)
-set(SHADERC_SKIP_EXAMPLES ON CACHE BOOL "" FORCE)
-set(SHADERC_SKIP_COPYRIGHT_CHECK ON CACHE BOOL "" FORCE)
-
-# --------------------------------------------------
 # External libraries
 # --------------------------------------------------
-add_subdirectory(external/Vulkan-Headers)
-
-set(CMAKE_DISABLE_FIND_PACKAGE_Vulkan ON) # ?
-unset(ENV{VULKAN_SDK}) # ?
-#set(VOLK_USE_ENV_VULKAN_SDK OFF CACHE BOOL "Ignore Vulkan SDK env variable") #?
-
-add_subdirectory(external/shaderc)
-add_subdirectory(external/volk)
-add_subdirectory(external/glfw)
-add_subdirectory(external/vk-bootstrap)
+add_subdirectory(${EXTERNAL_DIR}/Vulkan-Headers)
+add_subdirectory(${EXTERNAL_DIR}/volk)
+add_subdirectory(${EXTERNAL_DIR}/glfw)
+add_subdirectory(${EXTERNAL_DIR}/vk-bootstrap)
 
 # Volk uses Vulkan-Headers instead of find_package(Vulkan)
 target_link_libraries(volk PUBLIC Vulkan::Headers)
@@ -90,27 +96,34 @@ target_link_libraries(volk PUBLIC Vulkan::Headers)
 # --------------------------------------------------
 add_library(VulkanMemoryAllocator INTERFACE)
 target_include_directories(VulkanMemoryAllocator INTERFACE
-        external/VulkanMemoryAllocator/include
+        ${EXTERNAL_DIR}/VulkanMemoryAllocator/include
 )
 
-include_directories(
-        source/core
-        source/vulkan
+# --------------------------------------------------
+# Shaderc (Precompiled Binary from Submodule)
+# --------------------------------------------------
+add_library(shaderc INTERFACE)
+target_include_directories(shaderc INTERFACE
+        ${EXTERNAL_DIR}/shaderc/libshaderc/include
 )
+
+# Link the shaderc binary extracted via the setup script
+if(WIN32)
+    target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/shaderc_combined.lib)
+elseif(UNIX)
+    target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/libshaderc_combined.a)
+endif()
 
 # --------------------------------------------------
 # Application target
 # --------------------------------------------------
-add_executable(anvil-vk
-        Source/main.cpp
-        source/vulkan/AnvilDeletionQueue.h
-        source/core/AnvilWindow.cpp
-        source/core/AnvilWindow.h
-        source/vulkan/AnvilVulkanContext.cpp
-        source/vulkan/AnvilVulkanContext.h
-        source/utilities/AnvilFileIO.cpp
-        source/utilities/AnvilFileIO.h
-        # add other .cpp files here
+# Use the automated source list here
+add_executable(anvil-vk ${APP_SOURCES})
+# Target-specific includes
+target_include_directories(anvil-vk PRIVATE
+    ${SOURCE_DIR}/core
+    ${SOURCE_DIR}/vulkan
+    ${SOURCE_DIR}/utilities
 )
 
 # --------------------------------------------------
@@ -134,8 +147,8 @@ endif()
 # --------------------------------------------------
 target_link_libraries(anvil-vk PRIVATE
         glfw
-        shaderc_combined
         volk
         vk-bootstrap::vk-bootstrap
         VulkanMemoryAllocator
+        shaderc
 )

@@ -33,3 +33,7 @@
 
 # IDEs
 .idea
+
+# Build artifacts
+intermediate
+binaries/shaderc

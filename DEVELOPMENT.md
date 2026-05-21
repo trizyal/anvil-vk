@@ -9,6 +9,7 @@ anvil-vk/
 │
 ├── external/
 │   ├── glfw/
+│   ├── shaderc/
 │   ├── vk-bootstrap/
 │   ├── volk/
 │   ├── Vulkan-Headers/
@@ -18,18 +19,18 @@ anvil-vk/
 ├── source/
 │   ├── main.cpp
 │   ├── core/               # Engine lifecycle and OS-level stuff
-│   │   ├── Application.h/.cpp
-│   │   └── Window.h/.cpp
+│   │   ├── AnvilApplication.h/.cpp
+│   │   └── AnvilWindow.h/.cpp
 │   │
 │   ├── vulkan/             # The Vulkan abstraction layers
-│   │   ├── VulkanContext.h/.cpp    # Instance, Device, VMA allocator
-│   │   ├── Swapchain.h/.cpp        # Swapchain and recreation logic
-│   │   ├── Renderer.h/.cpp         # Command buffers, sync structures, draw loop
-│   │   ├── Pipeline.h/.cpp         # Shader loading and VkPipeline creation
-│   │   └── DeletionQueue.h         # Pattern for safe resource cleanup
+│   │   ├── AnvilVulkanContext.h/.cpp    # Instance, Device, VMA allocator
+│   │   ├── AnvilSwapchain.h/.cpp        # Swapchain and recreation logic
+│   │   ├── AnvilRenderer.h/.cpp         # Command buffers, sync structures, draw loop
+│   │   ├── AnvilPipeline.h/.cpp         # Shader loading and VkPipeline creation
+│   │   └── AnvilDeletionQueue.h         # Pattern for safe resource cleanup
 │   │
-│   └── utils/
-│       └── FileIO.h/.cpp           # Helper to read compiled .spv files
+│   └── utilities/
+│       └── AnvilFileIO.h/.cpp           # Helper to read compiled .spv files
 │ 
 └── shaders/ # Raw GLSL files (.vert, .frag)
 ```
@@ -37,7 +38,7 @@ anvil-vk/
 ## Naming Conventions
 
 - directories - `camelCase`
-- files - `camelCase`
+- files - `PascalCase`
 - namespace - `lowercase`
 - classes - `PascalCase`
 - struct - `PascalCase`
