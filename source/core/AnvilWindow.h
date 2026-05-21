@@ -17,11 +17,11 @@ public:
     AnvilWindow(uint32_t inWidth, uint32_t inHeight, std::string inTitle);
     ~AnvilWindow();
 
-    bool bShouldClose() const;
+    [[nodiscard]] bool bShouldClose() const;
     static void pollEvents();
 
-    std::string getWindowTitle() const;
-    GLFWwindow* getGLFWWindow() const;
+    [[nodiscard]] std::string getWindowTitle() const;
+    [[nodiscard]] GLFWwindow* getGLFWWindow() const;
     VkSurfaceKHR createSurface(VkInstance instance) const;
 };
 
