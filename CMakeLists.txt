@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)
 
 project(anvil-vk LANGUAGES C CXX)
 
@@ -13,30 +13,30 @@ set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
 # Automated Source File Collection
 # --------------------------------------------------
 file(GLOB_RECURSE APP_SOURCES
-    "${SOURCE_DIR}/*.cpp"
-    "${SOURCE_DIR}/*.c"
-    "${SOURCE_DIR}/*.h"
-    "${SOURCE_DIR}/*.hpp"
+        "${SOURCE_DIR}/*.cpp"
+        "${SOURCE_DIR}/*.c"
+        "${SOURCE_DIR}/*.h"
+        "${SOURCE_DIR}/*.hpp"
 )
 
 # --------------------------------------------------
 # Git submodules (optional but safe)
 # --------------------------------------------------
 find_package(Git QUIET)
-if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+if (GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     option(GIT_SUBMODULE "Check submodules during build" ON)
-    if(GIT_SUBMODULE)
+    if (GIT_SUBMODULE)
         message(STATUS "Updating submodules")
         execute_process(
                 COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 RESULT_VARIABLE GIT_SUBMOD_RESULT
         )
-        if(NOT GIT_SUBMOD_RESULT EQUAL 0)
+        if (NOT GIT_SUBMOD_RESULT EQUAL 0)
             message(FATAL_ERROR "Failed to update git submodules")
-        endif()
-    endif()
-endif()
+        endif ()
+    endif ()
+endif ()
 
 # --------------------------------------------------
 # C++ standard
@@ -56,37 +56,37 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-if(APPLE)
-    set(GLFW_BUILD_COCOA ON  CACHE BOOL "" FORCE)
+if (APPLE)
+    set(GLFW_BUILD_COCOA ON CACHE BOOL "" FORCE)
     set(GLFW_BUILD_WIN32 OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)
 
-elseif(WIN32)
+elseif (WIN32)
     set(GLFW_BUILD_COCOA OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_WIN32 ON  CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_WIN32 ON CACHE BOOL "" FORCE)
     set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)
 
-elseif(UNIX)
+elseif (UNIX)
     set(GLFW_BUILD_COCOA OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_WIN32 OFF CACHE BOOL "" FORCE)
-    if(USE_WAYLAND)
-        set(GLFW_BUILD_WAYLAND ON  CACHE BOOL "" FORCE)
+    if (USE_WAYLAND)
+        set(GLFW_BUILD_WAYLAND ON CACHE BOOL "" FORCE)
         set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)
-    else()
+    else ()
         set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
-        set(GLFW_BUILD_X11 ON  CACHE BOOL "" FORCE)
-    endif()
-endif()
+        set(GLFW_BUILD_X11 ON CACHE BOOL "" FORCE)
+    endif ()
+endif ()
 
 # --------------------------------------------------
 # External libraries
 # --------------------------------------------------
-add_subdirectory(${EXTERNAL_DIR}/Vulkan-Headers)
-add_subdirectory(${EXTERNAL_DIR}/volk)
-add_subdirectory(${EXTERNAL_DIR}/glfw)
-add_subdirectory(${EXTERNAL_DIR}/vk-bootstrap)
+add_subdirectory(${EXTERNAL_DIR}/Vulkan-Headers SYSTEM)
+add_subdirectory(${EXTERNAL_DIR}/volk SYSTEM)
+add_subdirectory(${EXTERNAL_DIR}/glfw SYSTEM)
+add_subdirectory(${EXTERNAL_DIR}/vk-bootstrap SYSTEM)
 
 # Volk uses Vulkan-Headers instead of find_package(Vulkan)
 target_link_libraries(volk PUBLIC Vulkan::Headers)
@@ -95,7 +95,7 @@ target_link_libraries(volk PUBLIC Vulkan::Headers)
 # Vulkan Memory Allocator (header-only)
 # --------------------------------------------------
 add_library(VulkanMemoryAllocator INTERFACE)
-target_include_directories(VulkanMemoryAllocator INTERFACE
+target_include_directories(VulkanMemoryAllocator SYSTEM INTERFACE
         ${EXTERNAL_DIR}/VulkanMemoryAllocator/include
 )
 
@@ -103,16 +103,16 @@ target_include_directories(VulkanMemoryAllocator INTERFACE
 # Shaderc (Precompiled Binary from Submodule)
 # --------------------------------------------------
 add_library(shaderc INTERFACE)
-target_include_directories(shaderc INTERFACE
+target_include_directories(shaderc SYSTEM INTERFACE
         ${EXTERNAL_DIR}/shaderc/libshaderc/include
 )
 
 # Link the shaderc binary extracted via the setup script
-if(WIN32)
+if (WIN32)
     target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/shaderc_combined.lib)
-elseif(UNIX)
+elseif (UNIX)
     target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/libshaderc_combined.a)
-endif()
+endif ()
 
 # --------------------------------------------------
 # Application target
@@ -121,9 +121,9 @@ endif()
 add_executable(anvil-vk ${APP_SOURCES})
 # Target-specific includes
 target_include_directories(anvil-vk PRIVATE
-    ${SOURCE_DIR}/core
-    ${SOURCE_DIR}/vulkan
-    ${SOURCE_DIR}/utilities
+        ${SOURCE_DIR}/core
+        ${SOURCE_DIR}/vulkan
+        ${SOURCE_DIR}/utilities
 )
 
 # --------------------------------------------------
@@ -135,20 +135,46 @@ target_compile_definitions(anvil-vk PRIVATE
         VK_ENABLE_BETA_EXTENSIONS
 )
 
-if(WIN32)
+if (WIN32)
     target_compile_definitions(anvil-vk PRIVATE
             WIN32_LEAN_AND_MEAN
             NOMINMAX
     )
-endif()
+endif ()
 
 # --------------------------------------------------
-# Link libraries
+# Compiler Warnings & Sanitizers
 # --------------------------------------------------
-target_link_libraries(anvil-vk PRIVATE
-        glfw
-        volk
-        vk-bootstrap::vk-bootstrap
-        VulkanMemoryAllocator
-        shaderc
-)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # Strict warnings for GCC/Clang
+    target_compile_options(anvil-vk PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+            -Wshadow
+    )
+    # Enable sanitizers only in Debug builds
+    if((CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "") AND NOT MINGW)
+        target_compile_options(anvil-vk PRIVATE
+                -g
+                -fno-omit-frame-pointer
+                -fsanitize=address,undefined
+        )
+        target_link_options(anvil-vk PRIVATE
+                -fsanitize=address,undefined
+        )
+    endif ()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # TODO: add MSVC stuff
+endif ()
+
+    # --------------------------------------------------
+    # Link libraries
+    # --------------------------------------------------
+    target_link_libraries(anvil-vk PRIVATE
+            glfw
+            volk
+            vk-bootstrap::vk-bootstrap
+            VulkanMemoryAllocator
+            shaderc
+    )
