@@ -3,12 +3,14 @@
 
 #include <vector>
 
+#include <VkBootstrap.h>
+
 #include "AnvilVulkanContext.h"
 
 class AnvilSwapchain
 {
 private:
-    AnvilVulkanContext *anvilVulkanContext;
+    AnvilVulkanContext *anvilVulkanContext = nullptr;
 
 public:
     vkb::Swapchain vkbSwapchain;
@@ -18,6 +20,7 @@ public:
     std::vector<VkImageView> anvilImageViews;
 
     void initialise(AnvilVulkanContext& inAnvilContext, uint32_t inWidth, uint32_t inHeight);
+    void recreate(uint32_t inWidth, uint32_t inHeight);
     void cleanup() const;
 };
 

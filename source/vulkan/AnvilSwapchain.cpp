@@ -27,6 +27,14 @@ void AnvilSwapchain::initialise(AnvilVulkanContext& inAnvilContext, uint32_t inW
     anvilImageViews = vkbSwapchain.get_image_views().value();
 }
 
+void AnvilSwapchain::recreate(uint32_t inWidth, uint32_t inHeight)
+{
+    (void)inWidth;
+    (void)inHeight;
+    // TODO: Implement resizing swapchain
+    throw std::logic_error("AnvilSwapchain::recreate(uint32_t inWidth, uint32_t inHeight) is not implemented yet.");
+}
+
 void AnvilSwapchain::cleanup() const
 {
     for (VkImageView imageView: anvilImageViews)

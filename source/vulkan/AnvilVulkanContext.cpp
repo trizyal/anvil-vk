@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <VkBootstrap.h>
+
 #include "AnvilWindow.h"
 
 void AnvilVulkanContext::initialise(AnvilWindow& inWindow)

@@ -2,7 +2,6 @@
 #define ANVIL_VK_VULKANCONTEXT_H
 
 #include <volk.h>
-#include <VkBootstrap.h>
 #include <vk_mem_alloc.h>
 
 #include "AnvilDeletionQueue.h"

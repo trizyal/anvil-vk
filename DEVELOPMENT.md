@@ -39,7 +39,7 @@ anvil-vk/
 
 - directories - `camelCase`
 - files - `PascalCase`
-- namespace - `lowercase`
+- namespace - `PascalCase`
 - classes - `PascalCase`
 - struct - `PascalCase`
 - class functions - `camelCase`
