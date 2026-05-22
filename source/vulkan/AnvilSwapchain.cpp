@@ -6,10 +6,13 @@ void AnvilSwapchain::initialise(AnvilVulkanContext& inAnvilContext, uint32_t inW
     buildSwapchainInternal(inWidth, inHeight);
 }
 
-void AnvilSwapchain::recreate(uint32_t inWidth, uint32_t inHeight)
+void AnvilSwapchain::recreate(const uint32_t inWidth, const uint32_t inHeight)
 {
     // Wait for GPU to finish
+    vkDeviceWaitIdle(anvilVulkanContext->anvilDevice);
+    cleanup();
 
+    buildSwapchainInternal(inWidth, inHeight);
 }
 
 void AnvilSwapchain::cleanup()
@@ -23,7 +26,7 @@ void AnvilSwapchain::cleanup()
     anvilSwapchain = VK_NULL_HANDLE;
 }
 
-void AnvilSwapchain::buildSwapchainInternal(uint32_t inWidth, uint32_t inHeight)
+void AnvilSwapchain::buildSwapchainInternal(const uint32_t inWidth, const uint32_t inHeight)
 {
     vkb::SwapchainBuilder vkbSwapchainBuilder{
         anvilVulkanContext->anvilPhysicalDevice,

@@ -42,7 +42,7 @@ namespace AnvilShaderCompiler
 
     CompiledShader LoadShader(const VkDevice& device, const std::string& filePath, ShaderType shaderType)
     {
-        auto source = AnvilFileIO::readFile(filePath);
+        auto source = AnvilFileIO::ReadFile(filePath);
         auto spirv = CompileGLSLToSPIRV(source.data(), filePath, shaderType);
 
         CompiledShader temp;

@@ -6,7 +6,7 @@
 
 namespace AnvilFileIO
 {
-    std::vector<char> readFile(const std::string &filename);
+    std::vector<char> ReadFile(const std::string &filename);
 };
 
 #endif //ANVIL_VK_FILEIO_H

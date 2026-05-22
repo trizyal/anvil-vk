@@ -15,8 +15,8 @@ class AnvilPipelineBuilder
 {
 private:
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-
     VkFormat colorAttachmentFormat;
+
     VkPipelineInputAssemblyStateCreateInfo inputAssembly;
     VkPipelineRasterizationStateCreateInfo rasterizer;
     VkPipelineColorBlendAttachmentState colorBlendAttachment;
@@ -35,7 +35,7 @@ public:
     AnvilPipelineBuilder& setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace);
     AnvilPipelineBuilder& disableBlending();
 
-    AnvilPipeline build(VkDevice inDevice);
+    AnvilPipeline build(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout);
 };
 
 #endif //ANVIL_VK_PIPELINE_H
