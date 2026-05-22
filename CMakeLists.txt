@@ -20,25 +20,6 @@ file(GLOB_RECURSE APP_SOURCES
 )
 
 # --------------------------------------------------
-# Git submodules (optional but safe)
-# --------------------------------------------------
-find_package(Git QUIET)
-if (GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    option(GIT_SUBMODULE "Check submodules during build" ON)
-    if (GIT_SUBMODULE)
-        message(STATUS "Updating submodules")
-        execute_process(
-                COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                RESULT_VARIABLE GIT_SUBMOD_RESULT
-        )
-        if (NOT GIT_SUBMOD_RESULT EQUAL 0)
-            message(FATAL_ERROR "Failed to update git submodules")
-        endif ()
-    endif ()
-endif ()
-
-# --------------------------------------------------
 # C++ standard
 # --------------------------------------------------
 set(CMAKE_CXX_STANDARD 20)
@@ -108,9 +89,9 @@ target_include_directories(shaderc SYSTEM INTERFACE
 )
 
 # Link the shaderc binary extracted via the setup script
-if (WIN32)
+if (MSVC)
     target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/shaderc_combined.lib)
-elseif (UNIX)
+else()
     target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/libshaderc_combined.a)
 endif ()
 
@@ -121,7 +102,7 @@ add_library(spirv-reflect STATIC
         ${EXTERNAL_DIR}/SPIRV-Reflect/spirv_reflect.h
         ${EXTERNAL_DIR}/SPIRV-Reflect/spirv_reflect.c
 )
-target_include_directories(spirv-reflect SYSTEM PUBLIC ${EXTERNAL}/SPIRV-Reflect)
+target_include_directories(spirv-reflect SYSTEM PUBLIC ${EXTERNAL_DIR}/SPIRV-Reflect)
 
 # --------------------------------------------------
 # Application target

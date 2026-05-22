@@ -1,8 +1,10 @@
 #include "AnvilShaders.h"
 
+#include <shaderc/shaderc.hpp>
+
 namespace AnvilShaders
 {
-    inline shaderc_shader_kind toShadercShaderKind(const ShaderType inShaderType)
+    shaderc_shader_kind ConvertToShadercKind(const ShaderType inShaderType)
     {
         switch (inShaderType)
         {

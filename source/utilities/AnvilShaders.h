@@ -6,7 +6,7 @@
 #include <filesystem>
 
 #include <volk.h>
-#include <shaderc/shaderc.h>
+#include <shaderc/shaderc.hpp>
 
 namespace AnvilShaders
 {

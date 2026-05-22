@@ -3,7 +3,28 @@
 void AnvilSwapchain::initialise(AnvilVulkanContext& inAnvilContext, uint32_t inWidth, uint32_t inHeight)
 {
     anvilVulkanContext = &inAnvilContext;
+    buildSwapchainInternal(inWidth, inHeight);
+}
 
+void AnvilSwapchain::recreate(uint32_t inWidth, uint32_t inHeight)
+{
+    // Wait for GPU to finish
+
+}
+
+void AnvilSwapchain::cleanup()
+{
+    for (VkImageView imageView: anvilImageViews)
+    {
+        vkDestroyImageView(anvilVulkanContext->anvilDevice, imageView, nullptr);
+    }
+
+    vkDestroySwapchainKHR(anvilVulkanContext->anvilDevice, anvilSwapchain, nullptr);
+    anvilSwapchain = VK_NULL_HANDLE;
+}
+
+void AnvilSwapchain::buildSwapchainInternal(uint32_t inWidth, uint32_t inHeight)
+{
     vkb::SwapchainBuilder vkbSwapchainBuilder{
         anvilVulkanContext->anvilPhysicalDevice,
         anvilVulkanContext->anvilDevice,
@@ -21,26 +42,11 @@ void AnvilSwapchain::initialise(AnvilVulkanContext& inAnvilContext, uint32_t inW
         throw std::runtime_error("Failed to create swapchain.");
     }
 
-    vkbSwapchain = vkbSwapchainResult.value();
+    vkb::Swapchain vkbSwapchain = vkbSwapchainResult.value();
+    anvilSwapchain = vkbSwapchain.swapchain;
+    anvilExtent = vkbSwapchain.extent;
     anvilImageFormat = vkbSwapchain.image_format;
+
     anvilImages = vkbSwapchain.get_images().value();
     anvilImageViews = vkbSwapchain.get_image_views().value();
-}
-
-void AnvilSwapchain::recreate(uint32_t inWidth, uint32_t inHeight)
-{
-    (void)inWidth;
-    (void)inHeight;
-    // TODO: Implement resizing swapchain
-    throw std::logic_error("AnvilSwapchain::recreate(uint32_t inWidth, uint32_t inHeight) is not implemented yet.");
-}
-
-void AnvilSwapchain::cleanup() const
-{
-    for (VkImageView imageView: anvilImageViews)
-    {
-        vkDestroyImageView(anvilVulkanContext->anvilDevice, imageView, nullptr);
-    }
-
-    vkb::destroy_swapchain(vkbSwapchain);
 }
