@@ -26,8 +26,8 @@ private:
     uint32_t anvilFrameNumber = 0;
 
     AnvilFrame& getCurrentFrame();
-    void setupSyncStructures();
     void setupCommandBuffers();
+    void setupSyncStructures();
 
 public:
     void initialise(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);
