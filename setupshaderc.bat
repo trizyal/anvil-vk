@@ -39,7 +39,7 @@ cmake --build "%INTERMEDIATE_DIR%\shaderc" --config Release --target shaderc_com
 echo.
 echo [3/3] Copying static library to binaries folder
 if not exist "%BINARIES_DIR%\shaderc" mkdir "%BINARIES_DIR%\shaderc"
-copy /Y "%INTERMEDIATE_DIR%\shaderc\libshaderc\Release\shaderc_combined.lib" "%BINARIES_DIR%\shaderc\libshaderc_combined.a"
+copy /Y "%INTERMEDIATE_DIR%\shaderc\libshaderc\libshaderc_combined.a" "%BINARIES_DIR%\shaderc\libshaderc_combined.a"
 
 echo.
 echo =========================
