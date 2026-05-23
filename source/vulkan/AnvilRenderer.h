@@ -5,13 +5,13 @@
 
 struct AnvilFrame
 {
-    VkCommandPool anvilCommandPool;
-    VkCommandBuffer anvilCommandBuffer;
+    VkCommandPool cmdPool;
+    VkCommandBuffer cmdBuffer;
 
     // Sync objects
-    VkSemaphore anvilSwapchainSemaphore; // Image is ready to render to
-    VkSemaphore anvilRenderSemaphore; // Render is finished, ready to present
-    VkFence anvilRenderFence; // CPU waits for GPU to finish this frame
+    VkSemaphore swapchainSemaphore; // Image is ready to render to
+    VkSemaphore renderSemaphore; // Render is finished, ready to present
+    VkFence renderFence; // CPU waits for GPU to finish this frame
 };
 
 constexpr uint32_t FRAMES_IN_FLIGHT = 2;
@@ -28,6 +28,8 @@ private:
     AnvilFrame& getCurrentFrame();
     void setupCommandBuffers();
     void setupSyncStructures();
+    void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
+        VkImageLayout oldLayout, VkImageLayout newLayout);
 
 public:
     void initialise(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);

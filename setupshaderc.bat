@@ -32,7 +32,7 @@ echo [2/3] Building shaderc_combined
 ::cmake -S "%EXTERNAL_DIR%\shaderc" -B "%INTERMEDIATE_DIR%\shaderc" -DCMAKE_BUILD_TYPE=Release -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON
 ::cmake --build "%INTERMEDIATE_DIR%\shaderc" --config Release --target shaderc_combined
 
-cmake -S "%EXTERNAL_DIR%\shaderc" -B "%INTERMEDIATE_DIR%\shaderc" -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON
+cmake -S "%EXTERNAL_DIR%\shaderc" -B "%INTERMEDIATE_DIR%\shaderc" -G Ninja -DCMAKE_BUILD_TYPE=Release -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON
 cmake --build "%INTERMEDIATE_DIR%\shaderc" --config Release --target shaderc_combined
 
 :: 3. Copy the binary out
