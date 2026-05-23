@@ -10,7 +10,7 @@
 class AnvilSwapchain
 {
 private:
-    AnvilVulkanContext *anvilVulkanContext = nullptr;
+    AnvilVulkanContext *ptrContext = nullptr;
 
     void buildSwapchainInternal(uint32_t inWidth, uint32_t inHeight);
 

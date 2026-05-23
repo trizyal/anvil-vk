@@ -19,8 +19,8 @@ constexpr uint32_t FRAMES_IN_FLIGHT = 2;
 class AnvilRenderer
 {
 private:
-    AnvilVulkanContext* anvilContext;
-    AnvilSwapchain* anvilSwapchain;
+    AnvilVulkanContext* ptrAContext;
+    AnvilSwapchain* ptrASwapchain;
 
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
     uint32_t anvilFrameNumber = 0;
