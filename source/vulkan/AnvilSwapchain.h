@@ -15,7 +15,7 @@ class AnvilSwapchain
 private:
     AnvilVulkanContext *ptrContext = nullptr;
 
-    void buildSwapchainInternal(uint32_t inWidth, uint32_t inHeight);
+    void buildSwapchainInternal(VkExtent2D inExtent);
 
 public:
     VkSwapchainKHR anvilSwapchain = VK_NULL_HANDLE;
@@ -25,8 +25,8 @@ public:
     std::vector<VkImage> anvilImages;
     std::vector<VkImageView> anvilImageViews;
 
-    void initialise(AnvilVulkanContext& inAnvilContext, uint32_t inWidth, uint32_t inHeight);
-    void recreate(uint32_t inWidth, uint32_t inHeight);
+    void initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
+    void recreateSwapchain(VkExtent2D inExtent);
     void cleanup();
 };
 

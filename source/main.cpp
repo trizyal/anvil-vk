@@ -6,11 +6,7 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
-#include "AnvilWindow.h"
-#include "AnvilVulkanContext.h"
-// #include <GLFW/glfw3.h>
-
-// #include <VkBootstrap.h>
+#include "AnvilApplication.h"
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -18,26 +14,22 @@ int main()
 {
     try
     {
-        AnvilWindow window(1280, 720, "anvil-vk");
-        AnvilVulkanContext anvilContext;
+        AnvilApplication app;
 
-        std::cout << "Initializing Vulkan..." << std::endl;
-        anvilContext.initialise(window);
-        std::cout << "Vulkan Initialized successfully!" << std::endl;
+        app.initializeAnvil({
+            .width = 1280,
+            .height = 720,
+            .title = "Anvil Vulkan Template"
+        });
 
-        while (!window.bShouldClose())
-        {
-            AnvilWindow::pollEvents();
-        }
+        app.runAnvil();
+        app.shutdownAnvil();
 
-        vkDeviceWaitIdle(anvilContext.anvilDevice);
-        anvilContext.cleanup();
+        return EXIT_SUCCESS;
     }
     catch (const std::exception& e)
     {
         std::cerr << "Fatal Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
-    return EXIT_SUCCESS;
 }

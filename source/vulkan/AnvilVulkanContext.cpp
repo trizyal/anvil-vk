@@ -10,8 +10,9 @@
 
 #include "AnvilWindow.h"
 
-void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
+void AnvilVulkanContext::initializeContext(AnvilWindow& inWindow)
 {
+    std::cout << "Initialising AnvilVulkanContext..." << std::endl;
     // Initialise Volk
     if (volkInitialize() != VK_SUCCESS)
     {
@@ -23,8 +24,18 @@ void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
     // Build Instance with vk-bootstrap
     vkb::InstanceBuilder vkbInstanceBuilder;
     vkbInstanceBuilder.set_app_name(inWindow.getWindowTitle().c_str());
+#ifndef NDEBUG
     vkbInstanceBuilder.request_validation_layers(true);
     vkbInstanceBuilder.use_default_debug_messenger();
+
+    // TODO: Add INFO and VERBOSE severities to the default messenger as a configurable option
+#if 0
+    vkbInstanceBuilder.add_debug_messenger_severity(
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+    );
+#endif
+#endif
     vkbInstanceBuilder.require_api_version(1, 4, 0);
     vkb::Result<vkb::Instance> vkbInstanceResult = vkbInstanceBuilder.build();
 
@@ -117,9 +128,13 @@ void AnvilVulkanContext::initialise(AnvilWindow& inWindow)
         vmaDestroyAllocator(anvilAllocator);
         vkDestroyDevice(anvilDevice, nullptr);
         vkDestroySurfaceKHR(anvilInstance, anvilSurface, nullptr);
+#ifndef NDEBUG
         vkb::destroy_debug_utils_messenger(anvilInstance, anvilDebugMessenger);
+#endif
         vkDestroyInstance(anvilInstance, nullptr);
     });
+
+    std::cout << "Finished initializing AnvilVulkanContext" << std::endl;
 }
 
 void AnvilVulkanContext::cleanup()

@@ -3,19 +3,26 @@
 
 #include "AnvilSwapchain.h"
 
-void AnvilSwapchain::initialise(AnvilVulkanContext& inAnvilContext, uint32_t inWidth, uint32_t inHeight)
+#include <iostream>
+
+#include "GLFW/glfw3.h"
+
+void AnvilSwapchain::initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
+    std::cout << "Creating AnvilSwapchain" << std::endl;
     ptrContext = &inAnvilContext;
-    buildSwapchainInternal(inWidth, inHeight);
+    buildSwapchainInternal(inExtent);
+    std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
 
-void AnvilSwapchain::recreate(const uint32_t inWidth, const uint32_t inHeight)
+void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
 {
+    std::cout << "Re-Creating AnvilSwapchain" << std::endl;
     // Wait for GPU to finish
     vkDeviceWaitIdle(ptrContext->anvilDevice);
     cleanup();
 
-    buildSwapchainInternal(inWidth, inHeight);
+    buildSwapchainInternal(inExtent);
 }
 
 void AnvilSwapchain::cleanup()
@@ -29,7 +36,7 @@ void AnvilSwapchain::cleanup()
     anvilSwapchain = VK_NULL_HANDLE;
 }
 
-void AnvilSwapchain::buildSwapchainInternal(const uint32_t inWidth, const uint32_t inHeight)
+void AnvilSwapchain::buildSwapchainInternal(VkExtent2D inExtent)
 {
     vkb::SwapchainBuilder vkbSwapchainBuilder{
         ptrContext->anvilPhysicalDevice,
@@ -39,7 +46,7 @@ void AnvilSwapchain::buildSwapchainInternal(const uint32_t inWidth, const uint32
 
     vkbSwapchainBuilder.use_default_format_selection();
     vkbSwapchainBuilder.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR); // vsync
-    vkbSwapchainBuilder.set_desired_extent(inWidth, inHeight);
+    vkbSwapchainBuilder.set_desired_extent(inExtent.width, inExtent.height);
     vkb::Result<vkb::Swapchain> vkbSwapchainResult = vkbSwapchainBuilder.build();
 
     if (!vkbSwapchainResult)

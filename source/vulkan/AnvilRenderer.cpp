@@ -6,13 +6,18 @@
 #include <iostream>
 #include <stdexcept>
 
-void AnvilRenderer::initialise(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
+#include "AnvilWindow.h"
+
+void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {
+    std::cout << "Initializing AnvilRenderer" << std::endl;
     this->ptrAContext = inAnvilContext;
     this->ptrASwapchain = inAnvilSwapchain;
 
     setupCommandBuffers();
     setupSyncStructures();
+
+    std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
 
 void AnvilRenderer::cleanup()
@@ -29,13 +34,12 @@ void AnvilRenderer::cleanup()
     }
 }
 
-void AnvilRenderer::drawFrame()
+void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
 {
     AnvilFrame& frame = getCurrentFrame();
 
     // Wait for previous frame
     vkWaitForFences(ptrAContext->anvilDevice, 1, &frame.renderFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(ptrAContext->anvilDevice, 1, &frame.renderFence);
 
     // Request image from swapchain
     uint32_t imageIndex;
@@ -49,7 +53,24 @@ void AnvilRenderer::drawFrame()
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         // TODO: Implement OUT_OF_DATE_KHR handling
+        // Recreate Swapchain
+        ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+        return;
     }
+    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+    {
+        throw std::runtime_error("Failed to acquire swapchain image.");
+    }
+
+    // Check if a previous frame is still using this swapchain image
+    if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+        vkWaitForFences(ptrAContext->anvilDevice, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+    }
+    // Mark the image as now being in use by this frame
+    imagesInFlight[imageIndex] = frame.renderFence;
+
+    // Reset fences after the second wait and vkAcquireNextImageKHR
+    vkResetFences(ptrAContext->anvilDevice, 1, &frame.renderFence);
 
     // Reset and begin command buffer
     VkCommandBuffer cmd = frame.cmdBuffer;
@@ -61,7 +82,8 @@ void AnvilRenderer::drawFrame()
     vkBeginCommandBuffer(cmd, &beginInfo);
 
     // Transition image here
-    // TODO: Add image transition and barriers
+    transitionImageLayout(cmd, ptrASwapchain->anvilImages[imageIndex],
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     // Begin Dynamic Rendering
     VkRenderingAttachmentInfo colorAttachmentInfo{};
@@ -70,11 +92,11 @@ void AnvilRenderer::drawFrame()
     colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachmentInfo.clearValue.color = {0.05f, 0.05f, 0.05f, 1.0f};
+    colorAttachmentInfo.clearValue.color = {{0.05f, 0.05f, 0.05f, 1.0f}};
 
     VkRenderingInfo renderInfo{};
     renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-    renderInfo.renderArea = {0, 0, ptrASwapchain->anvilExtent.width, ptrASwapchain->anvilExtent.height};
+    renderInfo.renderArea = {{0, 0}, {ptrASwapchain->anvilExtent.width, ptrASwapchain->anvilExtent.height}};
     renderInfo.layerCount = 1;
     renderInfo.colorAttachmentCount = 1;
     renderInfo.pColorAttachments = &colorAttachmentInfo;
@@ -87,7 +109,62 @@ void AnvilRenderer::drawFrame()
 
     vkCmdEndRendering(cmd);
 
-    // TODO: Submit and Present, possibly a separate function
+    // Transition image to present layout
+    transitionImageLayout(cmd, ptrASwapchain->anvilImages[imageIndex],
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+    // End command buffer
+    vkEndCommandBuffer(cmd);
+
+    // Submit command buffer
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = { frame.swapchainSemaphore };
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmd;
+
+    VkSemaphore signalSemaphores[] = { frame.renderSemaphore };
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    if (vkQueueSubmit(ptrAContext->anvilGraphicsQueue, 1, &submitInfo, frame.renderFence) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to submit draw command buffer.");
+    }
+
+    // Present
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+
+    VkSwapchainKHR swapchain = {ptrASwapchain->anvilSwapchain};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &swapchain;
+    presentInfo.pImageIndices = &imageIndex;
+
+    VkResult presentResult = vkQueuePresentKHR(ptrAContext->anvilGraphicsQueue, &presentInfo);
+
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
+    {
+        // Recreate Swapchain
+        ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+    }
+    else if (presentResult != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to present swapchain image.");
+    }
+
+    // Increase frame number
+    anvilFrameNumber++;
 }
 
 void AnvilRenderer::setupCommandBuffers()
@@ -144,6 +221,8 @@ void AnvilRenderer::setupSyncStructures()
             throw std::runtime_error("Failed to create render fence.");
         }
     }
+
+    imagesInFlight.resize(ptrASwapchain->anvilImages.size(), VK_NULL_HANDLE);
 }
 
 AnvilFrame& AnvilRenderer::getCurrentFrame()
@@ -173,7 +252,7 @@ void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage
     {
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        sourceFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        sourceFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         destinationFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     }
     else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
