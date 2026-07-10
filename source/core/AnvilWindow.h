@@ -1,3 +1,6 @@
+// Copyright (C) 2026 trizyal
+// SPDX-License-Identifier: GPL-3.0-only
+
 #ifndef ANVIL_VK_WINDOW_H
 #define ANVIL_VK_WINDOW_H
 
