@@ -1,3 +1,6 @@
+// Copyright (C) 2026 trizyal
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "AnvilSwapchain.h"
 
 void AnvilSwapchain::initialise(AnvilVulkanContext& inAnvilContext, uint32_t inWidth, uint32_t inHeight)

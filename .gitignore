@@ -33,6 +33,7 @@
 
 # IDEs
 .idea
+.vs
 
 # Build artifacts
 intermediate
