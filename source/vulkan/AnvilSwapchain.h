@@ -15,8 +15,6 @@ class AnvilSwapchain
 private:
     AnvilVulkanContext *ptrContext = nullptr;
 
-    void buildSwapchainInternal(VkExtent2D inExtent);
-
 public:
     VkSwapchainKHR anvilSwapchain = VK_NULL_HANDLE;
     VkExtent2D anvilExtent;

@@ -12,9 +12,9 @@ struct AnvilFrame
     VkCommandBuffer cmdBuffer;
 
     // Sync objects
-    VkSemaphore swapchainSemaphore; // Image is ready to render to
-    VkSemaphore renderSemaphore; // Render is finished, ready to present
-    VkFence renderFence; // CPU waits for GPU to finish this frame
+    VkSemaphore imageAvailableSemaphore; // Image is ready to render to
+    VkSemaphore renderFinishedSemaphore; // Render is finished, ready to present
+    VkFence frameDoneFence; // CPU waits for GPU to finish this frame
 };
 
 constexpr uint32_t FRAMES_IN_FLIGHT = 2;
@@ -26,8 +26,9 @@ private:
     AnvilSwapchain* ptrASwapchain = nullptr;
 
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
-    uint32_t anvilFrameNumber = 0;
-    std::vector<VkFence> imagesInFlight;
+    uint32_t anvilFrameIndex = 0;
+
+    bool recreateSwapchain = false;
 
     AnvilFrame& getCurrentFrame();
     void setupCommandBuffers();

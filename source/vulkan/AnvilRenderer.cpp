@@ -27,50 +27,67 @@ void AnvilRenderer::cleanup()
 
     for (const AnvilFrame& anvilFrame : anvilFrames)
     {
-        vkDestroySemaphore(ptrAContext->anvilDevice, anvilFrame.swapchainSemaphore, nullptr);
-        vkDestroySemaphore(ptrAContext->anvilDevice, anvilFrame.renderSemaphore, nullptr);
-        vkDestroyFence(ptrAContext->anvilDevice, anvilFrame.renderFence, nullptr);
+        vkDestroySemaphore(ptrAContext->anvilDevice, anvilFrame.imageAvailableSemaphore, nullptr);
+        vkDestroySemaphore(ptrAContext->anvilDevice, anvilFrame.renderFinishedSemaphore, nullptr);
+        vkDestroyFence(ptrAContext->anvilDevice, anvilFrame.frameDoneFence, nullptr);
         vkDestroyCommandPool(ptrAContext->anvilDevice, anvilFrame.cmdPool, nullptr);
     }
 }
 
 void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
 {
+    // Recreate swapchain maybe
+    if (recreateSwapchain)
+    {
+        vkDeviceWaitIdle(ptrAContext->anvilDevice);
+        ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+
+        recreateSwapchain = false;
+    }
+
     AnvilFrame& frame = getCurrentFrame();
 
     // Wait for previous frame
-    vkWaitForFences(ptrAContext->anvilDevice, 1, &frame.renderFence, VK_TRUE, UINT64_MAX);
+    auto res = vkWaitForFences(ptrAContext->anvilDevice, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX);
+    if (res != VK_SUCCESS)
+    {
+        // TODO: Make error and to_string function to replay the std::runtime_error and be able to get strings for VkResult
+        throw std::runtime_error("Unable to wait for frame fence.");
+    }
 
     // Request image from swapchain
-    uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(ptrAContext->anvilDevice,
+    uint32_t imageIndex = 0;
+    VkResult acquiredResult = vkAcquireNextImageKHR(ptrAContext->anvilDevice,
         ptrASwapchain->anvilSwapchain,
         UINT64_MAX,
-        frame.swapchainSemaphore,
+        frame.imageAvailableSemaphore,
         VK_NULL_HANDLE,
         &imageIndex);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    if (acquiredResult == VK_ERROR_OUT_OF_DATE_KHR /*|| acquiredResult == VK_SUBOPTIMAL_KHR*/)
     {
-        // TODO: Implement OUT_OF_DATE_KHR handling
         // Recreate Swapchain
-        ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+        recreateSwapchain = true;
+        // anvilFrameIndex--;
+        // anvilFrameIndex %= FRAMES_IN_FLIGHT;
+
         return;
     }
-    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+
+    if (acquiredResult != VK_SUCCESS && acquiredResult != VK_SUBOPTIMAL_KHR)
     {
         throw std::runtime_error("Failed to acquire swapchain image.");
     }
 
-    // Check if a previous frame is still using this swapchain image
-    if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-        vkWaitForFences(ptrAContext->anvilDevice, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+    // Reset fences after vkAcquireNextImageKHR
+    res = vkResetFences(ptrAContext->anvilDevice, 1, &frame.frameDoneFence);
+    if (res != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to reset frameDoneFence.");
     }
-    // Mark the image as now being in use by this frame
-    imagesInFlight[imageIndex] = frame.renderFence;
 
-    // Reset fences after the second wait and vkAcquireNextImageKHR
-    vkResetFences(ptrAContext->anvilDevice, 1, &frame.renderFence);
+    assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
+    assert(imageIndex < ptrASwapchain->anvilImages.size());
 
     // Reset and begin command buffer
     VkCommandBuffer cmd = frame.cmdBuffer;
@@ -121,7 +138,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = { frame.swapchainSemaphore };
+    VkSemaphore waitSemaphores[] = { frame.imageAvailableSemaphore };
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
@@ -130,11 +147,11 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmd;
 
-    VkSemaphore signalSemaphores[] = { frame.renderSemaphore };
+    VkSemaphore signalSemaphores[] = { frame.renderFinishedSemaphore };
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(ptrAContext->anvilGraphicsQueue, 1, &submitInfo, frame.renderFence) != VK_SUCCESS)
+    if (vkQueueSubmit(ptrAContext->anvilGraphicsQueue, 1, &submitInfo, frame.frameDoneFence) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to submit draw command buffer.");
     }
@@ -155,16 +172,17 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
 
     if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
     {
-        // Recreate Swapchain
-        ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+        recreateSwapchain = true;
     }
     else if (presentResult != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to present swapchain image.");
     }
 
-    // Increase frame number
-    anvilFrameNumber++;
+    anvilFrameIndex++;
+    assert(sizeof(anvilFrames) / sizeof(AnvilFrame) == FRAMES_IN_FLIGHT);
+    anvilFrameIndex %= FRAMES_IN_FLIGHT;
+    assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
 }
 
 void AnvilRenderer::setupCommandBuffers()
@@ -208,26 +226,24 @@ void AnvilRenderer::setupSyncStructures()
     for (AnvilFrame& anvilFrame : anvilFrames)
     {
         // TODO: Provide better error messages for Semaphores and Fences
-        if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &anvilFrame.swapchainSemaphore) != VK_SUCCESS)
+        if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &anvilFrame.imageAvailableSemaphore) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create swapchain semaphore.");
         }
-        if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &anvilFrame.renderSemaphore) != VK_SUCCESS)
+        if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &anvilFrame.renderFinishedSemaphore) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create render semaphore.");
         }
-        if (vkCreateFence(ptrAContext->anvilDevice, &fenceInfo, nullptr, &anvilFrame.renderFence) != VK_SUCCESS)
+        if (vkCreateFence(ptrAContext->anvilDevice, &fenceInfo, nullptr, &anvilFrame.frameDoneFence) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create render fence.");
         }
     }
-
-    imagesInFlight.resize(ptrASwapchain->anvilImages.size(), VK_NULL_HANDLE);
 }
 
 AnvilFrame& AnvilRenderer::getCurrentFrame()
 {
-    return anvilFrames[anvilFrameNumber % FRAMES_IN_FLIGHT];
+    return anvilFrames[anvilFrameIndex % FRAMES_IN_FLIGHT];
 }
 
 void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
