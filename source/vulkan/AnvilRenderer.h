@@ -12,9 +12,8 @@ struct AnvilFrame
     VkCommandBuffer cmdBuffer;
 
     // Sync objects
-    VkSemaphore swapchainSemaphore; // Image is ready to render to
-    VkSemaphore renderSemaphore; // Render is finished, ready to present
-    VkFence renderFence; // CPU waits for GPU to finish this frame
+    VkSemaphore imageAvailableSemaphore; // Image is ready to render to
+    VkFence frameDoneFence; // CPU waits for GPU to finish this frame
 };
 
 constexpr uint32_t FRAMES_IN_FLIGHT = 2;
@@ -22,11 +21,16 @@ constexpr uint32_t FRAMES_IN_FLIGHT = 2;
 class AnvilRenderer
 {
 private:
-    AnvilVulkanContext* ptrAContext;
-    AnvilSwapchain* ptrASwapchain;
+    AnvilVulkanContext* ptrAContext = nullptr;
+    AnvilSwapchain* ptrASwapchain = nullptr;
 
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
-    uint32_t anvilFrameNumber = 0;
+    uint32_t anvilFrameIndex = 0;
+
+    // Rendering is finished, ready to present
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+
+    bool recreateSwapchain = false;
 
     AnvilFrame& getCurrentFrame();
     void setupCommandBuffers();
@@ -35,10 +39,12 @@ private:
         VkImageLayout oldLayout, VkImageLayout newLayout);
 
 public:
-    void initialise(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);
+    AnvilRenderer() = default;
+
+    void initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);
     void cleanup();
 
-    void drawFrame();
+    void drawFrame(AnvilWindow& inWindow);
 };
 
 #endif //ANVIL_VK_RENDERER_H

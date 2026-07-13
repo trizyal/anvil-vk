@@ -3,12 +3,14 @@
 
 #include "AnvilWindow.h"
 
+#include <iostream>
 #include <stdexcept>
 #include <utility>
 
 AnvilWindow::AnvilWindow(const uint32_t inWidth, const uint32_t inHeight, std::string inTitle)
     : width(inWidth), height(inHeight), anvilTitle(std::move(inTitle))
 {
+    std::cout << "Creating AnvilWindow..." << std::endl;
     glfwInit();
 
     // No OpenGL
@@ -26,6 +28,7 @@ AnvilWindow::AnvilWindow(const uint32_t inWidth, const uint32_t inHeight, std::s
     {
         throw std::runtime_error("Failed to create GLFW window");
     }
+    std::cout << "Finishing creating AnvilWindow" << std::endl;
 }
 
 AnvilWindow::~AnvilWindow()
@@ -64,4 +67,17 @@ VkSurfaceKHR AnvilWindow::createSurface(VkInstance instance) const
     }
 
     return surface;
+}
+
+VkExtent2D AnvilWindow::getFramebufferExtent() const
+{
+    int fbWidth = 0;
+    int fbHeight = 0;
+
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+
+    return VkExtent2D{
+        static_cast<uint32_t>(fbWidth),
+        static_cast<uint32_t>(fbHeight)
+    };
 }

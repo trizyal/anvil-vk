@@ -88,12 +88,64 @@ target_include_directories(shaderc SYSTEM INTERFACE
         ${EXTERNAL_DIR}/shaderc/libshaderc/include
 )
 
-# Link the shaderc binary extracted via the setup script
-if (MSVC)
-    target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/shaderc_combined.lib)
-else()
-    target_link_libraries(shaderc INTERFACE ${BINARIES_DIR}/shaderc/libshaderc_combined.a)
+# Select the shaderc binary that matches the active C++ toolchain
+#
+# Windows toolchain cases:
+#   MSVC        -> cl.exe, MSVC ABI, .lib
+#   clang-msvc  -> clang-cl.exe, MSVC ABI, .lib
+#   mingw       -> g++/MingW, GNU ABI, .a
+#   clang-mingw -> clang++, MingW/GNU ABI, .a
+if (WIN32)
+    if (MSVC)
+        set(SHADERC_TOOLCHAIN_DIR "msvc")
+        set(SHADERC_LIB_NAME "shaderc_combined.lib")
+        set(SHADERC_SETUP_HINT "setupshaderc.bat msvc")
+
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
+        set(SHADERC_TOOLCHAIN_DIR "clang-msvc")
+        set(SHADERC_LIB_NAME "shaderc_combined.lib")
+        set(SHADERC_SETUP_HINT "setupshaderc.bat clang-msvc")
+
+    elseif (MINGW)
+        set(SHADERC_TOOLCHAIN_DIR "mingw")
+        set(SHADERC_LIB_NAME "libshaderc_combined.a")
+        set(SHADERC_SETUP_HINT "setupshaderc.bat mingw")
+
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(SHADERC_TOOLCHAIN_DIR "clang-mingw")
+        set(SHADERC_LIB_NAME "libshaderc_combined.a")
+        set(SHADERC_SETUP_HINT "setupshaderc.bat clang-mingw")
+
+    else ()
+        message(FATAL_ERROR
+            "Unsupported Windows compiler for Shaderc prebuilt binary selection.\n"
+            "Compiler ID: ${CMAKE_CXX_COMPILER_ID}\n"
+            "Simulate ID: ${CMAKE_CXX_SIMULATE_ID}\n"
+            "MINGW: ${MINGW}\n"
+        )
+    endif ()
+
+else ()
+    message(FATAL_ERROR
+        "Shaderc prebuilt binary selection is currently configured for Windows only.\n"
+    )
+endif()
+
+set(SHADERC_LIB_PATH "${BINARIES_DIR}/shaderc/${SHADERC_TOOLCHAIN_DIR}/${SHADERC_LIB_NAME}")
+
+if (NOT EXISTS "${SHADERC_LIB_PATH}")
+    message(FATAL_ERROR
+        "Shaderc static library not found:\n"
+        "  ${SHADERC_LIB_PATH}\n"
+        "Compiler detected: ${CMAKE_CXX_COMPILER_ID}\n"
+        "Run the setup script from the project root to generate it:\n"
+        "  ${SHADERC_SETUP_HINT}\n"
+        "Note: the MSVC .lib and the MinGW/GCC .a are NOT interchangeable; "
+        "you must generate the file that matches your active toolchain."
+    )
 endif ()
+
+target_link_libraries(shaderc INTERFACE "${SHADERC_LIB_PATH}")
 
 # --------------------------------------------------
 # SPIRV-Reflect

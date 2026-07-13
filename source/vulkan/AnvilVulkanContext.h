@@ -9,6 +9,8 @@
 
 #include "AnvilDeletionQueue.h"
 
+class AnvilWindow;
+
 class AnvilVulkanContext
 {
 public:
@@ -25,7 +27,7 @@ public:
 
     AnvilDeletionQueue anvilDeletionQueue;
 
-    void initialise(class AnvilWindow& inWindow);
+    void initializeContext(AnvilWindow& inWindow);
     void cleanup();
 };
 
