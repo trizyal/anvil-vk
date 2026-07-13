@@ -86,6 +86,11 @@ void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
     anvilImages = vkbSwapchain.get_images().value();
     anvilImageViews = vkbSwapchain.get_image_views().value();
 
+    if (oldSwapchain != VK_NULL_HANDLE)
+    {
+        vkDestroySwapchainKHR(ptrContext->anvilDevice, oldSwapchain, nullptr);
+    }
+
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
 

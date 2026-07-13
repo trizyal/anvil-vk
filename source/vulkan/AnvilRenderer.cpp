@@ -8,6 +8,8 @@
 
 #include "AnvilWindow.h"
 
+#define WHY 0
+
 void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {
     std::cout << "Initializing AnvilRenderer" << std::endl;
@@ -28,9 +30,14 @@ void AnvilRenderer::cleanup()
     for (const AnvilFrame& anvilFrame : anvilFrames)
     {
         vkDestroySemaphore(ptrAContext->anvilDevice, anvilFrame.imageAvailableSemaphore, nullptr);
-        vkDestroySemaphore(ptrAContext->anvilDevice, anvilFrame.renderFinishedSemaphore, nullptr);
         vkDestroyFence(ptrAContext->anvilDevice, anvilFrame.frameDoneFence, nullptr);
         vkDestroyCommandPool(ptrAContext->anvilDevice, anvilFrame.cmdPool, nullptr);
+    }
+
+    // Clean up per-image semaphores
+    for (VkSemaphore& semaphore : renderFinishedSemaphores)
+    {
+        vkDestroySemaphore(ptrAContext->anvilDevice, semaphore, nullptr);
     }
 }
 
@@ -41,6 +48,21 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
     {
         vkDeviceWaitIdle(ptrAContext->anvilDevice);
         ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+
+#if WHY // Was suggested but does not seem to be needed
+        // Recreate semaphores
+        for (VkSemaphore sem : renderFinishedSemaphores) {
+            vkDestroySemaphore(ptrAContext->anvilDevice, sem, nullptr);
+        }
+
+        renderFinishedSemaphores.resize(ptrASwapchain->anvilImages.size());
+        VkSemaphoreCreateInfo semaphoreInfo{};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        for (size_t i = 0; i < renderFinishedSemaphores.size(); i++)
+        {
+            vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]);
+        }
+#endif
 
         recreateSwapchain = false;
     }
@@ -147,7 +169,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmd;
 
-    VkSemaphore signalSemaphores[] = { frame.renderFinishedSemaphore };
+    VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[imageIndex] };
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -228,15 +250,21 @@ void AnvilRenderer::setupSyncStructures()
         // TODO: Provide better error messages for Semaphores and Fences
         if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &anvilFrame.imageAvailableSemaphore) != VK_SUCCESS)
         {
-            throw std::runtime_error("Failed to create swapchain semaphore.");
-        }
-        if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &anvilFrame.renderFinishedSemaphore) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create render semaphore.");
+            throw std::runtime_error("Failed to create imageAvailableSemaphore.");
         }
         if (vkCreateFence(ptrAContext->anvilDevice, &fenceInfo, nullptr, &anvilFrame.frameDoneFence) != VK_SUCCESS)
         {
-            throw std::runtime_error("Failed to create render fence.");
+            throw std::runtime_error("Failed to create frameDoneFence.");
+        }
+    }
+
+    // Create semaphores based on swapchain images count
+    renderFinishedSemaphores.resize(ptrASwapchain->anvilImages.size());
+    for (uint32_t i = 0; i < renderFinishedSemaphores.size(); i++)
+    {
+        if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create renderFinishedSemaphore.");
         }
     }
 }

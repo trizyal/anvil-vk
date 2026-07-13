@@ -13,7 +13,6 @@ struct AnvilFrame
 
     // Sync objects
     VkSemaphore imageAvailableSemaphore; // Image is ready to render to
-    VkSemaphore renderFinishedSemaphore; // Render is finished, ready to present
     VkFence frameDoneFence; // CPU waits for GPU to finish this frame
 };
 
@@ -27,6 +26,9 @@ private:
 
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
     uint32_t anvilFrameIndex = 0;
+
+    // Rendering is finished, ready to present
+    std::vector<VkSemaphore> renderFinishedSemaphores;
 
     bool recreateSwapchain = false;
 
