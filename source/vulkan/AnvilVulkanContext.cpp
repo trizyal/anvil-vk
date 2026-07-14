@@ -1,6 +1,12 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
+#define VOLK_IMPLEMENTATION
+#include <volk.h>
+
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
+
 #include "AnvilVulkanContext.h"
 
 #include <stdexcept>

@@ -1,11 +1,5 @@
 #include <iostream>
 
-#define VOLK_IMPLEMENTATION
-#include <volk.h>
-
-#define VMA_IMPLEMENTATION
-#include <vk_mem_alloc.h>
-
 #include "AnvilApplication.h"
 
 constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
