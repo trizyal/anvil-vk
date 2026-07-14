@@ -4,6 +4,8 @@
 #ifndef ANVIL_VK_SHADERS_H
 #define ANVIL_VK_SHADERS_H
 
+#ifdef SHADERC
+
 #include <string>
 #include <vector>
 #include <filesystem>
@@ -43,5 +45,7 @@ namespace AnvilShaders
 
     shaderc_shader_kind ConvertToShadercKind(ShaderType inShaderType);
 }
+
+#endif //SHADERC
 
 #endif //ANVIL_VK_SHADERS_H

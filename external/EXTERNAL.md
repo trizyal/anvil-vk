@@ -15,3 +15,10 @@
   - SPDX-License-Identifier: Apache-2.0 OR MIT
 - VulkanMemoryAllocator @ v3.3.0 (May 2025)
   - SPDX-License-Identifier: MIT
+
+
+**Require fetch**
+
+- slang @ v2026.13 (July 2026)
+  - `python fetch_slang.py`
+  - SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception

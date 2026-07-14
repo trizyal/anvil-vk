@@ -4,6 +4,8 @@
 #ifndef ANVIL_VK_SHADERCOMPILER_H
 #define ANVIL_VK_SHADERCOMPILER_H
 
+#ifdef SHADERC
+
 #include <string>
 #include <vector>
 
@@ -37,5 +39,7 @@ namespace AnvilShaderCompiler
         const std::vector<uint32_t>& spirvCode
     );
 } // namespace AnvilShaderCompiler
+
+#endif //SHADERC
 
 #endif //ANVIL_VK_SHADERCOMPILER_H
