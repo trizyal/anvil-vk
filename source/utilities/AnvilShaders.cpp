@@ -1,14 +1,15 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifdef SHADERC
-
 #include "AnvilShaders.h"
 
+#ifdef SHADERC
 #include <shaderc/shaderc.hpp>
+#endif //SHADERC
 
 namespace AnvilShaders
 {
+#ifdef SHADERC
     shaderc_shader_kind ConvertToShadercKind(const ShaderType inShaderType)
     {
         switch (inShaderType)
@@ -26,5 +27,5 @@ namespace AnvilShaders
             return shaderc_glsl_infer_from_source;
         }
     }
-}
 #endif //SHADERC
+} //AnvilShaders

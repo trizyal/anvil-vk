@@ -4,14 +4,14 @@
 #ifndef ANVIL_VK_SHADERS_H
 #define ANVIL_VK_SHADERS_H
 
-#ifdef SHADERC
-
 #include <string>
 #include <vector>
 #include <filesystem>
 
 #include <volk.h>
+#ifdef SHADERC
 #include <shaderc/shaderc.hpp>
+#endif
 
 namespace AnvilShaders
 {
@@ -24,28 +24,36 @@ namespace AnvilShaders
         ST_MAX          = 3
     };
 
-    // Extracted from SPIRV-Reflect
-    struct ShaderReflectionData {
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-        std::vector<VkPushConstantRange> pushConstants;
-    };
-
-    // Loaded Shader
-    struct CompiledShader {
-        VkShaderModule module = VK_NULL_HANDLE;
-        ShaderReflectionData reflection;
-    };
-
-    // Tracker for reloading
-    struct ShaderSourceTracker {
+    struct ShaderCompileRequest
+    {
         std::string filePath;
-        std::filesystem::file_time_type lastCompileTime;
+        std::string entryPoint;
         ShaderType shaderType;
     };
 
-    shaderc_shader_kind ConvertToShadercKind(ShaderType inShaderType);
-}
+    struct ShaderByteCode
+    {
+        std::vector<uint32_t> spirv;
+    };
 
+    ShaderByteCode GetEmptyShaderByteCode();
+
+#ifdef SHADERC
+    shaderc_shader_kind ConvertToShadercKind(ShaderType inShaderType);
 #endif //SHADERC
+} //AnvilShaders
+
+class AnvilShaderModule
+{
+private:
+    VkDevice anvilDevice = VK_NULL_HANDLE;
+    VkShaderModule anvilShaderModule = VK_NULL_HANDLE;
+
+public:
+    void create(VkDevice inDevice, AnvilShaders::ShaderByteCode inSPIRV);
+    void destroy();
+
+    [[nodiscard]] VkShaderModule get() const;
+};
 
 #endif //ANVIL_VK_SHADERS_H

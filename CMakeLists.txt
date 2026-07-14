@@ -212,6 +212,8 @@ endif ()
 # Define the SHADERC macro in C++ if the CMake option is toggled ON
 if (USE_SHADERC)
     target_compile_definitions(anvil-vk PRIVATE SHADERC)
+else()
+    target_compile_definitions(anvil-vk PRIVATE SLANG)
 endif()
 
 # --------------------------------------------------
