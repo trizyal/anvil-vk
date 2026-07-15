@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "AnvilShaderCompiler.h"
 #include "AnvilWindow.h"
 
 #define WHY 0
@@ -18,6 +19,20 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
 
     setupCommandBuffers();
     setupSyncStructures();
+
+    AnvilShaderCompiler tCompiler;
+    tCompiler.init();
+
+    AnvilShaders::ShaderCompileRequest tRequest;
+    tRequest.moduleName = "HelloTriangle";
+    tRequest.entryPoint = "vertexMain";
+    tRequest.shaderType = AnvilShaders::ST_Vertex;
+
+    AnvilShaders::ShaderByteCode tSPIRV = tCompiler.compileToSPIRV(tRequest);
+
+    auto test = std::string("SlangTest.spv");
+
+    AnvilShaders::DumpSPIRVToFile(tSPIRV.spirv, test);
 
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }

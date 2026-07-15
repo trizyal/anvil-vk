@@ -9,8 +9,13 @@
 #include <filesystem>
 
 #include <volk.h>
+
 #ifdef SHADERC
 #include <shaderc/shaderc.hpp>
+#endif
+
+#ifdef SLANG
+#include <slang.h>
 #endif
 
 namespace AnvilShaders
@@ -26,7 +31,7 @@ namespace AnvilShaders
 
     struct ShaderCompileRequest
     {
-        std::string filePath;
+        std::string moduleName;
         std::string entryPoint;
         ShaderType shaderType;
     };
@@ -34,12 +39,19 @@ namespace AnvilShaders
     struct ShaderByteCode
     {
         std::vector<uint32_t> spirv;
+
+        [[nodiscard]] bool isValid() const
+        {
+            return !spirv.empty();
+        }
     };
 
-    ShaderByteCode GetEmptyShaderByteCode();
+    void DumpSPIRVToFile(std::vector<uint32_t> inSPIRV, std::string& filename);
 
 #ifdef SHADERC
     shaderc_shader_kind ConvertToShadercKind(ShaderType inShaderType);
+#else
+    SlangStage ConvertToSlangStage(ShaderType inShaderType);
 #endif //SHADERC
 } //AnvilShaders
 
@@ -50,8 +62,8 @@ private:
     VkShaderModule anvilShaderModule = VK_NULL_HANDLE;
 
 public:
-    void create(VkDevice inDevice, AnvilShaders::ShaderByteCode inSPIRV);
-    void destroy();
+    bool create(VkDevice inDevice, const AnvilShaders::ShaderByteCode& inSPIRV);
+    void destroy() const;
 
     [[nodiscard]] VkShaderModule get() const;
 };
