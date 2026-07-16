@@ -69,7 +69,7 @@ void HelloTriangle::cleanup()
     }
 }
 
-void HelloTriangle::recordCommands(VkCommandBuffer inCmd, VkExtent2D inExtent)
+void HelloTriangle::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -77,15 +77,15 @@ void HelloTriangle::recordCommands(VkCommandBuffer inCmd, VkExtent2D inExtent)
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(inExtent.width);
-    viewport.height = static_cast<float>(inExtent.height);
+    viewport.width = static_cast<float>(inAnvilSwapchain.anvilExtent.width);
+    viewport.height = static_cast<float>(inAnvilSwapchain.anvilExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(inCmd, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = inExtent;
+    scissor.extent = inAnvilSwapchain.anvilExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 
     // Draw

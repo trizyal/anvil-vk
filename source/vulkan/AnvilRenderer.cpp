@@ -225,7 +225,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
 }
 
-void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, VkExtent2D)>& drawCallback)
+void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback)
 {
     // Recreate swapchain maybe
     if (recreateSwapchain)
@@ -311,7 +311,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     // Anvil has no idea what is being drawn here, it just executes the user's code.
     if (drawCallback)
     {
-        drawCallback(cmd, ptrASwapchain->anvilExtent);
+        drawCallback(cmd, ptrASwapchain);
     }
 
     vkCmdEndRendering(cmd);

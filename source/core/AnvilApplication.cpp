@@ -68,9 +68,9 @@ void AnvilApplication::runAnvil()
 
         // TODO: Refactor so that this call does not need to exist in an anvil file
         // Testing the User Renderer
-        anvilRenderer.drawFrame(*anvilWindow, [&](VkCommandBuffer cmd, VkExtent2D extent)
+        anvilRenderer.drawFrame(*anvilWindow, [&](VkCommandBuffer cmd, AnvilSwapchain *swapchain)
         {
-            test.recordCommands(cmd, extent);
+            test.recordCommands(cmd, *swapchain);
         });
     }
 

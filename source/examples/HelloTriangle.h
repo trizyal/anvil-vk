@@ -25,7 +25,7 @@ public:
     void cleanup();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, VkExtent2D inExtent);
+    void recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain);
 };
 
 #endif //EXAMPLE_HELLOTRIANGLE_H

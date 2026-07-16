@@ -10,6 +10,7 @@ anvil-vk/
 ├── external/
 │   ├── glfw/
 │   ├── shaderc/
+│   ├── slang/       # Run fetch_slang.py to get the directory
 │   ├── SPIRV-Reflect/
 │   ├── vk-bootstrap/
 │   ├── volk/
@@ -23,6 +24,10 @@ anvil-vk/
 │   │   ├── AnvilApplication.h/.cpp
 │   │   └── AnvilWindow.h/.cpp
 │   │
+│   ├── examples/   # How to use anvil
+│   │   ├── HelloTriangle.h/.cpp
+│   │   └── # More to come
+│   │
 │   ├──utilities/
 │   │   ├── AnvilFileIO.h/.cpp
 │   │   ├── AnvilShaderCompiler.h/.cpp
@@ -31,13 +36,16 @@ anvil-vk/
 │   └── vulkan/     # The Vulkan abstraction layers
 │       ├── AnvilVulkanContext.h/.cpp    # Instance, Device, VMA allocator
 │       ├── AnvilSwapchain.h/.cpp        # Swapchain and recreation logic
+│       ├── AnvilShaderModule.h/.cpp     # Shader modules
 │       ├── AnvilRenderer.h/.cpp         # Command buffers, sync structures, draw loop
 │       ├── AnvilPipeline.h/.cpp         # Shader loading and VkPipeline creation
 │       └── AnvilDeletionQueue.h         # Pattern for safe resource cleanup
 │
-└── shaders/        # Raw GLSL files (.vert, .frag)
-    ├── HelloTriangle.frag
-    └── HelloTriangle.vert
+└── shaders/        # Shader Files
+    ├── HelloTriangle.slang
+    └── glsl/
+        ├── HelloTriangle.vert
+        └── HelloTriangle.frag
 ```
 
 ## Separation of Context

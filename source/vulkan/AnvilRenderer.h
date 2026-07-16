@@ -47,7 +47,7 @@ public:
     void cleanup();
 
     void drawFrame(AnvilWindow& inWindow);
-    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, VkExtent2D)>& drawCallback);
+    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
 };
 
 #endif //ANVIL_VK_RENDERER_H
