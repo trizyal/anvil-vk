@@ -191,6 +191,10 @@ target_include_directories(anvil-vk PRIVATE
         ${SOURCE_DIR}/core
         ${SOURCE_DIR}/vulkan
         ${SOURCE_DIR}/utilities
+
+        # Testing user renderer
+        # Figure out a better way to structure non anvil side
+        ${SOURCE_DIR}/examples
 )
 
 # --------------------------------------------------

@@ -10,6 +10,7 @@
 #include "AnvilWindow.h"
 
 #define WHY 0
+#define SLANG_TEST 0
 
 void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {
@@ -20,6 +21,7 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
     setupCommandBuffers();
     setupSyncStructures();
 
+#if SLANG_TEST
     AnvilShaderCompiler tCompiler;
     tCompiler.init();
 
@@ -33,6 +35,7 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
     auto test = std::string("SlangTest.spv");
 
     AnvilShaders::DumpSPIRVToFile(tSPIRV.spirv, test);
+#endif //SLANG_TEST
 
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
@@ -160,6 +163,156 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
     // TODO: Pipeline binding
 
     // TODO: Hardcoded triangle for now
+
+    vkCmdEndRendering(cmd);
+
+    // Transition image to present layout
+    transitionImageLayout(cmd, ptrASwapchain->anvilImages[imageIndex],
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+    // End command buffer
+    vkEndCommandBuffer(cmd);
+
+    // Submit command buffer
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = { frame.imageAvailableSemaphore };
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmd;
+
+    VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[imageIndex] };
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    if (vkQueueSubmit(ptrAContext->anvilGraphicsQueue, 1, &submitInfo, frame.frameDoneFence) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to submit draw command buffer.");
+    }
+
+    // Present
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+
+    VkSwapchainKHR swapchain = {ptrASwapchain->anvilSwapchain};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &swapchain;
+    presentInfo.pImageIndices = &imageIndex;
+
+    VkResult presentResult = vkQueuePresentKHR(ptrAContext->anvilGraphicsQueue, &presentInfo);
+
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
+    {
+        recreateSwapchain = true;
+    }
+    else if (presentResult != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to present swapchain image.");
+    }
+
+    anvilFrameIndex++;
+    assert(sizeof(anvilFrames) / sizeof(AnvilFrame) == FRAMES_IN_FLIGHT);
+    anvilFrameIndex %= FRAMES_IN_FLIGHT;
+    assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
+}
+
+void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, VkExtent2D)>& drawCallback)
+{
+    // Recreate swapchain maybe
+    if (recreateSwapchain)
+    {
+        vkDeviceWaitIdle(ptrAContext->anvilDevice);
+        ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+        recreateSwapchain = false;
+    }
+
+    AnvilFrame& frame = getCurrentFrame();
+
+    // Wait for previous frame
+    auto res = vkWaitForFences(ptrAContext->anvilDevice, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX);
+    if (res != VK_SUCCESS)
+    {
+        // TODO: Make error and to_string function to replay the std::runtime_error and be able to get strings for VkResult
+        throw std::runtime_error("Unable to wait for frame fence.");
+    }
+
+    // Request image from swapchain
+    uint32_t imageIndex = 0;
+    VkResult acquiredResult = vkAcquireNextImageKHR(ptrAContext->anvilDevice,
+        ptrASwapchain->anvilSwapchain,
+        UINT64_MAX,
+        frame.imageAvailableSemaphore,
+        VK_NULL_HANDLE,
+        &imageIndex);
+
+    if (acquiredResult == VK_ERROR_OUT_OF_DATE_KHR /*|| acquiredResult == VK_SUBOPTIMAL_KHR*/)
+    {
+        // Recreate Swapchain
+        recreateSwapchain = true;
+        return;
+    }
+
+    if (acquiredResult != VK_SUCCESS && acquiredResult != VK_SUBOPTIMAL_KHR)
+    {
+        throw std::runtime_error("Failed to acquire swapchain image.");
+    }
+
+    // Reset fences after vkAcquireNextImageKHR
+    res = vkResetFences(ptrAContext->anvilDevice, 1, &frame.frameDoneFence);
+    if (res != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to reset frameDoneFence.");
+    }
+
+    assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
+    assert(imageIndex < ptrASwapchain->anvilImages.size());
+
+    // Reset and begin command buffer
+    VkCommandBuffer cmd = frame.cmdBuffer;
+    vkResetCommandBuffer(cmd, 0);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &beginInfo);
+
+    // Transition image here
+    transitionImageLayout(cmd, ptrASwapchain->anvilImages[imageIndex],
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+    // Begin Dynamic Rendering
+    VkRenderingAttachmentInfo colorAttachmentInfo{};
+    colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    colorAttachmentInfo.imageView = ptrASwapchain->anvilImageViews[imageIndex];
+    colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachmentInfo.clearValue.color = {{0.05f, 0.05f, 0.05f, 1.0f}};
+
+    VkRenderingInfo renderInfo{};
+    renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    renderInfo.renderArea = {{0, 0}, {ptrASwapchain->anvilExtent.width, ptrASwapchain->anvilExtent.height}};
+    renderInfo.layerCount = 1;
+    renderInfo.colorAttachmentCount = 1;
+    renderInfo.pColorAttachments = &colorAttachmentInfo;
+
+    vkCmdBeginRendering(cmd, &renderInfo);
+
+    // --- EXECUTE PROJECT POLICY ---
+    // Anvil has no idea what is being drawn here, it just executes the user's code.
+    if (drawCallback)
+    {
+        drawCallback(cmd, ptrASwapchain->anvilExtent);
+    }
 
     vkCmdEndRendering(cmd);
 

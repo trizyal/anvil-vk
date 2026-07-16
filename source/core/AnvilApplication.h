@@ -12,6 +12,7 @@
 #include "AnvilVulkanContext.h"
 #include "AnvilSwapchain.h"
 #include "AnvilRenderer.h"
+#include "HelloTriangle.h"
 
 struct AnvilApplicationCreateInfo
 {
@@ -27,6 +28,9 @@ private:
     AnvilVulkanContext anvilContext;
     AnvilSwapchain anvilSwapchain;
     AnvilRenderer anvilRenderer;
+
+    // Testing the User Renderer
+    HelloTriangle test;
 
     bool anvilInitialized = false;
 

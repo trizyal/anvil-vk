@@ -23,6 +23,9 @@ void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreat
     anvilSwapchain.initializeSwapchain(anvilContext, anvilWindow->getFramebufferExtent());
     anvilRenderer.initializeRenderer(&anvilContext, &anvilSwapchain);
 
+    // Testing the User Renderer
+    test.initalizeProject(&anvilContext, &anvilSwapchain);
+
     anvilInitialized = true;
     std::cout << "Anvil initialization complete!" << std::endl;
 }
@@ -35,6 +38,9 @@ void AnvilApplication::shutdownAnvil()
     }
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
+
+    // Testing the User Renderer
+    test.cleanup();
 
     anvilRenderer.cleanup();
     anvilSwapchain.cleanup();
@@ -56,8 +62,16 @@ void AnvilApplication::runAnvil()
     {
         AnvilWindow::pollEvents();
 
-        // TODO: Test and fix drawFrame() function
+#if 0 // Original rendering structure
         anvilRenderer.drawFrame(*anvilWindow);
+#endif
+
+        // TODO: Refactor so that this call does not need to exist in an anvil file
+        // Testing the User Renderer
+        anvilRenderer.drawFrame(*anvilWindow, [&](VkCommandBuffer cmd, VkExtent2D extent)
+        {
+            test.recordCommands(cmd, extent);
+        });
     }
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
