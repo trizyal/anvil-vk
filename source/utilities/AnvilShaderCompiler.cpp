@@ -197,6 +197,7 @@ ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         retByteCode.spirv.assign(spirvCode, spirvCode + spirvWordCount);
     }
 
+    // TODO: This dump should ideally be in readable code
     // Dump SPIR-V if requested
     if (bDumpSpirv && retByteCode.isValid()) {
         std::string fileName = request.entryPoint + ".spv";

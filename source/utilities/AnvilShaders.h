@@ -8,8 +8,6 @@
 #include <vector>
 #include <filesystem>
 
-#include <volk.h>
-
 #ifdef SHADERC
 #include <shaderc/shaderc.hpp>
 #endif
@@ -54,18 +52,5 @@ namespace AnvilShaders
     SlangStage ConvertToSlangStage(ShaderType inShaderType);
 #endif //SHADERC
 } //AnvilShaders
-
-class AnvilShaderModule
-{
-private:
-    VkDevice anvilDevice = VK_NULL_HANDLE;
-    VkShaderModule anvilShaderModule = VK_NULL_HANDLE;
-
-public:
-    bool create(VkDevice inDevice, const AnvilShaders::ShaderByteCode& inSPIRV);
-    void destroy() const;
-
-    [[nodiscard]] VkShaderModule get() const;
-};
 
 #endif //ANVIL_VK_SHADERS_H
