@@ -3,6 +3,7 @@
 #include "AnvilApplication.h"
 
 #include "HelloTriangle/HelloTriangle.h"
+#include "HelloCube/HelloCube.h"
 
 int main()
 {
@@ -13,7 +14,8 @@ int main()
         .title = "Anvil Vulkan Template"
     });
 
-    HelloTriangle project;
+    // HelloTriangle project;
+    HelloCube project;
     project.initalizeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
 
     // Register hot-reload event
