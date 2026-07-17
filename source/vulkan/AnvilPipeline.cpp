@@ -8,6 +8,7 @@
 AnvilPipelineBuilder::AnvilPipelineBuilder() : colorAttachmentFormat()
 {
     // Initialise standard structs to safe zero values
+    vertexInputInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
     inputAssembly = {.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
     rasterizer = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
     colorBlendAttachment = {};
@@ -15,6 +16,19 @@ AnvilPipelineBuilder::AnvilPipelineBuilder() : colorAttachmentFormat()
     depthStencil = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
     // dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
     dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
+}
+
+AnvilPipelineBuilder& AnvilPipelineBuilder::setVertexInput(const std::vector<VkVertexInputBindingDescription>& inBinding, const std::vector<VkVertexInputAttributeDescription>& inAttributes)
+{
+    vertexBindings = inBinding;
+    vertexAttributes = inAttributes;
+
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexBindings.size());
+    vertexInputInfo.pVertexBindingDescriptions = vertexBindings.data();
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributes.size());
+    vertexInputInfo.pVertexAttributeDescriptions = vertexAttributes.data();
+
+    return *this;
 }
 
 AnvilPipelineBuilder& AnvilPipelineBuilder::setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader)
@@ -87,10 +101,6 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::disableBlending()
 
 AnvilPipeline AnvilPipelineBuilder::build(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout)
 {
-    // Dummy vertex input state, will be pulled from buffers later
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
     // Viewport state setup
     // Using dynamic states so we can resize the window
     VkPipelineViewportStateCreateInfo viewportState{};

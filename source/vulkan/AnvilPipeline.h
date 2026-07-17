@@ -17,9 +17,9 @@ struct AnvilPipeline
 class AnvilPipelineBuilder
 {
 private:
-    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     VkFormat colorAttachmentFormat;
 
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo;
     VkPipelineInputAssemblyStateCreateInfo inputAssembly;
     VkPipelineRasterizationStateCreateInfo rasterizer;
     VkPipelineColorBlendAttachmentState colorBlendAttachment;
@@ -27,10 +27,18 @@ private:
     VkPipelineDepthStencilStateCreateInfo depthStencil;
     VkPipelineRenderingCreateInfo dynamicRendering;
 
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    std::vector<VkVertexInputBindingDescription> vertexBindings;
+    std::vector<VkVertexInputAttributeDescription> vertexAttributes;
+
 public:
     AnvilPipelineBuilder();
 
     // Chainable methods to set state
+    AnvilPipelineBuilder& setVertexInput(
+        const std::vector<VkVertexInputBindingDescription>& inBinding,
+        const std::vector<VkVertexInputAttributeDescription>& inAttributes
+    );
     AnvilPipelineBuilder& setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader);
     AnvilPipelineBuilder& setColorAttachmentFormat(VkFormat inColorFormat);
     AnvilPipelineBuilder& setInputTopology(VkPrimitiveTopology inTopology);
