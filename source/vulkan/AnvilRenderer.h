@@ -46,7 +46,6 @@ public:
     void initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);
     void cleanup();
 
-    void drawFrame(AnvilWindow& inWindow);
     void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
 };
 

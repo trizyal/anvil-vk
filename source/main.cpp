@@ -2,28 +2,40 @@
 
 #include "AnvilApplication.h"
 
-constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+#include "HelloTriangle.h"
 
 int main()
 {
+    AnvilApplication anvil;
+    anvil.initializeAnvil({
+        .width = 1280,
+        .height = 720,
+        .title = "Anvil Vulkan Template"
+    });
+
+    HelloTriangle project;
+    project.initalizeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
+
+    // Register hot-reload event
+    anvil.addShaderReloadCallback([&]() {
+        project.loadPipeline();
+    });
+
     try
     {
-        AnvilApplication app;
-
-        app.initializeAnvil({
-            .width = 1280,
-            .height = 720,
-            .title = "Anvil Vulkan Template"
+        anvil.runAnvilRenderer([&](VkCommandBuffer cmd, AnvilSwapchain* swapchain)
+        {
+            project.recordCommands(cmd, *swapchain);
         });
-
-        app.runAnvil();
-        app.shutdownAnvil();
-
-        return EXIT_SUCCESS;
     }
     catch (const std::exception& e)
     {
         std::cerr << "Fatal Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+
+    project.cleanupProject();
+    anvil.shutdownAnvil();
+
+    return EXIT_SUCCESS;
 }

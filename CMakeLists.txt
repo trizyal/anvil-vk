@@ -220,6 +220,10 @@ else()
     target_compile_definitions(anvil-vk PRIVATE SLANG)
 endif()
 
+target_compile_definitions(anvil-vk PRIVATE
+        ANVIL_SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
+)
+
 # --------------------------------------------------
 # Compiler Warnings & Sanitizers
 # --------------------------------------------------
