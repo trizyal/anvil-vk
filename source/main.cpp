@@ -2,7 +2,7 @@
 
 #include "AnvilApplication.h"
 
-#include "HelloTriangle.h"
+#include "HelloTriangle/HelloTriangle.h"
 
 int main()
 {

@@ -21,6 +21,7 @@ option(USE_SHADERC "Compile with Shaderc and SPIRV-Reflect for GLSL" OFF)
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
+set(EXAMPLE_DIR "${SOURCE_DIR}/examples")
 
 # --------------------------------------------------
 # Automated Source File Collection
@@ -30,6 +31,9 @@ file(GLOB_RECURSE APP_SOURCES
         "${SOURCE_DIR}/*.c"
         "${SOURCE_DIR}/*.h"
         "${SOURCE_DIR}/*.hpp"
+
+        "${EXAMPLE_DIR}/*.cpp"
+        "${EXAMPLE_DIR}/*.h"
 )
 
 # Prevent find_package(Vulkan) from looking for system SDKs
