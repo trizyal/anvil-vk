@@ -4,38 +4,49 @@
 #ifndef ANVIL_VK_SHADERCOMPILER_H
 #define ANVIL_VK_SHADERCOMPILER_H
 
-#include <string>
-#include <vector>
-
-#include <volk.h>
+#ifdef SLANG
+#include <slang.h>
+#include <slang-com-ptr.h>
+#endif
 
 #include "AnvilShaders.h"
 
-namespace AnvilShaderCompiler
+class AnvilShaderCompiler
 {
-    extern bool DumpDebugSPIRV;
+public:
+    enum class OptimizationLevel : uint8_t
+    {
+        None    = 0, // Best for debugging
+        Default = 1, // Standard compilation
+        High    = 2, // Aggressive optimizations
+    };
 
-    std::vector<uint32_t> CompileGLSLToSPIRV(
-        const std::string& glslSource,
-        const std::string& shaderName,
-        AnvilShaders::ShaderType inShaderType
-    );
+    // Initialise the Global Session
+    bool init();
 
-    // Extract bindings and push constants
-    AnvilShaders::ShaderReflectionData CreateShaderReflectionData(
-        const std::vector<uint32_t>& spirvCode
-    );
+    // Clean up compiler resources
+    void destroy();
 
-    AnvilShaders::CompiledShader LoadShader(
-        const VkDevice& device,
-        const std::string& filePath,
-        AnvilShaders::ShaderType shaderType
-    );
+    // Configuration Setters
+    void setOptimizationLevel(OptimizationLevel inLevel);
+    void addSearchPath(const std::string& inPath);
+    void setSpirvDump(bool inEnable, const std::string& inDumpDirectory);
 
-    void DumpSPIRV(
-        const std::string& originalPath,
-        const std::vector<uint32_t>& spirvCode
-    );
-} // namespace AnvilShaderCompiler
+private:
+#ifdef SLANG
+    Slang::ComPtr<slang::IGlobalSession> globalSession;
+    static int32_t getSlangOptimizationLevel(OptimizationLevel inLevel);
+#endif
+
+    // Configuration State
+    OptimizationLevel optimizationLevel = OptimizationLevel::Default;
+    std::vector<std::string> searchPaths;
+    bool bDumpSpirv = false;
+    std::string dumpDirectory;
+
+public:
+    // Request compiler shaders from AnvilShaderCompiler
+    AnvilShaders::ShaderByteCode compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request) const;
+};
 
 #endif //ANVIL_VK_SHADERCOMPILER_H

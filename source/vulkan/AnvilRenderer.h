@@ -4,6 +4,8 @@
 #ifndef ANVIL_VK_RENDERER_H
 #define ANVIL_VK_RENDERER_H
 
+#include <functional>
+
 #include "AnvilSwapchain.h"
 
 struct AnvilFrame
@@ -44,7 +46,7 @@ public:
     void initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);
     void cleanup();
 
-    void drawFrame(AnvilWindow& inWindow);
+    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
 };
 
 #endif //ANVIL_VK_RENDERER_H

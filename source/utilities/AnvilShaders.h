@@ -8,8 +8,13 @@
 #include <vector>
 #include <filesystem>
 
-#include <volk.h>
+#ifdef SHADERC
 #include <shaderc/shaderc.hpp>
+#endif
+
+#ifdef SLANG
+#include <slang.h>
+#endif
 
 namespace AnvilShaders
 {
@@ -22,26 +27,30 @@ namespace AnvilShaders
         ST_MAX          = 3
     };
 
-    // Extracted from SPIRV-Reflect
-    struct ShaderReflectionData {
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-        std::vector<VkPushConstantRange> pushConstants;
-    };
-
-    // Loaded Shader
-    struct CompiledShader {
-        VkShaderModule module = VK_NULL_HANDLE;
-        ShaderReflectionData reflection;
-    };
-
-    // Tracker for reloading
-    struct ShaderSourceTracker {
-        std::string filePath;
-        std::filesystem::file_time_type lastCompileTime;
+    struct ShaderCompileRequest
+    {
+        std::string moduleName;
+        std::string entryPoint;
         ShaderType shaderType;
     };
 
+    struct ShaderByteCode
+    {
+        std::vector<uint32_t> spirv;
+
+        [[nodiscard]] bool isValid() const
+        {
+            return !spirv.empty();
+        }
+    };
+
+    void DumpSPIRVToFile(std::vector<uint32_t> inSPIRV, std::string& filename);
+
+#ifdef SHADERC
     shaderc_shader_kind ConvertToShadercKind(ShaderType inShaderType);
-}
+#else
+    SlangStage ConvertToSlangStage(ShaderType inShaderType);
+#endif //SHADERC
+} //AnvilShaders
 
 #endif //ANVIL_VK_SHADERS_H

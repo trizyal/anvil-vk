@@ -5,7 +5,7 @@
 
 #include <stdexcept>
 
-AnvilPipelineBuilder::AnvilPipelineBuilder()
+AnvilPipelineBuilder::AnvilPipelineBuilder() : colorAttachmentFormat()
 {
     // Initialise standard structs to safe zero values
     inputAssembly = {.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
@@ -13,7 +13,8 @@ AnvilPipelineBuilder::AnvilPipelineBuilder()
     colorBlendAttachment = {};
     multisampling = {.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
     depthStencil = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
-    dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
+    // dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
+    dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
 }
 
 AnvilPipelineBuilder& AnvilPipelineBuilder::setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader)
@@ -103,7 +104,7 @@ AnvilPipeline AnvilPipelineBuilder::build(const VkDevice& inDevice, const VkPipe
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments = &colorBlendAttachment;
 
-    std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
     dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());

@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <functional>
 
 #include "AnvilWindow.h"
 #include "AnvilVulkanContext.h"
@@ -38,13 +39,19 @@ public:
     AnvilApplication& operator=(const AnvilApplication&) = delete;
 
     void initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo = {});
-    void runAnvil();
+    void runAnvilRenderer(const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
     void shutdownAnvil();
 
     [[nodiscard]] AnvilWindow& getAnvilWindow() const;
     [[nodiscard]] AnvilVulkanContext& getAnvilContext();
     [[nodiscard]] AnvilSwapchain& getAnvilSwapchain();
     [[nodiscard]] AnvilRenderer& getAnvilRenderer();
+
+    void addShaderReloadCallback(std::function<void()> shaderCallback);
+
+private:
+    bool wasReloadPressed = false;
+    std::vector<std::function<void()>> shaderReloadQueue;
 };
 
 #endif //ANVIL_VK_APPLICATION_H

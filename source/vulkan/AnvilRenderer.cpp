@@ -6,9 +6,10 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "AnvilShaderCompiler.h"
 #include "AnvilWindow.h"
 
-#define WHY 0
+#define SLANG_TEST 0
 
 void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {
@@ -18,6 +19,22 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
 
     setupCommandBuffers();
     setupSyncStructures();
+
+#if SLANG_TEST
+    AnvilShaderCompiler tCompiler;
+    tCompiler.init();
+
+    AnvilShaders::ShaderCompileRequest tRequest;
+    tRequest.moduleName = "HelloTriangle";
+    tRequest.entryPoint = "vertexMain";
+    tRequest.shaderType = AnvilShaders::ST_Vertex;
+
+    AnvilShaders::ShaderByteCode tSPIRV = tCompiler.compileToSPIRV(tRequest);
+
+    auto test = std::string("SlangTest.spv");
+
+    AnvilShaders::DumpSPIRVToFile(tSPIRV.spirv, test);
+#endif //SLANG_TEST
 
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
@@ -41,29 +58,13 @@ void AnvilRenderer::cleanup()
     }
 }
 
-void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
+void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback)
 {
     // Recreate swapchain maybe
     if (recreateSwapchain)
     {
         vkDeviceWaitIdle(ptrAContext->anvilDevice);
         ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
-
-#if WHY // Was suggested but does not seem to be needed
-        // Recreate semaphores
-        for (VkSemaphore sem : renderFinishedSemaphores) {
-            vkDestroySemaphore(ptrAContext->anvilDevice, sem, nullptr);
-        }
-
-        renderFinishedSemaphores.resize(ptrASwapchain->anvilImages.size());
-        VkSemaphoreCreateInfo semaphoreInfo{};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        for (size_t i = 0; i < renderFinishedSemaphores.size(); i++)
-        {
-            vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]);
-        }
-#endif
-
         recreateSwapchain = false;
     }
 
@@ -90,9 +91,6 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
     {
         // Recreate Swapchain
         recreateSwapchain = true;
-        // anvilFrameIndex--;
-        // anvilFrameIndex %= FRAMES_IN_FLIGHT;
-
         return;
     }
 
@@ -142,9 +140,12 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow)
 
     vkCmdBeginRendering(cmd, &renderInfo);
 
-    // TODO: Pipeline binding
-
-    // TODO: Hardcoded triangle for now
+    // --- EXECUTE PROJECT POLICY ---
+    // Anvil has no idea what is being drawn here, it just executes the user's code.
+    if (drawCallback)
+    {
+        drawCallback(cmd, ptrASwapchain);
+    }
 
     vkCmdEndRendering(cmd);
 

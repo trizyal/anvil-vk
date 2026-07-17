@@ -1,6 +1,12 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
+#define VOLK_IMPLEMENTATION
+#include <volk.h>
+
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
+
 #include "AnvilVulkanContext.h"
 
 #include <stdexcept>
@@ -63,10 +69,16 @@ void AnvilVulkanContext::initializeContext(AnvilWindow& inWindow)
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
     features13.dynamicRendering = VK_TRUE;
 
+    // Fix for VUID-VkShaderModuleCreateInfo-pCode-08740
+    VkPhysicalDeviceVulkan11Features features11{};
+    features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    features11.shaderDrawParameters = VK_TRUE;
+
     vkb::PhysicalDeviceSelector vkbPhysicalDeviceSelector{vkbInstance};
     vkbPhysicalDeviceSelector.set_surface(anvilSurface);
     vkbPhysicalDeviceSelector.set_minimum_version(1, 3);
     vkbPhysicalDeviceSelector.add_required_extension_features(features13);
+    vkbPhysicalDeviceSelector.add_required_extension_features(features11);
     vkb::Result<vkb::PhysicalDevice> vkbPhysicalDeviceResult = vkbPhysicalDeviceSelector.select();
 
     if (!vkbPhysicalDeviceResult)
