@@ -6,6 +6,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "AnvilShaderCompiler.h"
 
 struct Vertex
@@ -49,6 +51,8 @@ void HelloCube::cleanupProject()
 {
     if (ptrAContext)
     {
+        vertexBuffer.destroy(ptrAContext->anvilAllocator);
+        indexBuffer.destroy(ptrAContext->anvilAllocator);
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroy();
@@ -75,8 +79,28 @@ void HelloCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwa
     scissor.extent = inAnvilSwapchain.anvilExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 
+    // Calculate C++ Transforms
+    static float time = 0.0f;
+    time += 0.016f; // Simple delta time
+
+    float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+
+    glm::mat4 projection = glm::perspective(glm::radians(70.0f), aspect, 0.1f, 100.0f);
+    projection[1][1] *= -1; // Flip Y for Vulkan
+
+    glm::mat4 view = glm::lookAt(glm::vec3(0, 2, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glm::mat4 model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.5f, 1.0f, 0.0f));
+
+    PushConstants constants;
+    constants.renderMatrix = projection * view * model;
+    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(inCmd, 0, 1, &vertexBuffer.buffer, &offset);
+    vkCmdBindIndexBuffer(inCmd, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+
     // Draw
-    vkCmdDraw(inCmd, 3, 1, 0, 0);
+    vkCmdDrawIndexed(inCmd, 36, 1, 0, 0, 0);
 }
 
 void HelloCube::loadPipeline()

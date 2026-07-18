@@ -23,7 +23,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setVertexInput(const std::vector<VkV
     vertexBindings = inBinding;
     vertexAttributes = inAttributes;
 
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexBindings.size());
+    vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexBindings.size());
     vertexInputInfo.pVertexBindingDescriptions = vertexBindings.data();
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributes.size());
     vertexInputInfo.pVertexAttributeDescriptions = vertexAttributes.data();
@@ -123,6 +123,10 @@ AnvilPipeline AnvilPipelineBuilder::build(const VkDevice& inDevice, const VkPipe
     // Multisampling defaults
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

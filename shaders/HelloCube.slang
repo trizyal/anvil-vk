@@ -26,7 +26,8 @@ VertexOutput vertexMain(VertexInput input)
     VertexOutput output;
 
     // Apply the C++ matrix transform
-    output.position = mul(pushConstants.renderMatrix, float4(input.position, 1.0));
+    // This multiplication if other way around, was breaking things
+    output.position = mul(float4(input.position,1), pushConstants.renderMatrix);
     output.color = input.color;
 
     return output;

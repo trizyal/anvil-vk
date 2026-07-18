@@ -21,14 +21,14 @@ public:
     AnvilBuffer(AnvilBuffer&& other) noexcept;
     AnvilBuffer& operator=(AnvilBuffer&& other) noexcept;
 
-private:
+// private:
     VkBuffer buffer = VK_NULL_HANDLE;
     VmaAllocation allocation = VK_NULL_HANDLE;
 
 public:
     void createAndUpload(VmaAllocator inAllocator, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage);
     void destroy(VmaAllocator inAllocator);
-    VkBuffer get() const { return buffer; }
+    const VkBuffer* get() const { return &buffer; }
 };
 
 #endif //ANVIL_VK_BUFFER_H
