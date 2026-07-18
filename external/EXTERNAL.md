@@ -2,6 +2,8 @@
 
 - glfw @ 3.4 (Feb 2024)
   - SPDX-License-Identifier: Zlib
+- glm @ 1.0.3 (Dec 2025)
+  - SPDX-License-Identifier: LicenseRef-scancode-happy-bunny
 - shaderc @ v2026.2 (April 2026)
   - `python utils/git-sync-deps`
   - SPDX-License-Identifier: Apache-2.0

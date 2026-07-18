@@ -78,6 +78,7 @@ add_subdirectory(${EXTERNAL_DIR}/Vulkan-Headers SYSTEM)
 add_subdirectory(${EXTERNAL_DIR}/volk SYSTEM)
 add_subdirectory(${EXTERNAL_DIR}/glfw SYSTEM)
 add_subdirectory(${EXTERNAL_DIR}/vk-bootstrap SYSTEM)
+add_subdirectory(${EXTERNAL_DIR}/glm SYSTEM)
 
 # Volk uses Vulkan-Headers instead of find_package(Vulkan)
 target_link_libraries(volk PUBLIC Vulkan::Headers)
@@ -263,6 +264,7 @@ target_link_libraries(anvil-vk PRIVATE
         volk
         vk-bootstrap::vk-bootstrap
         VulkanMemoryAllocator
+        glm
 )
 
 # Conditional linking

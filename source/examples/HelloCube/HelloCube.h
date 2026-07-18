@@ -4,6 +4,8 @@
 #ifndef EXAMPLE_HELLOCUBE_H
 #define EXAMPLE_HELLOCUBE_H
 
+#include <glm/glm.hpp>
+
 #include "AnvilBuffer.h"
 #include "AnvilVulkanContext.h"
 #include "AnvilShaderModule.h"
@@ -14,7 +16,7 @@
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
 {
-    // glm::mat4 renderMatrix;
+    glm::mat4 renderMatrix;
 };
 
 class HelloCube

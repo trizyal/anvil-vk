@@ -3,7 +3,6 @@
 
 #include "HelloCube.h"
 
-
 #include <iostream>
 #include <stdexcept>
 
@@ -11,18 +10,16 @@
 
 struct Vertex
 {
-    // glm::vec3 position;
-    uint32_t position;
-    // glm::vec3 color;
-    uint32_t color;
+    glm::vec3 position;
+    glm::vec3 color;
 };
 
 // 8 corners of a cube
 const std::vector<Vertex> cubeVertices = {
-    // {{-1, -1, -1}, {1, 0, 0}}, {{ 1, -1, -1}, {0, 1, 0}},
-    // {{ 1,  1, -1}, {0, 0, 1}}, {{-1,  1, -1}, {1, 1, 0}},
-    // {{-1, -1,  1}, {1, 0, 1}}, {{ 1, -1,  1}, {0, 1, 1}},
-    // {{ 1,  1,  1}, {1, 1, 1}}, {{-1,  1,  1}, {0, 0, 0}}
+    {{-1, -1, -1}, {1, 0, 0}}, {{ 1, -1, -1}, {0, 1, 0}},
+    {{ 1,  1, -1}, {0, 0, 1}}, {{-1,  1, -1}, {1, 1, 0}},
+    {{-1, -1,  1}, {1, 0, 1}}, {{ 1, -1,  1}, {0, 1, 1}},
+    {{ 1,  1,  1}, {1, 1, 1}}, {{-1,  1,  1}, {0, 0, 0}}
 };
 
 // 36 indices for 12 triangles
