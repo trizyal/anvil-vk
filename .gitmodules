@@ -13,9 +13,6 @@
 [submodule "External/glfw"]
 	path = external/glfw
 	url = git@github.com:glfw/glfw.git
-[submodule "external/shaderc"]
-	path = external/shaderc
-	url = git@github.com:google/shaderc.git
 [submodule "external/glm"]
 	path = external/glm
 	url = git@github.com:g-truc/glm.git

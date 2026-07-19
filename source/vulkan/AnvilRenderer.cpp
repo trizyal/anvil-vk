@@ -9,8 +9,6 @@
 #include "AnvilShaderCompiler.h"
 #include "AnvilWindow.h"
 
-#define SLANG_TEST 0
-
 void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {
     std::cout << "Initializing AnvilRenderer" << std::endl;
@@ -19,22 +17,6 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
 
     setupCommandBuffers();
     setupSyncStructures();
-
-#if SLANG_TEST
-    AnvilShaderCompiler tCompiler;
-    tCompiler.init();
-
-    AnvilShaders::ShaderCompileRequest tRequest;
-    tRequest.moduleName = "HelloTriangle";
-    tRequest.entryPoint = "vertexMain";
-    tRequest.shaderType = AnvilShaders::ST_Vertex;
-
-    AnvilShaders::ShaderByteCode tSPIRV = tCompiler.compileToSPIRV(tRequest);
-
-    auto test = std::string("SlangTest.spv");
-
-    AnvilShaders::DumpSPIRVToFile(tSPIRV.spirv, test);
-#endif //SLANG_TEST
 
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
