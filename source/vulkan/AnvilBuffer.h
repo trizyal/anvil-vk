@@ -9,6 +9,8 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
+#include "AnvilVulkanDebug.h"
+
 class AnvilBuffer
 {
 public:
@@ -26,8 +28,8 @@ public:
     AnvilBuffer(AnvilBuffer&& other) noexcept;
     AnvilBuffer& operator=(AnvilBuffer&& other) noexcept;
 
-    void createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage,
-        const char* debugName = nullptr, std::source_location loc = std::source_location::current());
+    void createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+        ANVIL_DEBUG_DECL());
     void destroy(VmaAllocator inAllocator);
 };
 

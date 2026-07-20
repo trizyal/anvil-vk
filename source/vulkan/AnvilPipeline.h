@@ -8,6 +8,8 @@
 
 #include <volk.h>
 
+#include "AnvilVulkanDebug.h"
+
 struct AnvilPipeline
 {
     VkPipeline pipeline;
@@ -50,7 +52,7 @@ public:
     AnvilPipelineBuilder& setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace);
     AnvilPipelineBuilder& disableBlending();
 
-    AnvilPipeline build(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout);
+    AnvilPipeline build(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL());
 };
 
 #endif //ANVIL_VK_PIPELINE_H
