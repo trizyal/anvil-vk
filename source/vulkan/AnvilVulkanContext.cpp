@@ -14,6 +14,7 @@
 
 #include <VkBootstrap.h>
 
+#include "AnvilVulkanDebug.h"
 #include "AnvilWindow.h"
 
 void AnvilVulkanContext::initializeContext(AnvilWindow& inWindow)
@@ -32,16 +33,17 @@ void AnvilVulkanContext::initializeContext(AnvilWindow& inWindow)
     vkbInstanceBuilder.set_app_name(inWindow.getWindowTitle().c_str());
 #ifndef NDEBUG
     vkbInstanceBuilder.request_validation_layers(true);
-    vkbInstanceBuilder.use_default_debug_messenger();
+    // vkbInstanceBuilder.use_default_debug_messenger();
+    vkbInstanceBuilder.set_debug_callback(AnvilDebug::DebugCallback);
 
     // TODO: Add INFO and VERBOSE severities to the default messenger as a configurable option
-#if 0
+    // Not yet running with the custom debug messenger
     vkbInstanceBuilder.add_debug_messenger_severity(
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
     );
 #endif
-#endif //NDEBUG
+
     vkbInstanceBuilder.require_api_version(1, 4, 0);
     vkb::Result<vkb::Instance> vkbInstanceResult = vkbInstanceBuilder.build();
 

@@ -21,9 +21,10 @@ set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
 # Automated Source File Collection
 # --------------------------------------------------
 file(GLOB_RECURSE ANVIL_CORE_SOURCES
-        "${SOURCE_DIR}/core/*.cpp"      "${SOURCE_DIR}/core/*.h"      "${SOURCE_DIR}/core/*.hpp"
-        "${SOURCE_DIR}/vulkan/*.cpp"    "${SOURCE_DIR}/vulkan/*.h"    "${SOURCE_DIR}/vulkan/*.hpp"
-        "${SOURCE_DIR}/utilities/*.cpp" "${SOURCE_DIR}/utilities/*.h" "${SOURCE_DIR}/utilities/*.hpp"
+        "${SOURCE_DIR}/*.cpp"
+        "${SOURCE_DIR}/*.c"
+        "${SOURCE_DIR}/*.h"
+        "${SOURCE_DIR}/*.hpp"
 )
 
 # Prevent find_package(Vulkan) from looking for system SDKs
@@ -123,8 +124,8 @@ if (WIN32)
     )
 endif ()
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-        ANVIL_SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        ANVIL_SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
 )
 
 # --------------------------------------------------
@@ -166,4 +167,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         slang
 )
 
-add_subdirectory(${SOURCE_DIR}/examples)
+add_subdirectory(examples)

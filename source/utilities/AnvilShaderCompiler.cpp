@@ -108,9 +108,11 @@ ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         cSearchPaths.push_back(path.c_str());
     }
 
+    // Needs to be initialized outside the .empty() block
+    const char* defaultPath[] = {ANVIL_SHADER_DIR};
+
     if (cSearchPaths.empty())
     {
-        const char* defaultPath[] = {ANVIL_SHADER_DIR};
         sessionDesc.searchPaths = defaultPath;
         sessionDesc.searchPathCount = 1;
     }

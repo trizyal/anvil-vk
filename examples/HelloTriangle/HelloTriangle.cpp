@@ -100,7 +100,7 @@ void HelloTriangle::loadPipeline()
 
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
-        .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
+        // .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)

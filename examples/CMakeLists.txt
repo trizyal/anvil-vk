@@ -18,11 +18,6 @@ macro(add_anvil_example EXAMPLE_NAME)
     # Link against the engine library target
     target_link_libraries(${EXAMPLE_NAME} PRIVATE ${PROJECT_NAME})
 
-    # Bind the absolute path for shader hot-reloading
-    target_compile_definitions(${EXAMPLE_NAME} PRIVATE
-            ANVIL_SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
-    )
-
     # The Runtime Gotcha: Copy Slang dynamic libraries to output folder
     # Crucial: Copy dynamic libraries to executable directory so the .exe doesn't crash
     add_custom_command(TARGET ${EXAMPLE_NAME} POST_BUILD
