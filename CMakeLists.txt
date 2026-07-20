@@ -85,9 +85,24 @@ target_include_directories(VulkanMemoryAllocator SYSTEM INTERFACE
 # --------------------------------------------------
 # imgui
 # --------------------------------------------------
-add_library(imgui INTERFACE)
-target_include_directories(imgui SYSTEM INTERFACE
-        ${EXTERNAL_DIR}/imgui)
+add_library(imgui STATIC
+        ${EXTERNAL_DIR}/imgui/imgui.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_draw.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_tables.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_widgets.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_demo.cpp        # optional
+        ${EXTERNAL_DIR}/imgui/backends/imgui_impl_glfw.cpp
+        ${EXTERNAL_DIR}/imgui/backends/imgui_impl_vulkan.cpp
+)
+target_include_directories(imgui PUBLIC
+        ${EXTERNAL_DIR}/imgui
+        ${EXTERNAL_DIR}/imgui/backends)
+
+# ImGui uses glfw and volk
+target_link_libraries(imgui PUBLIC
+        glfw
+        volk
+)
 
 # ----------------------------------------------
 # Slang Setup
