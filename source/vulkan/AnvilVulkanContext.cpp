@@ -41,7 +41,7 @@ void AnvilVulkanContext::initializeContext(AnvilWindow& inWindow)
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
     );
 #endif
-#endif
+#endif //NDEBUG
     vkbInstanceBuilder.require_api_version(1, 4, 0);
     vkb::Result<vkb::Instance> vkbInstanceResult = vkbInstanceBuilder.build();
 
