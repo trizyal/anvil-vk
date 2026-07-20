@@ -43,13 +43,66 @@ namespace AnvilDebug
 
     void SetObjectName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType, const char* inDebugName)
     {
+        if (!inDevice || !inObjectHandle || !vkSetDebugUtilsObjectNameEXT)
+        {
+            return;
+        }
 
+        VkDebugUtilsObjectNameInfoEXT debugNameInfo{};
+        debugNameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+        debugNameInfo.objectType = inObjectType;
+        debugNameInfo.objectHandle = inObjectHandle;
+        debugNameInfo.pObjectName = inDebugName;
+
+        vkSetDebugUtilsObjectNameEXT(inDevice, &debugNameInfo);
     }
 
     void SetAutoName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType,
         const char* inName, std::source_location location)
     {
+        std::string finalName;
 
+        // Extract file name
+        std::string shortFileName = std::filesystem::path(location.file_name()).filename().string();
+
+        if (inName && std::strlen(inName) > 0)
+        {
+            std::stringstream ss;
+            ss << inName << " [" << shortFileName << ":" << location.line() << "]";
+            finalName = ss.str();
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << "AutoName_" << ObjectTypeToString(inObjectType) << " [" << shortFileName << ":" << location.line() << "]";
+            finalName = ss.str();
+        }
+
+        SetObjectName(inDevice, inObjectHandle, inObjectType, finalName.c_str());
+    }
+
+    const char* ObjectTypeToString(VkObjectType inObjectType)
+    {
+        switch (inObjectType)
+        {
+        case VK_OBJECT_TYPE_BUFFER: return "Buffer";
+        case VK_OBJECT_TYPE_IMAGE: return "Image";
+        case VK_OBJECT_TYPE_IMAGE_VIEW: return "ImageView";
+        case VK_OBJECT_TYPE_PIPELINE: return "Pipeline";
+        case VK_OBJECT_TYPE_PIPELINE_LAYOUT: return "PipelineLayout";
+        case VK_OBJECT_TYPE_SHADER_MODULE: return "ShaderModule";
+        case VK_OBJECT_TYPE_COMMAND_BUFFER: return "CommandBuffer";
+        case VK_OBJECT_TYPE_COMMAND_POOL: return "CommandPool";
+        case VK_OBJECT_TYPE_RENDER_PASS: return "RenderPass";
+        case VK_OBJECT_TYPE_FRAMEBUFFER: return "Framebuffer";
+        case VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT: return "DescriptorSetLayout";
+        case VK_OBJECT_TYPE_DESCRIPTOR_POOL: return "DescriptorPool";
+        case VK_OBJECT_TYPE_DESCRIPTOR_SET: return "DescriptorSet";
+        case VK_OBJECT_TYPE_SEMAPHORE: return "Semaphore";
+        case VK_OBJECT_TYPE_FENCE: return "Fence";
+        case VK_OBJECT_TYPE_SWAPCHAIN_KHR: return "Swapchain";
+        default: return "Unknown";
+        }
     }
 
 }

@@ -19,11 +19,34 @@ namespace AnvilDebug
         void* pUserData);
 
     // Vulkan object naming
-    void SetObjectName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType, const char* inDebugName);
+    void SetObjectName(
+        VkDevice inDevice,
+        uint64_t inObjectHandle,
+        VkObjectType inObjectType,
+        const char* inDebugName);
 
     // Smart context analyzer
-    void SetAutoName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType,
-        const char* inName = nullptr, std::source_location location = std::source_location::current());
+    void SetAutoName(
+        VkDevice inDevice,
+        uint64_t inObjectHandle,
+        VkObjectType inObjectType,
+        const char* inName = nullptr,
+        std::source_location location = std::source_location::current());
+
+    // Type deducer to avoid casting Vulkan handles manually
+    template <typename T>
+    inline void SetAutoName(
+        VkDevice inDevice,
+        T inObjectHandle,
+        VkObjectType inObjectType,
+        const char* inName = nullptr,
+        std::source_location location = std::source_location::current())
+    {
+        // Double cast prevents warnings across different OS handle architectures
+        SetAutoName(inDevice, (uint64_t)(size_t)inObjectHandle, inObjectType, inName, location);
+    }
+
+    const char* ObjectTypeToString(VkObjectType inObjectType);
 }
 
 #endif //ANVIL_VK_VULKANDEBUG_H

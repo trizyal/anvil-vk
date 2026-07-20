@@ -232,15 +232,19 @@ void HelloCube::createBuffers()
 {
     vertexBuffer.createAndUpload(
         ptrAContext->anvilAllocator,
+        ptrAContext->anvilDevice,
         cubeVertices.data(),
         cubeVertices.size() * sizeof(Vertex),
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        "CubeVertexBuffer"
     );
 
     indexBuffer.createAndUpload(
         ptrAContext->anvilAllocator,
+        ptrAContext->anvilDevice,
         cubeIndices.data(),
         cubeIndices.size() * sizeof(uint16_t),
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        "CubeIndexBuffer"
     );
 }

@@ -7,6 +7,8 @@
 #include <cstring>
 #include <utility>
 
+#include "AnvilVulkanDebug.h"
+
 AnvilBuffer::AnvilBuffer(AnvilBuffer&& other) noexcept
 {
     *this = std::move(other);
@@ -25,7 +27,8 @@ AnvilBuffer& AnvilBuffer::operator=(AnvilBuffer&& other) noexcept
     return *this;
 }
 
-void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage)
+void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage,
+    const char* debugName, std::source_location loc)
 {
     // Clean up if this object wrapper is being reused
     if (buffer != VK_NULL_HANDLE)
@@ -45,6 +48,8 @@ void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, const void* inData, 
     {
         throw std::runtime_error("Anvil Engine: Failed to allocate VMA buffer.");
     }
+
+    AnvilDebug::SetAutoName(inDevice, buffer, VK_OBJECT_TYPE_BUFFER, debugName, loc);
 
     // Direct memory mapping and immediate transfer
     void* mappedMemory = nullptr;
