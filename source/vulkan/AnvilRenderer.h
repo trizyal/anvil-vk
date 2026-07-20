@@ -34,12 +34,6 @@ private:
 
     bool recreateSwapchain = false;
 
-    AnvilFrame& getCurrentFrame();
-    void setupCommandBuffers();
-    void setupSyncStructures();
-    void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
-        VkImageLayout oldLayout, VkImageLayout newLayout);
-
 public:
     AnvilRenderer() = default;
 
@@ -47,6 +41,13 @@ public:
     void cleanup();
 
     void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
+
+private:
+    AnvilFrame& getCurrentFrame();
+    void setupCommandBuffers();
+    void setupSyncStructures();
+    void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
+        VkImageLayout oldLayout, VkImageLayout newLayout);
 };
 
 #endif //ANVIL_VK_RENDERER_H

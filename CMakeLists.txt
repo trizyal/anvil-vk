@@ -82,6 +82,13 @@ target_include_directories(VulkanMemoryAllocator SYSTEM INTERFACE
         ${EXTERNAL_DIR}/VulkanMemoryAllocator/include
 )
 
+# --------------------------------------------------
+# imgui
+# --------------------------------------------------
+add_library(imgui INTERFACE)
+target_include_directories(imgui SYSTEM INTERFACE
+        ${EXTERNAL_DIR}/imgui)
+
 # ----------------------------------------------
 # Slang Setup
 # ----------------------------------------------
@@ -165,6 +172,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         VulkanMemoryAllocator
         glm
         slang
+        imgui
 )
 
 add_subdirectory(examples)
