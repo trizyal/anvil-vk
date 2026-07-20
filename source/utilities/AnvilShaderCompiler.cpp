@@ -6,17 +6,13 @@
 
 #include <array>
 #include <iostream>
+#include <fstream>
 
-#ifdef SLANG
 #include <slang.h>
 #include <slang-com-ptr.h>
 #include <slang-com-helper.h>
-#endif //SLANG
-
-#include <fstream>
 
 #include "AnvilFileIO.h"
-
 #include "AnvilShaders.h"
 using namespace AnvilShaders;
 
@@ -29,7 +25,6 @@ ShaderByteCode GetEmptyShaderByteCode()
     return empty;
 }
 
-#ifdef SLANG
 void DiagnoseIfNeeded(slang::IBlob* slangBlob)
 {
     if (slangBlob && slangBlob->getBufferSize() > 0)
@@ -38,7 +33,6 @@ void DiagnoseIfNeeded(slang::IBlob* slangBlob)
             << static_cast<const char*>(slangBlob->getBufferPointer()) << std::endl;
     }
 }
-#endif //SLANG
 
 bool AnvilShaderCompiler::init()
 {

@@ -4,10 +4,8 @@
 #ifndef ANVIL_VK_SHADERCOMPILER_H
 #define ANVIL_VK_SHADERCOMPILER_H
 
-#ifdef SLANG
 #include <slang.h>
 #include <slang-com-ptr.h>
-#endif
 
 #include "AnvilShaders.h"
 
@@ -33,10 +31,8 @@ public:
     void setSpirvDump(bool inEnable, const std::string& inDumpDirectory);
 
 private:
-#ifdef SLANG
     Slang::ComPtr<slang::IGlobalSession> globalSession;
     static int32_t getSlangOptimizationLevel(OptimizationLevel inLevel);
-#endif
 
     // Configuration State
     OptimizationLevel optimizationLevel = OptimizationLevel::Default;

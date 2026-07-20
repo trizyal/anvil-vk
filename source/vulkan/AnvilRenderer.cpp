@@ -9,8 +9,6 @@
 #include "AnvilShaderCompiler.h"
 #include "AnvilWindow.h"
 
-#define SLANG_TEST 0
-
 void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {
     std::cout << "Initializing AnvilRenderer" << std::endl;
@@ -19,22 +17,6 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
 
     setupCommandBuffers();
     setupSyncStructures();
-
-#if SLANG_TEST
-    AnvilShaderCompiler tCompiler;
-    tCompiler.init();
-
-    AnvilShaders::ShaderCompileRequest tRequest;
-    tRequest.moduleName = "HelloTriangle";
-    tRequest.entryPoint = "vertexMain";
-    tRequest.shaderType = AnvilShaders::ST_Vertex;
-
-    AnvilShaders::ShaderByteCode tSPIRV = tCompiler.compileToSPIRV(tRequest);
-
-    auto test = std::string("SlangTest.spv");
-
-    AnvilShaders::DumpSPIRVToFile(tSPIRV.spirv, test);
-#endif //SLANG_TEST
 
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
@@ -122,6 +104,9 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     transitionImageLayout(cmd, ptrASwapchain->anvilImages[imageIndex],
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
+    // Transition Depth Image
+    transitionImageLayout(cmd, ptrASwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+
     // Begin Dynamic Rendering
     VkRenderingAttachmentInfo colorAttachmentInfo{};
     colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -131,12 +116,21 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     colorAttachmentInfo.clearValue.color = {{0.05f, 0.05f, 0.05f, 1.0f}};
 
+    // 2. Define the Depth Attachment
+    VkRenderingAttachmentInfo depthAttachmentInfo{.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+    depthAttachmentInfo.imageView = ptrASwapchain->depthImageView;
+    depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+    depthAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depthAttachmentInfo.clearValue.depthStencil = {1.0f, 0}; // 1.0 is the furthest depth
+
     VkRenderingInfo renderInfo{};
     renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     renderInfo.renderArea = {{0, 0}, {ptrASwapchain->anvilExtent.width, ptrASwapchain->anvilExtent.height}};
     renderInfo.layerCount = 1;
     renderInfo.colorAttachmentCount = 1;
     renderInfo.pColorAttachments = &colorAttachmentInfo;
+    renderInfo.pDepthAttachment = &depthAttachmentInfo;
 
     vkCmdBeginRendering(cmd, &renderInfo);
 
@@ -306,6 +300,18 @@ void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage
         barrier.dstAccessMask = 0;
         sourceFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         destinationFlags = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    }
+    else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
+    {
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        sourceFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destinationFlags = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+    else
+    {
+        throw std::invalid_argument("Unsupported layout transition!");
     }
     
     vkCmdPipelineBarrier(inCmd, sourceFlags, destinationFlags, 0, 0, nullptr, 0, nullptr, 1, &barrier);

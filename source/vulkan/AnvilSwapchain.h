@@ -15,13 +15,22 @@ class AnvilSwapchain
 private:
     AnvilVulkanContext *ptrContext = nullptr;
 
+    void createDepthAttachment();
+
 public:
     VkSwapchainKHR anvilSwapchain = VK_NULL_HANDLE;
     VkExtent2D anvilExtent;
-    VkFormat anvilImageFormat;
 
+    VkFormat anvilImageFormat;
     std::vector<VkImage> anvilImages;
     std::vector<VkImageView> anvilImageViews;
+
+    // Depth properties
+    VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+    VkImage depthImage = VK_NULL_HANDLE;
+    VkImageView depthImageView = VK_NULL_HANDLE;
+    VmaAllocation depthImageAllocation = VK_NULL_HANDLE;
+
 
     void initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
     void recreateSwapchain(VkExtent2D inExtent);

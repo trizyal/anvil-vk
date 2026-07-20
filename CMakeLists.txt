@@ -10,17 +10,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --------------------------------------------------
-# Build Options
-# --------------------------------------------------
-# Toggle this via CLI: cmake -B build -DUSE_SHADERC=ON
-option(USE_SHADERC "Compile with Shaderc and SPIRV-Reflect for GLSL" OFF)
-
-# --------------------------------------------------
 # Project Directory Variables
 # --------------------------------------------------
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
+set(EXAMPLE_DIR "${SOURCE_DIR}/examples")
 
 # --------------------------------------------------
 # Automated Source File Collection
@@ -30,6 +25,9 @@ file(GLOB_RECURSE APP_SOURCES
         "${SOURCE_DIR}/*.c"
         "${SOURCE_DIR}/*.h"
         "${SOURCE_DIR}/*.hpp"
+
+        "${EXAMPLE_DIR}/*.cpp"
+        "${EXAMPLE_DIR}/*.h"
 )
 
 # Prevent find_package(Vulkan) from looking for system SDKs
@@ -74,6 +72,7 @@ add_subdirectory(${EXTERNAL_DIR}/Vulkan-Headers SYSTEM)
 add_subdirectory(${EXTERNAL_DIR}/volk SYSTEM)
 add_subdirectory(${EXTERNAL_DIR}/glfw SYSTEM)
 add_subdirectory(${EXTERNAL_DIR}/vk-bootstrap SYSTEM)
+add_subdirectory(${EXTERNAL_DIR}/glm SYSTEM)
 
 # Volk uses Vulkan-Headers instead of find_package(Vulkan)
 target_link_libraries(volk PUBLIC Vulkan::Headers)
@@ -86,98 +85,16 @@ target_include_directories(VulkanMemoryAllocator SYSTEM INTERFACE
         ${EXTERNAL_DIR}/VulkanMemoryAllocator/include
 )
 
-# --------------------------------------------------
-# Conditional shaderc and spirv-reflect
-# --------------------------------------------------
-if (USE_SHADERC)
-    # --------------------------------------------------
-    # Shaderc (Precompiled Binary from Submodule)
-    # --------------------------------------------------
-    add_library(shaderc INTERFACE)
-    target_include_directories(shaderc SYSTEM INTERFACE
-            ${EXTERNAL_DIR}/shaderc/libshaderc/include
-    )
+# ----------------------------------------------
+# Slang Setup
+# ----------------------------------------------
+add_library(slang INTERFACE)
+target_include_directories(slang SYSTEM INTERFACE  ${EXTERNAL_DIR}/slang/include)
 
-    # Select the shaderc binary that matches the active C++ toolchain
-    #
-    # Windows toolchain cases:
-    #   MSVC        -> cl.exe, MSVC ABI, .lib
-    #   clang-msvc  -> clang-cl.exe, MSVC ABI, .lib
-    #   mingw       -> g++/MingW, GNU ABI, .a
-    #   clang-mingw -> clang++, MingW/GNU ABI, .a
-    if (WIN32)
-        if (MSVC)
-            set(SHADERC_TOOLCHAIN_DIR "msvc")
-            set(SHADERC_LIB_NAME "shaderc_combined.lib")
-            set(SHADERC_SETUP_HINT "setupshaderc.bat msvc")
-
-        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
-            set(SHADERC_TOOLCHAIN_DIR "clang-msvc")
-            set(SHADERC_LIB_NAME "shaderc_combined.lib")
-            set(SHADERC_SETUP_HINT "setupshaderc.bat clang-msvc")
-
-        elseif (MINGW)
-            set(SHADERC_TOOLCHAIN_DIR "mingw")
-            set(SHADERC_LIB_NAME "libshaderc_combined.a")
-            set(SHADERC_SETUP_HINT "setupshaderc.bat mingw")
-
-        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-            set(SHADERC_TOOLCHAIN_DIR "clang-mingw")
-            set(SHADERC_LIB_NAME "libshaderc_combined.a")
-            set(SHADERC_SETUP_HINT "setupshaderc.bat clang-mingw")
-
-        else ()
-            message(FATAL_ERROR
-                    "Unsupported Windows compiler for Shaderc prebuilt binary selection.\n"
-                    "Compiler ID: ${CMAKE_CXX_COMPILER_ID}\n"
-                    "Simulate ID: ${CMAKE_CXX_SIMULATE_ID}\n"
-                    "MINGW: ${MINGW}\n"
-            )
-        endif ()
-
-    else ()
-        message(FATAL_ERROR
-                "Shaderc prebuilt binary selection is currently configured for Windows only.\n"
-        )
-    endif ()
-
-    set(SHADERC_LIB_PATH "${BINARIES_DIR}/shaderc/${SHADERC_TOOLCHAIN_DIR}/${SHADERC_LIB_NAME}")
-
-    if (NOT EXISTS "${SHADERC_LIB_PATH}")
-        message(FATAL_ERROR
-                "Shaderc static library not found:\n"
-                "  ${SHADERC_LIB_PATH}\n"
-                "Compiler detected: ${CMAKE_CXX_COMPILER_ID}\n"
-                "Run the setup script from the project root to generate it:\n"
-                "  ${SHADERC_SETUP_HINT}\n"
-                "Note: the MSVC .lib and the MinGW/GCC .a are NOT interchangeable; "
-                "you must generate the file that matches your active toolchain."
-        )
-    endif ()
-
-    target_link_libraries(shaderc INTERFACE "${SHADERC_LIB_PATH}")
-
-    # --------------------------------------------------
-    # SPIRV-Reflect
-    # --------------------------------------------------
-    add_library(spirv-reflect STATIC
-            ${EXTERNAL_DIR}/SPIRV-Reflect/spirv_reflect.h
-            ${EXTERNAL_DIR}/SPIRV-Reflect/spirv_reflect.c
-    )
-    target_include_directories(spirv-reflect SYSTEM PUBLIC ${EXTERNAL_DIR}/SPIRV-Reflect)
-
-else ()
-    # ----------------------------------------------
-    # Slang Setup
-    # ----------------------------------------------
-    add_library(slang INTERFACE)
-    target_include_directories(slang SYSTEM INTERFACE  ${EXTERNAL_DIR}/slang/include)
-
-    if (WIN32)
-        target_link_libraries(slang INTERFACE ${EXTERNAL_DIR}/slang/lib/slang.lib)
-    elseif (UNIX)
-        # Unimplemented
-    endif ()
+if (WIN32)
+    target_link_libraries(slang INTERFACE ${EXTERNAL_DIR}/slang/lib/slang.lib)
+elseif (UNIX)
+    # Unimplemented
 endif ()
 
 # --------------------------------------------------
@@ -212,13 +129,6 @@ if (WIN32)
             NOMINMAX
     )
 endif ()
-
-# Define the SHADERC macro in C++ if the CMake option is toggled ON
-if (USE_SHADERC)
-    target_compile_definitions(anvil-vk PRIVATE SHADERC)
-else()
-    target_compile_definitions(anvil-vk PRIVATE SLANG)
-endif()
 
 target_compile_definitions(anvil-vk PRIVATE
         ANVIL_SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
@@ -259,21 +169,17 @@ target_link_libraries(anvil-vk PRIVATE
         volk
         vk-bootstrap::vk-bootstrap
         VulkanMemoryAllocator
+        glm
 )
 
-# Conditional linking
-if (USE_SHADERC)
-    target_link_libraries(anvil-vk PRIVATE shaderc)
-else ()
-    # Slang linking
-    target_link_libraries(anvil-vk PRIVATE slang)
+# Slang linking
+target_link_libraries(anvil-vk PRIVATE slang)
 
-    # 3. The Runtime Gotcha: Copy Slang dynamic libraries to output folder
-    # Slang loads compiler modules dynamically at runtime.
-    # If the .dll/.so isn't sitting next to the .exe, the engine will crash.
-    # Crucial: Copy dynamic libraries to executable directory
-    add_custom_command(TARGET anvil-vk POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${EXTERNAL_DIR}/slang/bin $<TARGET_FILE_DIR:anvil-vk>
-    )
-endif ()
+# 3. The Runtime Gotcha: Copy Slang dynamic libraries to output folder
+# Slang loads compiler modules dynamically at runtime.
+# If the .dll/.so isn't sitting next to the .exe, the engine will crash.
+# Crucial: Copy dynamic libraries to executable directory
+add_custom_command(TARGET anvil-vk POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${EXTERNAL_DIR}/slang/bin $<TARGET_FILE_DIR:anvil-vk>
+)

@@ -1,4 +1,4 @@
-// shaders/hello_triangle.slang
+// HelloTriangle.slang
 
 struct VertexOutput
 {

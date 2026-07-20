@@ -8,13 +8,7 @@
 #include <vector>
 #include <filesystem>
 
-#ifdef SHADERC
-#include <shaderc/shaderc.hpp>
-#endif
-
-#ifdef SLANG
 #include <slang.h>
-#endif
 
 namespace AnvilShaders
 {
@@ -46,11 +40,7 @@ namespace AnvilShaders
 
     void DumpSPIRVToFile(std::vector<uint32_t> inSPIRV, std::string& filename);
 
-#ifdef SHADERC
-    shaderc_shader_kind ConvertToShadercKind(ShaderType inShaderType);
-#else
     SlangStage ConvertToSlangStage(ShaderType inShaderType);
-#endif //SHADERC
 } //AnvilShaders
 
 #endif //ANVIL_VK_SHADERS_H

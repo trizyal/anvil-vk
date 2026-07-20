@@ -5,9 +5,10 @@
 
 #include <stdexcept>
 
-AnvilPipelineBuilder::AnvilPipelineBuilder() : colorAttachmentFormat()
+AnvilPipelineBuilder::AnvilPipelineBuilder()
 {
     // Initialise standard structs to safe zero values
+    vertexInputInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
     inputAssembly = {.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
     rasterizer = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
     colorBlendAttachment = {};
@@ -15,6 +16,23 @@ AnvilPipelineBuilder::AnvilPipelineBuilder() : colorAttachmentFormat()
     depthStencil = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
     // dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
     dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
+
+    // Multisampling defaults
+    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+}
+
+AnvilPipelineBuilder& AnvilPipelineBuilder::setVertexInput(const std::vector<VkVertexInputBindingDescription>& inBinding, const std::vector<VkVertexInputAttributeDescription>& inAttributes)
+{
+    vertexBindings = inBinding;
+    vertexAttributes = inAttributes;
+
+    vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexBindings.size());
+    vertexInputInfo.pVertexBindingDescriptions = vertexBindings.data();
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributes.size());
+    vertexInputInfo.pVertexAttributeDescriptions = vertexAttributes.data();
+
+    return *this;
 }
 
 AnvilPipelineBuilder& AnvilPipelineBuilder::setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader)
@@ -45,6 +63,28 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setColorAttachmentFormat(VkFormat in
     colorAttachmentFormat = inColorFormat;
     dynamicRendering.colorAttachmentCount = 1;
     dynamicRendering.pColorAttachmentFormats = &colorAttachmentFormat;
+
+    return *this;
+}
+
+AnvilPipelineBuilder& AnvilPipelineBuilder::setDepthAttachmentFormat(VkFormat inDepthFormat)
+{
+    depthAttachmentFormat = inDepthFormat;
+
+    // Hook it into the dynamic rendering struct
+    dynamicRendering.depthAttachmentFormat = depthAttachmentFormat;
+
+    return *this;
+}
+
+AnvilPipelineBuilder& AnvilPipelineBuilder::enableDepthTest(bool bDepthWriteEnable, VkCompareOp inCompareOp)
+{
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = bDepthWriteEnable ? VK_TRUE : VK_FALSE;
+    depthStencil.depthCompareOp = inCompareOp;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.minDepthBounds = 0.0f;
+    depthStencil.maxDepthBounds = 1.0f;
 
     return *this;
 }
@@ -87,10 +127,6 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::disableBlending()
 
 AnvilPipeline AnvilPipelineBuilder::build(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout)
 {
-    // Dummy vertex input state, will be pulled from buffers later
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
     // Viewport state setup
     // Using dynamic states so we can resize the window
     VkPipelineViewportStateCreateInfo viewportState{};
@@ -109,10 +145,6 @@ AnvilPipeline AnvilPipelineBuilder::build(const VkDevice& inDevice, const VkPipe
     dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     dynamicStateInfo.pDynamicStates = dynamicStates.data();
-
-    // Multisampling defaults
-    multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
