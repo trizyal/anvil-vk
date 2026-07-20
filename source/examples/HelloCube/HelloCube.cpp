@@ -16,6 +16,7 @@ struct Vertex
     glm::vec3 color;
 };
 
+#if 0
 // 8 corners of a cube
 const std::vector<Vertex> cubeVertices = {
     {{-1, -1, -1}, {1, 0, 0}}, {{ 1, -1, -1}, {0, 1, 0}},
@@ -28,6 +29,62 @@ const std::vector<Vertex> cubeVertices = {
 const std::vector<uint16_t> cubeIndices = {
     0,1,2, 2,3,0, 1,5,6, 6,2,1, 7,6,5, 5,4,7,
     4,0,3, 3,7,4, 4,5,1, 1,0,4, 3,2,6, 6,7,3
+};
+#endif
+
+// 24 vertices (4 per face) to prevent color interpolation
+const std::vector<Vertex> cubeVertices = {
+    // Front face (Z = -1) - Red
+    {{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 0
+    {{ 1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 1
+    {{ 1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 2
+    {{-1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 3
+
+    // Right face (X = 1) - Green
+    {{ 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}}, // 4
+    {{ 1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}}, // 5
+    {{ 1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}}, // 6
+    {{ 1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}}, // 7
+
+    // Back face (Z = 1) - Blue
+    {{ 1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 8
+    {{-1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 9
+    {{-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 10
+    {{ 1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 11
+
+    // Left face (X = -1) - Yellow
+    {{-1.0f, -1.0f,  1.0f}, {1.0f, 1.0f, 0.0f}}, // 12
+    {{-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 0.0f}}, // 13
+    {{-1.0f,  1.0f, -1.0f}, {1.0f, 1.0f, 0.0f}}, // 14
+    {{-1.0f,  1.0f,  1.0f}, {1.0f, 1.0f, 0.0f}}, // 15
+
+    // Top face (Y = 1) - Cyan
+    {{-1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 1.0f}}, // 16
+    {{ 1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 1.0f}}, // 17
+    {{ 1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 1.0f}}, // 18
+    {{-1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 1.0f}}, // 19
+
+    // Bottom face (Y = -1) - Magenta
+    {{-1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 1.0f}}, // 20
+    {{ 1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 1.0f}}, // 21
+    {{ 1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 1.0f}}, // 22
+    {{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 1.0f}}  // 23
+};
+
+// 36 indices for 12 triangles (2 triangles per face)
+const std::vector<uint16_t> cubeIndices = {
+    // Front
+    0, 1, 2, 2, 3, 0,
+    // Right
+    4, 5, 6, 6, 7, 4,
+    // Back
+    8, 9, 10, 10, 11, 8,
+    // Left
+    12, 13, 14, 14, 15, 12,
+    // Top
+    16, 17, 18, 18, 19, 16,
+    // Bottom
+    20, 21, 22, 22, 23, 20
 };
 
 void HelloCube::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
@@ -162,6 +219,8 @@ void HelloCube::loadPipeline()
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
+        .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
+        .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
