@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(anvil-vk LANGUAGES C CXX)
 
+
 # --------------------------------------------------
 # C++ standard
 # --------------------------------------------------
@@ -15,19 +16,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
-set(EXAMPLE_DIR "${SOURCE_DIR}/examples")
 
 # --------------------------------------------------
 # Automated Source File Collection
 # --------------------------------------------------
-file(GLOB_RECURSE APP_SOURCES
+file(GLOB_RECURSE ANVIL_CORE_SOURCES
         "${SOURCE_DIR}/*.cpp"
         "${SOURCE_DIR}/*.c"
         "${SOURCE_DIR}/*.h"
         "${SOURCE_DIR}/*.hpp"
-
-        "${EXAMPLE_DIR}/*.cpp"
-        "${EXAMPLE_DIR}/*.h"
 )
 
 # Prevent find_package(Vulkan) from looking for system SDKs
@@ -101,37 +98,34 @@ endif ()
 # Application target
 # --------------------------------------------------
 # Use the automated source list here
-add_executable(anvil-vk ${APP_SOURCES})
+#add_executable(${PROJECT_NAME} ${ANVIL_CORE_SOURCES})
+add_library(${PROJECT_NAME} STATIC ${ANVIL_CORE_SOURCES})
 
 # Target-specific includes
-target_include_directories(anvil-vk PRIVATE
+target_include_directories(${PROJECT_NAME} PUBLIC
         ${SOURCE_DIR}/core
         ${SOURCE_DIR}/vulkan
         ${SOURCE_DIR}/utilities
-
-        # Testing user renderer
-        # Figure out a better way to structure non anvil side
-        ${SOURCE_DIR}/examples
 )
 
 # --------------------------------------------------
 # Target properties & compile definitions
 # --------------------------------------------------
-target_compile_definitions(anvil-vk PRIVATE
+target_compile_definitions(${PROJECT_NAME} PRIVATE
         GLFW_INCLUDE_NONE
         VK_NO_PROTOTYPES
         VK_ENABLE_BETA_EXTENSIONS
 )
 
 if (WIN32)
-    target_compile_definitions(anvil-vk PRIVATE
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
             WIN32_LEAN_AND_MEAN
             NOMINMAX
     )
 endif ()
 
-target_compile_definitions(anvil-vk PRIVATE
-        ANVIL_SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        ANVIL_SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
 )
 
 # --------------------------------------------------
@@ -139,7 +133,7 @@ target_compile_definitions(anvil-vk PRIVATE
 # --------------------------------------------------
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Strict warnings for GCC/Clang
-    target_compile_options(anvil-vk PRIVATE
+    target_compile_options(${PROJECT_NAME} PRIVATE
             -Wall
             -Wextra
             -Wpedantic
@@ -148,12 +142,12 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     )
     # Enable sanitizers only in Debug builds
     if ((CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "") AND NOT MINGW)
-        target_compile_options(anvil-vk PRIVATE
+        target_compile_options(${PROJECT_NAME} PRIVATE
                 -g
                 -fno-omit-frame-pointer
                 -fsanitize=address,undefined
         )
-        target_link_options(anvil-vk PRIVATE
+        target_link_options(${PROJECT_NAME} PRIVATE
                 -fsanitize=address,undefined
         )
     endif ()
@@ -164,22 +158,13 @@ endif ()
 # --------------------------------------------------
 # Link libraries
 # --------------------------------------------------
-target_link_libraries(anvil-vk PRIVATE
+target_link_libraries(${PROJECT_NAME} PUBLIC
         glfw
         volk
         vk-bootstrap::vk-bootstrap
         VulkanMemoryAllocator
         glm
+        slang
 )
 
-# Slang linking
-target_link_libraries(anvil-vk PRIVATE slang)
-
-# 3. The Runtime Gotcha: Copy Slang dynamic libraries to output folder
-# Slang loads compiler modules dynamically at runtime.
-# If the .dll/.so isn't sitting next to the .exe, the engine will crash.
-# Crucial: Copy dynamic libraries to executable directory
-add_custom_command(TARGET anvil-vk POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${EXTERNAL_DIR}/slang/bin $<TARGET_FILE_DIR:anvil-vk>
-)
+add_subdirectory(examples)

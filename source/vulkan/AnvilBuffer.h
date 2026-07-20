@@ -4,12 +4,17 @@
 #ifndef ANVIL_VK_BUFFER_H
 #define ANVIL_VK_BUFFER_H
 
+#include <source_location>
+
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
 class AnvilBuffer
 {
 public:
+    VkBuffer buffer = VK_NULL_HANDLE;
+    VmaAllocation allocation = VK_NULL_HANDLE;
+
     AnvilBuffer() = default;
     ~AnvilBuffer() = default;
 
@@ -21,14 +26,9 @@ public:
     AnvilBuffer(AnvilBuffer&& other) noexcept;
     AnvilBuffer& operator=(AnvilBuffer&& other) noexcept;
 
-// private:
-    VkBuffer buffer = VK_NULL_HANDLE;
-    VmaAllocation allocation = VK_NULL_HANDLE;
-
-public:
-    void createAndUpload(VmaAllocator inAllocator, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage);
+    void createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage,
+        const char* debugName = nullptr, std::source_location loc = std::source_location::current());
     void destroy(VmaAllocator inAllocator);
-    const VkBuffer* get() const { return &buffer; }
 };
 
 #endif //ANVIL_VK_BUFFER_H

@@ -2,8 +2,7 @@
 
 #include "AnvilApplication.h"
 
-#include "HelloTriangle/HelloTriangle.h"
-#include "HelloCube/HelloCube.h"
+#include "HelloCube.h"
 
 int main()
 {
@@ -11,10 +10,9 @@ int main()
     anvil.initializeAnvil({
         .width = 1280,
         .height = 720,
-        .title = "Anvil Vulkan Template"
+        .title = "Anvil Hello Cube Example"
     });
 
-    // HelloTriangle project;
     HelloCube project;
     project.initalizeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
 
