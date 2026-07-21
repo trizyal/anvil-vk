@@ -122,6 +122,29 @@ void AnvilUIRenderer::destroy(AnvilVulkanContext* inContext)
     }
 }
 
+void AnvilUIRenderer::beginUIFrame()
+{
+    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
+
+void AnvilUIRenderer::endUIFrame()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
+}
+
+void AnvilUIRenderer::recordUICommands(VkCommandBuffer inCmdBuffer)
+{
+    ImGui::Render();
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), inCmdBuffer);
+}
+
 void AnvilUIRenderer::createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DEFN)
 {
     VkDescriptorPoolCreateInfo poolInfo = {};
