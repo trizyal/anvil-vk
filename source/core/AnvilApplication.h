@@ -54,6 +54,8 @@ public:
 private:
     bool wasReloadPressed = false;
     std::vector<std::function<void()>> shaderReloadQueue;
+
+    float shaderReloadTimer = 0.0f;
 };
 
 #endif //ANVIL_VK_APPLICATION_H

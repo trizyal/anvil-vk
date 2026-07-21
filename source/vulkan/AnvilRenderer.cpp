@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "AnvilShaderCompiler.h"
+#include "AnvilUIRenderer.h"
 #include "AnvilWindow.h"
 #include "AnvilVulkanDebug.h"
 
@@ -141,6 +142,8 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     {
         drawCallback(cmd, ptrASwapchain);
     }
+
+    AnvilUIRenderer::recordUICommands(cmd);
 
     vkCmdEndRendering(cmd);
 

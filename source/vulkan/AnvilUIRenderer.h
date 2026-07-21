@@ -29,13 +29,13 @@ public:
     void destroy(AnvilVulkanContext* inContext);
 
     // Call this at the very beginning of your frame loop (before rendering)
-    void beginUIFrame();
+    static void beginUIFrame();
 
     // Call this INSIDE your command buffer recording, while Dynamic Rendering is active!
-    void recordUICommands(VkCommandBuffer cmdBuffer);
+    static void recordUICommands(VkCommandBuffer cmdBuffer);
 
     // Call this at the very end of your frame (after vkQueueSubmit) to handle multi-viewports
-    void endUIFrame();
+    static void endUIFrame();
 
 private:
     void createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DECL());

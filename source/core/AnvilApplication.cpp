@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include <imgui.h>
+
 AnvilApplication::~AnvilApplication()
 {
     shutdownAnvil();
@@ -76,13 +78,48 @@ void AnvilApplication::runAnvilRenderer(const std::function<void(VkCommandBuffer
                 for (auto& callback : shaderReloadQueue) {
                     callback();
                 }
+                // TRIGGER THE ON-SCREEN NOTIFICATION (Show for 3 seconds)
+                shaderReloadTimer = 3.0f;
 
                 std::cout << "[Anvil] Hot-reload complete." << std::endl;
             }
         }
         wasReloadPressed = isReloadPressed;
 
+        anvilUIRenderer.beginUIFrame();
+
+        // Engine-Level UI Overlay (Shader Log)
+        if (shaderReloadTimer > 0.0f)
+        {
+            // Decrease the timer by the time passed since last frame
+            shaderReloadTimer -= ImGui::GetIO().DeltaTime;
+
+            // Setup a borderless, non-interactive overlay window in the top-left
+            ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+                                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+                                     ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+            // Get the position of the main application window
+            ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+
+            // Offset 10 pixels from the top-left of the APP WINDOW, not the monitor
+            ImVec2 overlayPos = ImVec2(main_viewport->WorkPos.x + 10.0f, main_viewport->WorkPos.y + 10.0f);
+
+            ImGui::SetNextWindowPos(overlayPos, ImGuiCond_Always);
+            ImGui::SetNextWindowBgAlpha(0.7f); // Slightly transparent dark background
+
+            if (ImGui::Begin("Engine Overlay", nullptr, flags))
+            {
+                // Draw nice green text!
+                ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "[Anvil] Shaders successfully reloaded!");
+            }
+            ImGui::End();
+        }
+
+
         anvilRenderer.drawFrame(*anvilWindow, drawCallback);
+
+        anvilUIRenderer.endUIFrame();
     }
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
