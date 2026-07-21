@@ -13,6 +13,7 @@
 #include "AnvilVulkanContext.h"
 #include "AnvilSwapchain.h"
 #include "AnvilRenderer.h"
+#include "AnvilUIRenderer.h"
 
 struct AnvilApplicationCreateInfo
 {
@@ -28,6 +29,7 @@ private:
     AnvilVulkanContext anvilContext;
     AnvilSwapchain anvilSwapchain;
     AnvilRenderer anvilRenderer;
+    AnvilUIRenderer anvilUIRenderer;
 
     bool anvilInitialized = false;
 

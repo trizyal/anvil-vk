@@ -22,6 +22,7 @@ void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreat
     anvilContext.initializeContext(*anvilWindow);
     anvilSwapchain.initializeSwapchain(anvilContext, anvilWindow->getFramebufferExtent());
     anvilRenderer.initializeRenderer(&anvilContext, &anvilSwapchain);
+    anvilUIRenderer.initializeUIRenderer(&anvilContext, anvilWindow->getGLFWWindow(), &anvilSwapchain);
 
     anvilInitialized = true;
     std::cout << "Anvil initialization complete!" << std::endl;
@@ -36,6 +37,7 @@ void AnvilApplication::shutdownAnvil()
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
 
+    anvilUIRenderer.destroy(&anvilContext);
     anvilRenderer.cleanup();
     anvilSwapchain.cleanup();
     anvilContext.cleanup();

@@ -94,6 +94,9 @@ add_library(imgui STATIC
         ${EXTERNAL_DIR}/imgui/backends/imgui_impl_glfw.cpp
         ${EXTERNAL_DIR}/imgui/backends/imgui_impl_vulkan.cpp
 )
+target_compile_definitions(imgui PUBLIC
+        IMGUI_IMPL_VULKAN_NO_PROTOTYPES
+)
 target_include_directories(imgui PUBLIC
         ${EXTERNAL_DIR}/imgui
         ${EXTERNAL_DIR}/imgui/backends)
@@ -133,14 +136,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # --------------------------------------------------
 # Target properties & compile definitions
 # --------------------------------------------------
-target_compile_definitions(${PROJECT_NAME} PRIVATE
+target_compile_definitions(${PROJECT_NAME} PUBLIC
         GLFW_INCLUDE_NONE
         VK_NO_PROTOTYPES
         VK_ENABLE_BETA_EXTENSIONS
 )
 
 if (WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
             WIN32_LEAN_AND_MEAN
             NOMINMAX
     )
