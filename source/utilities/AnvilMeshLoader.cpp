@@ -53,7 +53,7 @@ namespace AnvilModelLoader
                     cgltf_accessor_read_float(positionAccessor, i, &meshData.vertices[i].position.x, 3);
 
                     // TODO: Read color in from glTF
-                    meshData.vertices[i].color = {0.05f, 0.05f, 0.05f}; // Default white
+                    meshData.vertices[i].color = {0.5f, 0.05f, 0.05f}; // Default red
                 }
             }
 

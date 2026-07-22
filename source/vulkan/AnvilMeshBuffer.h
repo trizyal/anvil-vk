@@ -20,8 +20,8 @@ struct AnvilMeshBuffer
     uint32_t indexCount = 0;
 
     // Upload AnvilMesh to Buffer
-    void createAnvilMeshBuffer(AnvilVulkanContext& inContext, const AnvilMesh& inMesh);
-    void destroyAnvilMeshBuffer(AnvilVulkanContext& inContext);
+    void createAnvilMeshBuffer(const AnvilVulkanContext& inContext, const AnvilMesh& inMesh);
+    void destroyAnvilMeshBuffer(const AnvilVulkanContext& inContext);
 
     static VkVertexInputBindingDescription getBindingDescription();
     static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();

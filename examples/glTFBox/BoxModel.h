@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "AnvilBuffer.h"
+#include "AnvilMeshBuffer.h"
 #include "AnvilVulkanContext.h"
 #include "AnvilShaderModule.h"
 #include "AnvilPipeline.h"
@@ -30,8 +31,7 @@ private:
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     AnvilPipeline pipeline = {};
 
-    AnvilBuffer vertexBuffer;
-    AnvilBuffer indexBuffer;
+    AnvilMeshBuffer meshBuffer;
 
     AnvilShaderCompiler shaderCompiler;
 
@@ -43,9 +43,6 @@ public:
     void recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain);
 
     void loadPipeline();
-
-private:
-    void createBuffers();
 };
 
 

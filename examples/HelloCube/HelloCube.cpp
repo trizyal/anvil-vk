@@ -150,7 +150,7 @@ void HelloCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwa
     glm::mat4 view = glm::lookAt(glm::vec3(0, 2, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     glm::mat4 model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.5f, 1.0f, 0.0f));
 
-    PushConstants constants;
+    PushConstants constants{};
     constants.renderMatrix = projection * view * model;
     vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
 

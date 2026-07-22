@@ -12,79 +12,15 @@
 #include "AnvilMeshLoader.h"
 #include "AnvilShaderCompiler.h"
 
-struct Vertex
-{
-    glm::vec3 position;
-    glm::vec3 color;
-};
-
-// 24 vertices (4 per face) to prevent color interpolation
-const std::vector<Vertex> cubeVertices = {
-    // Front face (Z = -1) - Red
-    {{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 0
-    {{ 1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 1
-    {{ 1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 2
-    {{-1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}}, // 3
-
-    // Right face (X = 1) - Green
-    {{ 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}}, // 4
-    {{ 1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}}, // 5
-    {{ 1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}}, // 6
-    {{ 1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}}, // 7
-
-    // Back face (Z = 1) - Blue
-    {{ 1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 8
-    {{-1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 9
-    {{-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 10
-    {{ 1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}}, // 11
-
-    // Left face (X = -1) - Yellow
-    {{-1.0f, -1.0f,  1.0f}, {1.0f, 1.0f, 0.0f}}, // 12
-    {{-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 0.0f}}, // 13
-    {{-1.0f,  1.0f, -1.0f}, {1.0f, 1.0f, 0.0f}}, // 14
-    {{-1.0f,  1.0f,  1.0f}, {1.0f, 1.0f, 0.0f}}, // 15
-
-    // Top face (Y = 1) - Cyan
-    {{-1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 1.0f}}, // 16
-    {{ 1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 1.0f}}, // 17
-    {{ 1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 1.0f}}, // 18
-    {{-1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 1.0f}}, // 19
-
-    // Bottom face (Y = -1) - Magenta
-    {{-1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 1.0f}}, // 20
-    {{ 1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 1.0f}}, // 21
-    {{ 1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 1.0f}}, // 22
-    {{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 1.0f}}  // 23
-};
-
-// 36 indices for 12 triangles (2 triangles per face)
-const std::vector<uint16_t> cubeIndices = {
-    // Front
-    0, 1, 2, 2, 3, 0,
-    // Right
-    4, 5, 6, 6, 7, 4,
-    // Back
-    8, 9, 10, 10, 11, 8,
-    // Left
-    12, 13, 14, 14, 15, 12,
-    // Top
-    16, 17, 18, 18, 19, 16,
-    // Bottom
-    20, 21, 22, 22, 23, 20
-};
-
 void BoxModel::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/Box/glTF/Box.gltf";
-    AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
+    const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
 
-    AnvilMeshBuffer cube;
-    cube.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
-
-    createBuffers();
+    meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
     // Initialize shader compiler
     if (!shaderCompiler.initializeShaderCompiler())
@@ -100,8 +36,7 @@ void BoxModel::cleanupProject()
 {
     if (ptrAContext)
     {
-        vertexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
-        indexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
+        meshBuffer.destroyAnvilMeshBuffer(*ptrAContext);
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
@@ -145,11 +80,14 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwap
     vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
 
     VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(inCmd, 0, 1, &vertexBuffer.buffer, &offset);
-    vkCmdBindIndexBuffer(inCmd, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
+
+    // This was VK_INDEX_TYPE_UINT16, but everything else uses 32
+    // Caused a bug where half the triangles were not being rendered.
+    vkCmdBindIndexBuffer(inCmd, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
     // Draw
-    vkCmdDrawIndexed(inCmd, 36, 1, 0, 0, 0);
+    vkCmdDrawIndexed(inCmd, meshBuffer.indexCount, 1, 0, 0, 0);
 }
 
 void BoxModel::loadPipeline()
@@ -197,14 +135,12 @@ void BoxModel::loadPipeline()
         throw std::runtime_error("Failed to create fragment shader module!");
     }
 
+    auto something = AnvilMeshBuffer::getAttributeDescriptions();
+
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {
-        {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
-    };
-    std::vector<VkVertexInputAttributeDescription> attributes = {
-        {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)},
-        {1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)}
-    };
+    std::vector<VkVertexInputBindingDescription> bindings = {AnvilMeshBuffer::getBindingDescription()};
+    std::vector<VkVertexInputAttributeDescription> attributes =
+        {something[0], something[1]};
 
     // Create pipeline
     AnvilPipelineBuilder pipelineBuilder;
@@ -220,23 +156,3 @@ void BoxModel::loadPipeline()
         .buildPipeline(ptrAContext->anvilDevice, pipelineLayout);
 }
 
-void BoxModel::createBuffers()
-{
-    vertexBuffer.createBuffer(
-        ptrAContext->anvilAllocator,
-        ptrAContext->anvilDevice,
-        cubeVertices.data(),
-        cubeVertices.size() * sizeof(Vertex),
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        "CubeVertexBuffer"
-    );
-
-    indexBuffer.createBuffer(
-        ptrAContext->anvilAllocator,
-        ptrAContext->anvilDevice,
-        cubeIndices.data(),
-        cubeIndices.size() * sizeof(uint16_t),
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        "CubeIndexBuffer"
-    );
-}
