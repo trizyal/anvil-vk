@@ -11,12 +11,12 @@
 #include <imgui.h>
 
 namespace AnvilColor {
-    inline constexpr auto Green  = ImVec4(0.2f, 1.0f, 0.2f, 1.0f); // Default
-    inline constexpr auto Red    = ImVec4(1.0f, 0.2f, 0.2f, 1.0f); // Errors
-    inline constexpr auto Yellow = ImVec4(1.0f, 1.0f, 0.2f, 1.0f); // Warnings
-    inline constexpr auto Blue   = ImVec4(0.3f, 0.7f, 1.0f, 1.0f); // Info
-    inline constexpr auto White  = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // Neutral
-    inline constexpr auto Gray   = ImVec4(0.6f, 0.6f, 0.6f, 1.0f); // Debug/Spam
+    inline constexpr ImVec4 Green  = ImVec4(0.2f, 1.0f, 0.2f, 1.0f); // Default
+    inline constexpr ImVec4 Red    = ImVec4(1.0f, 0.2f, 0.2f, 1.0f); // Errors
+    inline constexpr ImVec4 Yellow = ImVec4(1.0f, 1.0f, 0.2f, 1.0f); // Warnings
+    inline constexpr ImVec4 Blue   = ImVec4(0.3f, 0.7f, 1.0f, 1.0f); // Info
+    inline constexpr ImVec4 White  = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // Neutral
+    inline constexpr ImVec4 Gray   = ImVec4(0.6f, 0.6f, 0.6f, 1.0f); // Debug/Spam
 }
 
 struct UILogMessage
@@ -37,6 +37,7 @@ public:
     static void DrawOverlay();
 };
 
+// LOGUI(text, color)
 #define LOGUI(...) AnvilUILogger::AddLog(__VA_ARGS__)
 
 #endif //ANVIL_VK_UILOGGER_H
