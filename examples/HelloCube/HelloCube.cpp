@@ -96,7 +96,7 @@ void HelloCube::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapch
 
     // Initialize shader compiler
     // AnvilShaderCompiler shaderCompiler;
-    if (!shaderCompiler.init())
+    if (!shaderCompiler.initializeShaderCompiler())
     {
         throw std::runtime_error("Failed to initialize shader compiler!");
     }
@@ -108,12 +108,12 @@ void HelloCube::cleanupProject()
 {
     if (ptrAContext)
     {
-        vertexBuffer.destroy(ptrAContext->anvilAllocator);
-        indexBuffer.destroy(ptrAContext->anvilAllocator);
+        vertexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
+        indexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vertexShader.destroy();
-        fragmentShader.destroy();
+        vertexShader.destroyShaderModule();
+        fragmentShader.destroyShaderModule();
     }
 }
 
@@ -168,8 +168,8 @@ void HelloCube::loadPipeline()
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
     }
-    vertexShader.destroy();
-    fragmentShader.destroy();
+    vertexShader.destroyShaderModule();
+    fragmentShader.destroyShaderModule();
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -195,12 +195,12 @@ void HelloCube::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.create(ptrAContext->anvilDevice, vSpirv))
+    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, vSpirv))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
-    if (!fragmentShader.create(ptrAContext->anvilDevice, fSpirv))
+    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, fSpirv))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
     }
@@ -225,12 +225,12 @@ void HelloCube::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .build(ptrAContext->anvilDevice, pipelineLayout);
+        .buildPipeline(ptrAContext->anvilDevice, pipelineLayout);
 }
 
 void HelloCube::createBuffers()
 {
-    vertexBuffer.createAndUpload(
+    vertexBuffer.createBuffer(
         ptrAContext->anvilAllocator,
         ptrAContext->anvilDevice,
         cubeVertices.data(),
@@ -239,7 +239,7 @@ void HelloCube::createBuffers()
         "CubeVertexBuffer"
     );
 
-    indexBuffer.createAndUpload(
+    indexBuffer.createBuffer(
         ptrAContext->anvilAllocator,
         ptrAContext->anvilDevice,
         cubeIndices.data(),

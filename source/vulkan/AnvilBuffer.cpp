@@ -27,13 +27,13 @@ AnvilBuffer& AnvilBuffer::operator=(AnvilBuffer&& other) noexcept
     return *this;
 }
 
-void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
     ANVIL_DEBUG_DEFN)
 {
     // Clean up if this object wrapper is being reused
     if (buffer != VK_NULL_HANDLE)
     {
-        destroy(inAllocator);
+        destroyBuffer(inAllocator);
     }
 
     VkBufferCreateInfo bufferInfo{};
@@ -58,7 +58,7 @@ void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, c
     vmaUnmapMemory(inAllocator, allocation);
 }
 
-void AnvilBuffer::destroy(VmaAllocator inAllocator)
+void AnvilBuffer::destroyBuffer(VmaAllocator inAllocator)
 {
     if (buffer != VK_NULL_HANDLE && allocation != VK_NULL_HANDLE)
     {

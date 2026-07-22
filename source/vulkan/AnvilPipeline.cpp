@@ -125,7 +125,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::disableBlending()
     return *this;
 }
 
-AnvilPipeline AnvilPipelineBuilder::build(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DEFN)
+AnvilPipeline AnvilPipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DEFN)
 {
     // Viewport state setup
     // Using dynamic states so we can resize the window

@@ -17,7 +17,7 @@
 #include "AnvilVulkanDebug.h"
 #include "AnvilWindow.h"
 
-void AnvilVulkanContext::initializeContext(AnvilWindow& inWindow)
+void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 {
     std::cout << "Initialising AnvilVulkanContext..." << std::endl;
     // Initialise Volk
@@ -152,7 +152,7 @@ void AnvilVulkanContext::initializeContext(AnvilWindow& inWindow)
     std::cout << "Finished initializing AnvilVulkanContext" << std::endl;
 }
 
-void AnvilVulkanContext::cleanup()
+void AnvilVulkanContext::destroyVulkanContext()
 {
     anvilDeletionQueue.flush();
 }

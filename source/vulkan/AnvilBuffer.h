@@ -28,9 +28,9 @@ public:
     AnvilBuffer(AnvilBuffer&& other) noexcept;
     AnvilBuffer& operator=(AnvilBuffer&& other) noexcept;
 
-    void createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+    void createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
         ANVIL_DEBUG_DECL());
-    void destroy(VmaAllocator inAllocator);
+    void destroyBuffer(VmaAllocator inAllocator);
 };
 
 #endif //ANVIL_VK_BUFFER_H

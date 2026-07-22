@@ -24,15 +24,6 @@ struct AnvilApplicationCreateInfo
 
 class AnvilApplication
 {
-private:
-    std::unique_ptr<AnvilWindow> anvilWindow;
-    AnvilVulkanContext anvilContext;
-    AnvilSwapchain anvilSwapchain;
-    AnvilRenderer anvilRenderer;
-    AnvilUIRenderer anvilUIRenderer;
-
-    bool anvilInitialized = false;
-
 public:
     AnvilApplication() = default;
     ~AnvilApplication();
@@ -40,22 +31,28 @@ public:
     AnvilApplication(const AnvilApplication&) = delete;
     AnvilApplication& operator=(const AnvilApplication&) = delete;
 
+private:
+    std::unique_ptr<AnvilWindow> anvilWindow;
+    AnvilVulkanContext anvilContext;
+    AnvilSwapchain anvilSwapchain;
+    AnvilRenderer anvilRenderer;
+    AnvilUIRenderer anvilUIRenderer;
+    bool anvilInitialized = false;
+
+    std::vector<std::function<void()>> shaderReloadQueue;
+    bool wasReloadPressed = false;
+
+public:
     void initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo = {});
-    void runAnvilRenderer(const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
+    void runAnvil(const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& renderCallback);
     void shutdownAnvil();
+
+    void addShaderReloadCallback(std::function<void()> shaderCallback);
 
     [[nodiscard]] AnvilWindow& getAnvilWindow() const;
     [[nodiscard]] AnvilVulkanContext& getAnvilContext();
     [[nodiscard]] AnvilSwapchain& getAnvilSwapchain();
     [[nodiscard]] AnvilRenderer& getAnvilRenderer();
-
-    void addShaderReloadCallback(std::function<void()> shaderCallback);
-
-private:
-    bool wasReloadPressed = false;
-    std::vector<std::function<void()>> shaderReloadQueue;
-
-    float shaderReloadTimer = 0.0f;
 };
 
 #endif //ANVIL_VK_APPLICATION_H

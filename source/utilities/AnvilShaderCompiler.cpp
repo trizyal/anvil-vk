@@ -34,7 +34,7 @@ void DiagnoseIfNeeded(slang::IBlob* slangBlob)
     }
 }
 
-bool AnvilShaderCompiler::init()
+bool AnvilShaderCompiler::initializeShaderCompiler()
 {
     if (SLANG_FAILED(slang::createGlobalSession(globalSession.writeRef())))
     {
@@ -44,7 +44,7 @@ bool AnvilShaderCompiler::init()
     return true;
 }
 
-void AnvilShaderCompiler::destroy()
+void AnvilShaderCompiler::shutdownShaderCompiler()
 {
     // Explicitly release the COM pointer to free Slang resources
     globalSession.setNull();

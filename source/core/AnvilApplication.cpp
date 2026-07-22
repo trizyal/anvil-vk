@@ -23,7 +23,7 @@ void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreat
     }
 
     anvilWindow = std::make_unique<AnvilWindow>(inCreateInfo.width, inCreateInfo.height, inCreateInfo.title);
-    anvilContext.initializeContext(*anvilWindow);
+    anvilContext.initializeVulkanContext(*anvilWindow);
     anvilSwapchain.initializeSwapchain(anvilContext, anvilWindow->getFramebufferExtent());
     anvilRenderer.initializeRenderer(&anvilContext, &anvilSwapchain);
     anvilUIRenderer.initializeUIRenderer(&anvilContext, anvilWindow->getGLFWWindow(), &anvilSwapchain);
@@ -41,17 +41,17 @@ void AnvilApplication::shutdownAnvil()
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
 
-    anvilUIRenderer.destroy(&anvilContext);
-    anvilRenderer.cleanup();
+    anvilUIRenderer.shutdownUIRenderer(&anvilContext);
+    anvilRenderer.shutdownRenderer();
     anvilSwapchain.cleanup();
-    anvilContext.cleanup();
+    anvilContext.destroyVulkanContext();
 
     anvilWindow.reset();
 
     anvilInitialized = false;
 }
 
-void AnvilApplication::runAnvilRenderer(const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback)
+void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& renderCallback)
 {
     if (!anvilInitialized)
     {
@@ -88,12 +88,12 @@ void AnvilApplication::runAnvilRenderer(const std::function<void(VkCommandBuffer
         }
         wasReloadPressed = isReloadPressed;
 
-        AnvilUIRenderer::beginUIFrame();
+        AnvilUIRenderer::BeginUIFrame();
         AnvilUILogger::DrawOverlay();
 
-        anvilRenderer.drawFrame(*anvilWindow, drawCallback);
+        anvilRenderer.drawFrame(*anvilWindow, renderCallback);
 
-        AnvilUIRenderer::endUIFrame();
+        AnvilUIRenderer::EndUIFrame();
     }
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);

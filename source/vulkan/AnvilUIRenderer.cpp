@@ -96,7 +96,7 @@ bool AnvilUIRenderer::initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwi
     return true;
 }
 
-void AnvilUIRenderer::destroy(AnvilVulkanContext* inContext)
+void AnvilUIRenderer::shutdownUIRenderer(AnvilVulkanContext* inContext)
 {
     if (inContext->anvilDevice)
     {
@@ -121,14 +121,14 @@ void AnvilUIRenderer::destroy(AnvilVulkanContext* inContext)
     }
 }
 
-void AnvilUIRenderer::beginUIFrame()
+void AnvilUIRenderer::BeginUIFrame()
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
-void AnvilUIRenderer::endUIFrame()
+void AnvilUIRenderer::EndUIFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -138,7 +138,7 @@ void AnvilUIRenderer::endUIFrame()
     }
 }
 
-void AnvilUIRenderer::recordUICommands(VkCommandBuffer inCmdBuffer)
+void AnvilUIRenderer::RecordUICommands(VkCommandBuffer inCmdBuffer)
 {
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), inCmdBuffer);

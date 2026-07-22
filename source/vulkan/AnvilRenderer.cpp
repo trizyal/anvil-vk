@@ -23,7 +23,7 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
 
-void AnvilRenderer::cleanup()
+void AnvilRenderer::shutdownRenderer()
 {
     // Wait for GPU
     vkDeviceWaitIdle(ptrAContext->anvilDevice);
@@ -143,7 +143,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         drawCallback(cmd, ptrASwapchain);
     }
 
-    AnvilUIRenderer::recordUICommands(cmd);
+    AnvilUIRenderer::RecordUICommands(cmd);
 
     vkCmdEndRendering(cmd);
 

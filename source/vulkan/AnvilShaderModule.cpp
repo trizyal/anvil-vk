@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-bool AnvilShaderModule::create(const VkDevice inDevice, const AnvilShaders::ShaderByteCode& inSPIRV)
+bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilShaders::ShaderByteCode& inSPIRV)
 {
     anvilDevice = inDevice;
     if (!inSPIRV.isValid())
@@ -30,7 +30,7 @@ bool AnvilShaderModule::create(const VkDevice inDevice, const AnvilShaders::Shad
     return true;
 }
 
-void AnvilShaderModule::destroy() const
+void AnvilShaderModule::destroyShaderModule() const
 {
     if (anvilShaderModule != VK_NULL_HANDLE && anvilDevice != VK_NULL_HANDLE)
     {
