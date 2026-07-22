@@ -8,6 +8,8 @@
 
 #include <volk.h>
 
+#include "AnvilVulkanDebug.h"
+
 struct AnvilPipeline
 {
     VkPipeline pipeline;
@@ -16,6 +18,9 @@ struct AnvilPipeline
 
 class AnvilPipelineBuilder
 {
+public:
+    AnvilPipelineBuilder();
+
 private:
     VkFormat colorAttachmentFormat = VK_FORMAT_UNDEFINED;
     VkFormat depthAttachmentFormat = VK_FORMAT_UNDEFINED;
@@ -33,8 +38,6 @@ private:
     std::vector<VkVertexInputAttributeDescription> vertexAttributes;
 
 public:
-    AnvilPipelineBuilder();
-
     // Chainable methods to set state
     AnvilPipelineBuilder& setVertexInput(
         const std::vector<VkVertexInputBindingDescription>& inBinding,
@@ -50,7 +53,7 @@ public:
     AnvilPipelineBuilder& setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace);
     AnvilPipelineBuilder& disableBlending();
 
-    AnvilPipeline build(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout);
+    AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL());
 };
 
 #endif //ANVIL_VK_PIPELINE_H

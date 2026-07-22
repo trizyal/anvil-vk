@@ -14,9 +14,9 @@ namespace AnvilDebug
 {
     VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData)
+        void* /*pUserData*/)
     {
         if (messageSeverity < VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
             return VK_FALSE;
@@ -30,9 +30,24 @@ namespace AnvilDebug
         int& count = errorCounts[pCallbackData->messageIdNumber];
 
         if (count < MAX_PRINTS) {
-            std::cerr << "[Vulkan Validation] " << pCallbackData->pMessageIdName << ":\n"
-                      << pCallbackData->pMessage << "\n" << std::endl;
-        } else if (count == MAX_PRINTS) {
+            std::cerr << "[Vulkan Validation] " << pCallbackData->pMessageIdName << "\n";
+
+            // Extract and print all debug names
+            if (pCallbackData->objectCount > 0)
+            {
+                std::cerr << "Involved Objects:\n";
+                for (uint32_t i = 0; i < pCallbackData->objectCount; ++i)
+                {
+                    const auto& obj = pCallbackData->pObjects[i];
+                    std::cerr << "  - [" << i << "] "
+                              << "Name: " << (obj.pObjectName ? obj.pObjectName : "<Unnamed>")
+                              << " | Handle: 0x" << std::hex << obj.objectHandle << std::dec << "\n";
+                }
+            }
+
+            std::cerr << "Message:\n" << pCallbackData->pMessage << "\n" << std::endl;
+        }
+        else if (count == MAX_PRINTS) {
             std::cerr << "[Vulkan Validation] (Suppressing further prints of: "
                       << pCallbackData->pMessageIdName << ")\n" << std::endl;
         }

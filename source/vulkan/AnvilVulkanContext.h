@@ -27,8 +27,8 @@ public:
 
     AnvilDeletionQueue anvilDeletionQueue;
 
-    void initializeContext(AnvilWindow& inWindow);
-    void cleanup();
+    void initializeVulkanContext(AnvilWindow& inWindow);
+    void destroyVulkanContext();
 };
 
 #endif //ANVIL_VK_VULKANCONTEXT_H

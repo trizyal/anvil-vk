@@ -27,13 +27,13 @@ AnvilBuffer& AnvilBuffer::operator=(AnvilBuffer&& other) noexcept
     return *this;
 }
 
-void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage,
-    const char* debugName, std::source_location loc)
+void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+    ANVIL_DEBUG_DEFN)
 {
     // Clean up if this object wrapper is being reused
     if (buffer != VK_NULL_HANDLE)
     {
-        destroy(inAllocator);
+        destroyBuffer(inAllocator);
     }
 
     VkBufferCreateInfo bufferInfo{};
@@ -49,7 +49,7 @@ void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, c
         throw std::runtime_error("Anvil Engine: Failed to allocate VMA buffer.");
     }
 
-    AnvilDebug::SetAutoName(inDevice, buffer, VK_OBJECT_TYPE_BUFFER, debugName, loc);
+    ANVIL_DEBUG_NAME(inDevice, buffer, VK_OBJECT_TYPE_BUFFER);
 
     // Direct memory mapping and immediate transfer
     void* mappedMemory = nullptr;
@@ -58,7 +58,7 @@ void AnvilBuffer::createAndUpload(VmaAllocator inAllocator, VkDevice inDevice, c
     vmaUnmapMemory(inAllocator, allocation);
 }
 
-void AnvilBuffer::destroy(VmaAllocator inAllocator)
+void AnvilBuffer::destroyBuffer(VmaAllocator inAllocator)
 {
     if (buffer != VK_NULL_HANDLE && allocation != VK_NULL_HANDLE)
     {

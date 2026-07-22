@@ -19,17 +19,6 @@ public:
         High    = 2, // Aggressive optimizations
     };
 
-    // Initialise the Global Session
-    bool init();
-
-    // Clean up compiler resources
-    void destroy();
-
-    // Configuration Setters
-    void setOptimizationLevel(OptimizationLevel inLevel);
-    void addSearchPath(const std::string& inPath);
-    void setSpirvDump(bool inEnable, const std::string& inDumpDirectory);
-
 private:
     Slang::ComPtr<slang::IGlobalSession> globalSession;
     static int32_t getSlangOptimizationLevel(OptimizationLevel inLevel);
@@ -41,6 +30,17 @@ private:
     std::string dumpDirectory;
 
 public:
+    // Initialise the Global Session
+    bool initializeShaderCompiler();
+
+    // Clean up compiler resources
+    void shutdownShaderCompiler();
+
+    // Configuration Setters
+    void setOptimizationLevel(OptimizationLevel inLevel);
+    void addSearchPath(const std::string& inPath);
+    void setSpirvDump(bool inEnable, const std::string& inDumpDirectory);
+
     // Request compiler shaders from AnvilShaderCompiler
     AnvilShaders::ShaderByteCode compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request) const;
 };

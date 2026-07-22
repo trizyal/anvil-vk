@@ -7,7 +7,9 @@
 #include <stdexcept>
 
 #include "AnvilShaderCompiler.h"
+#include "AnvilUIRenderer.h"
 #include "AnvilWindow.h"
+#include "AnvilVulkanDebug.h"
 
 void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {
@@ -21,7 +23,7 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
 
-void AnvilRenderer::cleanup()
+void AnvilRenderer::shutdownRenderer()
 {
     // Wait for GPU
     vkDeviceWaitIdle(ptrAContext->anvilDevice);
@@ -141,6 +143,8 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         drawCallback(cmd, ptrASwapchain);
     }
 
+    AnvilUIRenderer::RecordUICommands(cmd);
+
     vkCmdEndRendering(cmd);
 
     // Transition image to present layout
@@ -209,8 +213,9 @@ void AnvilRenderer::setupCommandBuffers()
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.queueFamilyIndex = ptrAContext->anvilGraphicsQueueFamily;
 
-    for (AnvilFrame& anvilFrame : anvilFrames)
+    for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
     {
+        AnvilFrame& anvilFrame = anvilFrames[i];
         if (vkCreateCommandPool(ptrAContext->anvilDevice, &poolInfo, nullptr, &anvilFrame.cmdPool) != VK_SUCCESS)
         {
             // TODO: Provide better error message
@@ -228,6 +233,19 @@ void AnvilRenderer::setupCommandBuffers()
             // TODO: Provide better error message
             throw std::runtime_error("Failed to allocate command buffer.");
         }
+
+#if ANVIL_DEBUG
+        // When function structure doesn't allow ANVIL_DEBUG_NAME, we can directly use the SetAutoName function
+        std::string poolName = "AnvilFrame[" + std::to_string(i) + "]_CommandPool";
+        std::string cmdName  = "AnvilFrame[" + std::to_string(i) + "]_CommandBuffer";
+
+        // We can rely on the default std::source_location parameter here!
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, reinterpret_cast<uint64_t>(anvilFrame.cmdPool),
+                                VK_OBJECT_TYPE_COMMAND_POOL, poolName.c_str());
+
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, reinterpret_cast<uint64_t>(anvilFrame.cmdBuffer),
+                                VK_OBJECT_TYPE_COMMAND_BUFFER, cmdName.c_str());
+#endif
     }
 }
 

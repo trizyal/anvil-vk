@@ -9,24 +9,29 @@ anvil-vk/
 │
 ├── external/
 │   ├── glfw/
-│   ├── shaderc/
+│   ├── glm/
 │   ├── slang/       # Run fetch_slang.py to get the directory
-│   ├── SPIRV-Reflect/
+│   ├── imgui/
 │   ├── vk-bootstrap/
 │   ├── volk/
 │   ├── Vulkan-Headers/
 │   ├── VulkanMemoryAllocator/
 │   └── # More to come
 │ 
+├── examples # How to use anvil
+│   ├── HelloCube/   
+│   │   ├── HelloCube.h/.cpp
+│   │   └── main.cpp
+│   ├── HelloTriangle/
+│   │   ├── HelloTriangle.h/.cpp
+│   │   └── main.cpp
+│   └── # More to come   
+│      
 ├── source/
 │   ├── main.cpp
 │   ├── core/       # Engine lifecycle and OS-level stuff
 │   │   ├── AnvilApplication.h/.cpp
 │   │   └── AnvilWindow.h/.cpp
-│   │
-│   ├── examples/   # How to use anvil
-│   │   ├── HelloTriangle.h/.cpp
-│   │   └── # More to come
 │   │
 │   ├──utilities/
 │   │   ├── AnvilFileIO.h/.cpp
@@ -34,15 +39,19 @@ anvil-vk/
 │   │   └── AnvilShaders.h/.cpp
 │   │
 │   └── vulkan/     # The Vulkan abstraction layers
+│       ├── AnvilVulkanDebug.h/.cpp
 │       ├── AnvilVulkanContext.h/.cpp    # Instance, Device, VMA allocator
+│       ├── AnvilUIRenderer.h/.cpp
 │       ├── AnvilSwapchain.h/.cpp        # Swapchain and recreation logic
 │       ├── AnvilShaderModule.h/.cpp     # Shader modules
 │       ├── AnvilRenderer.h/.cpp         # Command buffers, sync structures, draw loop
 │       ├── AnvilPipeline.h/.cpp         # Shader loading and VkPipeline creation
-│       └── AnvilDeletionQueue.h         # Pattern for safe resource cleanup
+│       ├── AnvilDeletionQueue.h         # Pattern for safe resource cleanup
+│       └── AnvilBuffer.h/.cpp           
 │
 └── shaders/        # Shader Files
     ├── HelloTriangle.slang
+    ├── HelloCube.slang
     └── glsl/
         ├── HelloTriangle.vert
         └── HelloTriangle.frag

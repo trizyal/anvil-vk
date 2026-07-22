@@ -4,6 +4,8 @@
   - SPDX-License-Identifier: Zlib
 - glm @ 1.0.3 (Dec 2025)
   - SPDX-License-Identifier: LicenseRef-scancode-happy-bunny
+- imgui @v1.92.8-docking (May 2026)
+  - SPDX-License-Identifier: MIT
 - vk-bootstrap @ v1.4.341 (Jan 2026)
   - SPDX-License-Identifier: MIT
 - volk @ 1.4.304 (Jan 2025)

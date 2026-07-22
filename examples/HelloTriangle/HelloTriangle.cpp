@@ -15,7 +15,7 @@ void HelloTriangle::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSw
 
     // Initialize shader compiler
     // AnvilShaderCompiler shaderCompiler;
-    if (!shaderCompiler.init())
+    if (!shaderCompiler.initializeShaderCompiler())
     {
         throw std::runtime_error("Failed to initialize shader compiler!");
     }
@@ -29,8 +29,8 @@ void HelloTriangle::cleanupProject()
     {
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vertexShader.destroy();
-        fragmentShader.destroy();
+        vertexShader.destroyShaderModule();
+        fragmentShader.destroyShaderModule();
     }
 }
 
@@ -65,8 +65,8 @@ void HelloTriangle::loadPipeline()
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
     }
-    vertexShader.destroy();
-    fragmentShader.destroy();
+    vertexShader.destroyShaderModule();
+    fragmentShader.destroyShaderModule();
 
     // Create shader compilation request
     AnvilShaders::ShaderCompileRequest vReq{"HelloTriangle", "vertexMain", AnvilShaders::ST_Vertex};
@@ -77,12 +77,12 @@ void HelloTriangle::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.create(ptrAContext->anvilDevice, vSpirv))
+    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, vSpirv))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
-    if (!fragmentShader.create(ptrAContext->anvilDevice, fSpirv))
+    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, fSpirv))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
     }
@@ -100,10 +100,10 @@ void HelloTriangle::loadPipeline()
 
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
-        // .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
+        .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .build(ptrAContext->anvilDevice, pipelineLayout);
+        .buildPipeline(ptrAContext->anvilDevice, pipelineLayout, "HelloTrianglePipeline");
 }

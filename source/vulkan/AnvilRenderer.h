@@ -22,6 +22,9 @@ constexpr uint32_t FRAMES_IN_FLIGHT = 2;
 
 class AnvilRenderer
 {
+public:
+    AnvilRenderer() = default;
+
 private:
     AnvilVulkanContext* ptrAContext = nullptr;
     AnvilSwapchain* ptrASwapchain = nullptr;
@@ -34,19 +37,18 @@ private:
 
     bool recreateSwapchain = false;
 
+public:
+    void initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);
+    void shutdownRenderer();
+
+    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
+
+private:
     AnvilFrame& getCurrentFrame();
     void setupCommandBuffers();
     void setupSyncStructures();
     void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
         VkImageLayout oldLayout, VkImageLayout newLayout);
-
-public:
-    AnvilRenderer() = default;
-
-    void initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain);
-    void cleanup();
-
-    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback);
 };
 
 #endif //ANVIL_VK_RENDERER_H

@@ -82,6 +82,31 @@ target_include_directories(VulkanMemoryAllocator SYSTEM INTERFACE
         ${EXTERNAL_DIR}/VulkanMemoryAllocator/include
 )
 
+# --------------------------------------------------
+# imgui
+# --------------------------------------------------
+add_library(imgui STATIC
+        ${EXTERNAL_DIR}/imgui/imgui.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_draw.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_tables.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_widgets.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_demo.cpp        # optional
+        ${EXTERNAL_DIR}/imgui/backends/imgui_impl_glfw.cpp
+        ${EXTERNAL_DIR}/imgui/backends/imgui_impl_vulkan.cpp
+)
+target_compile_definitions(imgui PUBLIC
+        IMGUI_IMPL_VULKAN_NO_PROTOTYPES
+)
+target_include_directories(imgui PUBLIC
+        ${EXTERNAL_DIR}/imgui
+        ${EXTERNAL_DIR}/imgui/backends)
+
+# ImGui uses glfw and volk
+target_link_libraries(imgui PUBLIC
+        glfw
+        volk
+)
+
 # ----------------------------------------------
 # Slang Setup
 # ----------------------------------------------
@@ -111,14 +136,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # --------------------------------------------------
 # Target properties & compile definitions
 # --------------------------------------------------
-target_compile_definitions(${PROJECT_NAME} PRIVATE
+target_compile_definitions(${PROJECT_NAME} PUBLIC
         GLFW_INCLUDE_NONE
         VK_NO_PROTOTYPES
         VK_ENABLE_BETA_EXTENSIONS
 )
 
 if (WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
             WIN32_LEAN_AND_MEAN
             NOMINMAX
     )
@@ -165,6 +190,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         VulkanMemoryAllocator
         glm
         slang
+        imgui
 )
 
 add_subdirectory(examples)

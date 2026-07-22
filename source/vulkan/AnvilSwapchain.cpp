@@ -10,12 +10,12 @@
 void AnvilSwapchain::initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
     std::cout << "Creating AnvilSwapchain" << std::endl;
-    ptrContext = &inAnvilContext;
+    ptrAContext = &inAnvilContext;
 
     vkb::SwapchainBuilder vkbSwapchainBuilder{
-        ptrContext->anvilPhysicalDevice,
-        ptrContext->anvilDevice,
-        ptrContext->anvilSurface
+        ptrAContext->anvilPhysicalDevice,
+        ptrAContext->anvilDevice,
+        ptrAContext->anvilSurface
     };
 
     vkbSwapchainBuilder.use_default_format_selection();
@@ -47,7 +47,7 @@ void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
     std::cout << "Re-Creating AnvilSwapchain" << std::endl;
 
     // Wait for GPU to finish
-    vkDeviceWaitIdle(ptrContext->anvilDevice);
+    vkDeviceWaitIdle(ptrAContext->anvilDevice);
 
     // Save old swapchain handle
     VkSwapchainKHR oldSwapchain = anvilSwapchain;
@@ -55,22 +55,22 @@ void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
     // Destroy old images views
     for (VkImageView imageView: anvilImageViews)
     {
-        vkDestroyImageView(ptrContext->anvilDevice, imageView, nullptr);
+        vkDestroyImageView(ptrAContext->anvilDevice, imageView, nullptr);
     }
     anvilImageViews.clear();
 
     if (depthImageView != VK_NULL_HANDLE)
     {
-        vkDestroyImageView(ptrContext->anvilDevice, depthImageView, nullptr);
-        vmaDestroyImage(ptrContext->anvilAllocator, depthImage, depthImageAllocation);
+        vkDestroyImageView(ptrAContext->anvilDevice, depthImageView, nullptr);
+        vmaDestroyImage(ptrAContext->anvilAllocator, depthImage, depthImageAllocation);
         depthImageView = VK_NULL_HANDLE;
     }
 
     // Build new swapchain using the old one
     vkb::SwapchainBuilder vkbSwapchainBuilder{
-        ptrContext->anvilPhysicalDevice,
-        ptrContext->anvilDevice,
-        ptrContext->anvilSurface
+        ptrAContext->anvilPhysicalDevice,
+        ptrAContext->anvilDevice,
+        ptrAContext->anvilSurface
     };
 
     vkbSwapchainBuilder.use_default_format_selection();
@@ -99,7 +99,7 @@ void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
 
     if (oldSwapchain != VK_NULL_HANDLE)
     {
-        vkDestroySwapchainKHR(ptrContext->anvilDevice, oldSwapchain, nullptr);
+        vkDestroySwapchainKHR(ptrAContext->anvilDevice, oldSwapchain, nullptr);
     }
 
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
@@ -123,7 +123,7 @@ void AnvilSwapchain::createDepthAttachment()
     depthAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     depthAllocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    if (vmaCreateImage(ptrContext->anvilAllocator, &depthImageInfo,&depthAllocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
+    if (vmaCreateImage(ptrAContext->anvilAllocator, &depthImageInfo,&depthAllocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to allocate depth image.");
     }
@@ -140,7 +140,7 @@ void AnvilSwapchain::createDepthAttachment()
     depthImageViewInfo.subresourceRange.baseArrayLayer = 0;
     depthImageViewInfo.subresourceRange.layerCount = 1;
 
-    if (vkCreateImageView(ptrContext->anvilDevice, &depthImageViewInfo, nullptr, &depthImageView) != VK_SUCCESS)
+    if (vkCreateImageView(ptrAContext->anvilDevice, &depthImageViewInfo, nullptr, &depthImageView) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create depth image view.");
     }
@@ -150,16 +150,16 @@ void AnvilSwapchain::cleanup()
 {
     for (VkImageView imageView: anvilImageViews)
     {
-        vkDestroyImageView(ptrContext->anvilDevice, imageView, nullptr);
+        vkDestroyImageView(ptrAContext->anvilDevice, imageView, nullptr);
     }
 
     if (depthImageView != VK_NULL_HANDLE)
     {
-        vkDestroyImageView(ptrContext->anvilDevice, depthImageView, nullptr);
-        vmaDestroyImage(ptrContext->anvilAllocator, depthImage, depthImageAllocation);
+        vkDestroyImageView(ptrAContext->anvilDevice, depthImageView, nullptr);
+        vmaDestroyImage(ptrAContext->anvilAllocator, depthImage, depthImageAllocation);
         depthImageView = VK_NULL_HANDLE;
     }
 
-    vkDestroySwapchainKHR(ptrContext->anvilDevice, anvilSwapchain, nullptr);
+    vkDestroySwapchainKHR(ptrAContext->anvilDevice, anvilSwapchain, nullptr);
     anvilSwapchain = VK_NULL_HANDLE;
 }
