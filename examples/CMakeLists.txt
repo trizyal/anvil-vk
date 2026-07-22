@@ -18,6 +18,10 @@ macro(add_anvil_example EXAMPLE_NAME)
     # Link against the engine library target
     target_link_libraries(${EXAMPLE_NAME} PRIVATE ${PROJECT_NAME})
 
+    target_compile_definitions(${EXAMPLE_NAME} PUBLIC
+            PROJECT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE_NAME}\"
+    )
+
     # The Runtime Gotcha: Copy Slang dynamic libraries to output folder
     # Crucial: Copy dynamic libraries to executable directory so the .exe doesn't crash
     add_custom_command(TARGET ${EXAMPLE_NAME} POST_BUILD

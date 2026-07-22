@@ -20,6 +20,8 @@ void HelloTriangle::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSw
         throw std::runtime_error("Failed to initialize shader compiler!");
     }
 
+    shaderCompiler.addSearchPath(PROJECT_DIR);
+
     loadPipeline();
 }
 

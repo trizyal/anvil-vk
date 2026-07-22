@@ -101,6 +101,8 @@ void HelloCube::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapch
         throw std::runtime_error("Failed to initialize shader compiler!");
     }
 
+    shaderCompiler.addSearchPath(PROJECT_DIR);
+
     loadPipeline();
 }
 
