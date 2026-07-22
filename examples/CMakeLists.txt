@@ -36,3 +36,4 @@ endmacro()
 # Just call the macro with the name of the folder containing the specific example.
 add_anvil_example(HelloTriangle)
 add_anvil_example(HelloCube)
+add_anvil_example(glTFBox)
