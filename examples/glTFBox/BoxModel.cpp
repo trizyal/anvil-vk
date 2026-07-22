@@ -8,6 +8,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "AnvilMesh.h"
+#include "AnvilMeshLoader.h"
 #include "AnvilShaderCompiler.h"
 
 struct Vertex
@@ -76,15 +78,25 @@ void BoxModel::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapcha
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
 
+    const char* modelPath = PROJECT_DIR "/Box/glTF/Box.gltf";
+    AnvilMesh test = AnvilModelLoader::LoadGLTF(modelPath);
+
+    auto moretest = test.vertices;
+
+    for (auto t : moretest)
+    {
+        std::cout << t.position.x << t.position.y << t.position.z << std::endl;
+    }
+
     createBuffers();
 
     // Initialize shader compiler
-    // AnvilShaderCompiler shaderCompiler;
     if (!shaderCompiler.initializeShaderCompiler())
     {
         throw std::runtime_error("Failed to initialize shader compiler!");
     }
 
+    shaderCompiler.addSearchPath(PROJECT_DIR);
     loadPipeline();
 }
 

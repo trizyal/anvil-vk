@@ -133,6 +133,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${SOURCE_DIR}/utilities
 )
 
+# Header only cgltf
+target_include_directories(${PROJECT_NAME} PUBLIC
+        ${EXTERNAL_DIR}/cgltf
+)
+
 # --------------------------------------------------
 # Target properties & compile definitions
 # --------------------------------------------------
