@@ -8,7 +8,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilMesh.h"
+#include "AnvilMeshBuffer.h"
 #include "AnvilMeshLoader.h"
 #include "AnvilShaderCompiler.h"
 
@@ -79,14 +79,10 @@ void BoxModel::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapcha
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/Box/glTF/Box.gltf";
-    AnvilMesh test = AnvilModelLoader::LoadGLTF(modelPath);
+    AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
 
-    auto moretest = test.vertices;
-
-    for (auto t : moretest)
-    {
-        std::cout << t.position.x << t.position.y << t.position.z << std::endl;
-    }
+    AnvilMeshBuffer cube;
+    cube.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
     createBuffers();
 
