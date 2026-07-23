@@ -129,6 +129,7 @@ add_library(${PROJECT_NAME} STATIC ${ANVIL_CORE_SOURCES})
 # Target-specific includes
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${SOURCE_DIR}/core
+        ${SOURCE_DIR}/scene
         ${SOURCE_DIR}/vulkan
         ${SOURCE_DIR}/utilities
 )

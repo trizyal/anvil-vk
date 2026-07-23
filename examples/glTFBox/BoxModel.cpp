@@ -65,18 +65,17 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwap
 
     // Calculate C++ Transforms
     static float time = 0.0f;
-    time += 0.016f; // Simple delta time
+    static float dt = 0.016f; // Simple delta time
+
+    camera.updateCamera(dt);
 
     float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
 
-    glm::mat4 projection = glm::perspective(glm::radians(70.0f), aspect, 0.1f, 100.0f);
-    projection[1][1] *= -1; // Flip Y for Vulkan
-
-    glm::mat4 view = glm::lookAt(glm::vec3(0, 2, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    glm::mat4 model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.5f, 1.0f, 0.0f));
+    glm::mat4 projection = camera.getProjectionMatrix(aspect);
+    glm::mat4 view = camera.getViewMatrix();
 
     PushConstants constants;
-    constants.renderMatrix = projection * view * model;
+    constants.renderMatrix = projection * view;
     vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
 
     VkDeviceSize offset = 0;
