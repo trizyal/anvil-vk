@@ -8,6 +8,7 @@ anvil-vk/
 ├── CMakeLists.txt
 │
 ├── external/
+│   ├── cgltf/
 │   ├── glfw/
 │   ├── glm/
 │   ├── slang/       # Run fetch_slang.py to get the directory
@@ -19,43 +20,72 @@ anvil-vk/
 │   └── # More to come
 │ 
 ├── examples # How to use anvil
-│   ├── HelloCube/   
-│   │   ├── HelloCube.h/.cpp
-│   │   └── main.cpp
-│   ├── HelloTriangle/
+│   ├── HelloTriangle/      # Triangle vertices in shader, no buffers, no push contants
 │   │   ├── HelloTriangle.h/.cpp
+│   │   ├── HelloTriangle.slang
+│   │   └── main.cpp
+│   ├── HelloCube/          # Hard coded cube, buffer creation, rotation push constants
+│   │   ├── HelloCube.h/.cpp
+│   │   ├── HelloCube.slang
+│   │   └── main.cpp
+│   ├── glTFBox/            # Load model from gltf, mesh buffers
+│   │   ├── Box/ # glTF model
+│   │   ├── BoxModel.h/.cpp
+│   │   ├── BoxModel.slang
 │   │   └── main.cpp
 │   └── # More to come   
 │      
-├── source/
-│   ├── main.cpp
-│   ├── core/       # Engine lifecycle and OS-level stuff
-│   │   ├── AnvilApplication.h/.cpp
-│   │   └── AnvilWindow.h/.cpp
-│   │
-│   ├──utilities/
-│   │   ├── AnvilFileIO.h/.cpp
-│   │   ├── AnvilShaderCompiler.h/.cpp
-│   │   └── AnvilShaders.h/.cpp
-│   │
-│   └── vulkan/     # The Vulkan abstraction layers
-│       ├── AnvilVulkanDebug.h/.cpp
-│       ├── AnvilVulkanContext.h/.cpp    # Instance, Device, VMA allocator
-│       ├── AnvilUIRenderer.h/.cpp
-│       ├── AnvilSwapchain.h/.cpp        # Swapchain and recreation logic
-│       ├── AnvilShaderModule.h/.cpp     # Shader modules
-│       ├── AnvilRenderer.h/.cpp         # Command buffers, sync structures, draw loop
-│       ├── AnvilPipeline.h/.cpp         # Shader loading and VkPipeline creation
-│       ├── AnvilDeletionQueue.h         # Pattern for safe resource cleanup
-│       └── AnvilBuffer.h/.cpp           
-│
-└── shaders/        # Shader Files
-    ├── HelloTriangle.slang
-    ├── HelloCube.slang
-    └── glsl/
-        ├── HelloTriangle.vert
-        └── HelloTriangle.frag
+└── source/
+    ├── main.cpp
+    ├── core/       # Engine lifecycle and OS-level stuff
+    │   ├── AnvilApplication.h/.cpp
+    │   ├── AnvilInput.h/.cpp
+    │   └── AnvilWindow.h/.cpp
+    │
+    ├──utilities/
+    │   ├── AnvilFileIO.h/.cpp
+    │   ├── AnvilMeshLoader.h/.cpp
+    │   ├── AnvilShaderCompiler.h/.cpp
+    │   ├── AnvilShaders.h/.cpp
+    │   └── AnvilUILogger.h/.cpp
+    │
+    └── vulkan/     # The Vulkan abstraction layers
+        ├── AnvilVulkanDebug.h/.cpp
+        ├── AnvilVulkanContext.h/.cpp    # Instance, Device, VMA allocator
+        ├── AnvilUIRenderer.h/.cpp
+        ├── AnvilSwapchain.h/.cpp        # Swapchain and recreation logic
+        ├── AnvilShaderModule.h/.cpp     # Shader modules
+        ├── AnvilRenderer.h/.cpp         # Command buffers, sync structures, draw loop
+        ├── AnvilPipeline.h/.cpp         # Shader loading and VkPipeline creation
+        ├── AnvilMeshBuffer.h/.cpp       
+        ├── AnvilDeletionQueue.h         # Pattern for safe resource cleanup
+        └── AnvilBuffer.h/.cpp           
+
 ```
+
+## Naming Conventions
+
+- directories - `camelCase`
+- files - `PascalCase`
+
+- namespace - `PascalCase`
+- classes - `PascalCase`
+- struct - `PascalCase`
+
+- global - `CAPITALCASE`
+- \#defines - `MACRO_CASE`
+- enums name - `PascalCase`
+- enums values - `MACRO_CASE` or WEIRD stuff
+
+- class functions - `camelCase`
+- individual functions - `snake_case`
+- static function - `PascalCase`
+- namespace function - `PascalCase`
+
+- variables:
+  - class member- `camelCase`
+  - struct member- `camelCase`
+  - local- `snake_case`
 
 ## Separation of Context
 
@@ -96,22 +126,3 @@ VK_SUBOPTIMAL_KHR
 
 
 and then call swapchain recreation.
-
-## Naming Conventions
-
-- directories - `camelCase`
-- files - `PascalCase`
-- namespace - `PascalCase`
-- classes - `PascalCase`
-- struct - `PascalCase`
-- class functions - `camelCase`
-- individual functions - `snake_case`
-- global - `CAPITALCASE`
-- \#defines - `MACRO_CASE`
-- enums name - `PascalCase`
-- enums values - `MACRO_CASE`
-
-
-- variables:
-  - in class - `camelCase`
-  - in struct - `snake_case`
