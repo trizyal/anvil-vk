@@ -1,5 +1,7 @@
 # External
 
+- cgltf @ 85cd623 (July 2026)
+  - SPDX-License-Identifier: MIT
 - glfw @ 3.4 (Feb 2024)
   - SPDX-License-Identifier: Zlib
 - glm @ 1.0.3 (Dec 2025)

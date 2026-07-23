@@ -40,7 +40,6 @@ private:
     bool anvilInitialized = false;
 
     std::vector<std::function<void()>> shaderReloadQueue;
-    bool wasReloadPressed = false;
 
 public:
     void initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo = {});
