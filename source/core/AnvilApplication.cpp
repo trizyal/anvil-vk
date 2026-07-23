@@ -5,8 +5,7 @@
 
 #include <iostream>
 
-#include <imgui.h>
-
+#include "AnvilInput.h"
 #include "AnvilUILogger.h"
 
 AnvilApplication::~AnvilApplication()
@@ -27,6 +26,8 @@ void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreat
     anvilSwapchain.initializeSwapchain(anvilContext, anvilWindow->getFramebufferExtent());
     anvilRenderer.initializeRenderer(&anvilContext, &anvilSwapchain);
     anvilUIRenderer.initializeUIRenderer(&anvilContext, anvilWindow->getGLFWWindow(), &anvilSwapchain);
+
+    AnvilInput::InitializeInputSystem(anvilWindow->getGLFWWindow());
 
     anvilInitialized = true;
     std::cout << "Anvil initialization complete!" << std::endl;
@@ -61,14 +62,14 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilS
     while (!anvilWindow->bShouldClose())
     {
         AnvilWindow::pollEvents();
+        AnvilInput::UpdateInputs();
 
         // Check for Shader Reload
-        GLFWwindow* glwfWindow = anvilWindow->getGLFWWindow();
-        bool isCtrl = glfwGetKey(glwfWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
-        bool isDot  = glfwGetKey(glwfWindow, GLFW_KEY_PERIOD) == GLFW_PRESS;
+        bool isCtrl = AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
+        bool isDot = AnvilInput::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
         bool isReloadPressed = isCtrl && isDot;
 
-        if (isReloadPressed && !wasReloadPressed)
+        if (isReloadPressed)
         {
             if (!shaderReloadQueue.empty())
             {
@@ -86,7 +87,6 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilS
                 LOGUI("[Anvil] Shaders successfully reloaded!");
             }
         }
-        wasReloadPressed = isReloadPressed;
 
         AnvilUIRenderer::BeginUIFrame();
         AnvilUILogger::DrawOverlay();
