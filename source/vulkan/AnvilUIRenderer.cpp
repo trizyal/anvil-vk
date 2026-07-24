@@ -160,3 +160,78 @@ void AnvilUIRenderer::createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DEFN)
 
     ANVIL_DEBUG_NAME(inDevice, imguiPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL);
 }
+
+void AnvilUIRenderer::DrawDebugAxis(const glm::mat4& viewMatrix)
+{
+    // TODO: Clean up the DrawDebugAxis function
+
+    // 1. Position a small transparent window in the bottom right
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    float size = 100.0f;
+    ImVec2 windowPos = ImVec2(
+        viewport->WorkPos.x + viewport->WorkSize.x - size - 20.0f,
+        viewport->WorkPos.y + viewport->WorkSize.y - size - 20.0f
+    );
+
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(size, size));
+    ImGui::SetNextWindowBgAlpha(0.0f); // Fully transparent
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f); // No border
+
+    ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+        ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+    if (ImGui::Begin("DebugAxis", nullptr, flags))
+    {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+        // Center of our 100x100 window
+        ImVec2 origin = ImVec2(windowPos.x + size * 0.5f, windowPos.y + size * 0.5f);
+        float lineLength = 35.0f;
+
+        // 2. Transform World axes into View Space
+        // By multiplying by the mat3 of the view matrix, we discard translation and keep only rotation
+        glm::mat3 viewRot = glm::mat3(viewMatrix);
+        glm::vec3 xAxis = viewRot * glm::vec3(1.0f, 0.0f, 0.0f);
+        glm::vec3 yAxis = viewRot * glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 zAxis = viewRot * glm::vec3(0.0f, 0.0f, 1.0f);
+
+        // Structure to help us sort by Z-depth
+        struct AxisData { glm::vec3 dir; ImU32 color; const char* label; };
+        AxisData axes[3] = {
+            { xAxis, IM_COL32(255, 50, 50, 255),  "X" },
+            { yAxis, IM_COL32(50, 255, 50, 255),  "Y" },
+            { zAxis, IM_COL32(50, 150, 255, 255), "Z" } // Lighter blue so it doesn't blend into dark backgrounds
+        };
+
+        // 3. Sort by Z depth so the axis facing the camera draws ON TOP of the others
+        // In standard OpenGL/GLM LookAt, -Z is forward. So bigger Z means closer to camera.
+        std::sort(axes, axes + 3, [](const AxisData& a, const AxisData& b) {
+            return a.dir.z < b.dir.z;
+        });
+
+        // 4. Draw the lines and text
+        for (int i = 0; i < 3; ++i)
+        {
+            // ImGui +Y is down, but GLM view space +Y is up. So we subtract the Y component.
+            ImVec2 endPos = ImVec2(
+                origin.x + axes[i].dir.x * lineLength,
+                origin.y - axes[i].dir.y * lineLength
+            );
+
+            // Draw line (thickness 3.0f)
+            drawList->AddLine(origin, endPos, axes[i].color, 3.0f);
+
+            // Draw label slightly past the end of the line
+            ImVec2 textPos = ImVec2(
+                origin.x + axes[i].dir.x * (lineLength + 10.0f) - 4.0f,
+                origin.y - axes[i].dir.y * (lineLength + 10.0f) - 6.0f
+            );
+            drawList->AddText(textPos, axes[i].color, axes[i].label);
+        }
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
+}

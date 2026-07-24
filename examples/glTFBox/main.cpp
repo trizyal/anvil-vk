@@ -14,7 +14,7 @@ int main()
     });
 
     BoxModel project;
-    project.initalizeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
+    project.initializeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
 
     // Register hot-reload event
     anvil.addShaderReloadCallback([&]() {

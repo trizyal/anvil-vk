@@ -6,6 +6,7 @@
 
 #include <volk.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "AnvilVulkanDebug.h"
 
@@ -31,6 +32,8 @@ public:
     static void BeginUIFrame();
     static void RecordUICommands(VkCommandBuffer cmdBuffer);
     static void EndUIFrame();
+
+    static void DrawDebugAxis(const glm::mat4& viewMatrix);
 
 private:
     void createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DECL());

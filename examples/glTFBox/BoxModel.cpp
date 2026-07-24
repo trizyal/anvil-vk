@@ -11,8 +11,9 @@
 #include "AnvilMeshBuffer.h"
 #include "AnvilMeshLoader.h"
 #include "AnvilShaderCompiler.h"
+#include "AnvilUIRenderer.h"
 
-void BoxModel::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void BoxModel::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -73,6 +74,8 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwap
 
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
+
+    AnvilUIRenderer::DrawDebugAxis(view);
 
     PushConstants constants;
     constants.renderMatrix = projection * view;
