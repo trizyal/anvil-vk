@@ -104,6 +104,14 @@ namespace AnvilModelLoader
             }
         }
 
+        // TODO: Connect systems for texture loading
+        std::string texturePath = "";
+        if (data->images_count > 0)
+        {
+            // Get the URI of the first image (e.g., "Cube_BaseColor.png")
+            texturePath = data->images[0].uri;
+        }
+
         cgltf_free(data);
         return meshData;
     }
