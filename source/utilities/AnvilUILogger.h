@@ -10,7 +10,8 @@
 
 #include <imgui.h>
 
-namespace AnvilColor {
+namespace AnvilColor
+{
     inline constexpr ImVec4 Green  = ImVec4(0.2f, 1.0f, 0.2f, 1.0f); // Default
     inline constexpr ImVec4 Red    = ImVec4(1.0f, 0.2f, 0.2f, 1.0f); // Errors
     inline constexpr ImVec4 Yellow = ImVec4(1.0f, 1.0f, 0.2f, 1.0f); // Warnings

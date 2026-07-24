@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "AnvilBuffer.h"
+#include "AnvilCamera.h"
 #include "AnvilMeshBuffer.h"
 #include "AnvilVulkanContext.h"
 #include "AnvilShaderModule.h"
@@ -35,8 +36,10 @@ private:
 
     AnvilShaderCompiler shaderCompiler;
 
+    AnvilCamera camera;
+
 public:
-    void initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
+    void initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer

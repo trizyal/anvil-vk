@@ -4,6 +4,7 @@
 #include "AnvilMeshLoader.h"
 
 #include <stdexcept>
+#include <iostream>
 
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
@@ -28,20 +29,32 @@ namespace AnvilModelLoader
         }
 
         AnvilMesh meshData;
-
         if (data->meshes_count > 0)
         {
             cgltf_mesh* mesh = &data->meshes[0];
             cgltf_primitive* primitive = &mesh->primitives[0];
 
+            glm::vec3 materialBaseColor = {1.0f, 1.0f, 1.0f}; // Default white
+            if (primitive->material && primitive->material->has_pbr_metallic_roughness)
+            {
+                float* colorFactor = primitive->material->pbr_metallic_roughness.base_color_factor;
+                materialBaseColor = {colorFactor[0], colorFactor[1], colorFactor[2]};
+                std::cout << "Found material color: " << materialBaseColor.x << materialBaseColor.y << materialBaseColor.z << std::endl;
+            }
+
             // Extract Vertices
             cgltf_accessor* positionAccessor = nullptr;
+            cgltf_accessor* colorAccessor = nullptr;
+
             for (cgltf_size i = 0; i < primitive->attributes_count; ++i)
             {
                 if (primitive->attributes[i].type == cgltf_attribute_type_position)
                 {
                     positionAccessor = primitive->attributes[i].data;
-                    break;
+                }
+                else if (primitive->attributes[i].type == cgltf_attribute_type_color)
+                {
+                    colorAccessor = primitive->attributes[i].data;
                 }
             }
 
@@ -52,12 +65,19 @@ namespace AnvilModelLoader
                 {
                     cgltf_accessor_read_float(positionAccessor, i, &meshData.vertices[i].position.x, 3);
 
-                    // TODO: Read color in from glTF
-                    meshData.vertices[i].color = {0.5f, 0.05f, 0.05f}; // Default red
+                    if (colorAccessor)
+                    {
+                        cgltf_accessor_read_float(colorAccessor, i, &meshData.vertices[i].color.x, 3);
+                    }
+                    else
+                    {
+                        // meshData.vertices[i].color = glm::vec3(0.0f, 0.0f, 0.0f);
+                        meshData.vertices[i].color = materialBaseColor;
+                    }
                 }
             }
 
-            // Extract Indicies
+            // Extract Indices
             if (primitive->indices)
             {
                 cgltf_accessor* indexAccessor = primitive->indices;
