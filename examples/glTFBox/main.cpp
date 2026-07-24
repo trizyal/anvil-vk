@@ -10,7 +10,7 @@ int main()
     anvil.initializeAnvil({
         .width = 1280,
         .height = 720,
-        .title = "Anvil Hello Cube Example"
+        .title = "Anvil glTF Box Example"
     });
 
     BoxModel project;
