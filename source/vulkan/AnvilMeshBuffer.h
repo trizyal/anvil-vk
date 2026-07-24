@@ -24,7 +24,7 @@ struct AnvilMeshBuffer
     void destroyAnvilMeshBuffer(const AnvilVulkanContext& inContext);
 
     static VkVertexInputBindingDescription getBindingDescription();
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
 };
 
 #endif //ANVIL_VK_MESHBUFFER_H

@@ -45,6 +45,7 @@ namespace AnvilModelLoader
             // Extract Vertices
             cgltf_accessor* positionAccessor = nullptr;
             cgltf_accessor* colorAccessor = nullptr;
+            cgltf_accessor* uvAccessor = nullptr;
 
             for (cgltf_size i = 0; i < primitive->attributes_count; ++i)
             {
@@ -55,6 +56,10 @@ namespace AnvilModelLoader
                 else if (primitive->attributes[i].type == cgltf_attribute_type_color)
                 {
                     colorAccessor = primitive->attributes[i].data;
+                }
+                else if (primitive->attributes[i].type == cgltf_attribute_type_texcoord)
+                {
+                    uvAccessor = primitive->attributes[i].data;
                 }
             }
 
@@ -69,10 +74,20 @@ namespace AnvilModelLoader
                     {
                         cgltf_accessor_read_float(colorAccessor, i, &meshData.vertices[i].color.x, 3);
                     }
-                    else
+                    else // fallback
                     {
                         // meshData.vertices[i].color = glm::vec3(0.0f, 0.0f, 0.0f);
                         meshData.vertices[i].color = materialBaseColor;
+                    }
+
+                    // Read UV coordinates if they exists
+                    if (uvAccessor)
+                    {
+                        cgltf_accessor_read_float(uvAccessor, i, &meshData.vertices[i].uv.x, 2);
+                    }
+                    else // fallback
+                    {
+                        meshData.vertices[i].uv = glm::vec2(0.0f, 0.0f);
                     }
                 }
             }

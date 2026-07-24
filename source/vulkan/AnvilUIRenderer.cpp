@@ -209,7 +209,7 @@ void AnvilUIRenderer::DrawDebugAxis(const glm::mat4& viewMatrix)
         // 3. Sort by Z depth so the axis facing the camera draws ON TOP of the others
         // In standard OpenGL/GLM LookAt, -Z is forward. So bigger Z means closer to camera.
         std::sort(axes, axes + 3, [](const AxisData& a, const AxisData& b) {
-            return a.dir.z < b.dir.z;
+            return a.dir.z > b.dir.z;
         });
 
         // 4. Draw the lines and text
