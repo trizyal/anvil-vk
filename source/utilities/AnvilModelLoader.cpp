@@ -104,12 +104,17 @@ namespace AnvilModelLoader
             }
         }
 
-        // TODO: Connect systems for texture loading
-        std::string texturePath = "";
-        if (data->images_count > 0)
+        if (data->images_count > 0 && data->images[0].uri != nullptr)
         {
-            // Get the URI of the first image (e.g., "Cube_BaseColor.png")
-            texturePath = data->images[0].uri;
+            // Find the folder the .gltf is in
+            std::string baseDir = "";
+            size_t slashPos = filePath.find_last_of("/\\");
+            if (slashPos != std::string::npos) {
+                baseDir = filePath.substr(0, slashPos + 1);
+            }
+
+            // Combine folder path + image name (e.g., "PROJECT_DIR/Box/glTF/Cube_BaseColor.png")
+            meshData.texturePath = baseDir + data->images[0].uri;
         }
 
         cgltf_free(data);

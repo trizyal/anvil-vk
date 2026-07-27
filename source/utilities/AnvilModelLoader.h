@@ -21,6 +21,7 @@ struct AnvilMesh
 {
     std::vector<MeshVertex> vertices;
     std::vector<uint32_t> indices;
+    std::string texturePath;
 };
 
 namespace AnvilModelLoader

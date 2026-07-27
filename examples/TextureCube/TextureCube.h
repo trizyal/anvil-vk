@@ -13,6 +13,7 @@
 #include "AnvilPipeline.h"
 #include "AnvilShaderCompiler.h"
 #include "AnvilSwapchain.h"
+#include "AnvilTextureLoader.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -37,6 +38,12 @@ private:
 
     AnvilCamera camera;
 
+    // Things for textures
+    AnvilTexture myTexture;
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+
 public:
     void initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
     void cleanupProject();
@@ -45,6 +52,8 @@ public:
     void recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain);
 
     void loadPipeline();
+
+    void setupDescriptors();
 };
 
 
