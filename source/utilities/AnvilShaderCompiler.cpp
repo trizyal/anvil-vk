@@ -183,6 +183,10 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
     }
     shaderResult.reflection = linkedProgram;
 
+    auto paramCount = linkedProgram->getLayout()->getParameterCount();
+
+    std::cout << "Parameter count in ShaderCompiler: " << paramCount << std::endl;
+
     // TODO: This dump should ideally be in readable code
     // Dump SPIR-V if requested
     if (bDumpSpirv && shaderResult.isValid()) {

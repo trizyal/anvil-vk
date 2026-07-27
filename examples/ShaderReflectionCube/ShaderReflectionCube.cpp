@@ -21,7 +21,6 @@ void ShaderReflectionCube::initializeProject(AnvilVulkanContext& inAnvilContext,
 
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
     const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
-
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
     if (!cubeMesh.texturePath.empty())
@@ -41,7 +40,6 @@ void ShaderReflectionCube::initializeProject(AnvilVulkanContext& inAnvilContext,
     }
 
     shaderCompiler.addSearchPath(PROJECT_DIR);
-    setupDescriptors();
     loadPipeline();
 }
 
@@ -50,19 +48,9 @@ void ShaderReflectionCube::cleanupProject()
     if (ptrAContext)
     {
         myTexture.destroyAnvilTexture(ptrAContext);
-
-        if (descriptorPool) {
-            vkDestroyDescriptorPool(ptrAContext->anvilDevice, descriptorPool, nullptr);
-        }
-        if (descriptorSetLayout) {
-            vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
-        }
-
+        myMaterial.destroyMaterial();
         meshBuffer.destroyAnvilMeshBuffer(*ptrAContext);
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vertexShader.destroyShaderModule();
-        fragmentShader.destroyShaderModule();
     }
 }
 
@@ -100,9 +88,9 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain 
 
     PushConstants constants;
     constants.renderMatrix = projection * view;
-    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+    vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
 
-    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterial.materialDescriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
@@ -121,46 +109,21 @@ void ShaderReflectionCube::loadPipeline()
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
-    }
-    vertexShader.destroyShaderModule();
-    fragmentShader.destroyShaderModule();
-
-    VkPushConstantRange pushConstantRange{};
-    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(PushConstants);
-
-    VkPipelineLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    layoutInfo.pushConstantRangeCount = 1;
-    layoutInfo.pPushConstantRanges = &pushConstantRange;
-    // Add Descriptor Set Layout
-    layoutInfo.setLayoutCount = 1;
-    layoutInfo.pSetLayouts = &descriptorSetLayout;
-
-    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create pipeline layout!");
+        myMaterial.destroyMaterial();
     }
 
     // Create shader compilation request
     AnvilShaders::ShaderCompileRequest vReq{"ShaderReflectionCube", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fReq{"ShaderReflectionCube", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    // Compile shaders
-    auto vSpirv = shaderCompiler.compileToSPIRV(vReq);
-    auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
+    // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
+    myMaterial.buildMaterial(*ptrAContext, shaderCompiler, vReq, fReq);
 
-    // Create shader modules
-    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, vSpirv))
+    // Bind by name
+    if (myTexture.imageView != VK_NULL_HANDLE)
     {
-        throw std::runtime_error("Failed to create vertex shader module!");
-    }
-
-    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, fSpirv))
-    {
-        throw std::runtime_error("Failed to create fragment shader module!");
+        myMaterial.bindTexture("texSampler", myTexture);
+        myMaterial.updateDescriptorSets();
     }
 
     auto something = AnvilMeshBuffer::getAttributeDescriptions();
@@ -172,7 +135,7 @@ void ShaderReflectionCube::loadPipeline()
 
     // Create pipeline
     AnvilPipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(myMaterial.vertexShader.get(), myMaterial.fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
         .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
@@ -181,69 +144,5 @@ void ShaderReflectionCube::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, pipelineLayout);
-}
-
-void ShaderReflectionCube::setupDescriptors()
-{
-    // Create the Layout
-    VkDescriptorSetLayoutBinding layoutBinding{};
-    layoutBinding.binding = 0;
-    layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    layoutBinding.descriptorCount = 1;
-    layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &layoutBinding;
-
-    if (vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create descriptor set layout!");
-    }
-
-    // Create the Pool (Memory allocator for descriptor sets)
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = 1;
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 1;
-
-    if (vkCreateDescriptorPool(ptrAContext->anvilDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create descriptor pool!");
-    }
-
-    // Allocate the actual Descriptor Set
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = descriptorPool;
-    allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = &descriptorSetLayout;
-
-    if (vkAllocateDescriptorSets(ptrAContext->anvilDevice, &allocInfo, &descriptorSet) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to allocate descriptor set!");
-    }
-
-    // 4. Write to the Descriptor Set (Plug the actual texture into the slot)
-    VkDescriptorImageInfo imageInfo{};
-    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // The layout we transitioned to earlier
-    imageInfo.imageView = myTexture.imageView;
-    imageInfo.sampler = myTexture.sampler;
-
-    VkWriteDescriptorSet descriptorWrite{};
-    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = descriptorSet;
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pImageInfo = &imageInfo;
-
-    vkUpdateDescriptorSets(ptrAContext->anvilDevice, 1, &descriptorWrite, 0, nullptr);
+        .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout);
 }

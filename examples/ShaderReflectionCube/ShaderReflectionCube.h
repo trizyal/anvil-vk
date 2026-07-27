@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "AnvilCamera.h"
+#include "AnvilMaterial.h"
 #include "AnvilMeshBuffer.h"
 #include "AnvilVulkanContext.h"
 #include "AnvilShaderModule.h"
@@ -26,23 +27,15 @@ class ShaderReflectionCube
 private:
     AnvilVulkanContext* ptrAContext = nullptr;
     AnvilSwapchain* ptrASwapchain = nullptr;
-
-    AnvilShaderModule vertexShader;
-    AnvilShaderModule fragmentShader;
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    AnvilPipeline pipeline = {};
-
-    AnvilMeshBuffer meshBuffer;
-
     AnvilShaderCompiler shaderCompiler;
 
+    AnvilPipeline pipeline = {};
+    AnvilMeshBuffer meshBuffer;
     AnvilCamera camera;
 
     // Things for textures
     AnvilTexture myTexture;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    AnvilMaterial myMaterial;
 
 public:
     void initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
@@ -52,8 +45,6 @@ public:
     void recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain);
 
     void loadPipeline();
-
-    void setupDescriptors();
 };
 
 

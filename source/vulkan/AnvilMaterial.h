@@ -30,10 +30,10 @@ public:
     AnvilShaderModule vertexShader;
     AnvilShaderModule fragmentShader;
 
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    VkPipelineLayout materialPipelineLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout materialDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool materialDescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSet materialDescriptorSet = VK_NULL_HANDLE;
 
 private:
     AnvilVulkanContext* ptrAContext = nullptr;

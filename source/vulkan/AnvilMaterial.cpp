@@ -13,7 +13,9 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
     std::vector<VkPushConstantRange>& pushConstants)
 {
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
-    const uint32_t paramCount = reflection->getParameterCount();
+    uint32_t paramCount = reflection->getParameterCount();
+
+    std::cout << "ParamCount received in AnvilMaterial: " << paramCount << std::endl;
 
     for (uint32_t i = 0; i < paramCount; i++)
     {
@@ -137,7 +139,7 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     desc_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     desc_layout_info.bindingCount = static_cast<uint32_t>(_final_bindings.size());
     desc_layout_info.pBindings = _final_bindings.data();
-    if (vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &desc_layout_info, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+    if (vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &desc_layout_info, nullptr, &materialDescriptorSetLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create Material VkDescriptorSetLayout!");
     }
@@ -149,17 +151,17 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
         pool_info.poolSizeCount = static_cast<uint32_t>(_pool_sizes.size());
         pool_info.pPoolSizes = _pool_sizes.data();
         pool_info.maxSets = 1; //_pool_sizes.size()?
-        if (vkCreateDescriptorPool(ptrAContext->anvilDevice, &pool_info, nullptr, &descriptorPool) != VK_SUCCESS)
+        if (vkCreateDescriptorPool(ptrAContext->anvilDevice, &pool_info, nullptr, &materialDescriptorPool) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create Material VkDescriptorPool!");
         }
 
         VkDescriptorSetAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = descriptorPool;
+        alloc_info.descriptorPool = materialDescriptorPool;
         alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &descriptorSetLayout;
-        if (vkAllocateDescriptorSets(ptrAContext->anvilDevice, &alloc_info, &descriptorSet) != VK_SUCCESS)
+        alloc_info.pSetLayouts = &materialDescriptorSetLayout;
+        if (vkAllocateDescriptorSets(ptrAContext->anvilDevice, &alloc_info, &materialDescriptorSet) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to allocate Material VkDescriptorSet!");
         }
@@ -179,17 +181,17 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
 
     VkPipelineLayoutCreateInfo pipeline_layout_info{};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (descriptorSetLayout != VK_NULL_HANDLE)
+    if (materialDescriptorSetLayout != VK_NULL_HANDLE)
     {
         pipeline_layout_info.setLayoutCount = 1; //static_cast<uint32_t>(_final_bindings.size())?
-        pipeline_layout_info.pSetLayouts = &descriptorSetLayout;
+        pipeline_layout_info.pSetLayouts = &materialDescriptorSetLayout;
     }
     if (_merged_push_constant.size > 0)
     {
         pipeline_layout_info.pushConstantRangeCount = 1; //?
         pipeline_layout_info.pPushConstantRanges = &_merged_push_constant;
     }
-    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &pipeline_layout_info, nullptr, &pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &pipeline_layout_info, nullptr, &materialPipelineLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create Material VkPipelineLayout!");
     }
@@ -238,7 +240,7 @@ void AnvilMaterial::updateDescriptorSets()
 
     for (auto& write : pendingWrites)
     {
-        write.dstSet = descriptorSet;
+        write.dstSet = materialDescriptorSet;
         if (write.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
             write.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
         {
@@ -266,17 +268,17 @@ void AnvilMaterial::destroyMaterial() const
 {
     if (ptrAContext)
     {
-        if (descriptorPool)
+        if (materialDescriptorPool)
         {
-            vkDestroyDescriptorPool(ptrAContext->anvilDevice, descriptorPool, nullptr);
+            vkDestroyDescriptorPool(ptrAContext->anvilDevice, materialDescriptorPool, nullptr);
         }
-        if (descriptorSetLayout)
+        if (materialDescriptorSetLayout)
         {
-            vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
+            vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, materialDescriptorSetLayout, nullptr);
         }
-        if (pipelineLayout)
+        if (materialPipelineLayout)
         {
-            vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
+            vkDestroyPipelineLayout(ptrAContext->anvilDevice, materialPipelineLayout, nullptr);
         }
     }
 }
