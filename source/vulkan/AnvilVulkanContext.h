@@ -14,16 +14,16 @@ class AnvilWindow;
 class AnvilVulkanContext
 {
 public:
-    VkInstance anvilInstance;
-    VkDebugUtilsMessengerEXT anvilDebugMessenger;
-    VkPhysicalDevice anvilPhysicalDevice;
-    VkDevice anvilDevice;
-    VkSurfaceKHR anvilSurface;
+    VkInstance anvilInstance = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT anvilDebugMessenger = VK_NULL_HANDLE;
+    VkPhysicalDevice anvilPhysicalDevice = VK_NULL_HANDLE;
+    VkDevice anvilDevice = VK_NULL_HANDLE;
+    VkSurfaceKHR anvilSurface = VK_NULL_HANDLE;
 
-    VkQueue anvilGraphicsQueue;
-    uint32_t anvilGraphicsQueueFamily;
+    VkQueue anvilGraphicsQueue = VK_NULL_HANDLE;
+    uint32_t anvilGraphicsQueueIndex = 0;
 
-    VmaAllocator anvilAllocator;
+    VmaAllocator anvilAllocator = VK_NULL_HANDLE;
 
     AnvilDeletionQueue anvilDeletionQueue;
 

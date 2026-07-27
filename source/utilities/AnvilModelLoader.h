@@ -1,8 +1,8 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_MESHLOADER_H
-#define ANVIL_VK_MESHLOADER_H
+#ifndef ANVIL_VK_MODELLOADER_H
+#define ANVIL_VK_MODELLOADER_H
 
 #include <string>
 #include <vector>
@@ -29,4 +29,4 @@ namespace AnvilModelLoader
     AnvilMesh LoadGLTF(const std::string& filePath);
 }
 
-#endif //ANVIL_VK_MESHLOADER_H
+#endif //ANVIL_VK_MODELLOADER_H

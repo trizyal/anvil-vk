@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilMeshLoader.h"
+#include "AnvilModelLoader.h"
 
 #include <stdexcept>
 #include <iostream>

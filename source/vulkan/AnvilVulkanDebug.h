@@ -16,31 +16,6 @@
 #define ANVIL_DEBUG 0
 #endif
 
-// The comma-injection trick: strips arguments entirely if disabled
-#if ANVIL_DEBUG
-#define ANVIL_DEBUG_ARG(x), x
-#else
-#define ANVIL_DEBUG_ARG(x)
-#endif
-
-#define ANVIL_DEBUG_DECL() \
-    ANVIL_DEBUG_ARG(const char* aDebugName = nullptr) \
-    ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc = std::source_location::current())
-
-#define ANVIL_DEBUG_DEFN \
-    ANVIL_DEBUG_ARG(const char* aDebugName) \
-    ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
-
-#if ANVIL_DEBUG
-#   define ANVIL_DEBUG_NAME(dev, handle, type) \
-    AnvilDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
-#else
-#   define ANVIL_DEBUG_NAME(dev, hendle, type) do {} while (0)
-#endif
-
-// Optional: For passing the variable name automatically (e.g., ANVIL_NAME_OF(vertexBuffer))
-#define ANVIL_NAME_OF(var) #var
-
 namespace AnvilDebug
 {
     // Vulkan validation callback
@@ -80,5 +55,30 @@ namespace AnvilDebug
 
     const char* ObjectTypeToString(VkObjectType inObjectType);
 }
+
+// The comma-injection trick: strips arguments entirely if disabled
+#if ANVIL_DEBUG
+#define ANVIL_DEBUG_ARG(x), x
+#else
+#define ANVIL_DEBUG_ARG(x)
+#endif
+
+#define ANVIL_DEBUG_DECL() \
+ANVIL_DEBUG_ARG(const char* aDebugName = nullptr) \
+ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc = std::source_location::current())
+
+#define ANVIL_DEBUG_DEFN \
+ANVIL_DEBUG_ARG(const char* aDebugName) \
+ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
+
+#if ANVIL_DEBUG
+#   define ANVIL_DEBUG_NAME(dev, handle, type) \
+AnvilDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
+#else
+#   define ANVIL_DEBUG_NAME(dev, hendle, type) do {} while (0)
+#endif
+
+// Optional: For passing the variable name automatically (e.g., ANVIL_NAME_OF(vertexBuffer))
+#define ANVIL_NAME_OF(var) #var
 
 #endif //ANVIL_VK_VULKANDEBUG_H

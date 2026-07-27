@@ -115,7 +115,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     // --------------------------------
     // Get Queues
     anvilGraphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
-    anvilGraphicsQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+    anvilGraphicsQueueIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 
     // --------------------------------
     // Initialise Vulkan Memory Allocator

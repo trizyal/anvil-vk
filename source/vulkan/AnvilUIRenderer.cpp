@@ -61,7 +61,7 @@ bool AnvilUIRenderer::initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwi
     init_info.Instance = inContext->anvilInstance;
     init_info.PhysicalDevice = inContext->anvilPhysicalDevice;
     init_info.Device = device;
-    init_info.QueueFamily = inContext->anvilGraphicsQueueFamily;
+    init_info.QueueFamily = inContext->anvilGraphicsQueueIndex;
     init_info.Queue = inContext->anvilGraphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = imguiPool;
