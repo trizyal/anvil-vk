@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "AnvilMeshBuffer.h"
-#include "AnvilMeshLoader.h"
+#include "AnvilModelLoader.h"
 #include "AnvilShaderCompiler.h"
 #include "AnvilUIRenderer.h"
 

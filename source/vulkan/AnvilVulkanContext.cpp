@@ -158,6 +158,8 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     // Set up Deletion Queue
     anvilDeletionQueue.pushFunction([this]()
     {
+        vkDestroyFence(anvilDevice, uploadFence, nullptr);
+        vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);
         vmaDestroyAllocator(anvilAllocator);
         vkDestroyDevice(anvilDevice, nullptr);
         vkDestroySurfaceKHR(anvilInstance, anvilSurface, nullptr);
@@ -165,8 +167,6 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
         vkb::destroy_debug_utils_messenger(anvilInstance, anvilDebugMessenger);
 #endif
         vkDestroyInstance(anvilInstance, nullptr);
-        vkDestroyFence(anvilDevice, uploadFence, nullptr);
-        vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);
     });
 
     std::cout << "Finished initializing AnvilVulkanContext" << std::endl;
