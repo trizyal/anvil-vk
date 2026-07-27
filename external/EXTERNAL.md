@@ -8,6 +8,9 @@
   - SPDX-License-Identifier: LicenseRef-scancode-happy-bunny
 - imgui @v1.92.8-docking (May 2026)
   - SPDX-License-Identifier: MIT
+- stb @ 31c1ad3 (July 2026)
+  - Only 1 file `stb_image.h` 
+  - SPDX-License-Identifier: MIT
 - vk-bootstrap @ v1.4.341 (Jan 2026)
   - SPDX-License-Identifier: MIT
 - volk @ 1.4.304 (Jan 2025)

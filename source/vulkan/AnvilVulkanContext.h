@@ -29,6 +29,12 @@ public:
 
     void initializeVulkanContext(AnvilWindow& inWindow);
     void destroyVulkanContext();
+
+    VkCommandPool uploadCommandPool = VK_NULL_HANDLE;
+    VkFence uploadFence = VK_NULL_HANDLE;
+
+    // Takes a lambda containing Vulkan commands and executes them immediately
+    void immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction);
 };
 
 #endif //ANVIL_VK_VULKANCONTEXT_H
