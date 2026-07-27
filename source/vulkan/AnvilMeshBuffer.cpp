@@ -3,7 +3,7 @@
 
 #include "AnvilMeshBuffer.h"
 
-#include "AnvilMeshLoader.h"
+#include "AnvilModelLoader.h"
 #include "AnvilVulkanContext.h"
 
 void AnvilMeshBuffer::createAnvilMeshBuffer(const AnvilVulkanContext& inContext, const AnvilMesh& inMesh)
