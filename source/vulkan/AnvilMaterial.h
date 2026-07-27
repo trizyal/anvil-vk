@@ -45,11 +45,11 @@ private:
 
 public:
     void buildMaterial(AnvilVulkanContext& inContext,
-        AnvilShaderCompiler& inCompiler,
+        const AnvilShaderCompiler& inCompiler,
         const AnvilShaders::ShaderCompileRequest& inVertReq,
         const AnvilShaders::ShaderCompileRequest& inFragReq);
 
-    void destroyMaterial();
+    void destroyMaterial() const;
 
     void bindTexture(const std::string& name, const AnvilTexture& inTexture);
     void bindUniformBuffer(const std::string& name, const AnvilBuffer& inBuffer);

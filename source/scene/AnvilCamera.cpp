@@ -4,6 +4,8 @@
 #include "AnvilCamera.h"
 
 #include <algorithm>
+#include <iostream>
+#include <ostream>
 
 #include "AnvilInput.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -36,27 +38,27 @@ void AnvilCamera::updateCamera(float deltaTime)
 {
     float velocity = cameraSpeed * deltaTime;
 
-    // Keyboard Movement
-    if (AnvilInput::IsKeyPressed(GLFW_KEY_W)) position += front * velocity;
-    if (AnvilInput::IsKeyPressed(GLFW_KEY_S)) position -= front * velocity;
-    if (AnvilInput::IsKeyPressed(GLFW_KEY_A)) position -= right * velocity;
-    if (AnvilInput::IsKeyPressed(GLFW_KEY_D)) position += right * velocity;
-
-    // Vertical movement
-    // if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += up * velocity;
-    if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += worldUp * velocity;
-    // if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= up * velocity;
-    if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= worldUp * velocity;
-
-    // Sprinting
-    if (AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f;
-
     // Mouse Look
     // Only rotate if the mouse button is held down
     if (AnvilInput::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
     {
         // Hide and lock the cursor
         AnvilInput::SetCursorMode(GLFW_CURSOR_DISABLED);
+
+        // Sprinting
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f; // TODO: This camera velocity should be configurable
+
+        // Keyboard Movement
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_W)) position += front * velocity;
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_S)) position -= front * velocity;
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_A)) position -= right * velocity;
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_D)) position += right * velocity;
+
+        // Vertical movement
+        // if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += up * velocity;
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += worldUp * velocity;
+        // if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= up * velocity;
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= worldUp * velocity;
 
         glm::vec2 mouseDelta = AnvilInput::GetMouseDelta();
         yawDegree += mouseDelta.x * mouseSensitivity;

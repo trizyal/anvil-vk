@@ -67,7 +67,7 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
 }
 
 void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
-    AnvilShaderCompiler& inCompiler,
+    const AnvilShaderCompiler& inCompiler,
     const AnvilShaders::ShaderCompileRequest& inVertReq,
     const AnvilShaders::ShaderCompileRequest& inFragReq)
 {
@@ -111,7 +111,7 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> _merged_bindings_map;
     for (const auto& _b : _raw_bindings)
     {
-        if (_merged_bindings_map.count(_b.binding))
+        if (_merged_bindings_map.contains(_b.binding))
         {
             _merged_bindings_map[_b.binding].stageFlags |= _b.stageFlags;
         }
@@ -133,12 +133,150 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     }
 
     // Create Layouts and Allocate Sizes
-    VkDescriptorSetLayoutCreateInfo layout_info{};
-    layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layout_info.bindingCount = static_cast<uint32_t>(_final_bindings.size());
-    layout_info.pBindings = _final_bindings.data();
-    if (vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &layout_info, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+    VkDescriptorSetLayoutCreateInfo desc_layout_info{};
+    desc_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    desc_layout_info.bindingCount = static_cast<uint32_t>(_final_bindings.size());
+    desc_layout_info.pBindings = _final_bindings.data();
+    if (vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &desc_layout_info, nullptr, &descriptorSetLayout) != VK_SUCCESS)
     {
-        throw std::runtime_error("Failed to create VkDescriptorSetLayout!");
+        throw std::runtime_error("Failed to create Material VkDescriptorSetLayout!");
+    }
+
+    if (!_pool_sizes.empty())
+    {
+        VkDescriptorPoolCreateInfo pool_info{};
+        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pool_info.poolSizeCount = static_cast<uint32_t>(_pool_sizes.size());
+        pool_info.pPoolSizes = _pool_sizes.data();
+        pool_info.maxSets = 1; //_pool_sizes.size()?
+        if (vkCreateDescriptorPool(ptrAContext->anvilDevice, &pool_info, nullptr, &descriptorPool) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create Material VkDescriptorPool!");
+        }
+
+        VkDescriptorSetAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        alloc_info.descriptorPool = descriptorPool;
+        alloc_info.descriptorSetCount = 1;
+        alloc_info.pSetLayouts = &descriptorSetLayout;
+        if (vkAllocateDescriptorSets(ptrAContext->anvilDevice, &alloc_info, &descriptorSet) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to allocate Material VkDescriptorSet!");
+        }
+    }
+
+    // Push Constants and Pipeline Layout
+    VkPushConstantRange _merged_push_constant{};
+    if (!_raw_push_constants.empty())
+    {
+        _merged_push_constant = _raw_push_constants[0];
+        for (size_t i = 1; i < _raw_push_constants.size(); ++i)
+        {
+            _merged_push_constant.size = std::max(_merged_push_constant.size, _raw_push_constants[i].size);
+            _merged_push_constant.stageFlags |= _raw_push_constants[i].stageFlags;
+        }
+    }
+
+    VkPipelineLayoutCreateInfo pipeline_layout_info{};
+    pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    if (descriptorSetLayout != VK_NULL_HANDLE)
+    {
+        pipeline_layout_info.setLayoutCount = 1; //static_cast<uint32_t>(_final_bindings.size())?
+        pipeline_layout_info.pSetLayouts = &descriptorSetLayout;
+    }
+    if (_merged_push_constant.size > 0)
+    {
+        pipeline_layout_info.pushConstantRangeCount = 1; //?
+        pipeline_layout_info.pPushConstantRanges = &_merged_push_constant;
+    }
+    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &pipeline_layout_info, nullptr, &pipelineLayout) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create Material VkPipelineLayout!");
+    }
+}
+
+void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inTexture)
+{
+    if (!bindingMap.contains(name))
+    {
+        return;
+    }
+
+    const ShaderBinding _shader_binding = bindingMap[name];
+
+    VkDescriptorImageInfo image_info{};
+    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    image_info.imageView = inTexture.imageView;
+    image_info.sampler = inTexture.sampler;
+    pendingImageInfos.push_back(image_info);
+
+    VkWriteDescriptorSet descriptor_write{};
+    descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_write.dstBinding = _shader_binding.binding;
+    descriptor_write.dstArrayElement = 0;
+    descriptor_write.descriptorType = _shader_binding.descriptorType;
+    descriptor_write.descriptorCount = 1; //?
+    pendingWrites.push_back(descriptor_write);
+}
+
+void AnvilMaterial::bindUniformBuffer(const std::string& name, const AnvilBuffer& inBuffer)
+{
+    (void)name;
+    (void)inBuffer;
+    throw std::runtime_error("AnvilMaterial::bindUniformBuffer is not implemented!");
+}
+
+void AnvilMaterial::updateDescriptorSets()
+{
+    if (pendingWrites.empty())
+    {
+        return;
+    }
+
+    size_t image_index = 0;
+    size_t buffer_index = 0;
+
+    for (auto& write : pendingWrites)
+    {
+        write.dstSet = descriptorSet;
+        if (write.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+            write.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+        {
+            write.pImageInfo = &pendingImageInfos[image_index];
+            image_index++;
+        }
+        else if (write.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+        {
+            write.pBufferInfo = &pendingBufferInfos[buffer_index];
+            buffer_index++;
+        }
+    }
+
+    vkUpdateDescriptorSets(ptrAContext->anvilDevice,
+        static_cast<uint32_t>(pendingWrites.size()),
+        pendingWrites.data(),
+        0, nullptr);
+
+    pendingWrites.clear();
+    pendingImageInfos.clear();
+    pendingBufferInfos.clear();
+}
+
+void AnvilMaterial::destroyMaterial() const
+{
+    if (ptrAContext)
+    {
+        if (descriptorPool)
+        {
+            vkDestroyDescriptorPool(ptrAContext->anvilDevice, descriptorPool, nullptr);
+        }
+        if (descriptorSetLayout)
+        {
+            vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
+        }
+        if (pipelineLayout)
+        {
+            vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
+        }
     }
 }
