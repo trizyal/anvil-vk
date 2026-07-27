@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "BoxModel.h"
+#include "TextureCube.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -11,19 +11,28 @@
 #include "AnvilMeshBuffer.h"
 #include "AnvilModelLoader.h"
 #include "AnvilShaderCompiler.h"
+#include "AnvilTextureLoader.h"
 #include "AnvilUIRenderer.h"
 
-void BoxModel::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void TextureCube::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
 
-    const char* modelPath = PROJECT_DIR "/Box/glTF/Box.gltf";
-    // const char* modelPath = PROJECT_DIR "/BoxVertexColors/glTF/BoxVertexColors.gltf";
-    // const char* modelPath = PROJECT_DIR "/BoxInterleaved/glTF/BoxInterleaved.gltf";
+    const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
     const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
 
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
+
+    if (!cubeMesh.texturePath.empty())
+    {
+        std::cout << "Loading texture: " << cubeMesh.texturePath << std::endl;
+
+        myTexture = AnvilTextureLoader::LoadTexture(
+            cubeMesh.texturePath,
+            *ptrAContext
+        );
+    }
 
     // Initialize shader compiler
     if (!shaderCompiler.initializeShaderCompiler())
@@ -32,13 +41,23 @@ void BoxModel::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapch
     }
 
     shaderCompiler.addSearchPath(PROJECT_DIR);
+    setupDescriptors();
     loadPipeline();
 }
 
-void BoxModel::cleanupProject()
+void TextureCube::cleanupProject()
 {
     if (ptrAContext)
     {
+        myTexture.destroyAnvilTexture(ptrAContext);
+
+        if (descriptorPool) {
+            vkDestroyDescriptorPool(ptrAContext->anvilDevice, descriptorPool, nullptr);
+        }
+        if (descriptorSetLayout) {
+            vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
+        }
+
         meshBuffer.destroyAnvilMeshBuffer(*ptrAContext);
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
@@ -47,7 +66,7 @@ void BoxModel::cleanupProject()
     }
 }
 
-void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
+void TextureCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -83,6 +102,8 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwap
     constants.renderMatrix = projection * view;
     vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
 
+    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
 
@@ -94,9 +115,9 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwap
     vkCmdDrawIndexed(inCmd, meshBuffer.indexCount, 1, 0, 0, 0);
 }
 
-void BoxModel::loadPipeline()
+void TextureCube::loadPipeline()
 {
-    std::cout << "Creating BoxModel pipeline." << std::endl;
+    std::cout << "Creating TextureCube pipeline." << std::endl;
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
@@ -114,6 +135,9 @@ void BoxModel::loadPipeline()
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutInfo.pushConstantRangeCount = 1;
     layoutInfo.pPushConstantRanges = &pushConstantRange;
+    // Add Descriptor Set Layout
+    layoutInfo.setLayoutCount = 1;
+    layoutInfo.pSetLayouts = &descriptorSetLayout;
 
     if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
     {
@@ -121,8 +145,8 @@ void BoxModel::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"BoxModel", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"BoxModel", "fragmentMain", AnvilShaders::ST_Fragment};
+    AnvilShaders::ShaderCompileRequest vReq{"TextureCube", "vertexMain", AnvilShaders::ST_Vertex};
+    AnvilShaders::ShaderCompileRequest fReq{"TextureCube", "fragmentMain", AnvilShaders::ST_Fragment};
 
     // Compile shaders
     auto vSpirv = shaderCompiler.compileToSPIRV(vReq);
@@ -144,7 +168,7 @@ void BoxModel::loadPipeline()
     // Vertex Descriptions
     std::vector<VkVertexInputBindingDescription> bindings = {AnvilMeshBuffer::getBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
-        {something[0], something[1]};
+        {something[0], something[1], something[2]};
 
     // Create pipeline
     AnvilPipelineBuilder pipelineBuilder;
@@ -160,3 +184,66 @@ void BoxModel::loadPipeline()
         .buildPipeline(ptrAContext->anvilDevice, pipelineLayout);
 }
 
+void TextureCube::setupDescriptors()
+{
+    // Create the Layout
+    VkDescriptorSetLayoutBinding layoutBinding{};
+    layoutBinding.binding = 0;
+    layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    layoutBinding.descriptorCount = 1;
+    layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &layoutBinding;
+
+    if (vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create descriptor set layout!");
+    }
+
+    // Create the Pool (Memory allocator for descriptor sets)
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSize.descriptorCount = 1;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = 1;
+
+    if (vkCreateDescriptorPool(ptrAContext->anvilDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create descriptor pool!");
+    }
+
+    // Allocate the actual Descriptor Set
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = descriptorPool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &descriptorSetLayout;
+
+    if (vkAllocateDescriptorSets(ptrAContext->anvilDevice, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate descriptor set!");
+    }
+
+    // 4. Write to the Descriptor Set (Plug the actual texture into the slot)
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // The layout we transitioned to earlier
+    imageInfo.imageView = myTexture.imageView;
+    imageInfo.sampler = myTexture.sampler;
+
+    VkWriteDescriptorSet descriptorWrite{};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = descriptorSet;
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(ptrAContext->anvilDevice, 1, &descriptorWrite, 0, nullptr);
+}

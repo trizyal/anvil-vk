@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilMeshLoader.h"
+#include "AnvilModelLoader.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -45,6 +45,7 @@ namespace AnvilModelLoader
             // Extract Vertices
             cgltf_accessor* positionAccessor = nullptr;
             cgltf_accessor* colorAccessor = nullptr;
+            cgltf_accessor* uvAccessor = nullptr;
 
             for (cgltf_size i = 0; i < primitive->attributes_count; ++i)
             {
@@ -55,6 +56,10 @@ namespace AnvilModelLoader
                 else if (primitive->attributes[i].type == cgltf_attribute_type_color)
                 {
                     colorAccessor = primitive->attributes[i].data;
+                }
+                else if (primitive->attributes[i].type == cgltf_attribute_type_texcoord)
+                {
+                    uvAccessor = primitive->attributes[i].data;
                 }
             }
 
@@ -69,10 +74,20 @@ namespace AnvilModelLoader
                     {
                         cgltf_accessor_read_float(colorAccessor, i, &meshData.vertices[i].color.x, 3);
                     }
-                    else
+                    else // fallback
                     {
                         // meshData.vertices[i].color = glm::vec3(0.0f, 0.0f, 0.0f);
                         meshData.vertices[i].color = materialBaseColor;
+                    }
+
+                    // Read UV coordinates if they exists
+                    if (uvAccessor)
+                    {
+                        cgltf_accessor_read_float(uvAccessor, i, &meshData.vertices[i].uv.x, 2);
+                    }
+                    else // fallback
+                    {
+                        meshData.vertices[i].uv = glm::vec2(0.0f, 0.0f);
                     }
                 }
             }
@@ -87,6 +102,19 @@ namespace AnvilModelLoader
                     meshData.indices[i] = static_cast<uint32_t>(cgltf_accessor_read_index(indexAccessor, i));
                 }
             }
+        }
+
+        if (data->images_count > 0 && data->images[0].uri != nullptr)
+        {
+            // Find the folder the .gltf is in
+            std::string baseDir = "";
+            size_t slashPos = filePath.find_last_of("/\\");
+            if (slashPos != std::string::npos) {
+                baseDir = filePath.substr(0, slashPos + 1);
+            }
+
+            // Combine folder path + image name (e.g., "PROJECT_DIR/Box/glTF/Cube_BaseColor.png")
+            meshData.texturePath = baseDir + data->images[0].uri;
         }
 
         cgltf_free(data);

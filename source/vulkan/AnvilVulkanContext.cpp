@@ -115,7 +115,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     // --------------------------------
     // Get Queues
     anvilGraphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
-    anvilGraphicsQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+    anvilGraphicsQueueIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 
     // --------------------------------
     // Initialise Vulkan Memory Allocator
@@ -136,10 +136,30 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
         throw std::runtime_error("Failed to create Vulkan Memory Allocator.");
     }
 
+    VkCommandPoolCreateInfo uploadPoolInfo{};
+    uploadPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    uploadPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    uploadPoolInfo.queueFamilyIndex = anvilGraphicsQueueIndex;
+
+    if (vkCreateCommandPool(anvilDevice, &uploadPoolInfo, nullptr, &uploadCommandPool) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create upload command pool.");
+    }
+
+    VkFenceCreateInfo uploadFenceInfo{};
+    uploadFenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+    if (vkCreateFence(anvilDevice, &uploadFenceInfo, nullptr, &uploadFence) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create upload fence.");
+    }
+
     // --------------------------------
     // Set up Deletion Queue
     anvilDeletionQueue.pushFunction([this]()
     {
+        vkDestroyFence(anvilDevice, uploadFence, nullptr);
+        vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);
         vmaDestroyAllocator(anvilAllocator);
         vkDestroyDevice(anvilDevice, nullptr);
         vkDestroySurfaceKHR(anvilInstance, anvilSurface, nullptr);
@@ -150,6 +170,37 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     });
 
     std::cout << "Finished initializing AnvilVulkanContext" << std::endl;
+}
+
+void AnvilVulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction)
+{
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = uploadCommandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer cmd;
+    vkAllocateCommandBuffers(anvilDevice, &allocInfo, &cmd);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(cmd, &beginInfo);
+    callbackFunction(cmd);
+    vkEndCommandBuffer(cmd);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmd;
+
+    vkQueueSubmit(anvilGraphicsQueue, 1, &submitInfo, uploadFence);
+    vkWaitForFences(anvilDevice, 1, &uploadFence, VK_TRUE, UINT64_MAX);
+    vkResetFences(anvilDevice, 1, &uploadFence);
+
+    vkFreeCommandBuffers(anvilDevice, uploadCommandPool, 1, &cmd);
 }
 
 void AnvilVulkanContext::destroyVulkanContext()

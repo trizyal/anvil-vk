@@ -139,6 +139,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${EXTERNAL_DIR}/cgltf
 )
 
+# Header only stb
+target_include_directories(${PROJECT_NAME} PUBLIC
+        ${EXTERNAL_DIR}/stb
+)
+
 # --------------------------------------------------
 # Target properties & compile definitions
 # --------------------------------------------------

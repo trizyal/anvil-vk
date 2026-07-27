@@ -61,7 +61,7 @@ bool AnvilUIRenderer::initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwi
     init_info.Instance = inContext->anvilInstance;
     init_info.PhysicalDevice = inContext->anvilPhysicalDevice;
     init_info.Device = device;
-    init_info.QueueFamily = inContext->anvilGraphicsQueueFamily;
+    init_info.QueueFamily = inContext->anvilGraphicsQueueIndex;
     init_info.Queue = inContext->anvilGraphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = imguiPool;
@@ -209,7 +209,7 @@ void AnvilUIRenderer::DrawDebugAxis(const glm::mat4& viewMatrix)
         // 3. Sort by Z depth so the axis facing the camera draws ON TOP of the others
         // In standard OpenGL/GLM LookAt, -Z is forward. So bigger Z means closer to camera.
         std::sort(axes, axes + 3, [](const AxisData& a, const AxisData& b) {
-            return a.dir.z < b.dir.z;
+            return a.dir.z > b.dir.z;
         });
 
         // 4. Draw the lines and text
