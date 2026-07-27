@@ -42,7 +42,7 @@ public:
     void setSpirvDump(bool inEnable, const std::string& inDumpDirectory);
 
     // Request compiler shaders from AnvilShaderCompiler
-    AnvilShaders::ShaderByteCode compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request) const;
+    AnvilShaders::ShaderCompileResult compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request) const;
 };
 
 #endif //ANVIL_VK_SHADERCOMPILER_H
