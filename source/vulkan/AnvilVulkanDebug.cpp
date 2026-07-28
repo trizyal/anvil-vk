@@ -75,6 +75,7 @@ namespace AnvilDebug
     void SetAutoName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType,
         const char* inName, std::source_location location)
     {
+#if ANVIL_DEBUG
         std::string finalName;
 
         // Extract file name
@@ -94,6 +95,7 @@ namespace AnvilDebug
         }
 
         SetObjectName(inDevice, inObjectHandle, inObjectType, finalName.c_str());
+#endif
     }
 
     const char* ObjectTypeToString(VkObjectType inObjectType)
@@ -101,20 +103,25 @@ namespace AnvilDebug
         switch (inObjectType)
         {
         case VK_OBJECT_TYPE_BUFFER: return "Buffer";
-        case VK_OBJECT_TYPE_IMAGE: return "Image";
-        case VK_OBJECT_TYPE_IMAGE_VIEW: return "ImageView";
-        case VK_OBJECT_TYPE_PIPELINE: return "Pipeline";
-        case VK_OBJECT_TYPE_PIPELINE_LAYOUT: return "PipelineLayout";
-        case VK_OBJECT_TYPE_SHADER_MODULE: return "ShaderModule";
         case VK_OBJECT_TYPE_COMMAND_BUFFER: return "CommandBuffer";
         case VK_OBJECT_TYPE_COMMAND_POOL: return "CommandPool";
-        case VK_OBJECT_TYPE_RENDER_PASS: return "RenderPass";
-        case VK_OBJECT_TYPE_FRAMEBUFFER: return "Framebuffer";
-        case VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT: return "DescriptorSetLayout";
         case VK_OBJECT_TYPE_DESCRIPTOR_POOL: return "DescriptorPool";
         case VK_OBJECT_TYPE_DESCRIPTOR_SET: return "DescriptorSet";
-        case VK_OBJECT_TYPE_SEMAPHORE: return "Semaphore";
+        case VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT: return "DescriptorSetLayout";
+        case VK_OBJECT_TYPE_DEVICE: return "Device";
         case VK_OBJECT_TYPE_FENCE: return "Fence";
+        case VK_OBJECT_TYPE_FRAMEBUFFER: return "Framebuffer";
+        case VK_OBJECT_TYPE_IMAGE: return "Image";
+        case VK_OBJECT_TYPE_IMAGE_VIEW: return "ImageView";
+        case VK_OBJECT_TYPE_INSTANCE: return "Instance";
+        case VK_OBJECT_TYPE_PHYSICAL_DEVICE: return "PhysicalDevice";
+        case VK_OBJECT_TYPE_PIPELINE: return "Pipeline";
+        case VK_OBJECT_TYPE_PIPELINE_LAYOUT: return "PipelineLayout";
+        case VK_OBJECT_TYPE_RENDER_PASS: return "RenderPass";
+        case VK_OBJECT_TYPE_SAMPLER: return "Sampler";
+        case VK_OBJECT_TYPE_SEMAPHORE: return "Semaphore";
+        case VK_OBJECT_TYPE_SHADER_MODULE: return "ShaderModule";
+        case VK_OBJECT_TYPE_SURFACE_KHR: return "Surface";
         case VK_OBJECT_TYPE_SWAPCHAIN_KHR: return "Swapchain";
         default: return "Unknown";
         }

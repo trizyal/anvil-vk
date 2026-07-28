@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "GLFW/glfw3.h"
+#include "AnvilVulkanDebug.h"
 
 void AnvilSwapchain::initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
@@ -31,18 +31,34 @@ void AnvilSwapchain::initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkE
 
     vkb::Swapchain vkbSwapchain = vkbSwapchainResult.value();
     anvilSwapchain = vkbSwapchain.swapchain;
+    AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, anvilSwapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, "AnvilSwapchain");
+
     anvilExtent = vkbSwapchain.extent;
     anvilImageFormat = vkbSwapchain.image_format;
 
     anvilImages = vkbSwapchain.get_images().value();
     anvilImageViews = vkbSwapchain.get_image_views().value();
 
-    createDepthAttachment();
+    for (size_t i = 0; i < anvilImages.size(); ++i)
+    {
+        std::string imageName = "SwapchainImage[" + std::to_string(i) + "]";
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImages[i],
+            VK_OBJECT_TYPE_IMAGE, imageName.c_str());
+    }
+
+    for (size_t i = 0; i < anvilImageViews.size(); ++i)
+    {
+        std::string imageViewName = "SwapchainImageView[" + std::to_string(i) + "]";
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImageViews[i],
+            VK_OBJECT_TYPE_IMAGE_VIEW, imageViewName.c_str());
+    }
+
+    createDepthAttachment(inAnvilContext);
 
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
 
-void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
+void AnvilSwapchain::recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
     std::cout << "Re-Creating AnvilSwapchain" << std::endl;
 
@@ -89,13 +105,29 @@ void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
 
     vkb::Swapchain vkbSwapchain = vkbSwapchainResult.value();
     anvilSwapchain = vkbSwapchain.swapchain;
+    AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, anvilSwapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, "AnvilSwapchain");
+
     anvilExtent = vkbSwapchain.extent;
     anvilImageFormat = vkbSwapchain.image_format;
 
     anvilImages = vkbSwapchain.get_images().value();
     anvilImageViews = vkbSwapchain.get_image_views().value();
 
-    createDepthAttachment();
+    for (size_t i = 0; i < anvilImages.size(); ++i)
+    {
+        std::string imageName = "SwapchainImage[" + std::to_string(i) + "]";
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImages[i],
+            VK_OBJECT_TYPE_IMAGE, imageName.c_str());
+    }
+
+    for (size_t i = 0; i < anvilImageViews.size(); ++i)
+    {
+        std::string imageViewName = "SwapchainImageView[" + std::to_string(i) + "]";
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImageViews[i],
+            VK_OBJECT_TYPE_IMAGE_VIEW, imageViewName.c_str());
+    }
+
+    createDepthAttachment(inAnvilContext);
 
     if (oldSwapchain != VK_NULL_HANDLE)
     {
@@ -105,7 +137,7 @@ void AnvilSwapchain::recreateSwapchain(VkExtent2D inExtent)
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
 
-void AnvilSwapchain::createDepthAttachment()
+void AnvilSwapchain::createDepthAttachment(const AnvilVulkanContext& inAnvilContext)
 {
     // Create depth image via VMA
     VkImageCreateInfo depthImageInfo{};
@@ -128,6 +160,8 @@ void AnvilSwapchain::createDepthAttachment()
         throw std::runtime_error("Failed to allocate depth image.");
     }
 
+    AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, depthImageView, VK_OBJECT_TYPE_IMAGE_VIEW, "SwapchainDepthImageView");
+
     // Create depth imageview
     VkImageViewCreateInfo depthImageViewInfo{};
     depthImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -144,6 +178,8 @@ void AnvilSwapchain::createDepthAttachment()
     {
         throw std::runtime_error("Failed to create depth image view.");
     }
+
+    AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, depthImage, VK_OBJECT_TYPE_IMAGE, "SwapchainDepthImage");
 }
 
 void AnvilSwapchain::cleanup()

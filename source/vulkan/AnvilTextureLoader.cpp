@@ -4,16 +4,19 @@
 #include "AnvilTextureLoader.h"
 
 #include <stdexcept>
+#include <filesystem>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "AnvilBuffer.h"
+#include "AnvilVulkanResult.h"
 
 namespace AnvilTextureLoader
 {
     AnvilTexture LoadTexture(const std::string& filepath, AnvilVulkanContext& inContext)
     {
+        std::string imageName = std::filesystem::path(filepath).filename().string();
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, 4);
         if (!pixels) {
@@ -54,7 +57,13 @@ namespace AnvilTextureLoader
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
         AnvilTexture texture;
-        vmaCreateImage(inContext.anvilAllocator, &imageInfo, &allocInfo, &texture.image, &texture.allocation, nullptr);
+        if (vmaCreateImage(inContext.anvilAllocator, &imageInfo, &allocInfo, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create texture image: " + imageName);
+        }
+
+        std::string textureDebugName = "TextureImage: " + imageName;
+        AnvilDebug::SetAutoName(inContext.anvilDevice, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -104,7 +113,9 @@ namespace AnvilTextureLoader
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = 1;
 
-        vkCreateImageView(inContext.anvilDevice, &viewInfo, nullptr, &texture.imageView);
+        std::string imageViewDebugName = "TextureImageView: " + imageName;
+        CHECK(vkCreateImageView(inContext.anvilDevice, &viewInfo, nullptr, &texture.imageView));
+        AnvilDebug::SetAutoName(inContext.anvilDevice, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
 
         // Create Sampler
         VkSamplerCreateInfo samplerInfo{};
@@ -121,7 +132,9 @@ namespace AnvilTextureLoader
         samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-        vkCreateSampler(inContext.anvilDevice, &samplerInfo, nullptr, &texture.sampler);
+        std::string samplerDebugName = "TextureSampler: " + imageName;
+        CHECK(vkCreateSampler(inContext.anvilDevice, &samplerInfo, nullptr, &texture.sampler));
+        AnvilDebug::SetAutoName(inContext.anvilDevice, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
 
         return texture;
     }

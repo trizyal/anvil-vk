@@ -6,7 +6,8 @@
 #include <iostream>
 
 
-bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilShaders::ShaderCompileResult& inSPIRV)
+bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilShaders::ShaderCompileResult& inSPIRV
+    ANVIL_DEBUG_DEFN)
 {
     anvilDevice = inDevice;
     if (!inSPIRV.isValid())
@@ -27,6 +28,7 @@ bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilS
         return false;
     }
 
+    ANVIL_DEBUG_NAME(anvilDevice, anvilShaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
     return true;
 }
 

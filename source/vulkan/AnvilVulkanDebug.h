@@ -73,9 +73,9 @@ ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
 
 #if ANVIL_DEBUG
 #   define ANVIL_DEBUG_NAME(dev, handle, type) \
-AnvilDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
+    AnvilDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
 #else
-#   define ANVIL_DEBUG_NAME(dev, hendle, type) do {} while (0)
+#   define ANVIL_DEBUG_NAME(dev, handle, type) do {} while (0)
 #endif
 
 // Optional: For passing the variable name automatically (e.g., ANVIL_NAME_OF(vertexBuffer))

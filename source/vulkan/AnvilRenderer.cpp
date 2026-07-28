@@ -48,7 +48,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     if (recreateSwapchain)
     {
         vkDeviceWaitIdle(ptrAContext->anvilDevice);
-        ptrASwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
+        ptrASwapchain->recreateSwapchain(*ptrAContext, inWindow.getFramebufferExtent());
         recreateSwapchain = false;
     }
 
