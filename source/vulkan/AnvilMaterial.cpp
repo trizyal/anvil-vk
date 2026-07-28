@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include "AnvilVulkanDebug.h"
+
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
     VkShaderStageFlagBits stage,
     std::vector<VkDescriptorSetLayoutBinding>& layoutBindings,
@@ -91,6 +93,7 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     const AnvilShaders::ShaderCompileRequest& inFragReq)
 {
     ptrAContext = &inContext;
+    std::string materialDebugName = inVertReq.moduleName;
 
     // Compile Shaders internally
     const auto _vertex_result = inCompiler.compileToSPIRV(inVertReq);
@@ -119,13 +122,13 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
 
 
     // Build Vulkan Shader Modules
-    std::string debug_name = "MaterialVertexShader" + inVertReq.moduleName;
+    std::string debug_name = "MaterialVertexShader: " + inVertReq.moduleName;
     if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, _vertex_result, debug_name.c_str()))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
-    debug_name = "MaterialFragmentShader" + inVertReq.moduleName;
+    debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
     if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, _fragment_result, debug_name.c_str()))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
@@ -165,6 +168,8 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     {
         throw std::runtime_error("Failed to create Material VkDescriptorSetLayout!");
     }
+    debug_name = "MaterialDescriptorSetLayout: " + materialDebugName;
+    AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
 
     if (!_pool_sizes.empty())
     {
@@ -177,6 +182,8 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
         {
             throw std::runtime_error("Failed to create Material VkDescriptorPool!");
         }
+        debug_name = "MaterialDescriptorPool: " + materialDebugName;
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
 
         VkDescriptorSetAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -187,6 +194,8 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
         {
             throw std::runtime_error("Failed to allocate Material VkDescriptorSet!");
         }
+        debug_name = "MaterialDescriptorSet: " + materialDebugName;
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSet, VK_OBJECT_TYPE_DESCRIPTOR_SET, debug_name.c_str());
     }
 
     // Push Constants and Pipeline Layout
@@ -219,6 +228,9 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     {
         throw std::runtime_error("Failed to create Material VkPipelineLayout!");
     }
+    debug_name = "MaterialPipelineLayout: " + materialDebugName;
+    AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
+
 }
 
 void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inTexture)

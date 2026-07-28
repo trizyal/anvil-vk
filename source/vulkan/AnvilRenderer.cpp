@@ -258,17 +258,23 @@ void AnvilRenderer::setupSyncStructures()
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    for (AnvilFrame& anvilFrame : anvilFrames)
+    for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
     {
-        // TODO: Provide better error messages for Semaphores and Fences
+        AnvilFrame& anvilFrame = anvilFrames[i];
+
         if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &anvilFrame.imageAvailableSemaphore) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create imageAvailableSemaphore.");
         }
+        std::string debug_name = "Frame[" + std::to_string(i) + "]_ImageAvailableSemaphore";
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilFrame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE, debug_name.c_str());
+
         if (vkCreateFence(ptrAContext->anvilDevice, &fenceInfo, nullptr, &anvilFrame.frameDoneFence) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create frameDoneFence.");
         }
+        debug_name = "Frame[" + std::to_string(i) + "]_FrameDoneFence";
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilFrame.frameDoneFence, VK_OBJECT_TYPE_FENCE, debug_name.c_str());
     }
 
     // Create semaphores based on swapchain images count
@@ -279,6 +285,8 @@ void AnvilRenderer::setupSyncStructures()
         {
             throw std::runtime_error("Failed to create renderFinishedSemaphore.");
         }
+        std::string renderFinishedName = "SwapchainImage[" + std::to_string(i) + "]_RenderFinishedSemaphore";
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, renderFinishedName.c_str());
     }
 }
 
