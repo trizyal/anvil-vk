@@ -13,6 +13,13 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
     std::vector<VkPushConstantRange>& pushConstants)
 {
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
+
+    if (!reflection)
+    {
+        std::cerr << "Failed to get Slang reflection layout!" << std::endl;
+        return;
+    }
+
     uint32_t paramCount = reflection->getParameterCount();
 
     std::cout << "ParamCount received in AnvilMaterial: " << paramCount << std::endl;
@@ -30,8 +37,18 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
             VkPushConstantRange range{};
             range.stageFlags = stage;
             range.offset = static_cast<uint32_t>(varLayout->getOffset());
-            range.size = static_cast<uint32_t>(typeLayout->getSize());
+
+            // SLANG FIX: A ConstantBuffer<T> is a wrapper. We need the size of 'T' (the element).
+            slang::TypeLayoutReflection* elementType = typeLayout->getElementTypeLayout();
+            if (elementType != nullptr) {
+                range.size = static_cast<uint32_t>(elementType->getSize());
+            } else {
+                range.size = static_cast<uint32_t>(typeLayout->getSize());
+            }
+
             pushConstants.push_back(range);
+
+            std::cout << "Reflected Push Constant: " << name << " Size: " << range.size << "\n";
             continue;
         }
 
@@ -69,7 +86,7 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
 }
 
 void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
-    const AnvilShaderCompiler& inCompiler,
+    AnvilShaderCompiler& inCompiler,
     const AnvilShaders::ShaderCompileRequest& inVertReq,
     const AnvilShaders::ShaderCompileRequest& inFragReq)
 {
@@ -177,6 +194,8 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
             _merged_push_constant.size = std::max(_merged_push_constant.size, _raw_push_constants[i].size);
             _merged_push_constant.stageFlags |= _raw_push_constants[i].stageFlags;
         }
+
+        pushConstantStages = _merged_push_constant.stageFlags;
     }
 
     VkPipelineLayoutCreateInfo pipeline_layout_info{};
@@ -268,6 +287,9 @@ void AnvilMaterial::destroyMaterial() const
 {
     if (ptrAContext)
     {
+        vertexShader.destroyShaderModule();
+        fragmentShader.destroyShaderModule();
+
         if (materialDescriptorPool)
         {
             vkDestroyDescriptorPool(ptrAContext->anvilDevice, materialDescriptorPool, nullptr);

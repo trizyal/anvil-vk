@@ -21,7 +21,7 @@ public:
 
 private:
     Slang::ComPtr<slang::IGlobalSession> globalSession;
-    static int32_t getSlangOptimizationLevel(OptimizationLevel inLevel);
+    Slang::ComPtr<slang::ISession> session;
 
     // Configuration State
     OptimizationLevel optimizationLevel = OptimizationLevel::Default;
@@ -42,7 +42,10 @@ public:
     void setSpirvDump(bool inEnable, const std::string& inDumpDirectory);
 
     // Request compiler shaders from AnvilShaderCompiler
-    AnvilShaders::ShaderCompileResult compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request) const;
+    AnvilShaders::ShaderCompileResult compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request);
+
+private:
+    static int32_t getSlangOptimizationLevel(OptimizationLevel inLevel);
 };
 
 #endif //ANVIL_VK_SHADERCOMPILER_H

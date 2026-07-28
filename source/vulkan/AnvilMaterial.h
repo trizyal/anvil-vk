@@ -35,6 +35,8 @@ public:
     VkDescriptorPool materialDescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSet materialDescriptorSet = VK_NULL_HANDLE;
 
+    VkShaderStageFlags pushConstantStages = 0;
+
 private:
     AnvilVulkanContext* ptrAContext = nullptr;
 
@@ -45,7 +47,7 @@ private:
 
 public:
     void buildMaterial(AnvilVulkanContext& inContext,
-        const AnvilShaderCompiler& inCompiler,
+        AnvilShaderCompiler& inCompiler,
         const AnvilShaders::ShaderCompileRequest& inVertReq,
         const AnvilShaders::ShaderCompileRequest& inFragReq);
 

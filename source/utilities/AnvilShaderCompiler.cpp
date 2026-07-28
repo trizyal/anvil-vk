@@ -82,7 +82,7 @@ int32_t AnvilShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel i
 }
 
 
-ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request) const
+ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request)
 {
     ShaderCompileResult shaderResult = GetEmptyShaderByteCode();
     if (!globalSession)
@@ -91,6 +91,8 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
         return shaderResult;
     }
 
+    if (!session)
+    {
     // Setup target (Vulkan 1.3 / SPIR-V 1.5)
     slang::TargetDesc targetDesc = {};
     targetDesc.format = SLANG_SPIRV;
@@ -124,15 +126,15 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
 
     // Apply Optimization level
     const slang::CompilerOptionEntry options = {
-         slang::CompilerOptionName::Optimization,
-          { slang::CompilerOptionValueKind::Int, getSlangOptimizationLevel(optimizationLevel), 0, 0, 0 }
+        slang::CompilerOptionName::Optimization,
+         { slang::CompilerOptionValueKind::Int, getSlangOptimizationLevel(optimizationLevel), 0, 0, 0 }
     };
     sessionDesc.compilerOptionEntries = &options;
     sessionDesc.compilerOptionEntryCount = 1;
 
     // Create the Session
-    Slang::ComPtr<slang::ISession> session;
     globalSession->createSession(sessionDesc, session.writeRef());
+    }
 
     // Load the Shader Modules
     Slang::ComPtr<slang::IBlob> diagnostics;

@@ -79,16 +79,16 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain 
 
     camera.updateCamera(dt);
 
-    float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    const float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
 
-    glm::mat4 projection = camera.getProjectionMatrix(aspect);
-    glm::mat4 view = camera.getViewMatrix();
+    const glm::mat4 projection = camera.getProjectionMatrix(aspect);
+    const glm::mat4 view = camera.getViewMatrix();
 
     AnvilUIRenderer::DrawDebugAxis(view);
 
-    PushConstants constants;
+    PushConstants constants{};
     constants.renderMatrix = projection * view;
-    vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+    vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(PushConstants), &constants);
 
     vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterial.materialDescriptorSet, 0, nullptr);
 
