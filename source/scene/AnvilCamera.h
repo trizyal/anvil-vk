@@ -10,15 +10,17 @@ class AnvilCamera
 {
 public:
     static constexpr glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    static constexpr glm::vec3 defaultFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    static constexpr glm::vec3 defaultRight = glm::vec3(1.0f, 0.0f, 0.0f);
     static constexpr glm::vec3 defaultStartPosition = glm::vec3(0.0f, 0.0f, 5.0f);
 
     AnvilCamera(glm::vec3 inStartPosition = defaultStartPosition);
 
 private:
-    glm::vec3 position;
-    glm::vec3 front;
-    glm::vec3 up;
-    glm::vec3 right;
+    glm::vec3 position = defaultStartPosition;
+    glm::vec3 front = defaultFront;
+    glm::vec3 up = worldUp;
+    glm::vec3 right = defaultRight;
 
     float yawDegree;
     float pitchDegree;

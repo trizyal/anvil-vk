@@ -15,7 +15,7 @@ private:
     VkShaderModule anvilShaderModule = VK_NULL_HANDLE;
 
 public:
-    bool createShaderModule(VkDevice inDevice, const AnvilShaders::ShaderByteCode& inSPIRV);
+    bool createShaderModule(VkDevice inDevice, const AnvilShaders::ShaderCompileResult& inSPIRV);
     void destroyShaderModule() const;
 
     [[nodiscard]] VkShaderModule get() const;

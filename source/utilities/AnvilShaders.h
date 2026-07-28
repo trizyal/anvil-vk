@@ -9,6 +9,7 @@
 #include <filesystem>
 
 #include <slang.h>
+#include <slang-com-ptr.h>
 
 namespace AnvilShaders
 {
@@ -28,9 +29,10 @@ namespace AnvilShaders
         ShaderType shaderType;
     };
 
-    struct ShaderByteCode
+    struct ShaderCompileResult
     {
         std::vector<uint32_t> spirv;
+        Slang::ComPtr<slang::IComponentType> reflection;
 
         [[nodiscard]] bool isValid() const
         {

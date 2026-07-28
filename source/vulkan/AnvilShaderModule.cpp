@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilShaders::ShaderByteCode& inSPIRV)
+bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilShaders::ShaderCompileResult& inSPIRV)
 {
     anvilDevice = inDevice;
     if (!inSPIRV.isValid())

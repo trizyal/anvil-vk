@@ -16,9 +16,9 @@
 #include "AnvilShaders.h"
 using namespace AnvilShaders;
 
-ShaderByteCode GetEmptyShaderByteCode()
+ShaderCompileResult GetEmptyShaderByteCode()
 {
-    ShaderByteCode empty;
+    ShaderCompileResult empty;
     std::vector<uint32_t> emptyVec;
     emptyVec.clear();
     empty.spirv = emptyVec;
@@ -82,15 +82,17 @@ int32_t AnvilShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel i
 }
 
 
-ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request) const
+ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request)
 {
-    ShaderByteCode retByteCode = GetEmptyShaderByteCode();
+    ShaderCompileResult shaderResult = GetEmptyShaderByteCode();
     if (!globalSession)
     {
         std::cerr << "Slang Global Session is not initialized!\n";
-        return retByteCode;
+        return shaderResult;
     }
 
+    if (!session)
+    {
     // Setup target (Vulkan 1.3 / SPIR-V 1.5)
     slang::TargetDesc targetDesc = {};
     targetDesc.format = SLANG_SPIRV;
@@ -122,28 +124,17 @@ ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         sessionDesc.searchPathCount = static_cast<uint32_t>(cSearchPaths.size());
     }
 
-    // Compiler options
-#if 0
-    std::array<slang::CompilerOptionEntry, 1> options =
-    {
-        {
-            slang::CompilerOptionName::EmitSpirvDirectly,
-            slang::CompilerOptionValue{slang::CompilerOptionValueKind::Int, 1, 0, nullptr, nullptr}
-        }
-    };
-#endif
-
     // Apply Optimization level
     const slang::CompilerOptionEntry options = {
-         slang::CompilerOptionName::Optimization,
-          { slang::CompilerOptionValueKind::Int, getSlangOptimizationLevel(optimizationLevel), 0, 0, 0 }
+        slang::CompilerOptionName::Optimization,
+         { slang::CompilerOptionValueKind::Int, getSlangOptimizationLevel(optimizationLevel), 0, 0, 0 }
     };
     sessionDesc.compilerOptionEntries = &options;
     sessionDesc.compilerOptionEntryCount = 1;
 
     // Create the Session
-    Slang::ComPtr<slang::ISession> session;
     globalSession->createSession(sessionDesc, session.writeRef());
+    }
 
     // Load the Shader Modules
     Slang::ComPtr<slang::IBlob> diagnostics;
@@ -153,7 +144,7 @@ ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
     if (!slangModule)
     {
         std::cerr << "AnvilShaderCompiler: Failed to load Slang module: " << request.moduleName.c_str() << std::endl;
-        return retByteCode;
+        return shaderResult;
     }
 
     // Find the Entry Points
@@ -164,7 +155,7 @@ ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
     if (!entryPoint)
     {
         std::cerr << "AnvilShaderCompiler: Failed to find entry point " << request.entryPoint.c_str() << std::endl;
-        return retByteCode;
+        return shaderResult;
     }
 
     // Composite and Link
@@ -190,18 +181,23 @@ ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
     {
         const uint32_t* spirvCode = static_cast<const uint32_t*>(spirvBlob->getBufferPointer());
         const size_t spirvWordCount = spirvBlob->getBufferSize() / sizeof(uint32_t);
-        retByteCode.spirv.assign(spirvCode, spirvCode + spirvWordCount);
+        shaderResult.spirv.assign(spirvCode, spirvCode + spirvWordCount);
     }
+    shaderResult.reflection = linkedProgram;
+
+    auto paramCount = linkedProgram->getLayout()->getParameterCount();
+
+    std::cout << "Parameter count in ShaderCompiler: " << paramCount << std::endl;
 
     // TODO: This dump should ideally be in readable code
     // Dump SPIR-V if requested
-    if (bDumpSpirv && retByteCode.isValid()) {
+    if (bDumpSpirv && shaderResult.isValid()) {
         std::string fileName = request.entryPoint + ".spv";
         std::string fullPath = dumpDirectory.empty() ? fileName : (dumpDirectory + "/" + fileName);
 
         std::ofstream file(fullPath, std::ios::out | std::ios::binary);
         if (file.is_open()) {
-            file.write(reinterpret_cast<const char*>(retByteCode.spirv.data()), retByteCode.spirv.size() * sizeof(uint32_t));
+            file.write(reinterpret_cast<const char*>(shaderResult.spirv.data()), shaderResult.spirv.size() * sizeof(uint32_t));
             file.close();
         }
         else
@@ -210,5 +206,5 @@ ShaderByteCode AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         }
     }
 
-    return retByteCode;
+    return shaderResult;
 }

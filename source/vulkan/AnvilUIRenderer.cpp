@@ -3,6 +3,7 @@
 
 #include "AnvilUIRenderer.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <volk.h>
