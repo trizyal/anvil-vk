@@ -120,4 +120,4 @@ namespace AnvilModelLoader
         cgltf_free(data);
         return meshData;
     }
-}
+} //AnvilModelLoader

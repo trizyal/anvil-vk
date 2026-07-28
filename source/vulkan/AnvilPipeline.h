@@ -13,7 +13,6 @@
 struct AnvilPipeline
 {
     VkPipeline pipeline;
-    VkPipelineLayout pipelinelayout;
 };
 
 class AnvilPipelineBuilder
@@ -53,7 +52,7 @@ public:
     AnvilPipelineBuilder& setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace);
     AnvilPipelineBuilder& disableBlending();
 
-    AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL());
+    AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL()) const;
 };
 
 #endif //ANVIL_VK_PIPELINE_H

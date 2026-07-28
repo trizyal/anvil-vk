@@ -12,7 +12,6 @@
 #include <slang-com-ptr.h>
 #include <slang-com-helper.h>
 
-#include "AnvilFileIO.h"
 #include "AnvilShaders.h"
 using namespace AnvilShaders;
 

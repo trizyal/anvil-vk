@@ -13,11 +13,11 @@
 namespace AnvilResult
 {
     // Helper function to format and throw the error
-    inline void CheckVulkanResult(VkResult result, const char* functionName, const char* file, int line)
+    inline void CheckVulkanResult(const VkResult result, const char* functionName, const char* file, const int line)
     {
         if (result != VK_SUCCESS)
         {
-            std::string errorMsg = "Vulkan Error [" + std::to_string(result) + "]\n" +
+            const std::string errorMsg = "Vulkan Error [" + std::to_string(result) + "]\n" +
                                    "File: " + file + ":" + std::to_string(line) + "\n" +
                                    "Call: " + functionName + "\n";
 
@@ -25,7 +25,7 @@ namespace AnvilResult
             throw std::runtime_error(errorMsg);
         }
     }
-}
+} //AnvilResult
 
 // The macro that captures the code text (#x), the file name, and the line number
 #define CHECK(x) AnvilResult::CheckVulkanResult((x), #x, __FILE__, __LINE__)

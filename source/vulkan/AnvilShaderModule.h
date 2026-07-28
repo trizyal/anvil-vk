@@ -23,5 +23,4 @@ public:
     [[nodiscard]] VkShaderModule get() const;
 };
 
-
 #endif //ANVIL_VK_SHADERMODULE_H

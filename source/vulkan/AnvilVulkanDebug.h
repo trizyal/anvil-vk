@@ -54,7 +54,7 @@ namespace AnvilDebug
     }
 
     const char* ObjectTypeToString(VkObjectType inObjectType);
-}
+} //AnvilDebug
 
 // The comma-injection trick: strips arguments entirely if disabled
 #if ANVIL_DEBUG
@@ -78,7 +78,7 @@ ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
 #   define ANVIL_DEBUG_NAME(dev, handle, type) do {} while (0)
 #endif
 
-// Optional: For passing the variable name automatically (e.g., ANVIL_NAME_OF(vertexBuffer))
+// For passing the variable name automatically (e.g., ANVIL_NAME_OF(vertexBuffer))
 #define ANVIL_NAME_OF(var) #var
 
 #endif //ANVIL_VK_VULKANDEBUG_H

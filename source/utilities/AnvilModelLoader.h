@@ -28,6 +28,6 @@ namespace AnvilModelLoader
 {
     // Only returns CPU data
     AnvilMesh LoadGLTF(const std::string& filePath);
-}
+} //AnvilModelLoader
 
 #endif //ANVIL_VK_MODELLOADER_H

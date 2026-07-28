@@ -18,7 +18,7 @@ namespace AnvilColor
     inline constexpr ImVec4 Blue   = ImVec4(0.3f, 0.7f, 1.0f, 1.0f); // Info
     inline constexpr ImVec4 White  = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // Neutral
     inline constexpr ImVec4 Gray   = ImVec4(0.6f, 0.6f, 0.6f, 1.0f); // Debug/Spam
-}
+} //AnvilColor
 
 struct UILogMessage
 {
