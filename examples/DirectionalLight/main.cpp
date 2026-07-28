@@ -5,7 +5,7 @@
 
 #include "AnvilApplication.h"
 
-#include "ShaderReflectionCube.h"
+#include "DirectionalLight.h"
 
 int main()
 {
@@ -13,10 +13,10 @@ int main()
     anvil.initializeAnvil({
         .width = 1280,
         .height = 720,
-        .title = "Anvil Shader Reflection Cube Example"
+        .title = "Anvil Directional Light Example"
     });
 
-    ShaderReflectionCube project;
+    DirectionalLight project;
     project.initializeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
 
     // Register hot-reload event
