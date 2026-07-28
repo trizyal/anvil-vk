@@ -7,6 +7,7 @@
 #include <volk.h>
 
 #include "AnvilShaders.h"
+#include "AnvilVulkanDebug.h"
 
 class AnvilShaderModule
 {
@@ -15,11 +16,11 @@ private:
     VkShaderModule anvilShaderModule = VK_NULL_HANDLE;
 
 public:
-    bool createShaderModule(VkDevice inDevice, const AnvilShaders::ShaderCompileResult& inSPIRV);
+    bool createShaderModule(VkDevice inDevice, const AnvilShaders::ShaderCompileResult& inSPIRV
+        ANVIL_DEBUG_DECL());
     void destroyShaderModule() const;
 
     [[nodiscard]] VkShaderModule get() const;
 };
-
 
 #endif //ANVIL_VK_SHADERMODULE_H

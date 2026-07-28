@@ -31,11 +31,11 @@ private:
 
 public:
     void initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
-    void recreateSwapchain(VkExtent2D inExtent);
+    void recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
     void cleanup();
 
 private:
-    void createDepthAttachment();
+    void createDepthAttachment(const AnvilVulkanContext& inAnvilContext);
 };
 
 #endif //ANVIL_VK_SWAPCHAIN_H
