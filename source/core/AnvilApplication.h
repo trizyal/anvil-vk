@@ -9,7 +9,6 @@
  * @brief High-level application lifecycle, window management, and main loop orchestration.
  */
 
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <functional>
@@ -42,12 +41,19 @@ struct AnvilApplicationCreateInfo
 class AnvilApplication
 {
 public:
-    AnvilApplication() = default;
+    AnvilApplication()= default;
     ~AnvilApplication() = default;
 
+    /// Copy construction is disabled
     AnvilApplication(const AnvilApplication&) = delete;
+
+    /// Copy assignment is disabled
     AnvilApplication& operator=(const AnvilApplication&) = delete;
+
+    /// Move construction is disabled
     AnvilApplication(AnvilApplication&&) = delete;
+
+    /// Move assignment is disabled
     AnvilApplication& operator=(AnvilApplication&&) = delete;
 
 private:
