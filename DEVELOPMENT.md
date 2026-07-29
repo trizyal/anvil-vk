@@ -1,6 +1,33 @@
 # Development Guide
 
+## Project Status & Features
+
+### Implemented
+
+- Vulkan instance, device, and swapchain bootstrapping (`vk-bootstrap`, `volk`)
+- Automatic swapchain recreation on window resize
+- Per-frame synchronization and command buffer orchestration
+- Slang shader compilation (`.slang` to SPIR-V)
+- Shader hot reloading
+- Basic glTF 2.0 mesh loading (`cgltf`)
+- ImGui integration and overlay rendering
+
+### Work in Progress (WIP)
+
+- Directional lighting support
+- Normals and normal maps
+- Uniform Buffers support
+- Complex glTF models support
+
+### Future
+
+- Unified asset loading directory (`utilities`/`assets`)
+- Dedicated UI subsystem directory
+- Configurable INI file parsing for runtime settings
+
 ## Project Structure
+
+*Project structure and file structure is in the process of changing. As a result, this page is not upto date.*
 
 ```
 anvil-vk/
@@ -63,7 +90,9 @@ anvil-vk/
 
 ```
 
-## Naming Conventions
+## Conventions
+
+### Naming
 
 - directories - `camelCase`
 - files - `PascalCase`
@@ -83,46 +112,26 @@ anvil-vk/
 - namespace function - `PascalCase`
 
 - variables:
-  - class member- `camelCase`
-  - struct member- `camelCase`
-  - local- `snake_case`
+  - class member - `camelCase`
+  - struct member - `camelCase`
+  - local - `snake_case`
+
+---
 
 ## Separation of Context
 
-### AnvilVulkanContext
+*This section is currently being restructured as we are changing some architectural 
+structure of anvil and core vulkan resources.*
 
-1. Initialize Volk.
-2. Create `VkInstance`.
-3. Create debug messenger in debug builds.
-4. Create window surface.
-5. Pick physical device.
-6. Create logical device.
-7. Get graphics queue.
-8. Create VMA allocator.
-9. Register destruction in the deletion queue.
+---
 
-### AnvilWindow
+## Documentation
 
-- Initialize GLFW once.
-- Create a no-API window.
-- Create a Vulkan surface.
-- Destroy the window.
-- Terminate GLFW.
+### Doxygen Code Comments
 
-### AnvilSwapchain
-
-- Build swapchain using `vk-bootstrap`.
-- Store images.
-- Store image views.
-- Cleanup image views and swapchain.
-- Support `recreate`.
-
-The render loop should detect:
-
-```c++
-VK_ERROR_OUT_OF_DATE_KHR
-VK_SUBOPTIMAL_KHR
-```
-
-
-and then call swapchain recreation.
+- @brief
+- @params
+- @todo
+- @bug
+- @attention
+- @warning

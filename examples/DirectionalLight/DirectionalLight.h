@@ -1,8 +1,8 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef EXAMPLE_SHADERREFLECTIONCUBE_H
-#define EXAMPLE_SHADERREFLECTIONCUBE_H
+#ifndef EXAMPLE_DIRECTIONALLIGHT_H
+#define EXAMPLE_DIRECTIONALLIGHT_H
 
 #include <glm/glm.hpp>
 
@@ -21,7 +21,7 @@ struct PushConstants
     glm::mat4 renderMatrix;
 };
 
-class ShaderReflectionCube
+class DirectionalLight
 {
 private:
     AnvilVulkanContext* ptrAContext = nullptr;
@@ -46,5 +46,4 @@ public:
     void loadPipeline();
 };
 
-
-#endif //EXAMPLE_SHADERREFLECTIONCUBE_H
+#endif //EXAMPLE_DIRECTIONALLIGHT_H
