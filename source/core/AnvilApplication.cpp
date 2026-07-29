@@ -8,11 +8,6 @@
 #include "AnvilInput.h"
 #include "AnvilUILogger.h"
 
-AnvilApplication::~AnvilApplication()
-{
-    shutdownAnvil();
-}
-
 void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo)
 {
     std::cout << "Initializing Anvil..." << std::endl;
