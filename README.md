@@ -54,6 +54,11 @@ ranging from simple hardcoded geometry to loading glTF scenes.
 See [examples](examples/README.md) for detailed 
 descriptions of each example and third-party asset licenses.
 
+## Documentation & Architecture
+
+For detailed architectural guidelines, folder rules, roadmap checklists, and coding conventions, 
+please see the [development](DEVELOPMENT.md) document.
+
 ## License
 
 Copyright (C) 2026 trizyal.

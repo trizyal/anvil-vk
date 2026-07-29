@@ -90,7 +90,9 @@ anvil-vk/
 
 ```
 
-## Naming Conventions
+## Conventions
+
+### Naming
 
 - directories - `camelCase`
 - files - `PascalCase`
@@ -110,14 +112,18 @@ anvil-vk/
 - namespace function - `PascalCase`
 
 - variables:
-  - class member- `camelCase`
-  - struct member- `camelCase`
-  - local- `snake_case`
+  - class member - `camelCase`
+  - struct member - `camelCase`
+  - local - `snake_case`
+
+---
 
 ## Separation of Context
 
 *This section is currently being restructured as we are changing some architectural 
 structure of anvil and core vulkan resources.*
+
+---
 
 ## Documentation
 
