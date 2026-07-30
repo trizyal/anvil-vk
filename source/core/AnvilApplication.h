@@ -44,16 +44,16 @@ public:
     AnvilApplication()= default;
     ~AnvilApplication() = default;
 
-    /// Copy construction is disabled
+    /** Copy construction is disabled */
     AnvilApplication(const AnvilApplication&) = delete;
 
-    /// Copy assignment is disabled
+    /** Copy assignment is disabled */
     AnvilApplication& operator=(const AnvilApplication&) = delete;
 
-    /// Move construction is disabled
+    /** Move construction is disabled */
     AnvilApplication(AnvilApplication&&) = delete;
 
-    /// Move assignment is disabled
+    /** Move assignment is disabled */
     AnvilApplication& operator=(AnvilApplication&&) = delete;
 
 private:

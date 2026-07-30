@@ -47,12 +47,16 @@ public:
     AnvilRenderer() = default;
     ~AnvilRenderer() = default;
 
-    // Delete Copy Operations (Prevents double-freeing Vulkan sync objects & pools)
+    /** Copy construction is disabled (Prevents double-freeing Vulkan sync objects & pools) */
     AnvilRenderer(const AnvilRenderer&) = delete;
+
+    /** Copy assignment is disabled */
     AnvilRenderer& operator=(const AnvilRenderer&) = delete;
 
-    // Delete Move Operations (Locks the renderer instance in place)
+    /** Move construction is disabled */
     AnvilRenderer(AnvilRenderer&&) = delete;
+
+    /** Move assignment is disabled */
     AnvilRenderer& operator=(AnvilRenderer&&) = delete;
 
 private:

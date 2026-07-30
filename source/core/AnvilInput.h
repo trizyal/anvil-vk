@@ -35,6 +35,8 @@ constexpr uint32_t BUTTON_COUNT = GLFW_KEY_LAST + 1;
  * and the previous frame. Stores mouse position and calculates mouse delta for
  * movement speed.
  *
+ * @note This class is non-copyable and non-movable as all data is static.
+ *
  * @todo May need functions that listen to key being released instead of pressed.
  */
 class AnvilInput
@@ -43,11 +45,9 @@ public:
     AnvilInput() = default;
     ~AnvilInput() = default;
 
-    // Delete Copy Operations
     AnvilInput(const AnvilInput&) = delete;
     AnvilInput& operator=(const AnvilInput&) = delete;
 
-    // Delete Move Operations
     AnvilInput(AnvilInput&&) = delete;
     AnvilInput& operator=(AnvilInput&&) = delete;
 

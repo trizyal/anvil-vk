@@ -4,8 +4,19 @@
 #ifndef ANVIL_VK_CAMERA_H
 #define ANVIL_VK_CAMERA_H
 
+/**
+ * @file AnvilCamera.h
+ * @brief First-person 3D camera abstraction producing Vulkan-compatible view and projection matrices.
+ */
+
 #include <glm/glm.hpp>
 
+/**
+ * @brief Free-look 3D camera managing spatial vectors, Euler angles, and matrix generation.
+ *
+ * @note This class is non-copyable to prevent accidental duplication of camera states,
+ * but is movable so it can be stored in containers or transferred between scopes.
+ */
 class AnvilCamera
 {
 public:
@@ -14,7 +25,15 @@ public:
     static constexpr glm::vec3 defaultRight = glm::vec3(1.0f, 0.0f, 0.0f);
     static constexpr glm::vec3 defaultStartPosition = glm::vec3(0.0f, 0.0f, 5.0f);
 
-    AnvilCamera(glm::vec3 inStartPosition = defaultStartPosition);
+    /** Primary constructor, also acts as Default Constructor */
+    explicit AnvilCamera(glm::vec3 inStartPosition = defaultStartPosition);
+    ~AnvilCamera() = default;
+
+    AnvilCamera(const AnvilCamera&) = delete;
+    AnvilCamera& operator=(const AnvilCamera&) = delete;
+
+    AnvilCamera(AnvilCamera&&) noexcept = default;
+    AnvilCamera& operator=(AnvilCamera&&) noexcept = default;
 
 private:
     glm::vec3 position = defaultStartPosition;
@@ -32,8 +51,8 @@ public:
 
     void updateCamera(float deltaTime);
 
-    glm::mat4 getViewMatrix() const;
-    glm::mat4 getProjectionMatrix(float aspectRatio) const;
+    [[nodiscard]] glm::mat4 getViewMatrix() const;
+    [[nodiscard]] glm::mat4 getProjectionMatrix(float aspectRatio) const;
 
 private:
     void updateCameraVectors();
