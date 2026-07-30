@@ -17,16 +17,16 @@
  */
 struct AnvilFrame
 {
-    /**< Pool allocated specifically for this frame's command buffer. */
+    /** Pool allocated specifically for this frame's command buffer. */
     VkCommandPool cmdPool = VK_NULL_HANDLE;
 
-    /**< Primary command buffer for recording draw commands. */
+    /** Primary command buffer for recording draw commands. */
     VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
 
-    /**< Signaled when the swapchain image is ready to render to. */
+    /** Signaled when the swapchain image is ready to render to. */
     VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
 
-    /**< CPU waits on this for the GPU to finish rendering the frame. */
+    /** CPU waits on this for the GPU to finish rendering the frame. */
     VkFence frameDoneFence = VK_NULL_HANDLE;
 };
 
@@ -66,7 +66,7 @@ private:
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
     uint32_t anvilFrameIndex = 0;
 
-    // Rendering is finished, ready to present
+    /** Signaled when rendering is finished, and image ready to present. */
     std::vector<VkSemaphore> renderFinishedSemaphores;
 
     bool recreateSwapchain = false;

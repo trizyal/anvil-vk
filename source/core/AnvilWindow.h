@@ -26,12 +26,6 @@
  */
 class AnvilWindow
 {
-private:
-    GLFWwindow* glfwWindow = nullptr;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    std::string anvilTitle;
-
 public:
     /**
      * @brief Creates a new application window.
@@ -53,6 +47,13 @@ public:
     AnvilWindow(AnvilWindow&&) = delete;
     AnvilWindow& operator=(AnvilWindow&&) = delete;
 
+private:
+    GLFWwindow* glfwWindow = nullptr;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    std::string anvilTitle;
+
+public:
     /**
      * @brief Wrapper for glfwPollEvents.
      */
