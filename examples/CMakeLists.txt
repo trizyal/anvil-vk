@@ -18,6 +18,14 @@ macro(add_anvil_example EXAMPLE_NAME)
     # Link against the engine library target
     target_link_libraries(${EXAMPLE_NAME} PRIVATE ${PROJECT_NAME})
 
+    if (MINGW)
+        target_link_options(${EXAMPLE_NAME} PRIVATE
+                -static-libgcc
+                -static-libstdc++
+                -Wl,-Bstatic -lpthread -Wl,-Bdynamic
+        )
+    endif ()
+
     target_compile_definitions(${EXAMPLE_NAME} PUBLIC
             PROJECT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE_NAME}\"
     )
@@ -28,6 +36,18 @@ macro(add_anvil_example EXAMPLE_NAME)
             COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${EXTERNAL_DIR}/slang/bin $<TARGET_FILE_DIR:${EXAMPLE_NAME}>
     )
+
+    if (MINGW)
+        # Automatically find where CLion/MinGW keeps its DLLs
+        get_filename_component(MINGW_BIN_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+
+        # Copy libwinpthread-1.dll alongside the executable
+        add_custom_command(TARGET ${EXAMPLE_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${MINGW_BIN_DIR}/libwinpthread-1.dll"
+                "$<TARGET_FILE_DIR:${EXAMPLE_NAME}>"
+        )
+    endif ()
 endmacro()
 
 # --------------------------------------------------
