@@ -27,13 +27,13 @@ void AnvilInput::UpdateInputs()
     std::memcpy(s_PreviousMouseButtons, s_CurrentMouseButtons, sizeof(s_CurrentMouseButtons));
 
     // Poll keyboard state, space is the first listed key
-    for (int i = GLFW_KEY_SPACE; i < GLFW_KEY_LAST; i++)
+    for (int i = GLFW_KEY_SPACE; i <= GLFW_KEY_LAST; i++)
     {
         s_CurrentKeys[i] = (glfwGetKey(s_glfwWindow, i) == GLFW_PRESS);
     }
 
     // Poll mouse state
-    for (int i = GLFW_MOUSE_BUTTON_1; i < GLFW_MOUSE_BUTTON_LAST; i++)
+    for (int i = GLFW_MOUSE_BUTTON_1; i <= GLFW_MOUSE_BUTTON_LAST; i++)
     {
         s_CurrentMouseButtons[i] = (glfwGetMouseButton(s_glfwWindow, i) == GLFW_PRESS);
     }
