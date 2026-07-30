@@ -96,7 +96,7 @@ public:
      * @param request Struct containing source file path, entry point name, and target stage.
      * @return Result structure containing the compiled SPIR-V buffer and reflection data.
      *
-     * @bug Should throw a 
+     * @bug Should throw a runtime_error instead of an empty return.
      */
     AnvilShaders::ShaderCompileResult compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request);
 

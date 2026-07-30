@@ -6,8 +6,6 @@
 std::vector<UILogMessage> AnvilUILogger::messages;
 std::mutex AnvilUILogger::queueMutex;
 
-constexpr float LOG_DISPLAY_TIME = 5.0f;
-
 void AnvilUILogger::AddLog(const std::string& inText, ImVec4 inColor)
 {
     std::lock_guard<std::mutex> lock(queueMutex);
