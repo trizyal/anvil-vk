@@ -7,10 +7,10 @@
 
 // Define static variables
 GLFWwindow* AnvilInput::s_glfwWindow = nullptr;
-bool AnvilInput::s_CurrentKeys[350] = {false};
-bool AnvilInput::s_PreviousKeys[350] = {false};
-bool AnvilInput::s_CurrentMouseButtons[8] = {false};
-bool AnvilInput::s_PreviousMouseButtons[8] = {false};
+bool AnvilInput::s_CurrentKeys[KEY_COUNT] = {false};
+bool AnvilInput::s_PreviousKeys[KEY_COUNT] = {false};
+bool AnvilInput::s_CurrentMouseButtons[BUTTON_COUNT] = {false};
+bool AnvilInput::s_PreviousMouseButtons[BUTTON_COUNT] = {false};
 glm::vec2 AnvilInput::s_MousePosition = {0.0f, 0.0f};
 glm::vec2 AnvilInput::s_MouseDelta = {0.0f, 0.0f};
 bool AnvilInput::s_FirstMouseUpdate = true;

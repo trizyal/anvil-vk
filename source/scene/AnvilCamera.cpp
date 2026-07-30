@@ -46,7 +46,8 @@ void AnvilCamera::updateCamera(float deltaTime)
         AnvilInput::SetCursorMode(GLFW_CURSOR_DISABLED);
 
         // Sprinting
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f; // TODO: This camera velocity should be configurable
+        // TODO: This camera velocity should be configurable
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f;
 
         // Keyboard Movement
         if (AnvilInput::IsKeyPressed(GLFW_KEY_W)) position += front * velocity;
