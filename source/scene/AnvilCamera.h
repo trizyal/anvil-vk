@@ -40,6 +40,8 @@ constexpr glm::vec3 WORLD_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
  *
  * @note This class is non-copyable to prevent accidental duplication of camera states,
  * but is movable so it can be stored in containers or transferred between scopes.
+ *
+ * @todo Need to implement setters for camera speed and other things. Speed setters can be with scale or value.
  */
 class AnvilCamera
 {
@@ -81,9 +83,34 @@ public:
     float cameraSensitivity = defaultCameraSensitivity;
     float fovDegrees = defaultCameraFOVDegrees;
 
+    /**
+     * @brief Updates camera position and orientation based on frame timing and input.
+     *
+     * Should be called once per frame prior to querying matrices for rendering.
+     *
+     * @param deltaTime Time elapsed in seconds since the previous frame.
+     */
     void updateCamera(float deltaTime);
 
+    /**
+     * @brief Calculates and returns the current view matrix.
+     *
+     * Transforms coordinates from world space to camera view space using the current
+     * position, forward vector, and up vector.
+     *
+     * @return 4x4 view matrix.
+     */
     [[nodiscard]] glm::mat4 getViewMatrix() const;
+
+    /**
+     * @brief Calculates and returns a Vulkan-compatible perspective projection matrix.
+     *
+     * Transforms coordinates from view space to clip space. Accounted for Vulkan's inverted
+     * Y-coordinate clip space where necessary.
+     *
+     * @param aspectRatio Viewport width divided by viewport height.
+     * @return 4x4 perspective projection matrix.
+     */
     [[nodiscard]] glm::mat4 getProjectionMatrix(float aspectRatio) const;
 
 private:
