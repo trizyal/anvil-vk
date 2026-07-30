@@ -15,23 +15,26 @@
 #include "AnvilShaders.h"
 using namespace AnvilShaders;
 
-ShaderCompileResult GetEmptyShaderByteCode()
+namespace
 {
-    ShaderCompileResult empty;
-    std::vector<uint32_t> emptyVec;
-    emptyVec.clear();
-    empty.spirv = emptyVec;
-    return empty;
-}
-
-void DiagnoseIfNeeded(slang::IBlob* slangBlob)
-{
-    if (slangBlob && slangBlob->getBufferSize() > 0)
+    ShaderCompileResult GetEmptyShaderByteCode()
     {
-        std::cerr << "Slang Compiler Error/Warning:\n"
-            << static_cast<const char*>(slangBlob->getBufferPointer()) << std::endl;
+        ShaderCompileResult empty;
+        std::vector<uint32_t> emptyVec;
+        emptyVec.clear();
+        empty.spirv = emptyVec;
+        return empty;
     }
-}
+
+    void DiagnoseIfNeeded(slang::IBlob* slangBlob)
+    {
+        if (slangBlob && slangBlob->getBufferSize() > 0)
+        {
+            std::cerr << "Slang Compiler Error/Warning:\n"
+                << static_cast<const char*>(slangBlob->getBufferPointer()) << std::endl;
+        }
+    }
+} //Anonymous
 
 bool AnvilShaderCompiler::initializeShaderCompiler()
 {
@@ -46,6 +49,7 @@ bool AnvilShaderCompiler::initializeShaderCompiler()
 void AnvilShaderCompiler::shutdownShaderCompiler()
 {
     // Explicitly release the COM pointer to free Slang resources
+    session.setNull();
     globalSession.setNull();
 }
 

@@ -40,6 +40,8 @@ constexpr uint32_t FRAMES_IN_FLIGHT = 2;
  *
  * Manages multi-buffered frames in flight, handles swapchain recreation on resize,
  * and provides a callback interface for recording commands into the active buffer.
+ *
+ * @note This class is non-copyable and non-movable. May need to change that.
  */
 class AnvilRenderer
 {
