@@ -58,7 +58,7 @@ void TextureCube::cleanupProject()
             vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
         }
 
-        meshBuffer.destroyAnvilMeshBuffer(*ptrAContext);
+        meshBuffer.destroyAnvilMeshBuffer();
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();

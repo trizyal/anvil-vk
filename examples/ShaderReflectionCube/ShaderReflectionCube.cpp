@@ -49,7 +49,7 @@ void ShaderReflectionCube::cleanupProject()
     {
         myTexture.destroyAnvilTexture(ptrAContext);
         myMaterial.destroyMaterial();
-        meshBuffer.destroyAnvilMeshBuffer(*ptrAContext);
+        meshBuffer.destroyAnvilMeshBuffer();
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
     }
 }

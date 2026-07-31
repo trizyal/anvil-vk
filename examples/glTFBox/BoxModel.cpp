@@ -39,7 +39,7 @@ void BoxModel::cleanupProject()
 {
     if (ptrAContext)
     {
-        meshBuffer.destroyAnvilMeshBuffer(*ptrAContext);
+        meshBuffer.destroyAnvilMeshBuffer();
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();

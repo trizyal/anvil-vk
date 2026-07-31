@@ -60,6 +60,8 @@ public:
      * @param inData Pointer to CPU source data to copy into the buffer (may be nullptr).
      * @param size Size of the buffer in bytes.
      * @param usage Bitmask of VkBufferUsageFlags specifying intended buffer operations.
+     *
+     * @throws std::runtime_error If buffer allocation or GPU transfer commands fail.
      */
     void createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
                       ANVIL_DEBUG_DECL());

@@ -8,6 +8,8 @@
 
 void AnvilMeshBuffer::createAnvilMeshBuffer(const AnvilVulkanContext& inContext, const AnvilMesh& inMesh)
 {
+    this->ptrAContext = &inContext;
+
     indexCount = static_cast<uint32_t>(inMesh.indices.size());
 
     // TODO: Need to get debug name somehow
@@ -28,7 +30,7 @@ void AnvilMeshBuffer::createAnvilMeshBuffer(const AnvilVulkanContext& inContext,
     );
 }
 
-void AnvilMeshBuffer::destroyAnvilMeshBuffer(const AnvilVulkanContext& inContext)
+void AnvilMeshBuffer::destroyAnvilMeshBuffer()
 {
     vertexBuffer.destroyBuffer();
     indexBuffer.destroyBuffer();
