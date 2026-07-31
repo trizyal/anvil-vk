@@ -11,8 +11,8 @@
 
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
     VkShaderStageFlagBits stage,
-    std::vector<VkDescriptorSetLayoutBinding>& layoutBindings,
-    std::vector<VkPushConstantRange>& pushConstants)
+    std::vector<VkDescriptorSetLayoutBinding>& outLayoutBindings,
+    std::vector<VkPushConstantRange>& outPushConstants)
 {
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
 
@@ -48,7 +48,7 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                 range.size = static_cast<uint32_t>(typeLayout->getSize());
             }
 
-            pushConstants.push_back(range);
+            outPushConstants.push_back(range);
 
             std::cout << "Reflected Push Constant: " << name << " Size: " << range.size << "\n";
             continue;
@@ -76,7 +76,7 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                 continue;
             }
 
-            layoutBindings.push_back(layoutBinding);
+            outLayoutBindings.push_back(layoutBinding);
 
             ShaderBinding info{};
             info.set = varLayout->getBindingSpace();
