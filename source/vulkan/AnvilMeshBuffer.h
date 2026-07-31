@@ -14,9 +14,8 @@
 #include <glm/glm.hpp>
 
 #include "AnvilBuffer.h"
-
-struct AnvilMesh;
-class AnvilVulkanContext;
+#include "AnvilVulkanContext.h"
+#include "AnvilModelLoader.h"
 
 /**
  * @brief Encapsulates GPU vertex and index buffers for an indexed 3D mesh.
