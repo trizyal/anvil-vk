@@ -39,6 +39,7 @@
 # Build artifacts
 intermediate
 binaries/shaderc
+docs
 
 # Slang
 external/slang

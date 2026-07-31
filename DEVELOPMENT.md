@@ -48,44 +48,39 @@ anvil-vk/
 │ 
 ├── examples # How to use anvil
 │   ├── HelloTriangle/      # Triangle vertices in shader, no buffers, no push contants
-│   │   ├── HelloTriangle.h/.cpp
-│   │   ├── HelloTriangle.slang
-│   │   └── main.cpp
 │   ├── HelloCube/          # Hard coded cube, buffer creation, rotation push constants
-│   │   ├── HelloCube.h/.cpp
-│   │   ├── HelloCube.slang
-│   │   └── main.cpp
 │   ├── glTFBox/            # Load model from gltf, mesh buffers
-│   │   ├── Box/ # glTF model
-│   │   ├── BoxModel.h/.cpp
-│   │   ├── BoxModel.slang
-│   │   └── main.cpp
+│   ├── TextureCube/        # Load texture from gltf, map uv
+│   ├── ShaderReflectionCube/            # Same as TextureCube, but using shader reflection instead
 │   └── # More to come   
 │      
 └── source/
-    ├── main.cpp
     ├── core/       # Engine lifecycle and OS-level stuff
-    │   ├── AnvilApplication.h/.cpp
-    │   ├── AnvilInput.h/.cpp
-    │   └── AnvilWindow.h/.cpp
+    │   ├── AnvilApplication.h/.cpp #Commented
+    │   ├── AnvilInput.h/.cpp #Commented
+    │   └── AnvilWindow.h/.cpp #Commented
+    │
+    ├── scene/       
+    │   └── AnvilCamera.h/.cpp #Commented
     │
     ├──utilities/
-    │   ├── AnvilFileIO.h/.cpp
-    │   ├── AnvilMeshLoader.h/.cpp
-    │   ├── AnvilShaderCompiler.h/.cpp
-    │   ├── AnvilShaders.h/.cpp
-    │   └── AnvilUILogger.h/.cpp
+    │   ├── AnvilModelLoader.h/.cpp #Commented
+    │   ├── AnvilShaderCompiler.h/.cpp #Commented
+    │   ├── AnvilShaders.h/.cpp #Commented
+    │   └── AnvilUILogger.h/.cpp #Commented
     │
     └── vulkan/     # The Vulkan abstraction layers
+        ├── AnvilResult.h/.cpp
         ├── AnvilVulkanDebug.h/.cpp
-        ├── AnvilVulkanContext.h/.cpp    # Instance, Device, VMA allocator
+        ├── AnvilVulkanContext.h/.cpp
         ├── AnvilUIRenderer.h/.cpp
-        ├── AnvilSwapchain.h/.cpp        # Swapchain and recreation logic
-        ├── AnvilShaderModule.h/.cpp     # Shader modules
-        ├── AnvilRenderer.h/.cpp         # Command buffers, sync structures, draw loop
-        ├── AnvilPipeline.h/.cpp         # Shader loading and VkPipeline creation
+        ├── AnvilTextureLoader.h/.cpp
+        ├── AnvilSwapchain.h/.cpp     
+        ├── AnvilShaderModule.h/.cpp   
+        ├── AnvilRenderer.h/.cpp    #Commented
+        ├── AnvilPipeline.h/.cpp   
         ├── AnvilMeshBuffer.h/.cpp       
-        ├── AnvilDeletionQueue.h         # Pattern for safe resource cleanup
+        ├── AnvilDeletionQueue.h 
         └── AnvilBuffer.h/.cpp           
 
 ```
