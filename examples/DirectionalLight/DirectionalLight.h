@@ -15,10 +15,18 @@
 #include "AnvilSwapchain.h"
 #include "AnvilTextureLoader.h"
 
+struct SceneData
+{
+    glm::vec4 lightDirection;   /**< w = unused/padding */
+    glm::vec4 lightColor;       /**< w = intensity */
+    glm::vec4 ambientColor;     /**< w = unused/padding */
+};
+
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
 {
-    glm::mat4 renderMatrix;
+    glm::mat4 renderMatrix; /**< Projection * View * Model */
+    glm::mat4 modelMatrix;  /**< Model rotation for world-space normals */
 };
 
 class DirectionalLight
@@ -35,6 +43,8 @@ private:
     // Things for textures
     AnvilTexture myTexture;
     AnvilMaterial myMaterial;
+
+    AnvilBuffer sceneUBO;
 
 public:
     void initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
