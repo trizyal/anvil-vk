@@ -99,7 +99,7 @@ namespace AnvilTextureLoader
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
         });
 
-        stagingBuffer.destroyBuffer(inContext.anvilAllocator);
+        stagingBuffer.destroyBuffer();
 
         // Create ImageView
         VkImageViewCreateInfo viewInfo{};

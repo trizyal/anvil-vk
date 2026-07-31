@@ -110,8 +110,8 @@ void HelloCube::cleanupProject()
 {
     if (ptrAContext)
     {
-        vertexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
-        indexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
+        vertexBuffer.destroyBuffer();
+        indexBuffer.destroyBuffer();
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();

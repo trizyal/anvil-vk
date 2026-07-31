@@ -30,8 +30,8 @@ void AnvilMeshBuffer::createAnvilMeshBuffer(const AnvilVulkanContext& inContext,
 
 void AnvilMeshBuffer::destroyAnvilMeshBuffer(const AnvilVulkanContext& inContext)
 {
-    vertexBuffer.destroyBuffer(inContext.anvilAllocator);
-    indexBuffer.destroyBuffer(inContext.anvilAllocator);
+    vertexBuffer.destroyBuffer();
+    indexBuffer.destroyBuffer();
 }
 
 VkVertexInputBindingDescription AnvilMeshBuffer::getBindingDescription()
