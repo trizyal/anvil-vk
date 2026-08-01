@@ -21,7 +21,7 @@
 struct MeshVertex
 {
     glm::vec3 position; /**< 3D position coordinates in local object space. */
-    glm::vec3 color;    /**< Linear RGB color values, typically in the [0.0, 1.0] range. */
+    glm::vec3 normal;
     glm::vec2 uv;       /**< 2D texture coordinates for sampling diffuse/albedo maps. */
 };
 

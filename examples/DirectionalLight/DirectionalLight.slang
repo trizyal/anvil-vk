@@ -5,6 +5,7 @@ struct PushConstants
 {
     float4x4 renderMatrix; // Projection * View * Model
     float4x4 modelMatrix;  // Model rotation for world-space normals
+    float3 camera;
 }
 
 // [[vk::push_constant]] tells Slang to map this to Vulkan Push Constants

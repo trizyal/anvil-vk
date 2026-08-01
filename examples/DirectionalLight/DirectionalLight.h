@@ -27,6 +27,7 @@ struct PushConstants
 {
     glm::mat4 renderMatrix; /**< Projection * View * Model */
     glm::mat4 modelMatrix;  /**< Model rotation for world-space normals */
+    glm::vec3 camera;
 };
 
 class DirectionalLight

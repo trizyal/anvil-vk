@@ -46,6 +46,7 @@ namespace AnvilModelLoader
             const cgltf_accessor* position_accessor = nullptr;
             const cgltf_accessor* color_accessor = nullptr;
             const cgltf_accessor* uv_accessor = nullptr;
+            const cgltf_accessor* normal_accessor = nullptr;
 
             for (cgltf_size i = 0; i < primitive->attributes_count; ++i)
             {
@@ -61,6 +62,10 @@ namespace AnvilModelLoader
                 {
                     uv_accessor = primitive->attributes[i].data;
                 }
+                else if (primitive->attributes[i].type == cgltf_attribute_type_normal)
+                {
+                    normal_accessor = primitive->attributes[i].data;
+                }
             }
 
             if (position_accessor)
@@ -70,6 +75,7 @@ namespace AnvilModelLoader
                 {
                     cgltf_accessor_read_float(position_accessor, i, &meshData.vertices[i].position.x, 3);
 
+#if 0
                     if (color_accessor)
                     {
                         cgltf_accessor_read_float(color_accessor, i, &meshData.vertices[i].color.x, 3);
@@ -79,6 +85,7 @@ namespace AnvilModelLoader
                         // meshData.vertices[i].color = glm::vec3(0.0f, 0.0f, 0.0f);
                         meshData.vertices[i].color = materialBaseColor;
                     }
+#endif
 
                     // Read UV coordinates if they exists
                     if (uv_accessor)
@@ -88,6 +95,11 @@ namespace AnvilModelLoader
                     else // fallback
                     {
                         meshData.vertices[i].uv = glm::vec2(0.0f, 0.0f);
+                    }
+
+                    if (normal_accessor)
+                    {
+                        cgltf_accessor_read_float(normal_accessor, i, &meshData.vertices[i].normal.x, 3);
                     }
                 }
             }

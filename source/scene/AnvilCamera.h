@@ -70,7 +70,6 @@ public:
     AnvilCamera& operator=(AnvilCamera&&) noexcept = default;
 
 private:
-    glm::vec3 position = defaultStartPosition;
     glm::vec3 front = WORLD_FRONT;
     glm::vec3 up = WORLD_UP;
     glm::vec3 right = WORLD_RIGHT;
@@ -79,6 +78,7 @@ private:
     float pitchDegree;
 
 public:
+    glm::vec3 position = defaultStartPosition;
     float cameraSpeed = defaultCameraSpeed;
     float cameraSensitivity = defaultCameraSensitivity;
     float fovDegrees = defaultCameraFOVDegrees;
