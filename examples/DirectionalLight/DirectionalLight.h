@@ -45,6 +45,7 @@ private:
     AnvilMaterial myMaterial;
 
     AnvilBuffer sceneUBO;
+    SceneData sceneLighting{};
 
 public:
     void initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);

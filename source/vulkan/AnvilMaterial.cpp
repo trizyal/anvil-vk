@@ -259,9 +259,29 @@ void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inT
 
 void AnvilMaterial::bindUniformBuffer(const std::string& name, const AnvilBuffer& inBuffer)
 {
-    (void)name;
-    (void)inBuffer;
-    throw std::runtime_error("AnvilMaterial::bindUniformBuffer is not implemented!");
+    if (!bindingMap.contains(name))
+    {
+        return;
+    }
+
+    const ShaderBinding _shader_binding = bindingMap[name];
+
+    // 1. Setup buffer info
+    VkDescriptorBufferInfo buffer_info{};
+    buffer_info.buffer = inBuffer.buffer; // Assuming your AnvilBuffer holds a VkBuffer named 'buffer'
+    buffer_info.offset = 0;               // Offset into the buffer in bytes
+    buffer_info.range  = VK_WHOLE_SIZE;   // Size of the range in bytes (or VK_WHOLE_SIZE)
+    pendingBufferInfos.push_back(buffer_info);
+
+    // 2. Setup write descriptor set
+    VkWriteDescriptorSet descriptor_write{};
+    descriptor_write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_write.dstBinding      = _shader_binding.binding;
+    descriptor_write.dstArrayElement = 0;
+    descriptor_write.descriptorType  = _shader_binding.descriptorType; // e.g., VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+    descriptor_write.descriptorCount = 1;
+
+    pendingWrites.push_back(descriptor_write);
 }
 
 void AnvilMaterial::updateDescriptorSets()

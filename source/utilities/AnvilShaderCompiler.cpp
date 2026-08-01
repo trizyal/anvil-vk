@@ -69,6 +69,11 @@ void AnvilShaderCompiler::setSpirvDump(const bool inEnable, const std::string& i
     dumpDirectory = inDumpDirectory;
 }
 
+void AnvilShaderCompiler::resetSession()
+{
+    session.setNull();
+}
+
 int32_t AnvilShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel inLevel)
 {
     switch (inLevel)

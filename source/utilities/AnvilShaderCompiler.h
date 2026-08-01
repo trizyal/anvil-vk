@@ -88,6 +88,11 @@ public:
     void setSpirvDump(bool inEnable, const std::string& inDumpDirectory);
 
     /**
+     * @brief Release session.
+     */
+    void resetSession();
+
+    /**
      *@brief Compiles a Slang shader source file or entry point into Vulkan SPIR-V bytecode.
      *
      * Uses the currently configured search paths and optimization levels to process the
