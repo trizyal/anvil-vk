@@ -140,7 +140,9 @@ public:
      * @param inPipelineLayout Pipeline layout describing the resources accessible to the pipeline's shaders.
      * @param aDebugName Optional debug name for Vulkan object.
      * @param aDbgSrcLoc Automatic
-     * @return
+     * @return AnvilPipeline containing the created Vulkan graphics pipeline handle.
+     *
+     * @see AnvilPipeline
      */
     AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL()) const;
 };
