@@ -52,8 +52,13 @@ private:
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     VkPipelineRenderingCreateInfo dynamicRendering{};
 
+    /** Shader stages included in the graphics pipeline. */
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+
+    /** Vertex buffer binding descriptions used by the vertex input state. */
     std::vector<VkVertexInputBindingDescription> vertexBindings;
+
+    /** Vertex attribute descriptions used by the vertex input state. */
     std::vector<VkVertexInputAttributeDescription> vertexAttributes;
 
 public:
@@ -77,61 +82,64 @@ public:
     AnvilPipelineBuilder& setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader);
 
     /**
-     *
-     * @param inColorFormat
-     * @return
+     * @brief Sets the format of the color attachment used by dynamic rendering.
+     * @param inColorFormat Vulkan format of the color attachment.
+     * @return Reference to this builder for method chaining.
      */
     AnvilPipelineBuilder& setColorAttachmentFormat(VkFormat inColorFormat);
 
     /**
-     *
-     * @param inDepthFormat
-     * @return
+     * @brief Sets the format of the depth attachment used by dynamic rendering.
+     * @param inDepthFormat Vulkan format of the depth attachment.
+     * @return Reference to this builder for method chaining.
      */
     AnvilPipelineBuilder& setDepthAttachmentFormat(VkFormat inDepthFormat);
 
     /**
-     *
-     * @param bDepthWriteEnable
-     * @param inCompareOp
-     * @return
+     * @brief Enables depth testing and configures depth writes and comparison.
+     * @param bDepthWriteEnable 'true' if depth write should be enabled, `false` otherwise.
+     * @param inCompareOp Comparison operation used by the depth test (e.g. VK_COMPARE_OP_LESS).
+     * @return Reference to this builder for method chaining.
      */
     AnvilPipelineBuilder& enableDepthTest(bool bDepthWriteEnable, VkCompareOp inCompareOp);
 
     /**
-     *
-     * @param inTopology
-     * @return
+     * @brief Sets the primitive topology used by the input assembly stage.
+     * @param inTopology Primitive topology used to interpret vertex data (e.g. VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST).
+     * @return Reference to this builder for method chaining.
      */
     AnvilPipelineBuilder& setInputTopology(VkPrimitiveTopology inTopology);
 
     /**
-     *
-     * @param inPolygonMode
-     * @return
+     * @brief Sets the polygon rasterization mode.
+     * @param inPolygonMode Polygon rasterization stage (e.g. VK_POLYGON_MODE_FILL).
+     * @return Reference to this builder for method chaining.
      */
     AnvilPipelineBuilder& setPolygonMode(VkPolygonMode inPolygonMode);
 
     /**
      *
-     * @param inCullMode
-     * @param inFrontFace
-     * @return
+     * @param inCullMode Faces to cull during rasterization (e.g. VK_CULL_MODE_BACK_BIT).
+     * @param inFrontFace Winding order used to determine front-facing primitives (e.g. VK_FRONT_FACE_COUNTER_CLOCKWISE).
+     * @return Reference to this builder for method chaining.
      */
     AnvilPipelineBuilder& setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace);
 
     /**
+     * @brief Disables color blending for the pipeline's color attachment.
      *
-     * @return
+     * Configures the color blend attachment state so that fragment shader output
+     * is written directly to the color attachment without blending.
+     * @return Reference to this builder for method chaining.
      */
     AnvilPipelineBuilder& disableBlending();
 
     /**
-     *
-     * @param inDevice
-     * @param inPipelineLayout
-     * @param aDebugName
-     * @param aDbgSrcLoc
+     * @brief Builds a Vulkan graphics pipeline using the configured state.
+     * @param inDevice Vulkan logical device used to create the pipeline.
+     * @param inPipelineLayout Pipeline layout describing the resources accessible to the pipeline's shaders.
+     * @param aDebugName Optional debug name for Vulkan object.
+     * @param aDbgSrcLoc Automatic
      * @return
      */
     AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL()) const;
