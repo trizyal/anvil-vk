@@ -18,13 +18,16 @@ namespace AnvilDebug
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* /*pUserData*/)
     {
+        // TODO: Message severity should be toggleable.
         if (messageSeverity < VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
             return VK_FALSE;
         }
 
+        // TODO: Add handling of Message types.
+
         static std::unordered_map<int32_t, int> errorCounts;
         static std::mutex errorMutex;
-        const int MAX_PRINTS = 1; // Change this to 3 if you want to see an error a few times before silencing
+        const int MAX_PRINTS = 3; // Change this to view an error a few times before silencing.
 
         std::lock_guard<std::mutex> lock(errorMutex);
         int& count = errorCounts[pCallbackData->messageIdNumber];

@@ -11,6 +11,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 
 #include <VkBootstrap.h>
 
@@ -20,43 +21,56 @@
 void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 {
     std::cout << "Initialising AnvilVulkanContext..." << std::endl;
+
     // Initialise Volk
-    if (volkInitialize() != VK_SUCCESS)
+    if (const VkResult volk_result = volkInitialize(); volk_result != VK_SUCCESS)
     {
-        // TODO: Print detailed error message
-        throw std::runtime_error("Failed to initialise Volk.");
+        throw std::runtime_error("Failed to initialise Volk. Error code: " + std::to_string(volk_result));
     }
 
     // --------------------------------
-    // Build Instance with vk-bootstrap
-    vkb::InstanceBuilder vkbInstanceBuilder;
-    vkbInstanceBuilder.set_app_name(inWindow.getWindowTitle().c_str());
+    // vk-bootstrap
+    // --------------------------------
+
+    // Create Instance
+    vkb::InstanceBuilder vkb_instance_builder;
+    vkb_instance_builder.set_app_name(inWindow.getWindowTitle().c_str());
 #ifndef NDEBUG
-    vkbInstanceBuilder.request_validation_layers(true);
-    // vkbInstanceBuilder.use_default_debug_messenger();
-    vkbInstanceBuilder.set_debug_callback(AnvilDebug::DebugCallback);
-#if 0
-    // TODO: Add INFO and VERBOSE severities to the default messenger as a configurable option
-    // Not yet running with the custom debug messenger
-    vkbInstanceBuilder.add_debug_messenger_severity(
+    vkb_instance_builder.request_validation_layers(true);
+    vkb_instance_builder.set_debug_callback(AnvilDebug::DebugCallback);
+
+    // Here we enable all logs. DebugCallback handles whether to log it or not
+    vkb_instance_builder.add_debug_messenger_severity(
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
     );
-#endif
-#endif
+    vkb_instance_builder.add_debug_messenger_type(
+        // VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+    );
 
-    vkbInstanceBuilder.require_api_version(1, 4, 0);
-    vkb::Result<vkb::Instance> vkbInstanceResult = vkbInstanceBuilder.build();
+    // TODO: implement something like vkEnumerateInstanceExtensionProperties and then get available extensions.
+    // vkb_instance_builder.enable_extension(VK_EXT_DEVICE_ADDRESS_BINDING_REPORT_EXTENSION_NAME);
+#endif // NDEBUG
 
-    if (!vkbInstanceResult)
+    vkb_instance_builder.require_api_version(1, 4, 0);
+    vkb::Result<vkb::Instance> vkb_instance_result = vkb_instance_builder.build();
+
+    if (!vkb_instance_result)
     {
-        // TODO: Print detailed error message
-        throw std::runtime_error("Failed to create Vulkan instance: " + vkbInstanceResult.error().message());
+        std::ostringstream errorStream;
+        errorStream << "Failed to create Vulkan instance via vk-bootstrap:\n"
+                    << "  Primary error: " << vkb_instance_result.error().message() << "\n";
+        throw std::runtime_error(errorStream.str());
     }
 
-    const vkb::Instance vkbInstance = vkbInstanceResult.value();
-    anvilInstance = vkbInstance.instance;
-    anvilDebugMessenger = vkbInstance.debug_messenger;
+    const vkb::Instance vkb_instance = vkb_instance_result.value();
+    anvilInstance = vkb_instance.instance;
+    anvilDebugMessenger = vkb_instance.debug_messenger;
 
     // --------------------------------
     // Load Instance functions into Volk
@@ -77,7 +91,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
     features11.shaderDrawParameters = VK_TRUE;
 
-    vkb::PhysicalDeviceSelector vkbPhysicalDeviceSelector{vkbInstance};
+    vkb::PhysicalDeviceSelector vkbPhysicalDeviceSelector{vkb_instance};
     vkbPhysicalDeviceSelector.set_surface(anvilSurface);
     vkbPhysicalDeviceSelector.set_minimum_version(1, 3);
     vkbPhysicalDeviceSelector.add_required_extension_features(features13);
@@ -193,6 +207,7 @@ AnvilVulkanContext::~AnvilVulkanContext()
     vkDestroyFence(anvilDevice, uploadFence, nullptr);
     vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);
     vmaDestroyAllocator(anvilAllocator);
+
     vkDestroyDevice(anvilDevice, nullptr);
     vkDestroySurfaceKHR(anvilInstance, anvilSurface, nullptr);
 #ifndef NDEBUG
