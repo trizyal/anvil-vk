@@ -37,11 +37,6 @@ void AnvilApplication::shutdownAnvil()
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
 
-    anvilUIRenderer.shutdownUIRenderer(&anvilContext);
-    anvilRenderer.shutdownRenderer();
-    anvilSwapchain.cleanup();
-    anvilContext.destroyVulkanContext();
-
     anvilWindow.reset();
 
     anvilInitialized = false;

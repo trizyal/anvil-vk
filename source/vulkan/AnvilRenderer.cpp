@@ -23,7 +23,7 @@ void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, Anvil
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
 
-void AnvilRenderer::shutdownRenderer()
+AnvilRenderer::~AnvilRenderer()
 {
     // Wait for GPU
     vkDeviceWaitIdle(ptrAContext->anvilDevice);

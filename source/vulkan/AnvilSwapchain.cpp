@@ -182,7 +182,7 @@ void AnvilSwapchain::createDepthAttachment(const AnvilVulkanContext& inAnvilCont
     AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, depthImage, VK_OBJECT_TYPE_IMAGE, "SwapchainDepthImage");
 }
 
-void AnvilSwapchain::cleanup()
+AnvilSwapchain::~AnvilSwapchain()
 {
     for (VkImageView imageView: anvilImageViews)
     {

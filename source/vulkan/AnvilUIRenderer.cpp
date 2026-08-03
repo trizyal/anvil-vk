@@ -31,6 +31,8 @@ VkDescriptorPoolSize imguiPoolSizes[] =
 
 bool AnvilUIRenderer::initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwindow* inWindow, AnvilSwapchain* inSwapchain)
 {
+    ptrAContext = inContext;
+
     VkDevice device = inContext->anvilDevice;
 
     createDescriptorPool(device, "ImGuiDescriptorPool");
@@ -97,11 +99,11 @@ bool AnvilUIRenderer::initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwi
     return true;
 }
 
-void AnvilUIRenderer::shutdownUIRenderer(AnvilVulkanContext* inContext)
+AnvilUIRenderer::~AnvilUIRenderer()
 {
-    if (inContext->anvilDevice)
+    if (ptrAContext->anvilDevice)
     {
-        vkDeviceWaitIdle(inContext->anvilDevice);
+        vkDeviceWaitIdle(ptrAContext->anvilDevice);
     }
 
     // CRITICAL: Force ImGui to destroy viewport command buffers before shutting down
@@ -117,7 +119,7 @@ void AnvilUIRenderer::shutdownUIRenderer(AnvilVulkanContext* inContext)
 
     if (imguiPool != VK_NULL_HANDLE)
     {
-        vkDestroyDescriptorPool(inContext->anvilDevice, imguiPool, nullptr);
+        vkDestroyDescriptorPool(ptrAContext->anvilDevice, imguiPool, nullptr);
         imguiPool = VK_NULL_HANDLE;
     }
 }

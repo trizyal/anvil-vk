@@ -17,17 +17,18 @@ class AnvilUIRenderer
 {
 public:
     AnvilUIRenderer() = default;
-    ~AnvilUIRenderer() = default;
+    ~AnvilUIRenderer();
 
     VkFormat colorFormat;
     VkFormat depthFormat;
 
 private:
+    AnvilVulkanContext* ptrAContext = nullptr;
+
     VkDescriptorPool imguiPool = VK_NULL_HANDLE;
 
 public:
     bool initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwindow* inWindow, AnvilSwapchain* inSwapchain);
-    void shutdownUIRenderer(AnvilVulkanContext* inContext);
 
     static void BeginUIFrame();
     static void RecordUICommands(VkCommandBuffer cmdBuffer);

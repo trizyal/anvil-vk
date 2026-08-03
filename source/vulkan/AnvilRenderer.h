@@ -47,7 +47,7 @@ class AnvilRenderer
 {
 public:
     AnvilRenderer() = default;
-    ~AnvilRenderer() = default;
+    ~AnvilRenderer();
 
     /** Copy construction is disabled (Prevents double-freeing Vulkan sync objects & pools) */
     AnvilRenderer(const AnvilRenderer&) = delete;
@@ -87,7 +87,7 @@ public:
     /**
      * @brief Waits for the GPU to idle and destroys all per-frame Vulkan resources.
      */
-    void shutdownRenderer();
+
 
     /**
      * @brief Prepare a frame for rendering, executes the draw callback, and presents.

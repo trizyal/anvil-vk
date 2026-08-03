@@ -154,21 +154,6 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
         throw std::runtime_error("Failed to create upload fence.");
     }
 
-    // --------------------------------
-    // Set up Deletion Queue
-    anvilDeletionQueue.pushFunction([this]()
-    {
-        vkDestroyFence(anvilDevice, uploadFence, nullptr);
-        vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);
-        vmaDestroyAllocator(anvilAllocator);
-        vkDestroyDevice(anvilDevice, nullptr);
-        vkDestroySurfaceKHR(anvilInstance, anvilSurface, nullptr);
-#ifndef NDEBUG
-        vkb::destroy_debug_utils_messenger(anvilInstance, anvilDebugMessenger);
-#endif
-        vkDestroyInstance(anvilInstance, nullptr);
-    });
-
     std::cout << "Finished initializing AnvilVulkanContext" << std::endl;
 }
 
@@ -203,7 +188,15 @@ void AnvilVulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCm
     vkFreeCommandBuffers(anvilDevice, uploadCommandPool, 1, &cmd);
 }
 
-void AnvilVulkanContext::destroyVulkanContext()
+AnvilVulkanContext::~AnvilVulkanContext()
 {
-    anvilDeletionQueue.flush();
+    vkDestroyFence(anvilDevice, uploadFence, nullptr);
+    vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);
+    vmaDestroyAllocator(anvilAllocator);
+    vkDestroyDevice(anvilDevice, nullptr);
+    vkDestroySurfaceKHR(anvilInstance, anvilSurface, nullptr);
+#ifndef NDEBUG
+    vkb::destroy_debug_utils_messenger(anvilInstance, anvilDebugMessenger);
+#endif
+    vkDestroyInstance(anvilInstance, nullptr);
 }

@@ -13,6 +13,9 @@
 class AnvilSwapchain
 {
 public:
+    AnvilSwapchain() = default;
+    ~AnvilSwapchain();
+
     VkSwapchainKHR anvilSwapchain = VK_NULL_HANDLE;
     VkExtent2D anvilExtent;
 
@@ -32,7 +35,6 @@ private:
 public:
     void initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
     void recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
-    void cleanup();
 
 private:
     void createDepthAttachment(const AnvilVulkanContext& inAnvilContext);
