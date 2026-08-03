@@ -139,7 +139,7 @@ public:
      * @param inDevice Vulkan logical device used to create the pipeline.
      * @param inPipelineLayout Pipeline layout describing the resources accessible to the pipeline's shaders.
      * @param aDebugName Optional debug name for Vulkan object.
-     * @param aDbgSrcLoc Automatic
+     * @param aDbgSrcLoc Automatic.
      * @return AnvilPipeline containing the created Vulkan graphics pipeline handle.
      *
      * @see AnvilPipeline

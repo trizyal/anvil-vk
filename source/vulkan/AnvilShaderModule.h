@@ -44,9 +44,33 @@ private:
     VkDevice device = VK_NULL_HANDLE;
 
 public:
+    /**
+     * @brief Creates a Vulkan shader module from compiled SPIR-V bytecode
+     *
+     * Caches the logical device handle internally to allow for a no parameter destroy.
+     *
+     * @param inContext Reference to the active Anvil Vulkan context.
+     * @param inSPIRV Compilation result containing the compiled SPIR-V bytecode vector.
+     * @param aDebugName Optional debug name for Vulkan object.
+     * @param aDbgSrcLoc Automatic.
+     * @return `true` if the shader module was created successfully, `false` otherwise.
+     *
+     * @see ShaderCompileResult
+     */
     bool createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV ANVIL_DEBUG_DECL());
+
+    /**
+     * @brief Destroys the underlying Vulkan shader module using the cached logical device.
+     *
+     * Safe to call multiple times or on uninitialized/zeroed shader modules.
+     */
     void destroyShaderModule() const;
 
+    /**
+     * @brief Retrieves the underlying Vulkan shader module handle.
+     *
+     * @return The raw `VkShaderModule` handle, or `VK_NULL_HANDLE` if uninitialized.
+     */
     [[nodiscard]] VkShaderModule get() const;
 };
 

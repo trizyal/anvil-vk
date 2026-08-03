@@ -94,7 +94,7 @@ public:
      * Compiles the requested vertex and fragment via Slang, inspects the resulting reflection
      * metadata to build descriptor layouts and push constants, and allocates a descriptor set.
      *
-     * @param inContext Reference to the Anvil Vulkan Context.
+     * @param inContext Reference to the active Anvil Vulkan context.
      * @param inCompiler Reference to the active Slang shader compiler.
      * @param inVertReq Compilation request parameters for the vertex shader stage.
      * @param inFragReq Compilation request parameters for the fragment shader stage.
