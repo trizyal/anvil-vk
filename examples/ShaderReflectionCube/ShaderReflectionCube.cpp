@@ -106,6 +106,9 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain 
 void ShaderReflectionCube::loadPipeline()
 {
     std::cout << "Creating ShaderReflectionCube pipeline." << std::endl;
+
+    shaderCompiler.resetSession();
+
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);

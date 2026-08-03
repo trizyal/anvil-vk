@@ -4,12 +4,30 @@
 #include "AnvilShaderModule.h"
 
 #include <iostream>
+#include <utility>
 
-
-bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilShaders::ShaderCompileResult& inSPIRV
-    ANVIL_DEBUG_DEFN)
+AnvilShaderModule::AnvilShaderModule(AnvilShaderModule&& other) noexcept
 {
-    anvilDevice = inDevice;
+    *this = std::move(other);
+}
+
+AnvilShaderModule& AnvilShaderModule::operator=(AnvilShaderModule&& other) noexcept
+{
+    if (this != &other)
+    {
+        shaderModule = other.shaderModule;
+        device = other.device;
+
+        other.shaderModule = VK_NULL_HANDLE;
+        other.device = VK_NULL_HANDLE;
+    }
+    return *this;
+}
+
+bool AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
+                                           ANVIL_DEBUG_DEFN)
+{
+    device = inContext.anvilDevice;
     if (!inSPIRV.isValid())
     {
         std::cerr << "Cannot create shader module from invalid SPIR-V bytecode." << std::endl;
@@ -22,25 +40,25 @@ bool AnvilShaderModule::createShaderModule(const VkDevice inDevice, const AnvilS
     createInfo.codeSize = inSPIRV.spirv.size() * sizeof(uint32_t);
     createInfo.pCode = inSPIRV.spirv.data();
 
-    if (vkCreateShaderModule(anvilDevice, &createInfo, nullptr, &anvilShaderModule) != VK_SUCCESS)
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
     {
         std::cerr << "Failed to create Vulkan shader module!\n";
         return false;
     }
 
-    ANVIL_DEBUG_NAME(anvilDevice, anvilShaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
+    ANVIL_DEBUG_NAME(device, shaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
     return true;
 }
 
 void AnvilShaderModule::destroyShaderModule() const
 {
-    if (anvilShaderModule != VK_NULL_HANDLE && anvilDevice != VK_NULL_HANDLE)
+    if (shaderModule != VK_NULL_HANDLE && device != VK_NULL_HANDLE)
     {
-        vkDestroyShaderModule(anvilDevice, anvilShaderModule, nullptr);
+        vkDestroyShaderModule(device, shaderModule, nullptr);
     }
 }
 
 VkShaderModule AnvilShaderModule::get() const
 {
-    return anvilShaderModule;
+    return shaderModule;
 }

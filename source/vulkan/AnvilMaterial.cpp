@@ -123,13 +123,13 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
 
     // Build Vulkan Shader Modules
     std::string debug_name = "MaterialVertexShader: " + inVertReq.moduleName;
-    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, _vertex_result, debug_name.c_str()))
+    if (!vertexShader.createShaderModule(*ptrAContext, _vertex_result, debug_name.c_str()))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
     debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
-    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, _fragment_result, debug_name.c_str()))
+    if (!fragmentShader.createShaderModule(*ptrAContext, _fragment_result, debug_name.c_str()))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
     }

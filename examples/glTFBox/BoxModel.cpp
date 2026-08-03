@@ -97,6 +97,9 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwap
 void BoxModel::loadPipeline()
 {
     std::cout << "Creating BoxModel pipeline." << std::endl;
+
+    shaderCompiler.resetSession();
+
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);

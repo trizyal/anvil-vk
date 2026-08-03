@@ -165,6 +165,9 @@ void HelloCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwa
 void HelloCube::loadPipeline()
 {
     std::cout << "Creating HelloCube pipeline." << std::endl;
+
+    shaderCompiler.resetSession();
+
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
@@ -197,12 +200,12 @@ void HelloCube::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, vSpirv))
+    if (!vertexShader.createShaderModule(*ptrAContext, vSpirv))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
-    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, fSpirv))
+    if (!fragmentShader.createShaderModule(*ptrAContext, fSpirv))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
     }
