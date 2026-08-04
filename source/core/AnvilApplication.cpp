@@ -8,11 +8,6 @@
 #include "AnvilInput.h"
 #include "AnvilUILogger.h"
 
-AnvilApplication::~AnvilApplication()
-{
-    shutdownAnvil();
-}
-
 void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo)
 {
     std::cout << "Initializing Anvil..." << std::endl;
@@ -41,11 +36,6 @@ void AnvilApplication::shutdownAnvil()
     }
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
-
-    anvilUIRenderer.shutdownUIRenderer(&anvilContext);
-    anvilRenderer.shutdownRenderer();
-    anvilSwapchain.cleanup();
-    anvilContext.destroyVulkanContext();
 
     anvilWindow.reset();
 

@@ -58,7 +58,7 @@ void TextureCube::cleanupProject()
             vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
         }
 
-        meshBuffer.destroyAnvilMeshBuffer(*ptrAContext);
+        meshBuffer.destroyAnvilMeshBuffer();
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
@@ -74,15 +74,15 @@ void TextureCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilS
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(inAnvilSwapchain.anvilExtent.width);
-    viewport.height = static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    viewport.width = static_cast<float>(inAnvilSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(inCmd, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = inAnvilSwapchain.anvilExtent;
+    scissor.extent = inAnvilSwapchain.swapchainExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 
     // Calculate C++ Transforms
@@ -91,7 +91,7 @@ void TextureCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilS
 
     camera.updateCamera(dt);
 
-    float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    float aspect = static_cast<float>(inAnvilSwapchain.swapchainExtent.width) / static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
 
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
@@ -118,6 +118,9 @@ void TextureCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilS
 void TextureCube::loadPipeline()
 {
     std::cout << "Creating TextureCube pipeline." << std::endl;
+
+    shaderCompiler.resetSession();
+
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
@@ -153,12 +156,12 @@ void TextureCube::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, vSpirv))
+    if (!vertexShader.createShaderModule(*ptrAContext, vSpirv))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
-    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, fSpirv))
+    if (!fragmentShader.createShaderModule(*ptrAContext, fSpirv))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
     }
@@ -174,7 +177,7 @@ void TextureCube::loadPipeline()
     AnvilPipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
+        .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
         .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)

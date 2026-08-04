@@ -57,11 +57,11 @@ GLFWwindow* AnvilWindow::getGLFWWindow() const
     return glfwWindow;
 }
 
-VkSurfaceKHR AnvilWindow::createSurface(VkInstance instance) const
+VkSurfaceKHR AnvilWindow::createSurface(VkInstance inInstance) const
 {
     VkSurfaceKHR surface;
 
-    if (glfwCreateWindowSurface(instance, glfwWindow, nullptr, &surface) != VK_SUCCESS)
+    if (glfwCreateWindowSurface(inInstance, glfwWindow, nullptr, &surface) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create GLFW surface");
     }
@@ -77,7 +77,7 @@ VkExtent2D AnvilWindow::getFramebufferExtent() const
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
 
     return VkExtent2D{
-        static_cast<uint32_t>(fbWidth),
-        static_cast<uint32_t>(fbHeight)
+        .width = static_cast<uint32_t>(fbWidth),
+        .height = static_cast<uint32_t>(fbHeight)
     };
 }

@@ -11,8 +11,8 @@
 
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
     VkShaderStageFlagBits stage,
-    std::vector<VkDescriptorSetLayoutBinding>& layoutBindings,
-    std::vector<VkPushConstantRange>& pushConstants)
+    std::vector<VkDescriptorSetLayoutBinding>& outLayoutBindings,
+    std::vector<VkPushConstantRange>& outPushConstants)
 {
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
 
@@ -48,7 +48,7 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                 range.size = static_cast<uint32_t>(typeLayout->getSize());
             }
 
-            pushConstants.push_back(range);
+            outPushConstants.push_back(range);
 
             std::cout << "Reflected Push Constant: " << name << " Size: " << range.size << "\n";
             continue;
@@ -76,7 +76,7 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                 continue;
             }
 
-            layoutBindings.push_back(layoutBinding);
+            outLayoutBindings.push_back(layoutBinding);
 
             ShaderBinding info{};
             info.set = varLayout->getBindingSpace();
@@ -123,13 +123,13 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
 
     // Build Vulkan Shader Modules
     std::string debug_name = "MaterialVertexShader: " + inVertReq.moduleName;
-    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, _vertex_result, debug_name.c_str()))
+    if (!vertexShader.createShaderModule(*ptrAContext, _vertex_result, debug_name.c_str()))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
     debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
-    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, _fragment_result, debug_name.c_str()))
+    if (!fragmentShader.createShaderModule(*ptrAContext, _fragment_result, debug_name.c_str()))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
     }
@@ -259,9 +259,29 @@ void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inT
 
 void AnvilMaterial::bindUniformBuffer(const std::string& name, const AnvilBuffer& inBuffer)
 {
-    (void)name;
-    (void)inBuffer;
-    throw std::runtime_error("AnvilMaterial::bindUniformBuffer is not implemented!");
+    if (!bindingMap.contains(name))
+    {
+        return;
+    }
+
+    const ShaderBinding _shader_binding = bindingMap[name];
+
+    // 1. Setup buffer info
+    VkDescriptorBufferInfo buffer_info{};
+    buffer_info.buffer = inBuffer.buffer; // Assuming your AnvilBuffer holds a VkBuffer named 'buffer'
+    buffer_info.offset = 0;               // Offset into the buffer in bytes
+    buffer_info.range  = VK_WHOLE_SIZE;   // Size of the range in bytes (or VK_WHOLE_SIZE)
+    pendingBufferInfos.push_back(buffer_info);
+
+    // 2. Setup write descriptor set
+    VkWriteDescriptorSet descriptor_write{};
+    descriptor_write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_write.dstBinding      = _shader_binding.binding;
+    descriptor_write.dstArrayElement = 0;
+    descriptor_write.descriptorType  = _shader_binding.descriptorType; // e.g., VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+    descriptor_write.descriptorCount = 1;
+
+    pendingWrites.push_back(descriptor_write);
 }
 
 void AnvilMaterial::updateDescriptorSets()

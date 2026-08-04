@@ -7,10 +7,10 @@
 
 // Define static variables
 GLFWwindow* AnvilInput::s_glfwWindow = nullptr;
-bool AnvilInput::s_CurrentKeys[350] = {false};
-bool AnvilInput::s_PreviousKeys[350] = {false};
-bool AnvilInput::s_CurrentMouseButtons[8] = {false};
-bool AnvilInput::s_PreviousMouseButtons[8] = {false};
+bool AnvilInput::s_CurrentKeys[KEY_COUNT] = {false};
+bool AnvilInput::s_PreviousKeys[KEY_COUNT] = {false};
+bool AnvilInput::s_CurrentMouseButtons[BUTTON_COUNT] = {false};
+bool AnvilInput::s_PreviousMouseButtons[BUTTON_COUNT] = {false};
 glm::vec2 AnvilInput::s_MousePosition = {0.0f, 0.0f};
 glm::vec2 AnvilInput::s_MouseDelta = {0.0f, 0.0f};
 bool AnvilInput::s_FirstMouseUpdate = true;
@@ -27,13 +27,13 @@ void AnvilInput::UpdateInputs()
     std::memcpy(s_PreviousMouseButtons, s_CurrentMouseButtons, sizeof(s_CurrentMouseButtons));
 
     // Poll keyboard state, space is the first listed key
-    for (int i = GLFW_KEY_SPACE; i < GLFW_KEY_LAST; i++)
+    for (int i = GLFW_KEY_SPACE; i <= GLFW_KEY_LAST; i++)
     {
         s_CurrentKeys[i] = (glfwGetKey(s_glfwWindow, i) == GLFW_PRESS);
     }
 
     // Poll mouse state
-    for (int i = GLFW_MOUSE_BUTTON_1; i < GLFW_MOUSE_BUTTON_LAST; i++)
+    for (int i = GLFW_MOUSE_BUTTON_1; i <= GLFW_MOUSE_BUTTON_LAST; i++)
     {
         s_CurrentMouseButtons[i] = (glfwGetMouseButton(s_glfwWindow, i) == GLFW_PRESS);
     }

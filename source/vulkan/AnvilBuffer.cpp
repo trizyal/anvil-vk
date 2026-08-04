@@ -33,8 +33,10 @@ void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, cons
     // Clean up if this object wrapper is being reused
     if (buffer != VK_NULL_HANDLE)
     {
-        destroyBuffer(inAllocator);
+        destroyBuffer();
     }
+
+    allocator = inAllocator;
 
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -58,11 +60,11 @@ void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, cons
     vmaUnmapMemory(inAllocator, allocation);
 }
 
-void AnvilBuffer::destroyBuffer(VmaAllocator inAllocator)
+void AnvilBuffer::destroyBuffer()
 {
     if (buffer != VK_NULL_HANDLE && allocation != VK_NULL_HANDLE)
     {
-        vmaDestroyBuffer(inAllocator, buffer, allocation);
+        vmaDestroyBuffer(allocator, buffer, allocation);
         buffer = VK_NULL_HANDLE;
         allocation = VK_NULL_HANDLE;
     }

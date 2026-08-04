@@ -63,7 +63,6 @@ please see the [development](DEVELOPMENT.md) document.
 
 Copyright (C) 2026 trizyal.
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0-only). 
-See [LICENSE](LICENSE) for more details.
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0-only).
 
-*Copyright (C) 2026 trizyal. This project is licensed under the GPLv3.*
+*See [LICENSE](LICENSE) for more details.*

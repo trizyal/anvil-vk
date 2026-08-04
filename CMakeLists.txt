@@ -151,6 +151,8 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
         GLFW_INCLUDE_NONE
         VK_NO_PROTOTYPES
         VK_ENABLE_BETA_EXTENSIONS
+        UNIMPLEMENTED=0
+        IMPLEMENTED=1
 )
 
 if (WIN32)

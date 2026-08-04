@@ -4,10 +4,11 @@
 #include "AnvilMeshBuffer.h"
 
 #include "AnvilModelLoader.h"
-#include "AnvilVulkanContext.h"
 
 void AnvilMeshBuffer::createAnvilMeshBuffer(const AnvilVulkanContext& inContext, const AnvilMesh& inMesh)
 {
+    this->ptrAContext = &inContext;
+
     indexCount = static_cast<uint32_t>(inMesh.indices.size());
 
     // TODO: Need to get debug name somehow
@@ -28,10 +29,10 @@ void AnvilMeshBuffer::createAnvilMeshBuffer(const AnvilVulkanContext& inContext,
     );
 }
 
-void AnvilMeshBuffer::destroyAnvilMeshBuffer(const AnvilVulkanContext& inContext)
+void AnvilMeshBuffer::destroyAnvilMeshBuffer()
 {
-    vertexBuffer.destroyBuffer(inContext.anvilAllocator);
-    indexBuffer.destroyBuffer(inContext.anvilAllocator);
+    vertexBuffer.destroyBuffer();
+    indexBuffer.destroyBuffer();
 }
 
 VkVertexInputBindingDescription AnvilMeshBuffer::getBindingDescription()
@@ -58,7 +59,7 @@ std::array<VkVertexInputAttributeDescription, 3> AnvilMeshBuffer::getAttributeDe
     attributeDescriptions[1].binding = 0;
     attributeDescriptions[1].location = 1;
     attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescriptions[1].offset = offsetof(MeshVertex, color);
+    attributeDescriptions[1].offset = offsetof(MeshVertex, normal);
 
     // 2: UV
     attributeDescriptions[2].binding = 0;

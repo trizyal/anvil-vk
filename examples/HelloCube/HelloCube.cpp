@@ -110,8 +110,8 @@ void HelloCube::cleanupProject()
 {
     if (ptrAContext)
     {
-        vertexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
-        indexBuffer.destroyBuffer(ptrAContext->anvilAllocator);
+        vertexBuffer.destroyBuffer();
+        indexBuffer.destroyBuffer();
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
@@ -127,22 +127,22 @@ void HelloCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwa
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(inAnvilSwapchain.anvilExtent.width);
-    viewport.height = static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    viewport.width = static_cast<float>(inAnvilSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(inCmd, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = inAnvilSwapchain.anvilExtent;
+    scissor.extent = inAnvilSwapchain.swapchainExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 
     // Calculate C++ Transforms
     static float time = 0.0f;
     time += 0.016f; // Simple delta time
 
-    float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    float aspect = static_cast<float>(inAnvilSwapchain.swapchainExtent.width) / static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
 
     glm::mat4 projection = glm::perspective(glm::radians(70.0f), aspect, 0.1f, 100.0f);
     projection[1][1] *= -1; // Flip Y for Vulkan
@@ -165,6 +165,9 @@ void HelloCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwa
 void HelloCube::loadPipeline()
 {
     std::cout << "Creating HelloCube pipeline." << std::endl;
+
+    shaderCompiler.resetSession();
+
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
@@ -197,12 +200,12 @@ void HelloCube::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, vSpirv))
+    if (!vertexShader.createShaderModule(*ptrAContext, vSpirv))
     {
         throw std::runtime_error("Failed to create vertex shader module!");
     }
 
-    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, fSpirv))
+    if (!fragmentShader.createShaderModule(*ptrAContext, fSpirv))
     {
         throw std::runtime_error("Failed to create fragment shader module!");
     }
@@ -220,7 +223,7 @@ void HelloCube::loadPipeline()
     AnvilPipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
+        .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
         .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)

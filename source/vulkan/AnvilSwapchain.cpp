@@ -5,7 +5,10 @@
 
 #include <iostream>
 
+#include <VkBootstrap.h>
+
 #include "AnvilVulkanDebug.h"
+#include "AnvilVulkanContext.h"
 
 void AnvilSwapchain::initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
@@ -33,27 +36,27 @@ void AnvilSwapchain::initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkE
     anvilSwapchain = vkbSwapchain.swapchain;
     AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, anvilSwapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, "AnvilSwapchain");
 
-    anvilExtent = vkbSwapchain.extent;
-    anvilImageFormat = vkbSwapchain.image_format;
+    swapchainExtent = vkbSwapchain.extent;
+    swapchainFormat = vkbSwapchain.image_format;
 
-    anvilImages = vkbSwapchain.get_images().value();
-    anvilImageViews = vkbSwapchain.get_image_views().value();
+    swapchainImages = vkbSwapchain.get_images().value();
+    swapchainImageViews = vkbSwapchain.get_image_views().value();
 
-    for (size_t i = 0; i < anvilImages.size(); ++i)
+    for (size_t i = 0; i < swapchainImages.size(); ++i)
     {
         std::string imageName = "SwapchainImage[" + std::to_string(i) + "]";
-        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImages[i],
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, swapchainImages[i],
             VK_OBJECT_TYPE_IMAGE, imageName.c_str());
     }
 
-    for (size_t i = 0; i < anvilImageViews.size(); ++i)
+    for (size_t i = 0; i < swapchainImageViews.size(); ++i)
     {
         std::string imageViewName = "SwapchainImageView[" + std::to_string(i) + "]";
-        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImageViews[i],
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, swapchainImageViews[i],
             VK_OBJECT_TYPE_IMAGE_VIEW, imageViewName.c_str());
     }
 
-    createDepthAttachment(inAnvilContext);
+    createDepthAttachment();
 
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
@@ -67,13 +70,15 @@ void AnvilSwapchain::recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExt
 
     // Save old swapchain handle
     VkSwapchainKHR oldSwapchain = anvilSwapchain;
+    [[maybe_unused]] VkFormat oldFormat = swapchainFormat;
+    [[maybe_unused]] VkExtent2D oldExtent = swapchainExtent;
 
     // Destroy old images views
-    for (VkImageView imageView: anvilImageViews)
+    for (VkImageView imageView: swapchainImageViews)
     {
         vkDestroyImageView(ptrAContext->anvilDevice, imageView, nullptr);
     }
-    anvilImageViews.clear();
+    swapchainImageViews.clear();
 
     if (depthImageView != VK_NULL_HANDLE)
     {
@@ -107,44 +112,49 @@ void AnvilSwapchain::recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExt
     anvilSwapchain = vkbSwapchain.swapchain;
     AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, anvilSwapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, "AnvilSwapchain");
 
-    anvilExtent = vkbSwapchain.extent;
-    anvilImageFormat = vkbSwapchain.image_format;
+    swapchainExtent = vkbSwapchain.extent;
+    swapchainFormat = vkbSwapchain.image_format;
 
-    anvilImages = vkbSwapchain.get_images().value();
-    anvilImageViews = vkbSwapchain.get_image_views().value();
+    swapchainImages = vkbSwapchain.get_images().value();
+    swapchainImageViews = vkbSwapchain.get_image_views().value();
 
-    for (size_t i = 0; i < anvilImages.size(); ++i)
+    for (size_t i = 0; i < swapchainImages.size(); ++i)
     {
         std::string imageName = "SwapchainImage[" + std::to_string(i) + "]";
-        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImages[i],
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, swapchainImages[i],
             VK_OBJECT_TYPE_IMAGE, imageName.c_str());
     }
 
-    for (size_t i = 0; i < anvilImageViews.size(); ++i)
+    for (size_t i = 0; i < swapchainImageViews.size(); ++i)
     {
         std::string imageViewName = "SwapchainImageView[" + std::to_string(i) + "]";
-        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, anvilImageViews[i],
+        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, swapchainImageViews[i],
             VK_OBJECT_TYPE_IMAGE_VIEW, imageViewName.c_str());
     }
 
-    createDepthAttachment(inAnvilContext);
+    createDepthAttachment();
 
     if (oldSwapchain != VK_NULL_HANDLE)
     {
         vkDestroySwapchainKHR(ptrAContext->anvilDevice, oldSwapchain, nullptr);
     }
 
+    if (oldFormat != swapchainFormat)
+    {
+        std::cerr << "Swapchain format has changed!" << std::endl;
+    }
+
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
 
-void AnvilSwapchain::createDepthAttachment(const AnvilVulkanContext& inAnvilContext)
+void AnvilSwapchain::createDepthAttachment()
 {
     // Create depth image via VMA
     VkImageCreateInfo depthImageInfo{};
     depthImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     depthImageInfo.imageType = VK_IMAGE_TYPE_2D;
     depthImageInfo.format = depthFormat;
-    depthImageInfo.extent = {anvilExtent.width, anvilExtent.height, 1};
+    depthImageInfo.extent = {swapchainExtent.width, swapchainExtent.height, 1};
     depthImageInfo.mipLevels = 1;
     depthImageInfo.arrayLayers = 1;
     depthImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -160,7 +170,7 @@ void AnvilSwapchain::createDepthAttachment(const AnvilVulkanContext& inAnvilCont
         throw std::runtime_error("Failed to allocate depth image.");
     }
 
-    AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, depthImageView, VK_OBJECT_TYPE_IMAGE_VIEW, "SwapchainDepthImageView");
+    AnvilDebug::SetAutoName(ptrAContext->anvilDevice, depthImageView, VK_OBJECT_TYPE_IMAGE_VIEW, "SwapchainDepthImageView");
 
     // Create depth imageview
     VkImageViewCreateInfo depthImageViewInfo{};
@@ -179,12 +189,12 @@ void AnvilSwapchain::createDepthAttachment(const AnvilVulkanContext& inAnvilCont
         throw std::runtime_error("Failed to create depth image view.");
     }
 
-    AnvilDebug::SetAutoName(inAnvilContext.anvilDevice, depthImage, VK_OBJECT_TYPE_IMAGE, "SwapchainDepthImage");
+    AnvilDebug::SetAutoName(ptrAContext->anvilDevice, depthImage, VK_OBJECT_TYPE_IMAGE, "SwapchainDepthImage");
 }
 
-void AnvilSwapchain::cleanup()
+AnvilSwapchain::~AnvilSwapchain()
 {
-    for (VkImageView imageView: anvilImageViews)
+    for (VkImageView imageView: swapchainImageViews)
     {
         vkDestroyImageView(ptrAContext->anvilDevice, imageView, nullptr);
     }

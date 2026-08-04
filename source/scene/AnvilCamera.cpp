@@ -46,7 +46,8 @@ void AnvilCamera::updateCamera(float deltaTime)
         AnvilInput::SetCursorMode(GLFW_CURSOR_DISABLED);
 
         // Sprinting
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f; // TODO: This camera velocity should be configurable
+        // TODO: This camera velocity should be configurable
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f;
 
         // Keyboard Movement
         if (AnvilInput::IsKeyPressed(GLFW_KEY_W)) position += front * velocity;
@@ -56,13 +57,13 @@ void AnvilCamera::updateCamera(float deltaTime)
 
         // Vertical movement
         // if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += up * velocity;
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += worldUp * velocity;
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += WORLD_UP * velocity;
         // if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= up * velocity;
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= worldUp * velocity;
+        if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= WORLD_UP * velocity;
 
         glm::vec2 mouseDelta = AnvilInput::GetMouseDelta();
-        yawDegree += mouseDelta.x * mouseSensitivity;
-        pitchDegree += mouseDelta.y * mouseSensitivity;
+        yawDegree += mouseDelta.x * cameraSensitivity;
+        pitchDegree += mouseDelta.y * cameraSensitivity;
 
         // Constrain pitch so the screen does not flip upside down
         pitchDegree = std::clamp(pitchDegree, -89.0f, 89.0f);
@@ -84,6 +85,6 @@ void AnvilCamera::updateCameraVectors()
     newFront.z = sin(glm::radians(yawDegree)) * cos(glm::radians(pitchDegree));
 
     front = glm::normalize(newFront);
-    right = glm::normalize(glm::cross(front, worldUp));
+    right = glm::normalize(glm::cross(front, WORLD_UP));
     up = glm::normalize(glm::cross(right, front));
 }
