@@ -34,13 +34,13 @@ bool AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, 
         return false;
     }
 
-    VkShaderModuleCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    VkShaderModuleCreateInfo create_info = {};
+    create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     // codeSize expects bytes, but our vector holds 32-bit (4 byte) integers
-    createInfo.codeSize = inSPIRV.spirv.size() * sizeof(uint32_t);
-    createInfo.pCode = inSPIRV.spirv.data();
+    create_info.codeSize = inSPIRV.spirv.size() * sizeof(uint32_t);
+    create_info.pCode = inSPIRV.spirv.data();
 
-    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+    if (vkCreateShaderModule(device, &create_info, nullptr, &shaderModule) != VK_SUCCESS)
     {
         std::cerr << "Failed to create Vulkan shader module!\n";
         return false;
