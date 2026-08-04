@@ -40,20 +40,20 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setShaders(VkShaderModule inVertexSh
     // TODO: If there are more stages, need to figure out how that will go
     shaderStages.clear();
 
-    VkPipelineShaderStageCreateInfo vertStageInfo{};
-    vertStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    vertStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertStageInfo.module = inVertexShader;
-    vertStageInfo.pName = "main";
+    VkPipelineShaderStageCreateInfo vert_stage_info{};
+    vert_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vert_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vert_stage_info.module = inVertexShader;
+    vert_stage_info.pName = "main";
 
-    VkPipelineShaderStageCreateInfo fragStageInfo{};
-    fragStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    fragStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragStageInfo.module = inFragmentShader;
-    fragStageInfo.pName = "main";
+    VkPipelineShaderStageCreateInfo frag_stage_info{};
+    frag_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    frag_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    frag_stage_info.module = inFragmentShader;
+    frag_stage_info.pName = "main";
 
-    shaderStages.push_back(vertStageInfo);
-    shaderStages.push_back(fragStageInfo);
+    shaderStages.push_back(vert_stage_info);
+    shaderStages.push_back(frag_stage_info);
 
     return *this;
 }
@@ -129,41 +129,41 @@ AnvilPipeline AnvilPipelineBuilder::buildPipeline(const VkDevice& inDevice, cons
 {
     // Viewport state setup
     // Using dynamic states so we can resize the window
-    VkPipelineViewportStateCreateInfo viewportState{};
-    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.scissorCount = 1;
+    VkPipelineViewportStateCreateInfo viewport_state_info{};
+    viewport_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewport_state_info.viewportCount = 1;
+    viewport_state_info.scissorCount = 1;
 
-    VkPipelineColorBlendStateCreateInfo colorBlending{};
-    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+    VkPipelineColorBlendStateCreateInfo color_blending_info{};
+    color_blending_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    color_blending_info.logicOpEnable = VK_FALSE;
+    color_blending_info.attachmentCount = 1;
+    color_blending_info.pAttachments = &colorBlendAttachment;
 
-    std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-    VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
-    dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-    dynamicStateInfo.pDynamicStates = dynamicStates.data();
+    std::vector<VkDynamicState> dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    VkPipelineDynamicStateCreateInfo dynamic_state_info{};
+    dynamic_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
+    dynamic_state_info.pDynamicStates = dynamic_states.data();
 
-    VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
-    pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineCreateInfo.pNext = &dynamicRendering;
-    pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
-    pipelineCreateInfo.pStages = shaderStages.data();
-    pipelineCreateInfo.pVertexInputState = &vertexInputInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssembly;
-    pipelineCreateInfo.pViewportState = &viewportState;
-    pipelineCreateInfo.pRasterizationState = &rasterizer;
-    pipelineCreateInfo.pMultisampleState = &multisampling;
-    pipelineCreateInfo.pDepthStencilState = &depthStencil;
-    pipelineCreateInfo.pColorBlendState = &colorBlending;
-    pipelineCreateInfo.pDynamicState = &dynamicStateInfo;
-    pipelineCreateInfo.layout = inPipelineLayout;
+    VkGraphicsPipelineCreateInfo pipeline_create_info{};
+    pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipeline_create_info.pNext = &dynamicRendering;
+    pipeline_create_info.stageCount = static_cast<uint32_t>(shaderStages.size());
+    pipeline_create_info.pStages = shaderStages.data();
+    pipeline_create_info.pVertexInputState = &vertexInputInfo;
+    pipeline_create_info.pInputAssemblyState = &inputAssembly;
+    pipeline_create_info.pViewportState = &viewport_state_info; // Hard coded
+    pipeline_create_info.pRasterizationState = &rasterizer;
+    pipeline_create_info.pMultisampleState = &multisampling;
+    pipeline_create_info.pDepthStencilState = &depthStencil;
+    pipeline_create_info.pColorBlendState = &color_blending_info; // Hard coded
+    pipeline_create_info.pDynamicState = &dynamic_state_info; // Hard coded
+    pipeline_create_info.layout = inPipelineLayout;
 
     AnvilPipeline returnAnvilPipeline{};
 
-    if (vkCreateGraphicsPipelines(inDevice, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &returnAnvilPipeline.pipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(inDevice, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &returnAnvilPipeline.pipeline) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create graphics pipeline!");
     }
