@@ -36,7 +36,7 @@ AnvilRenderer::~AnvilRenderer()
     }
 
     // Clean up per-image semaphores
-    for (VkSemaphore& semaphore : renderFinishedSemaphores)
+    for (const VkSemaphore& semaphore : renderFinishedSemaphores)
     {
         vkDestroySemaphore(ptrAContext->anvilDevice, semaphore, nullptr);
     }
@@ -74,6 +74,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     if (acquiredResult == VK_ERROR_OUT_OF_DATE_KHR /*|| acquiredResult == VK_SUBOPTIMAL_KHR*/)
     {
         // Recreate Swapchain
+        std::cout << "VK_ERROR_OUT_OF_DATE_KHR" << std::endl;
         recreateSwapchain = true;
         return;
     }
@@ -193,6 +194,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
 
     if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
     {
+        std::cout << "VK_ERROR_OUT_OF_DATE_KHR || VK_SUBOPTIMAL_KHR" << std::endl;
         recreateSwapchain = true;
     }
     else if (presentResult != VK_SUCCESS)

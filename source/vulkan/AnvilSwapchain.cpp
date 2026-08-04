@@ -67,6 +67,8 @@ void AnvilSwapchain::recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExt
 
     // Save old swapchain handle
     VkSwapchainKHR oldSwapchain = anvilSwapchain;
+    [[maybe_unused]] VkFormat oldFormat = anvilImageFormat;
+    [[maybe_unused]] VkExtent2D oldExtent = anvilExtent;
 
     // Destroy old images views
     for (VkImageView imageView: anvilImageViews)
@@ -132,6 +134,11 @@ void AnvilSwapchain::recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExt
     if (oldSwapchain != VK_NULL_HANDLE)
     {
         vkDestroySwapchainKHR(ptrAContext->anvilDevice, oldSwapchain, nullptr);
+    }
+
+    if (oldFormat != anvilImageFormat)
+    {
+        std::cerr << "Swapchain format has changed!" << std::endl;
     }
 
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
