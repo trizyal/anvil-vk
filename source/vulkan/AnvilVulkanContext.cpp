@@ -64,10 +64,10 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 
     if (!vkb_instance_result)
     {
-        std::ostringstream errorStream;
-        errorStream << "Failed to create Vulkan instance via vk-bootstrap:\n"
-                    << "  Primary error: " << vkb_instance_result.error().message() << "\n";
-        throw std::runtime_error(errorStream.str());
+        std::ostringstream error_stream;
+        error_stream << "Failed to create Vulkan instance via vk-bootstrap:" << std::endl;
+        error_stream << "    Primary error: " << vkb_instance_result.error().message() << std::endl;
+        throw std::runtime_error(error_stream.str());
     }
 
     const vkb::Instance vkb_instance = vkb_instance_result.value();
@@ -103,16 +103,16 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     if (!vkb_physical_device_result)
     {
         std::ostringstream error_stream;
-        error_stream << "Failed to select a suitable GPU physical device:\n"
-                    << "  Primary error: " << vkb_physical_device_result.error().message() << "\n";
+        error_stream << "Failed to select a suitable GPU physical device:" << std::endl;
+        error_stream << "   Primary error: " << vkb_physical_device_result.error().message() << std::endl;
 
         const auto& failure_reasons = vkb_physical_device_result.detailed_failure_reasons();
         if (!failure_reasons.empty())
         {
-            error_stream << "  Detailed failure reasons:\n";
+            error_stream << "  Detailed failure reasons:" << std::endl;
             for (const auto& reason : failure_reasons)
             {
-                error_stream << "    - " << reason << "\n";
+                error_stream << "    - " << reason << std::endl;
             }
         }
         throw std::runtime_error(error_stream.str());
@@ -129,8 +129,8 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     if (!vkb_device_result)
     {
         std::ostringstream error_stream;
-        error_stream << "Failed to build logical Vulkan device:\n"
-                    << "  Primary error: " << vkb_device_result.error().message();
+        error_stream << "Failed to build logical Vulkan device:" << std::endl;
+        error_stream << "   Primary error: " << vkb_device_result.error().message();
         throw std::runtime_error(error_stream.str());
     }
 
@@ -192,29 +192,29 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 
 void AnvilVulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction) const
 {
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = uploadCommandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
+    VkCommandBufferAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    alloc_info.commandPool = uploadCommandPool;
+    alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    alloc_info.commandBufferCount = 1;
 
     VkCommandBuffer cmd;
-    vkAllocateCommandBuffers(anvilDevice, &allocInfo, &cmd);
+    vkAllocateCommandBuffers(anvilDevice, &alloc_info, &cmd);
 
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    vkBeginCommandBuffer(cmd, &beginInfo);
+    vkBeginCommandBuffer(cmd, &begin_info);
     callbackFunction(cmd);
     vkEndCommandBuffer(cmd);
 
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &cmd;
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd;
 
-    vkQueueSubmit(anvilGraphicsQueue, 1, &submitInfo, uploadFence);
+    vkQueueSubmit(anvilGraphicsQueue, 1, &submit_info, uploadFence);
     vkWaitForFences(anvilDevice, 1, &uploadFence, VK_TRUE, UINT64_MAX);
     vkResetFences(anvilDevice, 1, &uploadFence);
 
