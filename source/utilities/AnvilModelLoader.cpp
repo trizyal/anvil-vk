@@ -28,23 +28,23 @@ namespace AnvilModelLoader
             throw std::runtime_error("Failed to load GLTF file: " + filePath);
         }
 
-        AnvilMesh meshData;
+        AnvilMesh mesh_data;
         if (data->meshes_count > 0)
         {
             const cgltf_mesh* mesh = &data->meshes[0];
             const cgltf_primitive* primitive = &mesh->primitives[0];
 
-            glm::vec3 materialBaseColor = {1.0f, 1.0f, 1.0f}; // Default white
+            glm::vec3 material_base_color = {1.0f, 1.0f, 1.0f}; // Default white
             if (primitive->material && primitive->material->has_pbr_metallic_roughness)
             {
-                float* colorFactor = primitive->material->pbr_metallic_roughness.base_color_factor;
-                materialBaseColor = {colorFactor[0], colorFactor[1], colorFactor[2]};
-                std::cout << "Found material color: " << materialBaseColor.x << materialBaseColor.y << materialBaseColor.z << std::endl;
+                float* color_factor = primitive->material->pbr_metallic_roughness.base_color_factor;
+                material_base_color = {color_factor[0], color_factor[1], color_factor[2]};
+                std::cout << "Found material color: " << material_base_color.x << material_base_color.y << material_base_color.z << std::endl;
             }
 
             // Extract Vertices
             const cgltf_accessor* position_accessor = nullptr;
-            const cgltf_accessor* color_accessor = nullptr;
+            [[maybe_unused]]const cgltf_accessor* color_accessor = nullptr;
             const cgltf_accessor* uv_accessor = nullptr;
             const cgltf_accessor* normal_accessor = nullptr;
 
@@ -70,36 +70,36 @@ namespace AnvilModelLoader
 
             if (position_accessor)
             {
-                meshData.vertices.resize(position_accessor->count);
+                mesh_data.vertices.resize(position_accessor->count);
                 for (cgltf_size i = 0; i < position_accessor->count; ++i)
                 {
-                    cgltf_accessor_read_float(position_accessor, i, &meshData.vertices[i].position.x, 3);
+                    cgltf_accessor_read_float(position_accessor, i, &mesh_data.vertices[i].position.x, 3);
 
 #if 0
                     if (color_accessor)
                     {
-                        cgltf_accessor_read_float(color_accessor, i, &meshData.vertices[i].color.x, 3);
+                        cgltf_accessor_read_float(color_accessor, i, &mesh_data.vertices[i].color.x, 3);
                     }
                     else // fallback
                     {
                         // meshData.vertices[i].color = glm::vec3(0.0f, 0.0f, 0.0f);
-                        meshData.vertices[i].color = materialBaseColor;
+                        mesh_data.vertices[i].color = material_base_color;
                     }
 #endif
 
                     // Read UV coordinates if they exists
                     if (uv_accessor)
                     {
-                        cgltf_accessor_read_float(uv_accessor, i, &meshData.vertices[i].uv.x, 2);
+                        cgltf_accessor_read_float(uv_accessor, i, &mesh_data.vertices[i].uv.x, 2);
                     }
                     else // fallback
                     {
-                        meshData.vertices[i].uv = glm::vec2(0.0f, 0.0f);
+                        mesh_data.vertices[i].uv = glm::vec2(0.0f, 0.0f);
                     }
 
                     if (normal_accessor)
                     {
-                        cgltf_accessor_read_float(normal_accessor, i, &meshData.vertices[i].normal.x, 3);
+                        cgltf_accessor_read_float(normal_accessor, i, &mesh_data.vertices[i].normal.x, 3);
                     }
                 }
             }
@@ -108,10 +108,10 @@ namespace AnvilModelLoader
             if (primitive->indices)
             {
                 const cgltf_accessor* index_accessor = primitive->indices;
-                meshData.indices.resize(index_accessor->count);
+                mesh_data.indices.resize(index_accessor->count);
                 for (cgltf_size i = 0; i < index_accessor->count; ++i)
                 {
-                    meshData.indices[i] = static_cast<uint32_t>(cgltf_accessor_read_index(index_accessor, i));
+                    mesh_data.indices[i] = static_cast<uint32_t>(cgltf_accessor_read_index(index_accessor, i));
                 }
             }
         }
@@ -126,10 +126,10 @@ namespace AnvilModelLoader
             }
 
             // Combine folder path + image name (e.g., "PROJECT_DIR/Box/glTF/Cube_BaseColor.png")
-            meshData.texturePath = base_dir + data->images[0].uri;
+            mesh_data.texturePath = base_dir + data->images[0].uri;
         }
 
         cgltf_free(data);
-        return meshData;
+        return mesh_data;
     }
 } //AnvilModelLoader

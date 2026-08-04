@@ -70,7 +70,7 @@ namespace AnvilShaders
      * @param inSPIRV Vector of 32-bit SPIR-V binary words to write.
      * @param filename Destination file path where the binary artifact will be saved.
      */
-    void DumpSPIRVToFile(std::vector<uint32_t> inSPIRV, std::string& filename);
+    void DumpSPIRVToFile(const std::vector<uint32_t>& inSPIRV, const std::string& filename);
 
     /**
      * @brief Translates an Anvil ShaderType into the equivalent Slang SDK stage enumeration.

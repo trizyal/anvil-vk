@@ -20,9 +20,9 @@ namespace
     ShaderCompileResult GetEmptyShaderByteCode()
     {
         ShaderCompileResult empty;
-        std::vector<uint32_t> emptyVec;
-        emptyVec.clear();
-        empty.spirv = emptyVec;
+        std::vector<uint32_t> empty_vec;
+        empty_vec.clear();
+        empty.spirv = empty_vec;
         return empty;
     }
 
@@ -30,8 +30,8 @@ namespace
     {
         if (slangBlob && slangBlob->getBufferSize() > 0)
         {
-            std::cerr << "Slang Compiler Error/Warning:\n"
-                << static_cast<const char*>(slangBlob->getBufferPointer()) << std::endl;
+            std::cerr << "Slang Compiler Error/Warning:" << std::endl;
+            std::cerr << static_cast<const char*>(slangBlob->getBufferPointer()) << std::endl;
         }
     }
 } //Anonymous
@@ -92,127 +92,134 @@ int32_t AnvilShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel i
 
 ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request)
 {
-    ShaderCompileResult shaderResult = GetEmptyShaderByteCode();
+    ShaderCompileResult shader_result = GetEmptyShaderByteCode();
     if (!globalSession)
     {
-        std::cerr << "Slang Global Session is not initialized!\n";
-        return shaderResult;
+        std::cerr << "Slang Global Session is not initialized." << std::endl;
+        return shader_result;
     }
 
     if (!session)
     {
-    // Setup target (Vulkan 1.3 / SPIR-V 1.5)
-    slang::TargetDesc targetDesc = {};
-    targetDesc.format = SLANG_SPIRV;
-    targetDesc.profile = globalSession->findProfile("spirv_1_5");
+        // Setup target (Vulkan 1.3 / SPIR-V 1.5)
+        slang::TargetDesc target_desc = {};
+        target_desc.format = SLANG_SPIRV;
+        target_desc.profile = globalSession->findProfile("spirv_1_5");
 
-    // Configure Session
-    slang::SessionDesc sessionDesc = {};
-    sessionDesc.targets = &targetDesc;
-    sessionDesc.targetCount = 1;
+        // Configure Session
+        slang::SessionDesc session_desc = {};
+        session_desc.targets = &target_desc;
+        session_desc.targetCount = 1;
 
-    // Apply Search Paths
-    std::vector<const char*> cSearchPaths;
-    for (const auto& path : searchPaths)
-    {
-        cSearchPaths.push_back(path.c_str());
-    }
+        // Apply Search Paths
+        std::vector<const char*> search_paths;
+        for (const auto& path : searchPaths)
+        {
+            search_paths.push_back(path.c_str());
+        }
 
-    // Needs to be initialized outside the .empty() block
-    const char* defaultPath[] = {ANVIL_SHADER_DIR};
+        // Needs to be initialized outside the .empty() block
+        const char* defaultPath[] = {ANVIL_SHADER_DIR};
 
-    if (cSearchPaths.empty())
-    {
-        sessionDesc.searchPaths = defaultPath;
-        sessionDesc.searchPathCount = 1;
-    }
-    else
-    {
-        sessionDesc.searchPaths = cSearchPaths.data();
-        sessionDesc.searchPathCount = static_cast<uint32_t>(cSearchPaths.size());
-    }
+        if (search_paths.empty())
+        {
+            session_desc.searchPaths = defaultPath;
+            session_desc.searchPathCount = 1;
+        }
+        else
+        {
+            session_desc.searchPaths = search_paths.data();
+            session_desc.searchPathCount = static_cast<uint32_t>(search_paths.size());
+        }
 
-    // Apply Optimization level
-    const slang::CompilerOptionEntry options = {
-        slang::CompilerOptionName::Optimization,
-         { slang::CompilerOptionValueKind::Int, getSlangOptimizationLevel(optimizationLevel), 0, 0, 0 }
-    };
-    sessionDesc.compilerOptionEntries = &options;
-    sessionDesc.compilerOptionEntryCount = 1;
+        // Apply Optimization level
+        const slang::CompilerOptionEntry options = {
+            slang::CompilerOptionName::Optimization,
+        {
+                    .kind = slang::CompilerOptionValueKind::Int,
+                    .intValue0 = getSlangOptimizationLevel(optimizationLevel),
+                    .intValue1 = 0,
+                    .stringValue0 = nullptr, .stringValue1 = nullptr
+                }
+        };
+        session_desc.compilerOptionEntries = &options;
+        session_desc.compilerOptionEntryCount = 1;
 
-    // Create the Session
-    globalSession->createSession(sessionDesc, session.writeRef());
+        // Create the Session
+        globalSession->createSession(session_desc, session.writeRef());
     }
 
     // Load the Shader Modules
     Slang::ComPtr<slang::IBlob> diagnostics;
-    slang::IModule* slangModule = session->loadModule(request.moduleName.c_str(), diagnostics.writeRef());
+    slang::IModule* slang_module = session->loadModule(request.moduleName.c_str(), diagnostics.writeRef());
     DiagnoseIfNeeded(diagnostics);
 
-    if (!slangModule)
+    if (!slang_module)
     {
         std::cerr << "AnvilShaderCompiler: Failed to load Slang module: " << request.moduleName.c_str() << std::endl;
-        return shaderResult;
+        return shader_result;
     }
 
     // Find the Entry Points
     // eg. [shader("vertex")] vertexMain in Slang
-    Slang::ComPtr<slang::IEntryPoint> entryPoint;
-    slangModule->findEntryPointByName(request.entryPoint.c_str(), entryPoint.writeRef());
+    Slang::ComPtr<slang::IEntryPoint> entry_point;
+    slang_module->findEntryPointByName(request.entryPoint.c_str(), entry_point.writeRef());
 
-    if (!entryPoint)
+    if (!entry_point)
     {
         std::cerr << "AnvilShaderCompiler: Failed to find entry point " << request.entryPoint.c_str() << std::endl;
-        return shaderResult;
+        return shader_result;
     }
 
     // Composite and Link
-    slang::IComponentType* componentTypes[] = {slangModule, entryPoint};
-    Slang::ComPtr<slang::IComponentType> compositeComponent;
+    slang::IComponentType* component_types[] = {slang_module, entry_point};
+    Slang::ComPtr<slang::IComponentType> composite_component;
     session->createCompositeComponentType(
-        componentTypes,
+        component_types,
         2,
-        compositeComponent.writeRef(),
+        composite_component.writeRef(),
         diagnostics.writeRef()
     );
     DiagnoseIfNeeded(diagnostics);
 
-    Slang::ComPtr<slang::IComponentType> linkedProgram;
-    compositeComponent->link(linkedProgram.writeRef(), diagnostics.writeRef());
+    Slang::ComPtr<slang::IComponentType> linked_program;
+    composite_component->link(linked_program.writeRef(), diagnostics.writeRef());
     DiagnoseIfNeeded(diagnostics);
 
     // Extract SPIR-V
-    Slang::ComPtr<slang::IBlob> spirvBlob;
-    linkedProgram->getTargetCode(0, spirvBlob.writeRef(), diagnostics.writeRef());
+    Slang::ComPtr<slang::IBlob> spirv_blob;
+    linked_program->getTargetCode(0, spirv_blob.writeRef(), diagnostics.writeRef());
     DiagnoseIfNeeded(diagnostics);
-    if (spirvBlob)
+
+    if (spirv_blob)
     {
-        const uint32_t* spirvCode = static_cast<const uint32_t*>(spirvBlob->getBufferPointer());
-        const size_t spirvWordCount = spirvBlob->getBufferSize() / sizeof(uint32_t);
-        shaderResult.spirv.assign(spirvCode, spirvCode + spirvWordCount);
+        const uint32_t* spirv_code = static_cast<const uint32_t*>(spirv_blob->getBufferPointer());
+        const size_t spirv_word_count = spirv_blob->getBufferSize() / sizeof(uint32_t);
+        shader_result.spirv.assign(spirv_code, spirv_code + spirv_word_count);
     }
-    shaderResult.reflection = linkedProgram;
+    
+    shader_result.reflection = linked_program;
 
-    auto paramCount = linkedProgram->getLayout()->getParameterCount();
+    auto param_count = linked_program->getLayout()->getParameterCount();
 
-    std::cout << "Parameter count in ShaderCompiler: " << paramCount << std::endl;
+    std::cout << "Parameter count in ShaderCompiler: " << param_count << std::endl;
 
     // TODO: This dump should ideally be in readable code
     // Dump SPIR-V if requested
-    if (bDumpSpirv && shaderResult.isValid()) {
-        std::string fileName = request.entryPoint + ".spv";
-        std::string fullPath = dumpDirectory.empty() ? fileName : (dumpDirectory + "/" + fileName);
+    if (bDumpSpirv && shader_result.isValid()) {
+        std::string file_name = request.entryPoint + ".spv";
+        std::string full_path = dumpDirectory.empty() ? file_name : (dumpDirectory + "/" + file_name);
 
-        std::ofstream file(fullPath, std::ios::out | std::ios::binary);
+        std::ofstream file(full_path, std::ios::out | std::ios::binary);
         if (file.is_open()) {
-            file.write(reinterpret_cast<const char*>(shaderResult.spirv.data()), shaderResult.spirv.size() * sizeof(uint32_t));
+            file.write(reinterpret_cast<const char*>(shader_result.spirv.data()), shader_result.spirv.size() * sizeof(uint32_t));
             file.close();
         }
         else
         {
-            std::cerr << "AnvilShaderCompiler: Failed to open dump file: " << fullPath << "\n";
+            std::cerr << "AnvilShaderCompiler: Failed to open dump file: " << full_path << "\n";
         }
     }
 
-    return shaderResult;
+    return shader_result;
 }
