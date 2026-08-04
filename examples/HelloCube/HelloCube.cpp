@@ -127,22 +127,22 @@ void HelloCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwa
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(inAnvilSwapchain.anvilExtent.width);
-    viewport.height = static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    viewport.width = static_cast<float>(inAnvilSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(inCmd, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = inAnvilSwapchain.anvilExtent;
+    scissor.extent = inAnvilSwapchain.swapchainExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 
     // Calculate C++ Transforms
     static float time = 0.0f;
     time += 0.016f; // Simple delta time
 
-    float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    float aspect = static_cast<float>(inAnvilSwapchain.swapchainExtent.width) / static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
 
     glm::mat4 projection = glm::perspective(glm::radians(70.0f), aspect, 0.1f, 100.0f);
     projection[1][1] *= -1; // Flip Y for Vulkan
@@ -223,7 +223,7 @@ void HelloCube::loadPipeline()
     AnvilPipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
+        .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
         .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)

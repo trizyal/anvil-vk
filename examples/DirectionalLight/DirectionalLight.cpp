@@ -107,7 +107,7 @@ void DirectionalLight::loadPipeline()
     AnvilPipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(myMaterial.vertexShader.get(), myMaterial.fragmentShader.get())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(ptrASwapchain->anvilImageFormat)
+        .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
         .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
@@ -123,15 +123,15 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain& inA
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(inAnvilSwapchain.anvilExtent.width);
-    viewport.height = static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    viewport.width = static_cast<float>(inAnvilSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(inCmd, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = inAnvilSwapchain.anvilExtent;
+    scissor.extent = inAnvilSwapchain.swapchainExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 
 
@@ -150,7 +150,7 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain& inA
 
     camera.updateCamera(deltaTime);
 
-    const float aspect = static_cast<float>(inAnvilSwapchain.anvilExtent.width) / static_cast<float>(inAnvilSwapchain.anvilExtent.height);
+    const float aspect = static_cast<float>(inAnvilSwapchain.swapchainExtent.width) / static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
 
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();

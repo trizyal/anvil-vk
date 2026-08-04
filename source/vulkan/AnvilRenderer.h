@@ -12,6 +12,7 @@
 #include <functional>
 #include "AnvilSwapchain.h"
 
+class AnvilWindow;
 /**
  * @brief Per-frame GPU resources required for flight synchronized rendering.
  */

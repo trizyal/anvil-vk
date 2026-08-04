@@ -75,11 +75,13 @@ public:
      */
     void initializeVulkanContext(AnvilWindow& inWindow);
 
-    // MEMBERS FOR IMMEDIATE SUBMIT
 private:
     /** Pointer to the application window. */
     AnvilWindow* ptrAWindow = nullptr;
 
+    // ------------------------------------------------------------------------
+    // Immediate Submit Members
+    // ------------------------------------------------------------------------
     /** Dedicated command pool for immediate CPU-to-GPU transfer submissions. */
     VkCommandPool uploadCommandPool = VK_NULL_HANDLE;
 
@@ -87,7 +89,6 @@ private:
     VkFence uploadFence = VK_NULL_HANDLE;
 
 public:
-    // Takes a lambda containing Vulkan commands and executes them immediately
     /**
      * @brief Allocates a temporary command buffer, records a callback, and submits it immediately to the GPU.
      *

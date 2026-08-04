@@ -8,6 +8,7 @@
 
 #include "AnvilShaderCompiler.h"
 #include "AnvilUIRenderer.h"
+#include "AnvilVulkanContext.h"
 #include "AnvilWindow.h"
 #include "AnvilVulkanDebug.h"
 
@@ -92,7 +93,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     }
 
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
-    assert(imageIndex < ptrASwapchain->anvilImages.size());
+    assert(imageIndex < ptrASwapchain->swapchainImages.size());
 
     // Reset and begin command buffer
     VkCommandBuffer cmd = frame.cmdBuffer;
@@ -104,7 +105,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     vkBeginCommandBuffer(cmd, &beginInfo);
 
     // Transition image here
-    transitionImageLayout(cmd, ptrASwapchain->anvilImages[imageIndex],
+    transitionImageLayout(cmd, ptrASwapchain->swapchainImages[imageIndex],
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     // Transition Depth Image
@@ -113,7 +114,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     // Begin Dynamic Rendering
     VkRenderingAttachmentInfo colorAttachmentInfo{};
     colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-    colorAttachmentInfo.imageView = ptrASwapchain->anvilImageViews[imageIndex];
+    colorAttachmentInfo.imageView = ptrASwapchain->swapchainImageViews[imageIndex];
     colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -129,7 +130,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
 
     VkRenderingInfo renderInfo{};
     renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-    renderInfo.renderArea = {{0, 0}, {ptrASwapchain->anvilExtent.width, ptrASwapchain->anvilExtent.height}};
+    renderInfo.renderArea = {{0, 0}, {ptrASwapchain->swapchainExtent.width, ptrASwapchain->swapchainExtent.height}};
     renderInfo.layerCount = 1;
     renderInfo.colorAttachmentCount = 1;
     renderInfo.pColorAttachments = &colorAttachmentInfo;
@@ -149,7 +150,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     vkCmdEndRendering(cmd);
 
     // Transition image to present layout
-    transitionImageLayout(cmd, ptrASwapchain->anvilImages[imageIndex],
+    transitionImageLayout(cmd, ptrASwapchain->swapchainImages[imageIndex],
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
@@ -280,7 +281,7 @@ void AnvilRenderer::setupSyncStructures()
     }
 
     // Create semaphores based on swapchain images count
-    renderFinishedSemaphores.resize(ptrASwapchain->anvilImages.size());
+    renderFinishedSemaphores.resize(ptrASwapchain->swapchainImages.size());
     for (uint32_t i = 0; i < renderFinishedSemaphores.size(); i++)
     {
         if (vkCreateSemaphore(ptrAContext->anvilDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS)

@@ -77,7 +77,7 @@ bool AnvilUIRenderer::initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwi
 
     // CRITICAL: We must store the format in a static variable (or a class member)
     // because ImGui's Viewport system will read this pointer LATER when you drag a window!
-    colorFormat = inSwapchain->anvilImageFormat;
+    colorFormat = inSwapchain->swapchainFormat;
     depthFormat = inSwapchain->depthFormat;
 
     VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
