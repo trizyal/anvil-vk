@@ -53,11 +53,12 @@ public:
      * @param inSPIRV Compilation result containing the compiled SPIR-V bytecode vector.
      * @param aDebugName Optional debug name for Vulkan object.
      * @param aDbgSrcLoc Automatic.
-     * @return `true` if the shader module was created successfully, `false` otherwise.
+     *
+     * @throws std::runtime_error If shader module creation failed.
      *
      * @see ShaderCompileResult
      */
-    bool createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV ANVIL_DEBUG_DECL());
+    void createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV ANVIL_DEBUG_DECL());
 
     /**
      * @brief Destroys the underlying Vulkan shader module using the cached logical device.

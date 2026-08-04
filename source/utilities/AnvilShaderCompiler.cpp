@@ -95,8 +95,7 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
     ShaderCompileResult shader_result = GetEmptyShaderByteCode();
     if (!globalSession)
     {
-        std::cerr << "Slang Global Session is not initialized." << std::endl;
-        return shader_result;
+        throw std::runtime_error("Slang Global Session is not initialized.");
     }
 
     if (!session)
@@ -134,13 +133,13 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
 
         // Apply Optimization level
         const slang::CompilerOptionEntry options = {
-            slang::CompilerOptionName::Optimization,
-        {
-                    .kind = slang::CompilerOptionValueKind::Int,
-                    .intValue0 = getSlangOptimizationLevel(optimizationLevel),
-                    .intValue1 = 0,
-                    .stringValue0 = nullptr, .stringValue1 = nullptr
-                }
+            .name = slang::CompilerOptionName::Optimization,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::Int,
+                .intValue0 = getSlangOptimizationLevel(optimizationLevel),
+                .intValue1 = 0,
+                .stringValue0 = nullptr, .stringValue1 = nullptr
+            }
         };
         session_desc.compilerOptionEntries = &options;
         session_desc.compilerOptionEntryCount = 1;
@@ -150,9 +149,9 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
     }
 
     // Load the Shader Modules
-    Slang::ComPtr<slang::IBlob> diagnostics;
-    slang::IModule* slang_module = session->loadModule(request.moduleName.c_str(), diagnostics.writeRef());
-    DiagnoseIfNeeded(diagnostics);
+    Slang::ComPtr<slang::IBlob> diagnostics_blob;
+    slang::IModule* slang_module = session->loadModule(request.moduleName.c_str(), diagnostics_blob.writeRef());
+    DiagnoseIfNeeded(diagnostics_blob);
 
     if (!slang_module)
     {
@@ -178,18 +177,18 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
         component_types,
         2,
         composite_component.writeRef(),
-        diagnostics.writeRef()
+        diagnostics_blob.writeRef()
     );
-    DiagnoseIfNeeded(diagnostics);
+    DiagnoseIfNeeded(diagnostics_blob);
 
     Slang::ComPtr<slang::IComponentType> linked_program;
-    composite_component->link(linked_program.writeRef(), diagnostics.writeRef());
-    DiagnoseIfNeeded(diagnostics);
+    composite_component->link(linked_program.writeRef(), diagnostics_blob.writeRef());
+    DiagnoseIfNeeded(diagnostics_blob);
 
     // Extract SPIR-V
     Slang::ComPtr<slang::IBlob> spirv_blob;
-    linked_program->getTargetCode(0, spirv_blob.writeRef(), diagnostics.writeRef());
-    DiagnoseIfNeeded(diagnostics);
+    linked_program->getTargetCode(0, spirv_blob.writeRef(), diagnostics_blob.writeRef());
+    DiagnoseIfNeeded(diagnostics_blob);
 
     if (spirv_blob)
     {
@@ -197,7 +196,7 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
         const size_t spirv_word_count = spirv_blob->getBufferSize() / sizeof(uint32_t);
         shader_result.spirv.assign(spirv_code, spirv_code + spirv_word_count);
     }
-    
+
     shader_result.reflection = linked_program;
 
     auto param_count = linked_program->getLayout()->getParameterCount();

@@ -6,6 +6,8 @@
 #include <iostream>
 #include <utility>
 
+#include "AnvilVulkanResult.h"
+
 AnvilShaderModule::AnvilShaderModule(AnvilShaderModule&& other) noexcept
 {
     *this = std::move(other);
@@ -24,14 +26,13 @@ AnvilShaderModule& AnvilShaderModule::operator=(AnvilShaderModule&& other) noexc
     return *this;
 }
 
-bool AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
+void AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
                                            ANVIL_DEBUG_DEFN)
 {
     device = inContext.anvilDevice;
     if (!inSPIRV.isValid())
     {
-        std::cerr << "Cannot create shader module from invalid SPIR-V bytecode." << std::endl;
-        return false;
+        throw std::runtime_error("Cannot create shader module from invalid SPIR-V bytecode.");
     }
 
     VkShaderModuleCreateInfo create_info = {};
@@ -40,14 +41,9 @@ bool AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, 
     create_info.codeSize = inSPIRV.spirv.size() * sizeof(uint32_t);
     create_info.pCode = inSPIRV.spirv.data();
 
-    if (vkCreateShaderModule(device, &create_info, nullptr, &shaderModule) != VK_SUCCESS)
-    {
-        std::cerr << "Failed to create Vulkan shader module!\n";
-        return false;
-    }
+    CHECK(vkCreateShaderModule(device, &create_info, nullptr, &shaderModule));
 
     ANVIL_DEBUG_NAME(device, shaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
-    return true;
 }
 
 void AnvilShaderModule::destroyShaderModule() const
