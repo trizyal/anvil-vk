@@ -14,8 +14,6 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-#include "AnvilDeletionQueue.h"
-
 class AnvilWindow;
 
 /**
@@ -100,15 +98,7 @@ public:
      *
      * @throws std::runtime_error If command buffer allocation, submission, or fence waiting fails.
      */
-    void immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction);
-
-private:
-    /**
-     * @brief Internal helper to initialize Volk and create the Vulkan instance via vk-bootstrap.
-     *
-     * @throws std::runtime_error If Volk initialization or instance creation fails.
-     */
-    void createInstance();
+    void immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction) const;
 };
 
 #endif //ANVIL_VK_VULKANCONTEXT_H

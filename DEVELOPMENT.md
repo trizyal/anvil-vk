@@ -72,7 +72,7 @@ anvil-vk/
     └── vulkan/     # The Vulkan abstraction layers
         ├── AnvilResult.h/.cpp
         ├── AnvilVulkanDebug.h/.cpp
-        ├── AnvilVulkanContext.h/.cpp
+        ├── AnvilVulkanContext.h/.cpp #Commented
         ├── AnvilUIRenderer.h/.cpp
         ├── AnvilTextureLoader.h/.cpp
         ├── AnvilSwapchain.h/.cpp     
@@ -81,7 +81,6 @@ anvil-vk/
         ├── AnvilPipeline.h/.cpp   #Commented
         ├── AnvilMeshBuffer.h/.cpp  #Commented    
         ├── AnvilMaterial.h/.cpp  #Commented
-        ├── AnvilDeletionQueue.h 
         └── AnvilBuffer.h/.cpp   #Commented    
 
 ```
