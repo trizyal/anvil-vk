@@ -148,7 +148,8 @@ ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
 
 /**
  * @brief Convenience macro that converts a C++ variable identifier into a string literal for debug naming.
- * @example ANVIL_NAME_OF(vertexBuffer)
+ *
+ * @note Example: `ANVIL_NAME_OF(vertexBuffer)`.
  */
 #define ANVIL_NAME_OF(var) #var
 

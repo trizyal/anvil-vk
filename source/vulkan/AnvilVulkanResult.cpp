@@ -7,10 +7,23 @@
 
 namespace AnvilResult
 {
-    std::string ToString(const VkResult aResult)
+	void CheckVulkanResult(const VkResult aResult, const char* functionName, const char* file, const int line)
+    {
+    	if (aResult != VK_SUCCESS)
+    	{
+    		const std::string error_message = "Vulkan Error [" + ToString(aResult) + "]\n" +
+								   "File: " + file + ":" + std::to_string(line) + "\n" +
+								   "Call: " + functionName + "\n";
+
+    		// Optional: Can also use std::cerr here if we want it in the console.
+    		throw std::runtime_error(error_message);
+    	}
+    }
+
+	std::string ToString(const VkResult aResult)
     {
 		// See:
-		// https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkResult.html
+		// https://docs.vulkan.org/refpages/latest/refpages/source/VkResult.html
 		switch(aResult)
 		{
 #			define CASE_(x) case VK_##x: return #x
@@ -88,17 +101,4 @@ namespace AnvilResult
 		oss << "VkResult(" << std::underlying_type_t<VkResult>(aResult) << ")";
 		return oss.str();
 	}
-
-	void CheckVulkanResult(const VkResult aResult, const char* functionName, const char* file, const int line)
-    {
-    	if (aResult != VK_SUCCESS)
-    	{
-    		const std::string errorMsg = "Vulkan Error [" + ToString(aResult) + "]\n" +
-								   "File: " + file + ":" + std::to_string(line) + "\n" +
-								   "Call: " + functionName + "\n";
-
-    		// Optional: You can also std::cerr << errorMsg << '\n'; here if you want it in the console
-    		throw std::runtime_error(errorMsg);
-    	}
-    }
 }
