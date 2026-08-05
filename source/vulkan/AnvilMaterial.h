@@ -132,8 +132,6 @@ public:
      * @param inBuffer Reference to the GPU buffer containing the Uniform data.
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
-     *
-     * @bug Unimplemented.
      */
     void bindUniformBuffer(const std::string& name, const AnvilBuffer& inBuffer);
 

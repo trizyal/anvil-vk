@@ -74,7 +74,7 @@ anvil-vk/
         ├── AnvilVulkanDebug.h/.cpp
         ├── AnvilVulkanContext.h/.cpp #Commented
         ├── AnvilUIRenderer.h/.cpp
-        ├── AnvilTextureLoader.h/.cpp
+        ├── AnvilTextureLoader.h/.cpp #Commented
         ├── AnvilSwapchain.h/.cpp     #Commented
         ├── AnvilShaderModule.h/.cpp   #Commented
         ├── AnvilRenderer.h/.cpp    #Commented
