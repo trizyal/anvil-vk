@@ -6,7 +6,7 @@ Each example increases in complexity to show different aspects of the pipeline.
 ## Example Projects
 
 ### 01. HelloTriangle
-- **Path:** `examples/HelloTriangle/`
+- **Path:** [HelloTriangle](examples/HelloTriangle)
 - **Focus:** Basic pipeline setup and shader execution.
 - **Description:** Renders a single triangle with vertex data hardcoded directly inside the Slang vertex shader. 
 Demonstrates basic render loop orchestration without vertex buffers or push constants.
@@ -33,4 +33,16 @@ matrices from the CPU to the vertex shader each frame.
 - **Description:** Uses `AnvilMaterial` to get all descriptor set, shader modules and mesh data into a material. Then
 uses reflected data to bind descriptors.
 
+### 06. DirectionalLight
+- **Path:** `examples/DirectionalLight/`
+- **Focus:** Directional light shader and scene uniform buffer.
+- **Description:** Uniform buffer creation. Read normals from glTF file. Directional Light shaders doing a simple lighting equation. 
+Passing data via a uniform buffer `SceneData` with light direction, color and ambient color.
+
 ---
+
+## Project Asset Licenses
+
+| Asset Name   | Used In   | Author / Source                  | License   |
+|:-------------|:----------|:---------------------------------|:----------|
+| **Box.gltf** | `glTFBox` | Khronos Group glTF Sample Models | CC BY 4.0 |

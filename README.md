@@ -14,8 +14,6 @@ Anvil is intended to be a starting point rather than a rigid, all-in-one rendere
 - **Modern Tooling:** Uses Slang for shader compilation and standard C++ RAII patterns for Vulkan resource management.
 - **Template First:** Examples are separated from the engine source so the core codebase can be extracted easily into standalone projects.
 
-
-
 ## Building from Source
 
 ### Prerequisites
@@ -27,24 +25,21 @@ Anvil is intended to be a starting point rather than a rigid, all-in-one rendere
 ### Build Instructions
 
 1. Clone the repository
-
-```bash
-git clone git@github.com:trizyal/anvil-vk.git
-cd anvil-vk
-```
+    ```bash
+    git clone git@github.com:trizyal/anvil-vk.git
+    cd anvil-vk
+    ```
 
 2. Fetch Slang binaries into the `external/` directory:
+    ```bash
+    python fetch_slang.py
+    ```
 
-```bash
-python fetch_slang.py
-```
-
-3. Configure and build using CMake: (NEED TO UPDATE)
-
-```bash
-cmake -B build
-cmake --build build --config Release
-```
+3. Configure and build using CMake: (NEED TO UPDATE DUE TO EXAMPLES CMAKE)
+    ```bash
+    cmake -B build
+    cmake --build build --config Release
+    ```
 
 ## Examples
 
