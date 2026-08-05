@@ -211,7 +211,10 @@ ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileReque
 
         std::ofstream file(full_path, std::ios::out | std::ios::binary);
         if (file.is_open()) {
-            file.write(reinterpret_cast<const char*>(shader_result.spirv.data()), shader_result.spirv.size() * sizeof(uint32_t));
+            file.write(
+                reinterpret_cast<const char*>(shader_result.spirv.data()),
+                static_cast<std::streamsize>(shader_result.spirv.size() * sizeof(uint32_t))
+            );
             file.close();
         }
         else

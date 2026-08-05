@@ -55,9 +55,9 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilS
         AnvilInput::UpdateInputs();
 
         // Check for Shader Reload
-        bool isCtrl = AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
-        bool isDot = AnvilInput::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
-        bool isReloadPressed = isCtrl && isDot;
+        const bool isCtrl = AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
+        const bool isDot = AnvilInput::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
+        const bool isReloadPressed = isCtrl && isDot;
 
         if (isReloadPressed)
         {
@@ -89,9 +89,9 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilS
     vkDeviceWaitIdle(anvilContext.anvilDevice);
 }
 
-void AnvilApplication::addShaderReloadCallback(std::function<void()> callback)
+void AnvilApplication::addShaderReloadCallback(const std::function<void()>& shaderCallback)
 {
-    shaderReloadQueue.push_back(callback);
+    shaderReloadQueue.push_back(shaderCallback);
 }
 
 AnvilWindow& AnvilApplication::getAnvilWindow() const

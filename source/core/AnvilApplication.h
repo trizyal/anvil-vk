@@ -102,7 +102,7 @@ public:
      * Useful for hot-reloading shaders at runtime without restarting the application.
      * @param shaderCallback The function to execute when a reload is triggered.
      */
-    void addShaderReloadCallback(std::function<void()> shaderCallback);
+    void addShaderReloadCallback(const std::function<void()>& shaderCallback);
 
     /**
      * @brief Retrieves a reference to the active application window.
