@@ -48,6 +48,10 @@ class AnvilRenderer
 {
 public:
     AnvilRenderer() = default;
+
+    /**
+     * @brief Destroys the frame data.
+     */
     ~AnvilRenderer();
 
     /** Copy construction is disabled (Prevents double-freeing Vulkan sync objects & pools) */
@@ -108,8 +112,8 @@ private:
     AnvilFrame& getCurrentFrame();
     void setupCommandBuffers();
     void setupSyncStructures();
-    void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
-        VkImageLayout oldLayout, VkImageLayout newLayout);
+    static void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
+                                      VkImageLayout oldLayout, VkImageLayout newLayout);
 };
 
 #endif //ANVIL_VK_RENDERER_H

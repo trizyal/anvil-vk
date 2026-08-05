@@ -25,12 +25,12 @@ namespace AnvilDebug
 
         // TODO: Add handling of Message types.
 
-        static std::unordered_map<int32_t, int> errorCounts;
-        static std::mutex errorMutex;
+        static std::unordered_map<int32_t, int> error_counts;
+        static std::mutex error_mutex;
         const int MAX_PRINTS = 3; // Change this to view an error a few times before silencing.
 
-        std::lock_guard<std::mutex> lock(errorMutex);
-        int& count = errorCounts[pCallbackData->messageIdNumber];
+        std::lock_guard<std::mutex> lock(error_mutex);
+        int& count = error_counts[pCallbackData->messageIdNumber];
 
         if (count < MAX_PRINTS) {
             std::cerr << "[Vulkan Validation] " << pCallbackData->pMessageIdName << "\n";
@@ -66,38 +66,38 @@ namespace AnvilDebug
             return;
         }
 
-        VkDebugUtilsObjectNameInfoEXT debugNameInfo{};
-        debugNameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-        debugNameInfo.objectType = inObjectType;
-        debugNameInfo.objectHandle = inObjectHandle;
-        debugNameInfo.pObjectName = inDebugName;
+        VkDebugUtilsObjectNameInfoEXT debug_name_info{};
+        debug_name_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+        debug_name_info.objectType = inObjectType;
+        debug_name_info.objectHandle = inObjectHandle;
+        debug_name_info.pObjectName = inDebugName;
 
-        vkSetDebugUtilsObjectNameEXT(inDevice, &debugNameInfo);
+        vkSetDebugUtilsObjectNameEXT(inDevice, &debug_name_info);
     }
 
     void SetAutoName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType,
         const char* inName, std::source_location location)
     {
 #if ANVIL_DEBUG
-        std::string finalName;
+        std::string final_name;
 
         // Extract file name
-        std::string shortFileName = std::filesystem::path(location.file_name()).filename().string();
+        std::string short_file_name = std::filesystem::path(location.file_name()).filename().string();
 
         if (inName && std::strlen(inName) > 0)
         {
             std::stringstream ss;
-            ss << inName << " [" << shortFileName << ":" << location.line() << "]";
-            finalName = ss.str();
+            ss << inName << " [" << short_file_name << ":" << location.line() << "]";
+            final_name = ss.str();
         }
         else
         {
             std::stringstream ss;
-            ss << "AutoName_" << ObjectTypeToString(inObjectType) << " [" << shortFileName << ":" << location.line() << "]";
-            finalName = ss.str();
+            ss << "AutoName_" << ObjectTypeToString(inObjectType) << " [" << short_file_name << ":" << location.line() << "]";
+            final_name = ss.str();
         }
 
-        SetObjectName(inDevice, inObjectHandle, inObjectType, finalName.c_str());
+        SetObjectName(inDevice, inObjectHandle, inObjectType, final_name.c_str());
 #endif
     }
 

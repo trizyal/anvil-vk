@@ -70,12 +70,12 @@ anvil-vk/
     │   └── AnvilUILogger.h/.cpp #Commented
     │
     └── vulkan/     # The Vulkan abstraction layers
-        ├── AnvilResult.h/.cpp
-        ├── AnvilVulkanDebug.h/.cpp
+        ├── AnvilVulkanResult.h/.cpp #Commented
+        ├── AnvilVulkanDebug.h/.cpp #Commented
         ├── AnvilVulkanContext.h/.cpp #Commented
-        ├── AnvilUIRenderer.h/.cpp
-        ├── AnvilTextureLoader.h/.cpp
-        ├── AnvilSwapchain.h/.cpp     
+        ├── AnvilUIRenderer.h/.cpp #Commented
+        ├── AnvilTextureLoader.h/.cpp #Commented
+        ├── AnvilSwapchain.h/.cpp     #Commented
         ├── AnvilShaderModule.h/.cpp   #Commented
         ├── AnvilRenderer.h/.cpp    #Commented
         ├── AnvilPipeline.h/.cpp   #Commented

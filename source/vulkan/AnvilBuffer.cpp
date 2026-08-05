@@ -38,15 +38,15 @@ void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, cons
 
     allocator = inAllocator;
 
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
+    VkBufferCreateInfo buffer_info{};
+    buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    buffer_info.size = size;
+    buffer_info.usage = usage;
 
-    VmaAllocationCreateInfo allocInfo{};
-    allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // CPU_TO_GPU for dynamic/staging data as it ensures host-visibility
+    VmaAllocationCreateInfo alloc_info{};
+    alloc_info.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // CPU_TO_GPU for dynamic/staging data as it ensures host-visibility
 
-    if (vmaCreateBuffer(inAllocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS)
+    if (vmaCreateBuffer(inAllocator, &buffer_info, &alloc_info, &buffer, &allocation, nullptr) != VK_SUCCESS)
     {
         throw std::runtime_error("Anvil Engine: Failed to allocate VMA buffer.");
     }
@@ -54,9 +54,9 @@ void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, cons
     ANVIL_DEBUG_NAME(inDevice, buffer, VK_OBJECT_TYPE_BUFFER);
 
     // Direct memory mapping and immediate transfer
-    void* mappedMemory = nullptr;
-    vmaMapMemory(inAllocator, allocation, &mappedMemory);
-    std::memcpy(mappedMemory, inData, size);
+    void* mapped_memory = nullptr;
+    vmaMapMemory(inAllocator, allocation, &mapped_memory);
+    std::memcpy(mapped_memory, inData, size);
     vmaUnmapMemory(inAllocator, allocation);
 }
 
