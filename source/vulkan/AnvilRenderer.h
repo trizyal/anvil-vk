@@ -48,6 +48,10 @@ class AnvilRenderer
 {
 public:
     AnvilRenderer() = default;
+
+    /**
+     * @brief Destroys the frame data.
+     */
     ~AnvilRenderer();
 
     /** Copy construction is disabled (Prevents double-freeing Vulkan sync objects & pools) */
