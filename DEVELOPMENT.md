@@ -71,9 +71,9 @@ anvil-vk/
     │
     └── vulkan/     # The Vulkan abstraction layers
         ├── AnvilResult.h/.cpp
-        ├── AnvilVulkanDebug.h/.cpp
+        ├── AnvilVulkanDebug.h/.cpp #Commented
         ├── AnvilVulkanContext.h/.cpp #Commented
-        ├── AnvilUIRenderer.h/.cpp
+        ├── AnvilUIRenderer.h/.cpp #Commented
         ├── AnvilTextureLoader.h/.cpp #Commented
         ├── AnvilSwapchain.h/.cpp     #Commented
         ├── AnvilShaderModule.h/.cpp   #Commented
