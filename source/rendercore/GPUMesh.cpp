@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilMeshBuffer.h"
+#include "GPUMesh.h"
 
-#include "AnvilModelLoader.h"
+#include "ModelLoader.h"
 
-void AnvilMeshBuffer::createAnvilMeshBuffer(const VulkanContext& inContext, const AnvilMesh& inMesh)
+void GPUMesh::createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh& inMesh)
 {
     this->ptrAContext = &inContext;
 
@@ -29,13 +29,13 @@ void AnvilMeshBuffer::createAnvilMeshBuffer(const VulkanContext& inContext, cons
     );
 }
 
-void AnvilMeshBuffer::destroyAnvilMeshBuffer()
+void GPUMesh::destroyAnvilMeshBuffer()
 {
     vertexBuffer.destroyBuffer();
     indexBuffer.destroyBuffer();
 }
 
-VkVertexInputBindingDescription AnvilMeshBuffer::getBindingDescription()
+VkVertexInputBindingDescription GPUMesh::getBindingDescription()
 {
     VkVertexInputBindingDescription binding_description{};
     binding_description.binding = 0;
@@ -45,7 +45,7 @@ VkVertexInputBindingDescription AnvilMeshBuffer::getBindingDescription()
     return binding_description;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> AnvilMeshBuffer::getAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> GPUMesh::getAttributeDescriptions()
 {
     std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions{};
 

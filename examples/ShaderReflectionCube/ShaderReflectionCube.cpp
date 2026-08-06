@@ -8,8 +8,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilMeshBuffer.h"
-#include "AnvilModelLoader.h"
+#include "GPUMesh.h"
+#include "ModelLoader.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"
@@ -20,7 +20,7 @@ void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, Vulk
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
-    const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
+    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
     if (!cubeMesh.texturePath.empty())
@@ -129,10 +129,10 @@ void ShaderReflectionCube::loadPipeline()
         myMaterial.updateDescriptorSets();
     }
 
-    auto attributesArray = AnvilMeshBuffer::getAttributeDescriptions();
+    auto attributesArray = GPUMesh::getAttributeDescriptions();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {AnvilMeshBuffer::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
         {attributesArray[0], attributesArray[1], attributesArray[2]};
 

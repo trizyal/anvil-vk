@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_MESHBUFFER_H
-#define ANVIL_VK_MESHBUFFER_H
+#ifndef ANVIL_VK_GPUMESH_H
+#define ANVIL_VK_GPUMESH_H
 
 /**
- * @file AnvilMeshBuffer.h
+ * @file GPUMesh.h
  * @brief Container for GPU-side vertex and index buffers representing a renderable 3D mesh.
  */
 
@@ -15,7 +15,7 @@
 
 #include "GPUBuffer.h"
 #include "VulkanContext.h"
-#include "AnvilModelLoader.h"
+#include "ModelLoader.h"
 
 /**
  * @brief Encapsulates GPU vertex and index buffers for an indexed 3D mesh.
@@ -25,17 +25,17 @@
  *
  * @note This class in non-copyable. Moving is allowed.
  */
-class AnvilMeshBuffer
+class GPUMesh
 {
 public:
-    AnvilMeshBuffer() = default;
-    ~AnvilMeshBuffer() = default;
+    GPUMesh() = default;
+    ~GPUMesh() = default;
 
-    AnvilMeshBuffer(const AnvilMeshBuffer&) = delete;
-    AnvilMeshBuffer& operator=(const AnvilMeshBuffer&) = delete;
+    GPUMesh(const GPUMesh&) = delete;
+    GPUMesh& operator=(const GPUMesh&) = delete;
 
-    AnvilMeshBuffer(AnvilMeshBuffer&&) noexcept = default;
-    AnvilMeshBuffer& operator=(AnvilMeshBuffer&&) noexcept = default;
+    GPUMesh(GPUMesh&&) noexcept = default;
+    GPUMesh& operator=(GPUMesh&&) noexcept = default;
 
     /** GPU buffer containing interleaved MeshVertex attributes. */
     GPUBuffer vertexBuffer;
@@ -59,7 +59,7 @@ public:
      *
      * @see AnvilMesh
      */
-    void createAnvilMeshBuffer(const VulkanContext& inContext, const AnvilMesh& inMesh);
+    void createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh& inMesh);
 
     /**
      * @brief Destroys the underlying GPU vertex and index buffers.
@@ -88,4 +88,4 @@ public:
     static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
 };
 
-#endif //ANVIL_VK_MESHBUFFER_H
+#endif //ANVIL_VK_GPUMESH_H

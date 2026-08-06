@@ -8,8 +8,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilMeshBuffer.h"
-#include "AnvilModelLoader.h"
+#include "GPUMesh.h"
+#include "ModelLoader.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"
@@ -20,7 +20,7 @@ void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapcha
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
-    const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
+    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
 
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
@@ -166,10 +166,10 @@ void TextureCube::loadPipeline()
         throw std::runtime_error("Failed to create fragment shader module!");
     }
 
-    auto something = AnvilMeshBuffer::getAttributeDescriptions();
+    auto something = GPUMesh::getAttributeDescriptions();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {AnvilMeshBuffer::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
         {something[0], something[1], something[2]};
 

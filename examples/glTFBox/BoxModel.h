@@ -8,7 +8,7 @@
 
 #include "GPUBuffer.h"
 #include "AnvilCamera.h"
-#include "AnvilMeshBuffer.h"
+#include "GPUMesh.h"
 #include "VulkanContext.h"
 #include "ShaderModule.h"
 #include "PipelineBuilder.h"
@@ -32,7 +32,7 @@ private:
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     AnvilPipeline pipeline = {};
 
-    AnvilMeshBuffer meshBuffer;
+    GPUMesh meshBuffer;
 
     ShaderCompiler shaderCompiler;
 

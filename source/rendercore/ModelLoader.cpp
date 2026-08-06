@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilModelLoader.h"
+#include "ModelLoader.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -9,10 +9,10 @@
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
 
-namespace AnvilModelLoader
+namespace ModelLoader
 {
     // Only returns CPU data
-    AnvilMesh LoadGLTF(const std::string& filePath)
+    CPUMesh LoadGLTF(const std::string& filePath)
     {
         cgltf_options options{};
         cgltf_data* data = nullptr;
@@ -28,7 +28,7 @@ namespace AnvilModelLoader
             throw std::runtime_error("Failed to load GLTF file: " + filePath);
         }
 
-        AnvilMesh mesh_data;
+        CPUMesh mesh_data;
         if (data->meshes_count > 0)
         {
             const cgltf_mesh* mesh = &data->meshes[0];

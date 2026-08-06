@@ -5,7 +5,7 @@
 #define ANVIL_VK_MODELLOADER_H
 
 /**
- * @file AnvilModelLoader.h
+ * @file ModelLoader.h
  * @brief Utilities for loading 3D model files from disk into CPU-side mesh representations.
  */
 
@@ -28,7 +28,7 @@ struct MeshVertex
 /**
  * @brief CPU-side container for indexed 3D geometry and associated material data.
  */
-struct AnvilMesh
+struct CPUMesh
 {
     std::vector<MeshVertex> vertices; /**< Contiguous list of unique vertex attributes. */
     std::vector<uint32_t> indices;    /**< Index list defining triangle faces (3 indices per triangle). */
@@ -38,7 +38,7 @@ struct AnvilMesh
 /**
  * @brief Free functions for parsing and extracting asset data from disk.
  */
-namespace AnvilModelLoader
+namespace ModelLoader
 {
     /**
      * @brief Parses a glTF 2.0 file from disk and extracts its primary mesh and texture data.
@@ -52,7 +52,7 @@ namespace AnvilModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    AnvilMesh LoadGLTF(const std::string& filePath);
+    CPUMesh LoadGLTF(const std::string& filePath);
 } //AnvilModelLoader
 
 #endif //ANVIL_VK_MODELLOADER_H

@@ -8,7 +8,7 @@
 
 #include "AnvilCamera.h"
 #include "AnvilMaterial.h"
-#include "AnvilMeshBuffer.h"
+#include "GPUMesh.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
@@ -29,7 +29,7 @@ private:
     ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
-    AnvilMeshBuffer meshBuffer;
+    GPUMesh meshBuffer;
     AnvilCamera camera;
 
     // Things for textures
