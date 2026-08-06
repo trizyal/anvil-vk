@@ -10,7 +10,7 @@
 
 #include "AnvilVulkanDebug.h"
 #include "AnvilVulkanContext.h"
-#include "AnvilVulkanResult.h"
+#include "VulkanResult.h"
 
 void AnvilSwapchain::initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent)
 {

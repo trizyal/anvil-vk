@@ -11,7 +11,7 @@
 #include "AnvilVulkanContext.h"
 #include "AnvilWindow.h"
 #include "AnvilVulkanDebug.h"
-#include "AnvilVulkanResult.h"
+#include "VulkanResult.h"
 
 void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
 {

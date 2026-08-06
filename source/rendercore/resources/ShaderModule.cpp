@@ -5,7 +5,7 @@
 
 #include <utility>
 
-#include "AnvilVulkanResult.h"
+#include "VulkanResult.h"
 
 ShaderModule::ShaderModule(ShaderModule&& other) noexcept
 {

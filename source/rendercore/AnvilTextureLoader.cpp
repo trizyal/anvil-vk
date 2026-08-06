@@ -10,7 +10,7 @@
 #include <stb_image.h>
 
 #include "GPUBuffer.h"
-#include "AnvilVulkanResult.h"
+#include "VulkanResult.h"
 
 namespace AnvilTextureLoader
 {

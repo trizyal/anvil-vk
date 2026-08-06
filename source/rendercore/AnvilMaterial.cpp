@@ -9,7 +9,7 @@
 #include <ranges>
 
 #include "AnvilVulkanDebug.h"
-#include "AnvilVulkanResult.h"
+#include "VulkanResult.h"
 
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                                   const VkShaderStageFlagBits stage,

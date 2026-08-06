@@ -5,7 +5,7 @@
 #define ANVIL_VK_VULKANRESULT_H
 
 /**
- * @file AnvilVulkanResult.h
+ * @file VulkanResult.h
  * @brief Error handling and diagnostic utilities for checking Vulkan API return codes.
  */
 

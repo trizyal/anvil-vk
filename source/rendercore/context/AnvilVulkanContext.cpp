@@ -16,7 +16,7 @@
 #include <VkBootstrap.h>
 
 #include "AnvilVulkanDebug.h"
-#include "AnvilVulkanResult.h"
+#include "VulkanResult.h"
 #include "AnvilWindow.h"
 
 void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
