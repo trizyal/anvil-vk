@@ -14,10 +14,10 @@
 #include <functional>
 
 #include "AnvilWindow.h"
-#include "AnvilVulkanContext.h"
-#include "AnvilSwapchain.h"
+#include "VulkanContext.h"
+#include "VulkanSwapchain.h"
 #include "AnvilRenderer.h"
-#include "AnvilUIRenderer.h"
+#include "UIRenderer.h"
 
 /**
  * @brief Configuration settings for initializing an AnvilApplication instance.
@@ -58,10 +58,10 @@ public:
 
 private:
     std::unique_ptr<AnvilWindow> anvilWindow;
-    AnvilVulkanContext anvilContext;
-    AnvilSwapchain anvilSwapchain;
+    VulkanContext anvilContext;
+    VulkanSwapchain anvilSwapchain;
     AnvilRenderer anvilRenderer;
-    AnvilUIRenderer anvilUIRenderer;
+    UIRenderer anvilUIRenderer;
     bool anvilInitialized = false;
 
     std::vector<std::function<void()>> shaderReloadQueue;
@@ -87,7 +87,7 @@ public:
      * @throws std::runtime_error If the AnvilApplication is uninitialized or `drawFrame` throws.
      * @attention Shader reloading happening here is not ideal.
      */
-    void runAnvil(const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& renderCallback);
+    void runAnvil(const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& renderCallback);
 
     /**
      * @brief Shuts down the engine and safely destroys all Vulkan and window resources.
@@ -102,7 +102,7 @@ public:
      * Useful for hot-reloading shaders at runtime without restarting the application.
      * @param shaderCallback The function to execute when a reload is triggered.
      */
-    void addShaderReloadCallback(std::function<void()> shaderCallback);
+    void addShaderReloadCallback(const std::function<void()>& shaderCallback);
 
     /**
      * @brief Retrieves a reference to the active application window.
@@ -116,14 +116,14 @@ public:
      * @return Reference to the AnvilVulkanContext instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] AnvilVulkanContext& getAnvilContext();
+    [[nodiscard]] VulkanContext& getAnvilContext();
 
     /**
      * @brief Retrieves the active Vulkan swapchain.
      * @return Reference to the AnvilSwapchain instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] AnvilSwapchain& getAnvilSwapchain();
+    [[nodiscard]] VulkanSwapchain& getAnvilSwapchain();
 
     /**
      * @brief Retrieves the main renderer responsible for command buffer orchestration.

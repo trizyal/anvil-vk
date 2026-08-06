@@ -8,12 +8,12 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilMeshBuffer.h"
-#include "AnvilModelLoader.h"
-#include "AnvilShaderCompiler.h"
-#include "AnvilUIRenderer.h"
+#include "GPUMesh.h"
+#include "ModelLoader.h"
+#include "ShaderCompiler.h"
+#include "UIRenderer.h"
 
-void BoxModel::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void BoxModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -21,7 +21,7 @@ void BoxModel::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapch
     const char* modelPath = PROJECT_DIR "/Box/glTF/Box.gltf";
     // const char* modelPath = PROJECT_DIR "/BoxVertexColors/glTF/BoxVertexColors.gltf";
     // const char* modelPath = PROJECT_DIR "/BoxInterleaved/glTF/BoxInterleaved.gltf";
-    const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
+    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
 
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
@@ -47,7 +47,7 @@ void BoxModel::cleanupProject()
     }
 }
 
-void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
+void BoxModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -77,7 +77,7 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwap
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
 
-    AnvilUIRenderer::DrawDebugAxis(view);
+    UIRenderer::DrawDebugAxis(view);
 
     PushConstants constants;
     constants.renderMatrix = projection * view;
@@ -142,15 +142,15 @@ void BoxModel::loadPipeline()
         throw std::runtime_error("Failed to create fragment shader module!");
     }
 
-    auto something = AnvilMeshBuffer::getAttributeDescriptions();
+    auto something = GPUMesh::getAttributeDescriptions();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {AnvilMeshBuffer::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
         {something[0], something[1]};
 
     // Create pipeline
-    AnvilPipelineBuilder pipelineBuilder;
+    PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)

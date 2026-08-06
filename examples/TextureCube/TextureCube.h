@@ -7,13 +7,13 @@
 #include <glm/glm.hpp>
 
 #include "AnvilCamera.h"
-#include "AnvilMeshBuffer.h"
-#include "AnvilVulkanContext.h"
-#include "AnvilShaderModule.h"
-#include "AnvilPipeline.h"
-#include "AnvilShaderCompiler.h"
-#include "AnvilSwapchain.h"
-#include "AnvilTextureLoader.h"
+#include "GPUMesh.h"
+#include "VulkanContext.h"
+#include "ShaderModule.h"
+#include "PipelineBuilder.h"
+#include "ShaderCompiler.h"
+#include "VulkanSwapchain.h"
+#include "TextureLoader.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -24,17 +24,17 @@ struct PushConstants
 class TextureCube
 {
 private:
-    AnvilVulkanContext* ptrAContext = nullptr;
-    AnvilSwapchain* ptrASwapchain = nullptr;
+    VulkanContext* ptrAContext = nullptr;
+    VulkanSwapchain* ptrASwapchain = nullptr;
 
-    AnvilShaderModule vertexShader;
-    AnvilShaderModule fragmentShader;
+    ShaderModule vertexShader;
+    ShaderModule fragmentShader;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     AnvilPipeline pipeline = {};
 
-    AnvilMeshBuffer meshBuffer;
+    GPUMesh meshBuffer;
 
-    AnvilShaderCompiler shaderCompiler;
+    ShaderCompiler shaderCompiler;
 
     AnvilCamera camera;
 
@@ -45,11 +45,11 @@ private:
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
 public:
-    void initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
+    void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
 
     void loadPipeline();
 

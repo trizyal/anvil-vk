@@ -38,7 +38,7 @@ anvil-vk/
 │   ├── cgltf/
 │   ├── glfw/
 │   ├── glm/
-│   ├── slang/       # Run fetch_slang.py to get the directory
+│   ├── slang/                   # Run fetch_slang.py to get the directory
 │   ├── imgui/
 │   ├── vk-bootstrap/
 │   ├── volk/
@@ -46,43 +46,68 @@ anvil-vk/
 │   ├── VulkanMemoryAllocator/
 │   └── # More to come
 │ 
-├── examples # How to use anvil
-│   ├── HelloTriangle/      # Triangle vertices in shader, no buffers, no push contants
-│   ├── HelloCube/          # Hard coded cube, buffer creation, rotation push constants
-│   ├── glTFBox/            # Load model from gltf, mesh buffers
-│   ├── TextureCube/        # Load texture from gltf, map uv
-│   ├── ShaderReflectionCube/            # Same as TextureCube, but using shader reflection instead
+├── examples/                    # How to use anvil
+│   ├── HelloTriangle/           # Triangle vertices in shader, no buffers, no push contants
+│   ├── HelloCube/               # Hard coded cube, buffer creation, rotation push constants
+│   ├── glTFBox/                 # Load model from gltf, mesh buffers
+│   ├── TextureCube/             # Load texture from gltf, map uv
+│   ├── ShaderReflectionCube/    # Same as TextureCube, but using shader reflection instead
+│   ├── DirectionalLight/        # Load model, set up scene lighting and uniform buffers
 │   └── # More to come   
 │      
 └── source/
-    ├── core/       # Engine lifecycle and OS-level stuff
-    │   ├── AnvilApplication.h/.cpp #Commented
-    │   ├── AnvilInput.h/.cpp #Commented
-    │   └── AnvilWindow.h/.cpp #Commented
     │
-    ├── scene/       
-    │   └── AnvilCamera.h/.cpp #Commented
+    ├── core/
+    │   ├── AnvilApplication.cpp
+    │   ├── AnvilApplication.h
+    │   ├── AnvilInput.cpp
+    │   ├── AnvilInput.h
+    │   ├── AnvilWindow.cpp
+    │   └── AnvilWindow.h
     │
-    ├──utilities/
-    │   ├── AnvilModelLoader.h/.cpp #Commented
-    │   ├── AnvilShaderCompiler.h/.cpp #Commented
-    │   ├── AnvilShaders.h/.cpp #Commented
-    │   └── AnvilUILogger.h/.cpp #Commented
+    ├── rendercore/
+    │   ├── AnvilMaterial.cpp
+    │   ├── AnvilMaterial.h
+    │   ├── AnvilShaders.cpp
+    │   ├── AnvilShaders.h
+    │   ├── GPUMesh.cpp
+    │   ├── GPUMesh.h
+    │   ├── ModelLoader.cpp
+    │   ├── ModelLoader.h
+    │   ├── ShaderCompiler.cpp
+    │   ├── ShaderCompiler.h
+    │   ├── TextureLoader.cpp
+    │   ├── TextureLoader.h
+    │   │
+    │   ├── context/
+    │   │   ├── VulkanContext.cpp
+    │   │   ├── VulkanContext.h
+    │   │   ├── VulkanDebug.cpp
+    │   │   ├── VulkanDebug.h
+    │   │   ├── VulkanResult.cpp
+    │   │   ├── VulkanResult.h
+    │   │   ├── VulkanSwapchain.cpp
+    │   │   └── VulkanSwapchain.h
+    │   │
+    │   └── resources/
+    │       ├── GPUBuffer.cpp
+    │       ├── GPUBuffer.h
+    │       ├── PipelineBuilder.cpp
+    │       ├── PipelineBuilder.h
+    │       ├── ShaderModule.cpp
+    │       └── ShaderModule.h
     │
-    └── vulkan/     # The Vulkan abstraction layers
-        ├── AnvilVulkanResult.h/.cpp #Commented
-        ├── AnvilVulkanDebug.h/.cpp #Commented
-        ├── AnvilVulkanContext.h/.cpp #Commented
-        ├── AnvilUIRenderer.h/.cpp #Commented
-        ├── AnvilTextureLoader.h/.cpp #Commented
-        ├── AnvilSwapchain.h/.cpp     #Commented
-        ├── AnvilShaderModule.h/.cpp   #Commented
-        ├── AnvilRenderer.h/.cpp    #Commented
-        ├── AnvilPipeline.h/.cpp   #Commented
-        ├── AnvilMeshBuffer.h/.cpp  #Commented    
-        ├── AnvilMaterial.h/.cpp  #Commented
-        └── AnvilBuffer.h/.cpp   #Commented    
-
+    ├── renderer/
+    │   ├── AnvilRenderer.cpp
+    │   ├── AnvilRenderer.h
+    │   ├── ScreenLogger.cpp
+    │   ├── ScreenLogger.h
+    │   ├── UIRenderer.cpp
+    │   └── UIRenderer.h
+    │
+    └── scene/
+        ├── AnvilCamera.cpp
+        └── AnvilCamera.h
 ```
 
 ## Conventions

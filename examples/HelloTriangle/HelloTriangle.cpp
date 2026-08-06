@@ -6,9 +6,9 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 
-void HelloTriangle::initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -36,7 +36,7 @@ void HelloTriangle::cleanupProject()
     }
 }
 
-void HelloTriangle::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
+void HelloTriangle::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -101,7 +101,7 @@ void HelloTriangle::loadPipeline()
     }
 
     // Create pipeline
-    AnvilPipelineBuilder pipelineBuilder;
+    PipelineBuilder pipelineBuilder;
 
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)

@@ -8,19 +8,19 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilMeshBuffer.h"
-#include "AnvilModelLoader.h"
-#include "AnvilShaderCompiler.h"
-#include "AnvilTextureLoader.h"
-#include "AnvilUIRenderer.h"
+#include "GPUMesh.h"
+#include "ModelLoader.h"
+#include "ShaderCompiler.h"
+#include "TextureLoader.h"
+#include "UIRenderer.h"
 
-void TextureCube::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
-    const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
+    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
 
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
@@ -28,7 +28,7 @@ void TextureCube::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwa
     {
         std::cout << "Loading texture: " << cubeMesh.texturePath << std::endl;
 
-        myTexture = AnvilTextureLoader::LoadTexture(
+        myTexture = TextureLoader::LoadTexture(
             cubeMesh.texturePath,
             *ptrAContext
         );
@@ -66,7 +66,7 @@ void TextureCube::cleanupProject()
     }
 }
 
-void TextureCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
+void TextureCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -96,7 +96,7 @@ void TextureCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilS
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
 
-    AnvilUIRenderer::DrawDebugAxis(view);
+    UIRenderer::DrawDebugAxis(view);
 
     PushConstants constants;
     constants.renderMatrix = projection * view;
@@ -166,15 +166,15 @@ void TextureCube::loadPipeline()
         throw std::runtime_error("Failed to create fragment shader module!");
     }
 
-    auto something = AnvilMeshBuffer::getAttributeDescriptions();
+    auto something = GPUMesh::getAttributeDescriptions();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {AnvilMeshBuffer::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
         {something[0], something[1], something[2]};
 
     // Create pipeline
-    AnvilPipelineBuilder pipelineBuilder;
+    PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)

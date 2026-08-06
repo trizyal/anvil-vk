@@ -3,14 +3,16 @@
 
 #include "AnvilApplication.h"
 
+#include <chrono>
 #include <iostream>
 
 #include "AnvilInput.h"
-#include "AnvilUILogger.h"
+#include "ScreenLogger.h"
 
 void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo)
 {
     std::cout << "Initializing Anvil..." << std::endl;
+    auto cpuStart = std::chrono::high_resolution_clock::now();
     if (anvilInitialized)
     {
         return;
@@ -25,7 +27,10 @@ void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreat
     AnvilInput::InitializeInputSystem(anvilWindow->getGLFWWindow());
 
     anvilInitialized = true;
+    auto cpuEnd = std::chrono::high_resolution_clock::now();
+    auto initTime = std::chrono::duration<float, std::milli>(cpuEnd - cpuStart).count();
     std::cout << "Anvil initialization complete!" << std::endl;
+    std::cout << "Initialization took:" << initTime << "ms" << std::endl;
 }
 
 void AnvilApplication::shutdownAnvil()
@@ -42,7 +47,7 @@ void AnvilApplication::shutdownAnvil()
     anvilInitialized = false;
 }
 
-void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& renderCallback)
+void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& renderCallback)
 {
     if (!anvilInitialized)
     {
@@ -55,9 +60,9 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilS
         AnvilInput::UpdateInputs();
 
         // Check for Shader Reload
-        bool isCtrl = AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
-        bool isDot = AnvilInput::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
-        bool isReloadPressed = isCtrl && isDot;
+        const bool isCtrl = AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
+        const bool isDot = AnvilInput::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
+        const bool isReloadPressed = isCtrl && isDot;
 
         if (isReloadPressed)
         {
@@ -78,20 +83,20 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, AnvilS
             }
         }
 
-        AnvilUIRenderer::BeginUIFrame();
-        AnvilUILogger::DrawOverlay();
+        UIRenderer::BeginUIFrame();
+        ScreenLogger::DrawOverlay();
 
         anvilRenderer.drawFrame(*anvilWindow, renderCallback);
 
-        AnvilUIRenderer::EndUIFrame();
+        UIRenderer::EndUIFrame();
     }
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);
 }
 
-void AnvilApplication::addShaderReloadCallback(std::function<void()> callback)
+void AnvilApplication::addShaderReloadCallback(const std::function<void()>& shaderCallback)
 {
-    shaderReloadQueue.push_back(callback);
+    shaderReloadQueue.push_back(shaderCallback);
 }
 
 AnvilWindow& AnvilApplication::getAnvilWindow() const
@@ -99,12 +104,12 @@ AnvilWindow& AnvilApplication::getAnvilWindow() const
     return *anvilWindow;
 }
 
-AnvilVulkanContext& AnvilApplication::getAnvilContext()
+VulkanContext& AnvilApplication::getAnvilContext()
 {
     return anvilContext;
 }
 
-AnvilSwapchain& AnvilApplication::getAnvilSwapchain()
+VulkanSwapchain& AnvilApplication::getAnvilSwapchain()
 {
     return anvilSwapchain;
 }

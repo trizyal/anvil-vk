@@ -23,7 +23,7 @@ int main()
 
     try
     {
-        anvil.runAnvil([&](VkCommandBuffer cmd, AnvilSwapchain* swapchain)
+        anvil.runAnvil([&](VkCommandBuffer cmd, VulkanSwapchain* swapchain)
         {
             project.recordCommands(cmd, *swapchain);
         });

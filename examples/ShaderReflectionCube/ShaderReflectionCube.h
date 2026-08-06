@@ -8,12 +8,12 @@
 
 #include "AnvilCamera.h"
 #include "AnvilMaterial.h"
-#include "AnvilMeshBuffer.h"
-#include "AnvilVulkanContext.h"
-#include "AnvilPipeline.h"
-#include "AnvilShaderCompiler.h"
-#include "AnvilSwapchain.h"
-#include "AnvilTextureLoader.h"
+#include "GPUMesh.h"
+#include "VulkanContext.h"
+#include "PipelineBuilder.h"
+#include "ShaderCompiler.h"
+#include "VulkanSwapchain.h"
+#include "TextureLoader.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -24,12 +24,12 @@ struct PushConstants
 class ShaderReflectionCube
 {
 private:
-    AnvilVulkanContext* ptrAContext = nullptr;
-    AnvilSwapchain* ptrASwapchain = nullptr;
-    AnvilShaderCompiler shaderCompiler;
+    VulkanContext* ptrAContext = nullptr;
+    VulkanSwapchain* ptrASwapchain = nullptr;
+    ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
-    AnvilMeshBuffer meshBuffer;
+    GPUMesh meshBuffer;
     AnvilCamera camera;
 
     // Things for textures
@@ -37,11 +37,11 @@ private:
     AnvilMaterial myMaterial;
 
 public:
-    void initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
+    void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
 
     void loadPipeline();
 };

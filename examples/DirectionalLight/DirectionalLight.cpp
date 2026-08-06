@@ -8,26 +8,26 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilMeshBuffer.h"
-#include "AnvilModelLoader.h"
-#include "AnvilShaderCompiler.h"
-#include "AnvilTextureLoader.h"
-#include "AnvilUIRenderer.h"
+#include "GPUMesh.h"
+#include "ModelLoader.h"
+#include "ShaderCompiler.h"
+#include "TextureLoader.h"
+#include "UIRenderer.h"
 
-void DirectionalLight::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/BoxTextured/glTF/BoxTextured.gltf";
-    const AnvilMesh cubeMesh = AnvilModelLoader::LoadGLTF(modelPath);
+    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
     if (!cubeMesh.texturePath.empty())
     {
         std::cout << "Loading texture: " << cubeMesh.texturePath << std::endl;
 
-        myTexture = AnvilTextureLoader::LoadTexture(
+        myTexture = TextureLoader::LoadTexture(
             cubeMesh.texturePath,
             *ptrAContext
         );
@@ -96,15 +96,15 @@ void DirectionalLight::loadPipeline()
     }
     myMaterial.updateDescriptorSets();
 
-    auto attributesArray = AnvilMeshBuffer::getAttributeDescriptions();
+    auto attributesArray = GPUMesh::getAttributeDescriptions();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {AnvilMeshBuffer::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
     {attributesArray[0], attributesArray[1], attributesArray[2]};
 
     // Create pipeline
-    AnvilPipelineBuilder pipelineBuilder;
+    PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(myMaterial.vertexShader.get(), myMaterial.fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
@@ -117,7 +117,7 @@ void DirectionalLight::loadPipeline()
         .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout, "DirectionalLightPipeline");
 }
 
-void DirectionalLight::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain& inAnvilSwapchain)
+void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
 {
     // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};
@@ -155,7 +155,7 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain& inA
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    AnvilUIRenderer::DrawDebugAxis(view);
+    UIRenderer::DrawDebugAxis(view);
 
     PushConstants constants{};
     constants.renderMatrix = projection * view * model;
