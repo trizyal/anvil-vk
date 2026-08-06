@@ -2,6 +2,41 @@ cmake_minimum_required(VERSION 3.25)
 
 project(anvil-vk LANGUAGES C CXX)
 
+# --------------------------------------------------
+# Build Configurations & Custom 'Development' Type
+# --------------------------------------------------
+# Set default build type to 'Development' if none is specified
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Development" CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Development" "RelWithDebInfo" "Release")
+endif ()
+
+# Configure flags for custom 'Development' build (-Og: fast execution + debug symbols)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_C_FLAGS_DEVELOPMENT "-Og -g -DDEBUG" CACHE STRING "C flags for Development builds" FORCE)
+    set(CMAKE_CXX_FLAGS_DEVELOPMENT "-Og -g -DDEBUG" CACHE STRING "C++ flags for Development builds" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_DEVELOPMENT "" CACHE STRING "Linker flags for Development builds" FORCE)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_C_FLAGS_DEVELOPMENT "/Od /Zi /DDEBUG" CACHE STRING "C flags for Development builds" FORCE)
+    set(CMAKE_CXX_FLAGS_DEVELOPMENT "/Od /Zi /DDEBUG" CACHE STRING "C++ flags for Development builds" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_DEVELOPMENT "/DEBUG" CACHE STRING "Linker flags for Development builds" FORCE)
+endif ()
+
+# Global engine macros based on active configuration
+add_compile_definitions(
+        # Debug & Development builds get debug macros + validation layers
+        $<$<CONFIG:Debug>:ANVIL_DEBUG>
+        $<$<CONFIG:Debug>:ANVIL_ENABLE_VALIDATION>
+        $<$<CONFIG:Development>:ANVIL_DEBUG>
+        $<$<CONFIG:Development>:ANVIL_ENABLE_VALIDATION>
+
+        # RelWithDebInfo gets release macros + validation layers
+        $<$<CONFIG:RelWithDebInfo>:ANVIL_RELEASE>
+        $<$<CONFIG:RelWithDebInfo>:ANVIL_ENABLE_VALIDATION>
+
+        # Pure Release gets only release macros
+        $<$<CONFIG:Release>:ANVIL_RELEASE>
+)
 
 # --------------------------------------------------
 # C++ standard
@@ -137,12 +172,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # Header only cgltf
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
         ${EXTERNAL_DIR}/cgltf
 )
 
 # Header only stb
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
         ${EXTERNAL_DIR}/stb
 )
 
@@ -180,7 +215,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             -Wshadow
             -Wno-missing-field-initializers
     )
-    # Enable sanitizers only in Debug builds
+
+    # Enable sanitizers only in Debug and Development builds
     if ((CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "") AND NOT MINGW)
         target_compile_options(${PROJECT_NAME} PRIVATE
                 -g

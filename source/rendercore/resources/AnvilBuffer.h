@@ -14,7 +14,7 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-#include "../context/AnvilVulkanDebug.h"
+#include "AnvilVulkanDebug.h"
 
 /**
  * @brief Manages the lifecycle of a GPU Vulkan buffer and its backing VMA memory allocation.
@@ -63,7 +63,7 @@ public:
      *
      * @throws std::runtime_error If buffer allocation or GPU transfer commands fail.
      */
-    void createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+    void createBuffer(VmaAllocator inAllocator, [[maybe_unused]]VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
                       ANVIL_DEBUG_DECL());
 
     /**

@@ -3,6 +3,7 @@
 
 #include "AnvilApplication.h"
 
+#include <chrono>
 #include <iostream>
 
 #include "AnvilInput.h"
@@ -11,6 +12,7 @@
 void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo)
 {
     std::cout << "Initializing Anvil..." << std::endl;
+    auto cpuStart = std::chrono::high_resolution_clock::now();
     if (anvilInitialized)
     {
         return;
@@ -25,7 +27,10 @@ void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreat
     AnvilInput::InitializeInputSystem(anvilWindow->getGLFWWindow());
 
     anvilInitialized = true;
+    auto cpuEnd = std::chrono::high_resolution_clock::now();
+    auto initTime = std::chrono::duration<float, std::milli>(cpuEnd - cpuStart).count();
     std::cout << "Anvil initialization complete!" << std::endl;
+    std::cout << "Initialization took:" << initTime << "ms" << std::endl;
 }
 
 void AnvilApplication::shutdownAnvil()

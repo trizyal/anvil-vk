@@ -3,10 +3,9 @@
 
 #include "AnvilShaderModule.h"
 
-#include <iostream>
 #include <utility>
 
-#include "../context/AnvilVulkanResult.h"
+#include "AnvilVulkanResult.h"
 
 AnvilShaderModule::AnvilShaderModule(AnvilShaderModule&& other) noexcept
 {
@@ -27,7 +26,7 @@ AnvilShaderModule& AnvilShaderModule::operator=(AnvilShaderModule&& other) noexc
 }
 
 void AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
-                                           ANVIL_DEBUG_DEFN)
+        ANVIL_DEBUG_DEFN)
 {
     device = inContext.anvilDevice;
     if (!inSPIRV.isValid())

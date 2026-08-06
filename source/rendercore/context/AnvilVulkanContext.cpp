@@ -23,6 +23,8 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 {
     std::cout << "Initialising AnvilVulkanContext..." << std::endl;
 
+    ptrAWindow = &inWindow;
+
     // --------------------------------
     // Initialise Volk
     if (const VkResult volk_result = volkInitialize(); volk_result != VK_SUCCESS)
