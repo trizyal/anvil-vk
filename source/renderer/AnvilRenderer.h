@@ -10,7 +10,7 @@
  */
 
 #include <functional>
-#include "AnvilSwapchain.h"
+#include "../rendercore/context/AnvilSwapchain.h"
 
 class AnvilWindow;
 /**

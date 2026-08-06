@@ -6,7 +6,7 @@
 #include <iostream>
 #include <utility>
 
-#include "AnvilVulkanResult.h"
+#include "../context/AnvilVulkanResult.h"
 
 AnvilShaderModule::AnvilShaderModule(AnvilShaderModule&& other) noexcept
 {

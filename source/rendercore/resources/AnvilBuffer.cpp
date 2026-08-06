@@ -7,7 +7,7 @@
 #include <cstring>
 #include <utility>
 
-#include "AnvilVulkanDebug.h"
+#include "../context/AnvilVulkanDebug.h"
 
 AnvilBuffer::AnvilBuffer(AnvilBuffer&& other) noexcept
 {

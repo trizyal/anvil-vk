@@ -130,8 +130,10 @@ add_library(${PROJECT_NAME} STATIC ${ANVIL_CORE_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${SOURCE_DIR}/core
         ${SOURCE_DIR}/scene
-        ${SOURCE_DIR}/vulkan
-        ${SOURCE_DIR}/utilities
+        ${SOURCE_DIR}/rendercore
+        ${SOURCE_DIR}/rendercore/context
+        ${SOURCE_DIR}/rendercore/resources
+        ${SOURCE_DIR}/renderer
 )
 
 # Header only cgltf
