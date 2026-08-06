@@ -5,7 +5,7 @@
 #define ANVIL_VK_VULKANCONTEXT_H
 
 /**
- * @file AnvilVulkanContext.h
+ * @file VulkanContext.h
  * @brief Core Vulkan initialization, device management, and GPU memory allocator context.
  */
 
@@ -25,23 +25,23 @@ class AnvilWindow;
  *
  * @note This class is non-copyable and non-movable.
  */
-class AnvilVulkanContext
+class VulkanContext
 {
 public:
     /**
      * @brief Constructs an uninitialized Vulkan context container.
      */
-    AnvilVulkanContext() = default;
+    VulkanContext() = default;
 
     /**
      * @brief Destroy all owned Vulkan handles and destroys the C++ wrapper object.
      */
-    ~AnvilVulkanContext();
+    ~VulkanContext();
 
-    AnvilVulkanContext(const AnvilVulkanContext&) = delete;
-    AnvilVulkanContext& operator=(const AnvilVulkanContext&) = delete;
-    AnvilVulkanContext(AnvilVulkanContext&&) = delete;
-    AnvilVulkanContext& operator=(AnvilVulkanContext&&) = delete;
+    VulkanContext(const VulkanContext&) = delete;
+    VulkanContext& operator=(const VulkanContext&) = delete;
+    VulkanContext(VulkanContext&&) = delete;
+    VulkanContext& operator=(VulkanContext&&) = delete;
 
     /** Vulkan API instance handle. */
     VkInstance anvilInstance = VK_NULL_HANDLE;

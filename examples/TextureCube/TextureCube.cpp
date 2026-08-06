@@ -14,7 +14,7 @@
 #include "AnvilTextureLoader.h"
 #include "AnvilUIRenderer.h"
 
-void TextureCube::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -66,7 +66,7 @@ void TextureCube::cleanupProject()
     }
 }
 
-void TextureCube::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
+void TextureCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

@@ -13,7 +13,7 @@
 #include "AnvilShaderCompiler.h"
 #include "AnvilUIRenderer.h"
 
-void BoxModel::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void BoxModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -47,7 +47,7 @@ void BoxModel::cleanupProject()
     }
 }
 
-void BoxModel::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain)
+void BoxModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

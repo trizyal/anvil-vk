@@ -10,8 +10,8 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
-#include "AnvilSwapchain.h"
-#include "AnvilVulkanContext.h"
+#include "VulkanSwapchain.h"
+#include "VulkanContext.h"
 #include "VulkanDebug.h"
 #include "VulkanResult.h"
 
@@ -52,7 +52,7 @@ namespace
     };
 }
 
-bool AnvilUIRenderer::initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwindow* inWindow, AnvilSwapchain* inSwapchain)
+bool AnvilUIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, VulkanSwapchain* inSwapchain)
 {
     ptrAContext = inContext;
 

@@ -25,7 +25,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& other) noexcept
     return *this;
 }
 
-void ShaderModule::createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
+void ShaderModule::createShaderModule(const VulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
         ANVIL_DEBUG_DEFN)
 {
     device = inContext.anvilDevice;

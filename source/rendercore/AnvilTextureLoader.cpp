@@ -14,7 +14,7 @@
 
 namespace AnvilTextureLoader
 {
-    AnvilTexture LoadTexture(const std::string& filepath, AnvilVulkanContext& inContext)
+    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext)
     {
         std::string imageName = std::filesystem::path(filepath).filename().string();
         int texWidth, texHeight, texChannels;

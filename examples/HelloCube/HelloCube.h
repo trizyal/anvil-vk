@@ -7,11 +7,11 @@
 #include <glm/glm.hpp>
 
 #include "GPUBuffer.h"
-#include "AnvilVulkanContext.h"
+#include "VulkanContext.h"
 #include "ShaderModule.h"
 #include "PipelineBuilder.h"
 #include "AnvilShaderCompiler.h"
-#include "AnvilSwapchain.h"
+#include "VulkanSwapchain.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -22,8 +22,8 @@ struct PushConstants
 class HelloCube
 {
 private:
-    AnvilVulkanContext* ptrAContext = nullptr;
-    AnvilSwapchain* ptrASwapchain = nullptr;
+    VulkanContext* ptrAContext = nullptr;
+    VulkanSwapchain* ptrASwapchain = nullptr;
 
     ShaderModule vertexShader;
     ShaderModule fragmentShader;
@@ -36,11 +36,11 @@ private:
     AnvilShaderCompiler shaderCompiler;
 
 public:
-    void initalizeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain);
+    void initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, AnvilSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
 
     void loadPipeline();
 

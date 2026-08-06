@@ -14,7 +14,7 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-class AnvilVulkanContext;
+class VulkanContext;
 
 /**
  * @brief Manages the swapchain, presentation images, and a depth attachment for rendering.
@@ -29,25 +29,25 @@ class AnvilVulkanContext;
  * @warning Will need to decouple the depth from swapchain when moving to
  * deferred rendering, shadow mapping or post processing.
  */
-class AnvilSwapchain
+class VulkanSwapchain
 {
 public:
     /**
      * @brief Constructs an uninitialized Vulkan swapchain container.
      */
-    AnvilSwapchain() = default;
+    VulkanSwapchain() = default;
 
     /**
      * @brief Destroys the swapchain, all presentation views, and the depth attachment.
      */
-    ~AnvilSwapchain();
+    ~VulkanSwapchain();
 
 
-    AnvilSwapchain(const AnvilSwapchain&) = delete;
-    AnvilSwapchain& operator=(const AnvilSwapchain&) = delete;
+    VulkanSwapchain(const VulkanSwapchain&) = delete;
+    VulkanSwapchain& operator=(const VulkanSwapchain&) = delete;
 
-    AnvilSwapchain(AnvilSwapchain&&) = delete;
-    AnvilSwapchain& operator=(AnvilSwapchain&&) = delete;
+    VulkanSwapchain(VulkanSwapchain&&) = delete;
+    VulkanSwapchain& operator=(VulkanSwapchain&&) = delete;
 
     /** Underlying Vulkan swapchain handle. */
     VkSwapchainKHR anvilSwapchain = VK_NULL_HANDLE;
@@ -81,7 +81,7 @@ public:
 
 private:
     /** Cached pointer to the parent Vulkan context. */
-    AnvilVulkanContext *ptrAContext = nullptr;
+    VulkanContext *ptrAContext = nullptr;
 
 public:
     /**
@@ -94,7 +94,7 @@ public:
      *
      * @throws std::runtime_error If swapchain, image view, or depth buffer creation fails.
      */
-    void initializeSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
+    void initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent);
 
     /**
      * @brief Recreates the swapchain and its attachments to handle window resizing or surface changes.
@@ -107,7 +107,7 @@ public:
      *
      * @throws std::runtime_error If swapchain, image view, or depth buffer creation fails.
      */
-    void recreateSwapchain(AnvilVulkanContext& inAnvilContext, VkExtent2D inExtent);
+    void recreateSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent);
 
 private:
     /**

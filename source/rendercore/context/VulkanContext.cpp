@@ -7,7 +7,7 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
-#include "AnvilVulkanContext.h"
+#include "VulkanContext.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -19,7 +19,7 @@
 #include "VulkanResult.h"
 #include "AnvilWindow.h"
 
-void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
+void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 {
     std::cout << "Initialising AnvilVulkanContext..." << std::endl;
 
@@ -192,7 +192,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     std::cout << "Finished initializing AnvilVulkanContext" << std::endl;
 }
 
-void AnvilVulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction) const
+void VulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction) const
 {
     VkCommandBufferAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -223,7 +223,7 @@ void AnvilVulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCm
     vkFreeCommandBuffers(anvilDevice, uploadCommandPool, 1, &cmd);
 }
 
-AnvilVulkanContext::~AnvilVulkanContext()
+VulkanContext::~VulkanContext()
 {
     vkDestroyFence(anvilDevice, uploadFence, nullptr);
     vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);

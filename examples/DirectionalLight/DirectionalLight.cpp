@@ -14,7 +14,7 @@
 #include "AnvilTextureLoader.h"
 #include "AnvilUIRenderer.h"
 
-void DirectionalLight::initializeProject(AnvilVulkanContext& inAnvilContext, AnvilSwapchain& inAnvilSwapchain)
+void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -117,7 +117,7 @@ void DirectionalLight::loadPipeline()
         .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout, "DirectionalLightPipeline");
 }
 
-void DirectionalLight::recordCommands(VkCommandBuffer inCmd, AnvilSwapchain& inAnvilSwapchain)
+void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
 {
     // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};

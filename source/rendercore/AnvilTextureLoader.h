@@ -16,7 +16,7 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-#include "AnvilVulkanContext.h"
+#include "VulkanContext.h"
 
 /**
  * @brief GPU-side container representing a sampled 2D texture.
@@ -42,7 +42,7 @@ struct AnvilTexture
      *
      * @param inContext Pointer to the root Vulkan context providing the logical device and VMA allocator.
      */
-    void destroyAnvilTexture(const AnvilVulkanContext* inContext) const
+    void destroyAnvilTexture(const VulkanContext* inContext) const
     {
         if (sampler)
         {
@@ -77,7 +77,7 @@ namespace AnvilTextureLoader
      *
      * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
-    AnvilTexture LoadTexture(const std::string& filepath, AnvilVulkanContext& inContext);
+    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext);
 }
 
 #endif //ANVIL_VK_TEXTURELOADER_H

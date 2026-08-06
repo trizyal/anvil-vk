@@ -15,8 +15,8 @@
 
 #include "../rendercore/context/VulkanDebug.h"
 
-class AnvilVulkanContext;
-class AnvilSwapchain;
+class VulkanContext;
+class VulkanSwapchain;
 
 /**
  * @brief Subsystem responsible for initializing, recording, and rendering user interface overlay frames.
@@ -52,7 +52,7 @@ public:
     VkFormat depthFormat = VK_FORMAT_UNDEFINED;
 
 private:
-    AnvilVulkanContext* ptrAContext = nullptr;
+    VulkanContext* ptrAContext = nullptr;
 
     /** Dedicated descriptor pool allocated for Dear ImGui internal resources. */
     VkDescriptorPool imguiPool = VK_NULL_HANDLE;
@@ -65,7 +65,7 @@ public:
      * @param inSwapchain Pointer to the active swapchain to query color and depth attachment formats.
      * @return `true` if ImGui initialization succeeded, `false` otherwise.
      */
-    bool initializeUIRenderer(AnvilVulkanContext* inContext, GLFWwindow* inWindow, AnvilSwapchain* inSwapchain);
+    bool initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, VulkanSwapchain* inSwapchain);
 
     /**
      * @brief Starts a new ImGui frame for both the GLFW and Vulkan backends.

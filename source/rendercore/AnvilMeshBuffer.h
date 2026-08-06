@@ -14,7 +14,7 @@
 #include <glm/glm.hpp>
 
 #include "GPUBuffer.h"
-#include "AnvilVulkanContext.h"
+#include "VulkanContext.h"
 #include "AnvilModelLoader.h"
 
 /**
@@ -48,7 +48,7 @@ public:
 
 private:
     /** Cached context used for self-contained destruction. */
-    const AnvilVulkanContext* ptrAContext = nullptr;
+    const VulkanContext* ptrAContext = nullptr;
 
 public:
     /**
@@ -59,7 +59,7 @@ public:
      *
      * @see AnvilMesh
      */
-    void createAnvilMeshBuffer(const AnvilVulkanContext& inContext, const AnvilMesh& inMesh);
+    void createAnvilMeshBuffer(const VulkanContext& inContext, const AnvilMesh& inMesh);
 
     /**
      * @brief Destroys the underlying GPU vertex and index buffers.

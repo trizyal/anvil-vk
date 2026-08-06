@@ -19,7 +19,7 @@
 #include "AnvilShaderCompiler.h"
 #include "ShaderModule.h"
 #include "AnvilTextureLoader.h"
-#include "AnvilVulkanContext.h"
+#include "VulkanContext.h"
 
 /**
  * @brief Cached Vulkan descriptor binding metadata extracted via Slang shader reflection.
@@ -80,7 +80,7 @@ public:
     VkShaderStageFlags pushConstantStages = 0;
 
 private:
-    AnvilVulkanContext* ptrAContext = nullptr;
+    VulkanContext* ptrAContext = nullptr;
 
     std::unordered_map<std::string, ShaderBinding> bindingMap;
     std::vector<VkWriteDescriptorSet> pendingWrites;
@@ -101,7 +101,7 @@ public:
      *
      * @throws std::runtime_error If shader compilation fails or Vulkan layouts cannot be created.
      */
-    void buildMaterial(AnvilVulkanContext& inContext,
+    void buildMaterial(VulkanContext& inContext,
                        AnvilShaderCompiler& inCompiler,
                        const AnvilShaders::ShaderCompileRequest& inVertReq,
                        const AnvilShaders::ShaderCompileRequest& inFragReq);

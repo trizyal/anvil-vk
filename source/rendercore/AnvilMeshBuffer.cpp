@@ -5,7 +5,7 @@
 
 #include "AnvilModelLoader.h"
 
-void AnvilMeshBuffer::createAnvilMeshBuffer(const AnvilVulkanContext& inContext, const AnvilMesh& inMesh)
+void AnvilMeshBuffer::createAnvilMeshBuffer(const VulkanContext& inContext, const AnvilMesh& inMesh)
 {
     this->ptrAContext = &inContext;
 

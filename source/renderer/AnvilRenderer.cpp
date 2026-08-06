@@ -8,12 +8,12 @@
 
 #include "AnvilShaderCompiler.h"
 #include "AnvilUIRenderer.h"
-#include "AnvilVulkanContext.h"
+#include "VulkanContext.h"
 #include "AnvilWindow.h"
 #include "VulkanDebug.h"
 #include "VulkanResult.h"
 
-void AnvilRenderer::initializeRenderer(AnvilVulkanContext* inAnvilContext, AnvilSwapchain* inAnvilSwapchain)
+void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, VulkanSwapchain* inAnvilSwapchain)
 {
     std::cout << "Initializing AnvilRenderer" << std::endl;
     this->ptrAContext = inAnvilContext;
@@ -44,7 +44,7 @@ AnvilRenderer::~AnvilRenderer()
     }
 }
 
-void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, AnvilSwapchain*)>& drawCallback)
+void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& drawCallback)
 {
     // Recreate swapchain maybe
     if (recreateSwapchain)
