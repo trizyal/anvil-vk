@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilPipeline.h"
+#include "PipelineBuilder.h"
 
 #include <stdexcept>
 
-AnvilPipelineBuilder::AnvilPipelineBuilder()
+PipelineBuilder::PipelineBuilder()
 {
     // Initialise standard structs to safe zero values
     vertexInputInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
@@ -22,7 +22,7 @@ AnvilPipelineBuilder::AnvilPipelineBuilder()
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::setVertexInput(const std::vector<VkVertexInputBindingDescription>& inBinding, const std::vector<VkVertexInputAttributeDescription>& inAttributes)
+PipelineBuilder& PipelineBuilder::setVertexInput(const std::vector<VkVertexInputBindingDescription>& inBinding, const std::vector<VkVertexInputAttributeDescription>& inAttributes)
 {
     vertexBindings = inBinding;
     vertexAttributes = inAttributes;
@@ -35,7 +35,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setVertexInput(const std::vector<VkV
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader)
+PipelineBuilder& PipelineBuilder::setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader)
 {
     // TODO: If there are more stages, need to figure out how that will go
     shaderStages.clear();
@@ -58,7 +58,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setShaders(VkShaderModule inVertexSh
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::setColorAttachmentFormat(VkFormat inColorFormat)
+PipelineBuilder& PipelineBuilder::setColorAttachmentFormat(VkFormat inColorFormat)
 {
     colorAttachmentFormat = inColorFormat;
     dynamicRendering.colorAttachmentCount = 1;
@@ -67,7 +67,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setColorAttachmentFormat(VkFormat in
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::setDepthAttachmentFormat(VkFormat inDepthFormat)
+PipelineBuilder& PipelineBuilder::setDepthAttachmentFormat(VkFormat inDepthFormat)
 {
     depthAttachmentFormat = inDepthFormat;
 
@@ -77,7 +77,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setDepthAttachmentFormat(VkFormat in
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::enableDepthTest(bool bDepthWriteEnable, VkCompareOp inCompareOp)
+PipelineBuilder& PipelineBuilder::enableDepthTest(bool bDepthWriteEnable, VkCompareOp inCompareOp)
 {
     depthStencil.depthTestEnable = VK_TRUE;
     depthStencil.depthWriteEnable = bDepthWriteEnable ? VK_TRUE : VK_FALSE;
@@ -89,7 +89,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::enableDepthTest(bool bDepthWriteEnab
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::setInputTopology(VkPrimitiveTopology inTopology)
+PipelineBuilder& PipelineBuilder::setInputTopology(VkPrimitiveTopology inTopology)
 {
     inputAssembly.topology = inTopology;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
@@ -97,7 +97,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setInputTopology(VkPrimitiveTopology
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::setPolygonMode(VkPolygonMode inPolygonMode)
+PipelineBuilder& PipelineBuilder::setPolygonMode(VkPolygonMode inPolygonMode)
 {
     rasterizer.polygonMode = inPolygonMode;
     rasterizer.lineWidth = 1.0f;
@@ -105,7 +105,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setPolygonMode(VkPolygonMode inPolyg
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace)
+PipelineBuilder& PipelineBuilder::setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace)
 {
     rasterizer.cullMode = inCullMode;
     rasterizer.frontFace = inFrontFace;
@@ -113,7 +113,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::setCullMode(VkCullModeFlags inCullMo
     return *this;
 }
 
-AnvilPipelineBuilder& AnvilPipelineBuilder::disableBlending()
+PipelineBuilder& PipelineBuilder::disableBlending()
 {
     colorBlendAttachment.blendEnable = VK_FALSE;
     colorBlendAttachment.colorWriteMask =
@@ -125,7 +125,7 @@ AnvilPipelineBuilder& AnvilPipelineBuilder::disableBlending()
     return *this;
 }
 
-AnvilPipeline AnvilPipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DEFN) const
+AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DEFN) const
 {
     // Viewport state setup
     // Using dynamic states so we can resize the window

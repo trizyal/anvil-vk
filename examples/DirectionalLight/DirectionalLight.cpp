@@ -104,7 +104,7 @@ void DirectionalLight::loadPipeline()
     {attributesArray[0], attributesArray[1], attributesArray[2]};
 
     // Create pipeline
-    AnvilPipelineBuilder pipelineBuilder;
+    PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(myMaterial.vertexShader.get(), myMaterial.fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)

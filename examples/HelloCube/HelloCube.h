@@ -9,7 +9,7 @@
 #include "AnvilBuffer.h"
 #include "AnvilVulkanContext.h"
 #include "AnvilShaderModule.h"
-#include "AnvilPipeline.h"
+#include "PipelineBuilder.h"
 #include "AnvilShaderCompiler.h"
 #include "AnvilSwapchain.h"
 

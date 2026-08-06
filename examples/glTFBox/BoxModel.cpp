@@ -150,7 +150,7 @@ void BoxModel::loadPipeline()
         {something[0], something[1]};
 
     // Create pipeline
-    AnvilPipelineBuilder pipelineBuilder;
+    PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)

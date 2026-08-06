@@ -220,7 +220,7 @@ void HelloCube::loadPipeline()
     };
 
     // Create pipeline
-    AnvilPipelineBuilder pipelineBuilder;
+    PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)

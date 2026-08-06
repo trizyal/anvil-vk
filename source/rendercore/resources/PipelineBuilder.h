@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_PIPELINE_H
-#define ANVIL_VK_PIPELINE_H
+#ifndef ANVIL_VK_PIPELINEBUILDER_H
+#define ANVIL_VK_PIPELINEBUILDER_H
 
 /**
- * @file AnvilPipeline.h
+ * @file PipelineBuilder.h
  * @brief Builder pattern abstraction for configuring and compiling Vulkan graphics pipelines.
  */
 
@@ -32,13 +32,13 @@ struct AnvilPipeline
  * vertex input layouts, blending, rasterization, and dynamic rendering attachment formats
  * before compiling them into an AnvilPipeline.
  */
-class AnvilPipelineBuilder
+class PipelineBuilder
 {
 public:
     /**
      * @brief Constructs a new pipeline builder with sensible default fixed-function states.
      */
-    AnvilPipelineBuilder();
+    PipelineBuilder();
 
 private:
     VkFormat colorAttachmentFormat = VK_FORMAT_UNDEFINED;
@@ -68,7 +68,7 @@ public:
      * @param inAttributes Vector mapping vertex buffer offsets to shader input locations.
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& setVertexInput(
+    PipelineBuilder& setVertexInput(
         const std::vector<VkVertexInputBindingDescription>& inBinding,
         const std::vector<VkVertexInputAttributeDescription>& inAttributes
     );
@@ -79,21 +79,21 @@ public:
      * @param inFragmentShader Vulkan shader module containing fragment shader SPIR-V bytecode.
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader);
+    PipelineBuilder& setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader);
 
     /**
      * @brief Sets the format of the color attachment used by dynamic rendering.
      * @param inColorFormat Vulkan format of the color attachment.
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& setColorAttachmentFormat(VkFormat inColorFormat);
+    PipelineBuilder& setColorAttachmentFormat(VkFormat inColorFormat);
 
     /**
      * @brief Sets the format of the depth attachment used by dynamic rendering.
      * @param inDepthFormat Vulkan format of the depth attachment.
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& setDepthAttachmentFormat(VkFormat inDepthFormat);
+    PipelineBuilder& setDepthAttachmentFormat(VkFormat inDepthFormat);
 
     /**
      * @brief Enables depth testing and configures depth writes and comparison.
@@ -101,21 +101,21 @@ public:
      * @param inCompareOp Comparison operation used by the depth test (e.g. VK_COMPARE_OP_LESS).
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& enableDepthTest(bool bDepthWriteEnable, VkCompareOp inCompareOp);
+    PipelineBuilder& enableDepthTest(bool bDepthWriteEnable, VkCompareOp inCompareOp);
 
     /**
      * @brief Sets the primitive topology used by the input assembly stage.
      * @param inTopology Primitive topology used to interpret vertex data (e.g. VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST).
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& setInputTopology(VkPrimitiveTopology inTopology);
+    PipelineBuilder& setInputTopology(VkPrimitiveTopology inTopology);
 
     /**
      * @brief Sets the polygon rasterization mode.
      * @param inPolygonMode Polygon rasterization stage (e.g. VK_POLYGON_MODE_FILL).
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& setPolygonMode(VkPolygonMode inPolygonMode);
+    PipelineBuilder& setPolygonMode(VkPolygonMode inPolygonMode);
 
     /**
      *
@@ -123,7 +123,7 @@ public:
      * @param inFrontFace Winding order used to determine front-facing primitives (e.g. VK_FRONT_FACE_COUNTER_CLOCKWISE).
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace);
+    PipelineBuilder& setCullMode(VkCullModeFlags inCullMode, VkFrontFace inFrontFace);
 
     /**
      * @brief Disables color blending for the pipeline's color attachment.
@@ -132,7 +132,7 @@ public:
      * is written directly to the color attachment without blending.
      * @return Reference to this builder for method chaining.
      */
-    AnvilPipelineBuilder& disableBlending();
+    PipelineBuilder& disableBlending();
 
     /**
      * @brief Builds a Vulkan graphics pipeline using the configured state.
@@ -147,4 +147,4 @@ public:
     AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL()) const;
 };
 
-#endif //ANVIL_VK_PIPELINE_H
+#endif //ANVIL_VK_PIPELINEBUILDER_H
