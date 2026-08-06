@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilUIRenderer.h"
+#include "UIRenderer.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -52,7 +52,7 @@ namespace
     };
 }
 
-bool AnvilUIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, VulkanSwapchain* inSwapchain)
+bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, VulkanSwapchain* inSwapchain)
 {
     ptrAContext = inContext;
 
@@ -126,7 +126,7 @@ bool AnvilUIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow*
     return true;
 }
 
-AnvilUIRenderer::~AnvilUIRenderer()
+UIRenderer::~UIRenderer()
 {
     if (ptrAContext->anvilDevice)
     {
@@ -151,14 +151,14 @@ AnvilUIRenderer::~AnvilUIRenderer()
     }
 }
 
-void AnvilUIRenderer::BeginUIFrame()
+void UIRenderer::BeginUIFrame()
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
-void AnvilUIRenderer::EndUIFrame()
+void UIRenderer::EndUIFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -168,13 +168,13 @@ void AnvilUIRenderer::EndUIFrame()
     }
 }
 
-void AnvilUIRenderer::RecordUICommands(VkCommandBuffer inCmdBuffer)
+void UIRenderer::RecordUICommands(VkCommandBuffer inCmdBuffer)
 {
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), inCmdBuffer);
 }
 
-void AnvilUIRenderer::createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DEFN)
+void UIRenderer::createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DEFN)
 {
     VkDescriptorPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -188,7 +188,7 @@ void AnvilUIRenderer::createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DEFN)
     ANVIL_DEBUG_NAME(inDevice, imguiPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL);
 }
 
-void AnvilUIRenderer::DrawDebugAxis(const glm::mat4& viewMatrix)
+void UIRenderer::DrawDebugAxis(const glm::mat4& viewMatrix)
 {
     // TODO: Clean up the DrawDebugAxis function
 

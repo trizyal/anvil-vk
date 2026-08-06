@@ -12,7 +12,7 @@
 #include "AnvilModelLoader.h"
 #include "AnvilShaderCompiler.h"
 #include "AnvilTextureLoader.h"
-#include "AnvilUIRenderer.h"
+#include "UIRenderer.h"
 
 void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
@@ -155,7 +155,7 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& in
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    AnvilUIRenderer::DrawDebugAxis(view);
+    UIRenderer::DrawDebugAxis(view);
 
     PushConstants constants{};
     constants.renderMatrix = projection * view * model;

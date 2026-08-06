@@ -17,7 +17,7 @@
 #include "VulkanContext.h"
 #include "VulkanSwapchain.h"
 #include "AnvilRenderer.h"
-#include "AnvilUIRenderer.h"
+#include "UIRenderer.h"
 
 /**
  * @brief Configuration settings for initializing an AnvilApplication instance.
@@ -61,7 +61,7 @@ private:
     VulkanContext anvilContext;
     VulkanSwapchain anvilSwapchain;
     AnvilRenderer anvilRenderer;
-    AnvilUIRenderer anvilUIRenderer;
+    UIRenderer anvilUIRenderer;
     bool anvilInitialized = false;
 
     std::vector<std::function<void()>> shaderReloadQueue;

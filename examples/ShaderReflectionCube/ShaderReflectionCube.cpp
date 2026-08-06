@@ -12,7 +12,7 @@
 #include "AnvilModelLoader.h"
 #include "AnvilShaderCompiler.h"
 #include "AnvilTextureLoader.h"
-#include "AnvilUIRenderer.h"
+#include "UIRenderer.h"
 
 void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
@@ -84,7 +84,7 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    AnvilUIRenderer::DrawDebugAxis(view);
+    UIRenderer::DrawDebugAxis(view);
 
     PushConstants constants{};
     constants.renderMatrix = projection * view;

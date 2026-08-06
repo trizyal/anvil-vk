@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "AnvilInput.h"
-#include "AnvilUILogger.h"
+#include "UILogger.h"
 
 void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo)
 {
@@ -83,12 +83,12 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, Vulkan
             }
         }
 
-        AnvilUIRenderer::BeginUIFrame();
-        AnvilUILogger::DrawOverlay();
+        UIRenderer::BeginUIFrame();
+        UILogger::DrawOverlay();
 
         anvilRenderer.drawFrame(*anvilWindow, renderCallback);
 
-        AnvilUIRenderer::EndUIFrame();
+        UIRenderer::EndUIFrame();
     }
 
     vkDeviceWaitIdle(anvilContext.anvilDevice);

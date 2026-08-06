@@ -5,7 +5,7 @@
 #define ANVIL_VK_UIRENDERER_H
 
 /**
- * @file AnvilUIRenderer.h
+ * @file UIRenderer.h
  * @brief Manages Dear ImGui integration, overlay rendering, and debug UI widgets for Vulkan.
  */
 
@@ -13,7 +13,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "../rendercore/context/VulkanDebug.h"
+#include "VulkanDebug.h"
 
 class VulkanContext;
 class VulkanSwapchain;
@@ -26,24 +26,24 @@ class VulkanSwapchain;
  *
  * @note This class is non-copyable and non-movable. May need to change that.
  */
-class AnvilUIRenderer
+class UIRenderer
 {
 public:
     /**
      * @brief Constructs an uninitialized UI renderer container.
      */
-    AnvilUIRenderer() = default;
+    UIRenderer() = default;
 
     /**
      * @brief Destroys the UI renderer, shutting down ImGui backends and destroying the descriptor pool.
      */
-    ~AnvilUIRenderer();
+    ~UIRenderer();
 
-    AnvilUIRenderer(const AnvilUIRenderer&) = delete;
-    AnvilUIRenderer& operator=(const AnvilUIRenderer&) = delete;
+    UIRenderer(const UIRenderer&) = delete;
+    UIRenderer& operator=(const UIRenderer&) = delete;
 
-    AnvilUIRenderer(AnvilUIRenderer&&) = delete;
-    AnvilUIRenderer& operator=(AnvilUIRenderer&&) = delete;
+    UIRenderer(UIRenderer&&) = delete;
+    UIRenderer& operator=(UIRenderer&&) = delete;
 
     /** Target color attachment pixel format for UI rendering. */
     VkFormat colorFormat = VK_FORMAT_UNDEFINED;

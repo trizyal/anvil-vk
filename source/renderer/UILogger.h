@@ -5,7 +5,7 @@
 #define ANVIL_VK_UILOGGER_H
 
 /**
- * @file AnvilUILogger.h
+ * @file UILogger.h
  * @brief Thread-safe on-screen UI logger and ImGui overlay for runtime diagnostics.
  */
 
@@ -51,7 +51,7 @@ constexpr float LOG_DISPLAY_TIME = 5.0f;
  *
  * @todo Display time should be configurable, both as default and per log.
  */
-class AnvilUILogger
+class UILogger
 {
 private:
     static std::vector<UILogMessage> messages;
@@ -77,17 +77,17 @@ public:
 };
 
 /**
- * @brief Shorthand macro for submitting a message to the AnvilUILogger overlay.
+ * @brief Shorthand macro for submitting a message to the UILogger overlay.
  *
- * Syntactically mirrors AnvilUILogger::AddLog() and supports the following call signatures:
+ * Syntactically mirrors UILogger::AddLog() and supports the following call signatures:
  * @code
  * LOGUI("Engine initialized successfully.");                   // Uses default green color
  * LOGUI("Failed to open shader file!", AnvilColor::Red);       // Explicit error color
  * @endcode
  *
  * @param ... Accepts a string text message and an optional ImVec4 color argument.
- * @see AnvilUILogger::AddLog
+ * @see UILogger::AddLog
  */
-#define LOGUI(...) AnvilUILogger::AddLog(__VA_ARGS__)
+#define LOGUI(...) UILogger::AddLog(__VA_ARGS__)
 
 #endif //ANVIL_VK_UILOGGER_H

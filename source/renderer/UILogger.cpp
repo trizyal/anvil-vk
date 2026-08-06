@@ -1,18 +1,18 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilUILogger.h"
+#include "UILogger.h"
 
-std::vector<UILogMessage> AnvilUILogger::messages;
-std::mutex AnvilUILogger::queueMutex;
+std::vector<UILogMessage> UILogger::messages;
+std::mutex UILogger::queueMutex;
 
-void AnvilUILogger::AddLog(const std::string& inText, const ImVec4 inColor)
+void UILogger::AddLog(const std::string& inText, const ImVec4 inColor)
 {
     std::lock_guard<std::mutex> lock(queueMutex);
     messages.push_back({.text = inText, .color = inColor, .timeRemaining = LOG_DISPLAY_TIME});
 }
 
-void AnvilUILogger::DrawOverlay()
+void UILogger::DrawOverlay()
 {
     std::lock_guard<std::mutex> lock(queueMutex);
 
