@@ -25,16 +25,16 @@
  *
  * @todo SPIRV dumps should be readable.
  */
-class AnvilShaderCompiler
+class ShaderCompiler
 {
 public:
-    AnvilShaderCompiler() = default;
-    ~AnvilShaderCompiler() = default;
+    ShaderCompiler() = default;
+    ~ShaderCompiler() = default;
 
-    AnvilShaderCompiler(const AnvilShaderCompiler&) = delete;
-    AnvilShaderCompiler& operator=(const AnvilShaderCompiler&) = delete;
-    AnvilShaderCompiler(AnvilShaderCompiler&&) = delete;
-    AnvilShaderCompiler& operator=(AnvilShaderCompiler&&) = delete;
+    ShaderCompiler(const ShaderCompiler&) = delete;
+    ShaderCompiler& operator=(const ShaderCompiler&) = delete;
+    ShaderCompiler(ShaderCompiler&&) = delete;
+    ShaderCompiler& operator=(ShaderCompiler&&) = delete;
 
     /**
      * @brief Optimization levels applied during Slang-to-SPIR-V compilation.

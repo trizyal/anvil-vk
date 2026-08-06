@@ -10,7 +10,7 @@
 
 #include "AnvilMeshBuffer.h"
 #include "AnvilModelLoader.h"
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "UIRenderer.h"
 
 void BoxModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)

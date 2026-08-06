@@ -5,7 +5,7 @@
 #define ANVIL_VK_TEXTURELOADER_H
 
 /**
- * @file AnvilTextureLoader.h
+ * @file TextureLoader.h
  * @brief Utility structures and functions for loading image assets into device-local GPU textures.
  * @note May need to be turned into a similar class as AnvilBuffer. Right now it mirrors AnvilModelLoader,
  * may need separation there to have texture behave more like a wrapper, like buffer and have a separate Image Class.
@@ -62,7 +62,7 @@ struct AnvilTexture
 /**
  * @brief Functions for loading, decoding, and uploading texture files to the GPU.
  */
-namespace AnvilTextureLoader
+namespace TextureLoader
 {
     /**
      * @brief Loads an image file from disk, uploads it to device-local GPU memory, and generates mipmaps.

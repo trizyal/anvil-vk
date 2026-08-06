@@ -7,7 +7,7 @@
 #include "VulkanContext.h"
 #include "ShaderModule.h"
 #include "PipelineBuilder.h"
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "VulkanSwapchain.h"
 
 class HelloTriangle
@@ -21,7 +21,7 @@ private:
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     AnvilPipeline pipeline = {};
 
-    AnvilShaderCompiler shaderCompiler;
+    ShaderCompiler shaderCompiler;
 
 public:
     void initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);

@@ -16,9 +16,9 @@
 #include <slang-com-ptr.h>
 
 #include "GPUBuffer.h"
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "ShaderModule.h"
-#include "AnvilTextureLoader.h"
+#include "TextureLoader.h"
 #include "VulkanContext.h"
 
 /**
@@ -102,7 +102,7 @@ public:
      * @throws std::runtime_error If shader compilation fails or Vulkan layouts cannot be created.
      */
     void buildMaterial(VulkanContext& inContext,
-                       AnvilShaderCompiler& inCompiler,
+                       ShaderCompiler& inCompiler,
                        const AnvilShaders::ShaderCompileRequest& inVertReq,
                        const AnvilShaders::ShaderCompileRequest& inFragReq);
 

@@ -11,9 +11,9 @@
 #include "AnvilMeshBuffer.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "VulkanSwapchain.h"
-#include "AnvilTextureLoader.h"
+#include "TextureLoader.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -26,7 +26,7 @@ class ShaderReflectionCube
 private:
     VulkanContext* ptrAContext = nullptr;
     VulkanSwapchain* ptrASwapchain = nullptr;
-    AnvilShaderCompiler shaderCompiler;
+    ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
     AnvilMeshBuffer meshBuffer;

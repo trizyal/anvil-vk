@@ -90,7 +90,7 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
 }
 
 void AnvilMaterial::buildMaterial(VulkanContext& inContext,
-    AnvilShaderCompiler& inCompiler,
+    ShaderCompiler& inCompiler,
     const AnvilShaders::ShaderCompileRequest& inVertReq,
     const AnvilShaders::ShaderCompileRequest& inFragReq)
 {

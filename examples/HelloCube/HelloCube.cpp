@@ -8,7 +8,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 
 struct Vertex
 {

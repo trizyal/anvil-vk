@@ -11,9 +11,9 @@
 #include "VulkanContext.h"
 #include "ShaderModule.h"
 #include "PipelineBuilder.h"
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "VulkanSwapchain.h"
-#include "AnvilTextureLoader.h"
+#include "TextureLoader.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -34,7 +34,7 @@ private:
 
     AnvilMeshBuffer meshBuffer;
 
-    AnvilShaderCompiler shaderCompiler;
+    ShaderCompiler shaderCompiler;
 
     AnvilCamera camera;
 

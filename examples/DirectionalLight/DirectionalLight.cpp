@@ -10,8 +10,8 @@
 
 #include "AnvilMeshBuffer.h"
 #include "AnvilModelLoader.h"
-#include "AnvilShaderCompiler.h"
-#include "AnvilTextureLoader.h"
+#include "ShaderCompiler.h"
+#include "TextureLoader.h"
 #include "UIRenderer.h"
 
 void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
@@ -27,7 +27,7 @@ void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSw
     {
         std::cout << "Loading texture: " << cubeMesh.texturePath << std::endl;
 
-        myTexture = AnvilTextureLoader::LoadTexture(
+        myTexture = TextureLoader::LoadTexture(
             cubeMesh.texturePath,
             *ptrAContext
         );

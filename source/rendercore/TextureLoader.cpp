@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilTextureLoader.h"
+#include "TextureLoader.h"
 
 #include <stdexcept>
 #include <filesystem>
@@ -12,7 +12,7 @@
 #include "GPUBuffer.h"
 #include "VulkanResult.h"
 
-namespace AnvilTextureLoader
+namespace TextureLoader
 {
     AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext)
     {

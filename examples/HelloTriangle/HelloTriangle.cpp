@@ -6,7 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 
 void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {

@@ -10,8 +10,8 @@
 
 #include "AnvilMeshBuffer.h"
 #include "AnvilModelLoader.h"
-#include "AnvilShaderCompiler.h"
-#include "AnvilTextureLoader.h"
+#include "ShaderCompiler.h"
+#include "TextureLoader.h"
 #include "UIRenderer.h"
 
 void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
@@ -28,7 +28,7 @@ void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapcha
     {
         std::cout << "Loading texture: " << cubeMesh.texturePath << std::endl;
 
-        myTexture = AnvilTextureLoader::LoadTexture(
+        myTexture = TextureLoader::LoadTexture(
             cubeMesh.texturePath,
             *ptrAContext
         );

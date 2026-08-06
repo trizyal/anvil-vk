@@ -10,7 +10,7 @@
 #include "VulkanContext.h"
 #include "ShaderModule.h"
 #include "PipelineBuilder.h"
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "VulkanSwapchain.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
@@ -33,7 +33,7 @@ private:
     GPUBuffer vertexBuffer;
     GPUBuffer indexBuffer;
 
-    AnvilShaderCompiler shaderCompiler;
+    ShaderCompiler shaderCompiler;
 
 public:
     void initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);

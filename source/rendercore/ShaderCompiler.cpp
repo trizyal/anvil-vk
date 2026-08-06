@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 
 #include <array>
 #include <iostream>
@@ -36,7 +36,7 @@ namespace
     }
 } //Anonymous
 
-bool AnvilShaderCompiler::initializeShaderCompiler()
+bool ShaderCompiler::initializeShaderCompiler()
 {
     if (SLANG_FAILED(slang::createGlobalSession(globalSession.writeRef())))
     {
@@ -46,35 +46,35 @@ bool AnvilShaderCompiler::initializeShaderCompiler()
     return true;
 }
 
-void AnvilShaderCompiler::shutdownShaderCompiler()
+void ShaderCompiler::shutdownShaderCompiler()
 {
     // Explicitly release the COM pointer to free Slang resources
     session.setNull();
     globalSession.setNull();
 }
 
-void AnvilShaderCompiler::setOptimizationLevel(const OptimizationLevel inLevel)
+void ShaderCompiler::setOptimizationLevel(const OptimizationLevel inLevel)
 {
     optimizationLevel = inLevel;
 }
 
-void AnvilShaderCompiler::addSearchPath(const std::string& inPath)
+void ShaderCompiler::addSearchPath(const std::string& inPath)
 {
     searchPaths.push_back(inPath);
 }
 
-void AnvilShaderCompiler::setSpirvDump(const bool inEnable, const std::string& inDumpDirectory)
+void ShaderCompiler::setSpirvDump(const bool inEnable, const std::string& inDumpDirectory)
 {
     bDumpSpirv = inEnable;
     dumpDirectory = inDumpDirectory;
 }
 
-void AnvilShaderCompiler::resetSession()
+void ShaderCompiler::resetSession()
 {
     session.setNull();
 }
 
-int32_t AnvilShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel inLevel)
+int32_t ShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel inLevel)
 {
     switch (inLevel)
     {
@@ -90,7 +90,7 @@ int32_t AnvilShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel i
 }
 
 
-ShaderCompileResult AnvilShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request)
+ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request)
 {
     ShaderCompileResult shader_result = GetEmptyShaderByteCode();
     if (!globalSession)

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "UIRenderer.h"
 #include "VulkanContext.h"
 #include "AnvilWindow.h"

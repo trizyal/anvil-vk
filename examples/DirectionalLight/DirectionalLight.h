@@ -11,9 +11,9 @@
 #include "AnvilMeshBuffer.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
-#include "AnvilShaderCompiler.h"
+#include "ShaderCompiler.h"
 #include "VulkanSwapchain.h"
-#include "AnvilTextureLoader.h"
+#include "TextureLoader.h"
 
 struct SceneData
 {
@@ -35,7 +35,7 @@ class DirectionalLight
 private:
     VulkanContext* ptrAContext = nullptr;
     VulkanSwapchain* ptrASwapchain = nullptr;
-    AnvilShaderCompiler shaderCompiler;
+    ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
     AnvilMeshBuffer meshBuffer;
