@@ -1,18 +1,18 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "UILogger.h"
+#include "ScreenLogger.h"
 
-std::vector<UILogMessage> UILogger::messages;
-std::mutex UILogger::queueMutex;
+std::vector<UILogMessage> ScreenLogger::messages;
+std::mutex ScreenLogger::queueMutex;
 
-void UILogger::AddLog(const std::string& inText, const ImVec4 inColor)
+void ScreenLogger::AddLog(const std::string& inText, const ImVec4 inColor)
 {
     std::lock_guard<std::mutex> lock(queueMutex);
     messages.push_back({.text = inText, .color = inColor, .timeRemaining = LOG_DISPLAY_TIME});
 }
 
-void UILogger::DrawOverlay()
+void ScreenLogger::DrawOverlay()
 {
     std::lock_guard<std::mutex> lock(queueMutex);
 

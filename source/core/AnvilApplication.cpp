@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "AnvilInput.h"
-#include "UILogger.h"
+#include "ScreenLogger.h"
 
 void AnvilApplication::initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo)
 {
@@ -84,7 +84,7 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, Vulkan
         }
 
         UIRenderer::BeginUIFrame();
-        UILogger::DrawOverlay();
+        ScreenLogger::DrawOverlay();
 
         anvilRenderer.drawFrame(*anvilWindow, renderCallback);
 

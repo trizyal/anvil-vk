@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_UILOGGER_H
-#define ANVIL_VK_UILOGGER_H
+#ifndef ANVIL_VK_SCREENLOGGER_H
+#define ANVIL_VK_SCREENLOGGER_H
 
 /**
- * @file UILogger.h
+ * @file ScreenLogger.h
  * @brief Thread-safe on-screen UI logger and ImGui overlay for runtime diagnostics.
  */
 
@@ -51,7 +51,7 @@ constexpr float LOG_DISPLAY_TIME = 5.0f;
  *
  * @todo Display time should be configurable, both as default and per log.
  */
-class UILogger
+class ScreenLogger
 {
 private:
     static std::vector<UILogMessage> messages;
@@ -77,17 +77,17 @@ public:
 };
 
 /**
- * @brief Shorthand macro for submitting a message to the UILogger overlay.
+ * @brief Shorthand macro for submitting a message to the ScreenLogger overlay.
  *
- * Syntactically mirrors UILogger::AddLog() and supports the following call signatures:
+ * Syntactically mirrors ScreenLogger::AddLog() and supports the following call signatures:
  * @code
  * LOGUI("Engine initialized successfully.");                   // Uses default green color
  * LOGUI("Failed to open shader file!", AnvilColor::Red);       // Explicit error color
  * @endcode
  *
  * @param ... Accepts a string text message and an optional ImVec4 color argument.
- * @see UILogger::AddLog
+ * @see ScreenLogger::AddLog
  */
-#define LOGUI(...) UILogger::AddLog(__VA_ARGS__)
+#define LOGUI(...) ScreenLogger::AddLog(__VA_ARGS__)
 
-#endif //ANVIL_VK_UILOGGER_H
+#endif //ANVIL_VK_SCREENLOGGER_H

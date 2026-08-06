@@ -5,7 +5,7 @@
 #define ANVIL_VK_SHADERCOMPILER_H
 
 /**
- * @file AnvilShaderCompiler.h
+ * @file ShaderCompiler.h
  * @brief Runtime Slang-to-SPIR-V shader compilation utility wrapping the Slang SDK.
  */
 
