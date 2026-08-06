@@ -9,7 +9,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include "AnvilBuffer.h"
+#include "GPUBuffer.h"
 #include "AnvilVulkanResult.h"
 
 namespace AnvilTextureLoader
@@ -26,7 +26,7 @@ namespace AnvilTextureLoader
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
         // CPU-visible staging buffer
-        AnvilBuffer stagingBuffer;
+        GPUBuffer stagingBuffer;
         stagingBuffer.createBuffer(
             inContext.anvilAllocator,
             inContext.anvilDevice,

@@ -9,7 +9,7 @@
 #include "AnvilCamera.h"
 #include "AnvilMeshBuffer.h"
 #include "AnvilVulkanContext.h"
-#include "AnvilShaderModule.h"
+#include "ShaderModule.h"
 #include "PipelineBuilder.h"
 #include "AnvilShaderCompiler.h"
 #include "AnvilSwapchain.h"
@@ -27,8 +27,8 @@ private:
     AnvilVulkanContext* ptrAContext = nullptr;
     AnvilSwapchain* ptrASwapchain = nullptr;
 
-    AnvilShaderModule vertexShader;
-    AnvilShaderModule fragmentShader;
+    ShaderModule vertexShader;
+    ShaderModule fragmentShader;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     AnvilPipeline pipeline = {};
 

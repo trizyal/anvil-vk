@@ -13,7 +13,7 @@
 #include <volk.h>
 #include <glm/glm.hpp>
 
-#include "AnvilBuffer.h"
+#include "GPUBuffer.h"
 #include "AnvilVulkanContext.h"
 #include "AnvilModelLoader.h"
 
@@ -38,10 +38,10 @@ public:
     AnvilMeshBuffer& operator=(AnvilMeshBuffer&&) noexcept = default;
 
     /** GPU buffer containing interleaved MeshVertex attributes. */
-    AnvilBuffer vertexBuffer;
+    GPUBuffer vertexBuffer;
 
     /** GPU buffer containing 32-bit triangle indices. */
-    AnvilBuffer indexBuffer;
+    GPUBuffer indexBuffer;
 
     /** Total number of indices to draw. */
     uint32_t indexCount = 0;

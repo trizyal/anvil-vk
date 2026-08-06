@@ -1,18 +1,18 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilShaderModule.h"
+#include "ShaderModule.h"
 
 #include <utility>
 
 #include "AnvilVulkanResult.h"
 
-AnvilShaderModule::AnvilShaderModule(AnvilShaderModule&& other) noexcept
+ShaderModule::ShaderModule(ShaderModule&& other) noexcept
 {
     *this = std::move(other);
 }
 
-AnvilShaderModule& AnvilShaderModule::operator=(AnvilShaderModule&& other) noexcept
+ShaderModule& ShaderModule::operator=(ShaderModule&& other) noexcept
 {
     if (this != &other)
     {
@@ -25,7 +25,7 @@ AnvilShaderModule& AnvilShaderModule::operator=(AnvilShaderModule&& other) noexc
     return *this;
 }
 
-void AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
+void ShaderModule::createShaderModule(const AnvilVulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
         ANVIL_DEBUG_DEFN)
 {
     device = inContext.anvilDevice;
@@ -45,7 +45,7 @@ void AnvilShaderModule::createShaderModule(const AnvilVulkanContext& inContext, 
     ANVIL_DEBUG_NAME(device, shaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
 }
 
-void AnvilShaderModule::destroyShaderModule() const
+void ShaderModule::destroyShaderModule() const
 {
     if (shaderModule != VK_NULL_HANDLE && device != VK_NULL_HANDLE)
     {
@@ -53,7 +53,7 @@ void AnvilShaderModule::destroyShaderModule() const
     }
 }
 
-VkShaderModule AnvilShaderModule::get() const
+VkShaderModule ShaderModule::get() const
 {
     return shaderModule;
 }

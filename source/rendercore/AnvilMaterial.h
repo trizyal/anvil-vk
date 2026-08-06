@@ -15,9 +15,9 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 
-#include "AnvilBuffer.h"
+#include "GPUBuffer.h"
 #include "AnvilShaderCompiler.h"
-#include "AnvilShaderModule.h"
+#include "ShaderModule.h"
 #include "AnvilTextureLoader.h"
 #include "AnvilVulkanContext.h"
 
@@ -59,10 +59,10 @@ public:
     AnvilMaterial& operator=(AnvilMaterial&&) = delete;
 
     /** Owned vertex shader module and associated SPIR-V bytecode. */
-    AnvilShaderModule vertexShader;
+    ShaderModule vertexShader;
 
     /** Owned fragment shader module and associated SPIR-V bytecode. */
-    AnvilShaderModule fragmentShader;
+    ShaderModule fragmentShader;
 
     /** Reflected layout for the material's descriptor set. */
     VkDescriptorSetLayout materialDescriptorSetLayout = VK_NULL_HANDLE;
@@ -133,7 +133,7 @@ public:
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
-    void bindUniformBuffer(const std::string& name, const AnvilBuffer& inBuffer);
+    void bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer);
 
     /**
      * @brief Flushes all queued texture and buffer bindings to the GPU descriptor set.

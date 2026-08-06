@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_BUFFER_H
-#define ANVIL_VK_BUFFER_H
+#ifndef ANVIL_VK_GPUBUFFER_H
+#define ANVIL_VK_GPUBUFFER_H
 
 /**
- * @file AnvilBuffer.h
+ * @file GPUBuffer.h
  * @brief Move-only wrapper around Vulkan buffers and Vulkan Memory Allocator (VMA) allocations.
  */
 
@@ -27,19 +27,19 @@
  *
  * @note Copying this class is disallowed. Moving is allowed.
  */
-class AnvilBuffer
+class GPUBuffer
 {
 public:
-    AnvilBuffer() = default;
-    ~AnvilBuffer() = default;
+    GPUBuffer() = default;
+    ~GPUBuffer() = default;
 
     // Disallow copying to prevent double destruction/creation
-    AnvilBuffer(const AnvilBuffer&) = delete;
-    AnvilBuffer& operator=(const AnvilBuffer&) = delete;
+    GPUBuffer(const GPUBuffer&) = delete;
+    GPUBuffer& operator=(const GPUBuffer&) = delete;
 
     // Allow moving
-    AnvilBuffer(AnvilBuffer&& other) noexcept;
-    AnvilBuffer& operator=(AnvilBuffer&& other) noexcept;
+    GPUBuffer(GPUBuffer&& other) noexcept;
+    GPUBuffer& operator=(GPUBuffer&& other) noexcept;
 
     /** Underlying Vulkan buffer handle. */
     VkBuffer buffer = VK_NULL_HANDLE;
@@ -74,4 +74,4 @@ public:
     void destroyBuffer();
 };
 
-#endif //ANVIL_VK_BUFFER_H
+#endif //ANVIL_VK_GPUBUFFER_H

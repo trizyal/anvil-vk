@@ -5,7 +5,7 @@
 #define ANVIL_VK_SHADERMODULE_H
 
 /**
- * @file AnvilShaderModule.h
+ * @file ShaderModule.h
  * @brief Move-only wrapper around Vulkan shader modules compiled from Slang/SPIR-V bytecode.
  */
 
@@ -24,19 +24,19 @@
  *
  * @note Copying this class is disallowed. Moving is allowed.
  */
-class AnvilShaderModule
+class ShaderModule
 {
 public:
-    AnvilShaderModule() = default;
-    ~AnvilShaderModule() = default;
+    ShaderModule() = default;
+    ~ShaderModule() = default;
 
     // Disallow copying to prevent double destruction/creation
-    AnvilShaderModule(const AnvilShaderModule&) = delete;
-    AnvilShaderModule& operator=(const AnvilShaderModule&) = delete;
+    ShaderModule(const ShaderModule&) = delete;
+    ShaderModule& operator=(const ShaderModule&) = delete;
 
     // Allow moving
-    AnvilShaderModule(AnvilShaderModule&&) noexcept;
-    AnvilShaderModule& operator=(AnvilShaderModule&&) noexcept;
+    ShaderModule(ShaderModule&&) noexcept;
+    ShaderModule& operator=(ShaderModule&&) noexcept;
 
     VkShaderModule shaderModule = VK_NULL_HANDLE;
 

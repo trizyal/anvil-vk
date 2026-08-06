@@ -45,7 +45,7 @@ private:
     AnvilTexture myTexture;
     AnvilMaterial myMaterial;
 
-    AnvilBuffer sceneUBO;
+    GPUBuffer sceneUBO;
     SceneData sceneLighting{};
 
 public:

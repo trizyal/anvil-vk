@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilBuffer.h"
+#include "GPUBuffer.h"
 
 #include <stdexcept>
 #include <cstring>
@@ -9,12 +9,12 @@
 
 #include "AnvilVulkanDebug.h"
 
-AnvilBuffer::AnvilBuffer(AnvilBuffer&& other) noexcept
+GPUBuffer::GPUBuffer(GPUBuffer&& other) noexcept
 {
     *this = std::move(other);
 }
 
-AnvilBuffer& AnvilBuffer::operator=(AnvilBuffer&& other) noexcept
+GPUBuffer& GPUBuffer::operator=(GPUBuffer&& other) noexcept
 {
     if (this != &other)
     {
@@ -27,7 +27,7 @@ AnvilBuffer& AnvilBuffer::operator=(AnvilBuffer&& other) noexcept
     return *this;
 }
 
-void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+void GPUBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
     ANVIL_DEBUG_DEFN)
 {
     // Clean up if this object wrapper is being reused
@@ -60,7 +60,7 @@ void AnvilBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, cons
     vmaUnmapMemory(inAllocator, allocation);
 }
 
-void AnvilBuffer::destroyBuffer()
+void GPUBuffer::destroyBuffer()
 {
     if (buffer != VK_NULL_HANDLE && allocation != VK_NULL_HANDLE)
     {

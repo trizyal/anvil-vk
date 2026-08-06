@@ -246,7 +246,7 @@ void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inT
     pendingWrites.push_back(descriptor_write);
 }
 
-void AnvilMaterial::bindUniformBuffer(const std::string& name, const AnvilBuffer& inBuffer)
+void AnvilMaterial::bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer)
 {
     if (!bindingMap.contains(name))
     {
