@@ -18,7 +18,7 @@
 /**
  * @brief Utilities for translating and verifying Vulkan API return codes.
  */
-namespace AnvilResult
+namespace VulkanResult
 {
     /**
      * @brief Converts a Vulkan VkResult error code into a human-readable string literal.
@@ -45,7 +45,7 @@ namespace AnvilResult
      * @throws std::runtime_error If aResult is not VK_SUCCESS.
      */
     void CheckVulkanResult(VkResult aResult, const char* functionName, const char* file, int line);
-} //AnvilResult
+} //VulkanResult
 
 /**
  * @brief Macro wrapper around Vulkan API calls that automatically checks for errors and throws on failure.
@@ -55,6 +55,6 @@ namespace AnvilResult
  *
  * @note Example: `CHECK(vkCreateFence(device, &fenceInfo, nullptr, &fence));`
  */
-#define CHECK(x) AnvilResult::CheckVulkanResult((x), #x, __FILE__, __LINE__)
+#define CHECK(x) VulkanResult::CheckVulkanResult((x), #x, __FILE__, __LINE__)
 
 #endif //ANVIL_VK_VULKANRESULT_H

@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <ranges>
 
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 #include "VulkanResult.h"
 
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
@@ -165,7 +165,7 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     CHECK(vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &desc_layout_info, nullptr, &materialDescriptorSetLayout));
 
     debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
-    AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
+    VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
 
     if (!pool_sizes.empty())
     {
@@ -177,7 +177,7 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
         CHECK(vkCreateDescriptorPool(ptrAContext->anvilDevice, &pool_info, nullptr, &materialDescriptorPool));
 
         debug_name = "MaterialDescriptorPool: " + material_debug_name;
-        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
+        VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
 
         VkDescriptorSetAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -187,7 +187,7 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
         CHECK(vkAllocateDescriptorSets(ptrAContext->anvilDevice, &alloc_info, &materialDescriptorSet));
 
         debug_name = "MaterialDescriptorSet: " + material_debug_name;
-        AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSet, VK_OBJECT_TYPE_DESCRIPTOR_SET, debug_name.c_str());
+        VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSet, VK_OBJECT_TYPE_DESCRIPTOR_SET, debug_name.c_str());
     }
 
     // Push Constants and Pipeline Layout
@@ -219,7 +219,7 @@ void AnvilMaterial::buildMaterial(AnvilVulkanContext& inContext,
     CHECK(vkCreatePipelineLayout(ptrAContext->anvilDevice, &pipeline_layout_info, nullptr, &materialPipelineLayout));
 
     debug_name = "MaterialPipelineLayout: " + material_debug_name;
-    AnvilDebug::SetAutoName(ptrAContext->anvilDevice, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
+    VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
 }
 
 void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inTexture)

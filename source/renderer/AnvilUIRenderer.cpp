@@ -12,7 +12,7 @@
 
 #include "AnvilSwapchain.h"
 #include "AnvilVulkanContext.h"
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 #include "VulkanResult.h"
 
 namespace

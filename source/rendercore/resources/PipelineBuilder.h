@@ -13,7 +13,7 @@
 
 #include <volk.h>
 
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 
 /**
  * @brief Simple container wrapping a compiled Vulkan graphics pipeline handle.

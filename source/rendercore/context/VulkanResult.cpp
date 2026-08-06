@@ -5,7 +5,7 @@
 
 #include <sstream>
 
-namespace AnvilResult
+namespace VulkanResult
 {
 	void CheckVulkanResult(const VkResult aResult, const char* functionName, const char* file, const int line)
     {

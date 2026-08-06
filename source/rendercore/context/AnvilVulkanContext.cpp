@@ -15,7 +15,7 @@
 
 #include <VkBootstrap.h>
 
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 #include "VulkanResult.h"
 #include "AnvilWindow.h"
 
@@ -40,7 +40,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 
 #   ifndef NDEBUG
     vkb_instance_builder.request_validation_layers(true);
-    vkb_instance_builder.set_debug_callback(AnvilDebug::DebugCallback);
+    vkb_instance_builder.set_debug_callback(VulkanDebug::DebugCallback);
 
     // Here we enable all severities. DebugCallback handles whether to log it or not
     vkb_instance_builder.add_debug_messenger_severity(
@@ -164,7 +164,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     const VkResult vma_result = vmaCreateAllocator(&allocator_create_info, &anvilAllocator);
     if (vma_result != VK_SUCCESS)
     {
-        throw std::runtime_error(std::string("Failed to create Vulkan Memory Allocator. VkResult: ") + AnvilResult::ToString(vma_result));
+        throw std::runtime_error(std::string("Failed to create Vulkan Memory Allocator. VkResult: ") + VulkanResult::ToString(vma_result));
     }
 
     // --------------------------------
@@ -177,7 +177,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     const VkResult pool_result = vkCreateCommandPool(anvilDevice, &upload_pool_info, nullptr, &uploadCommandPool);
     if (pool_result != VK_SUCCESS)
     {
-        throw std::runtime_error(std::string("Failed to create upload command pool. VkResult: ") + AnvilResult::ToString(pool_result));
+        throw std::runtime_error(std::string("Failed to create upload command pool. VkResult: ") + VulkanResult::ToString(pool_result));
     }
 
     VkFenceCreateInfo upload_fence_info{};
@@ -186,7 +186,7 @@ void AnvilVulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     const VkResult fence_result = vkCreateFence(anvilDevice, &upload_fence_info, nullptr, &uploadFence);
     if (fence_result != VK_SUCCESS)
     {
-        throw std::runtime_error(std::string("Failed to create upload fence. VkResult: ") + AnvilResult::ToString(fence_result));
+        throw std::runtime_error(std::string("Failed to create upload fence. VkResult: ") + VulkanResult::ToString(fence_result));
     }
 
     std::cout << "Finished initializing AnvilVulkanContext" << std::endl;

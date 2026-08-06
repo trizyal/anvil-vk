@@ -63,7 +63,7 @@ namespace AnvilTextureLoader
         }
 
         std::string textureDebugName = "TextureImage: " + imageName;
-        AnvilDebug::SetAutoName(inContext.anvilDevice, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
+        VulkanDebug::SetAutoName(inContext.anvilDevice, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -115,7 +115,7 @@ namespace AnvilTextureLoader
 
         std::string imageViewDebugName = "TextureImageView: " + imageName;
         CHECK(vkCreateImageView(inContext.anvilDevice, &viewInfo, nullptr, &texture.imageView));
-        AnvilDebug::SetAutoName(inContext.anvilDevice, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
+        VulkanDebug::SetAutoName(inContext.anvilDevice, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
 
         // Create Sampler
         VkSamplerCreateInfo samplerInfo{};
@@ -134,7 +134,7 @@ namespace AnvilTextureLoader
 
         std::string samplerDebugName = "TextureSampler: " + imageName;
         CHECK(vkCreateSampler(inContext.anvilDevice, &samplerInfo, nullptr, &texture.sampler));
-        AnvilDebug::SetAutoName(inContext.anvilDevice, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
+        VulkanDebug::SetAutoName(inContext.anvilDevice, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
 
         return texture;
     }

@@ -13,7 +13,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "../rendercore/context/AnvilVulkanDebug.h"
+#include "../rendercore/context/VulkanDebug.h"
 
 class AnvilVulkanContext;
 class AnvilSwapchain;

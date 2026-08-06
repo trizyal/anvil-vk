@@ -5,7 +5,7 @@
 #define ANVIL_VK_VULKANDEBUG_H
 
 /**
- * @file AnvilVulkanDebug.h
+ * @file VulkanDebug.h
  * @brief Vulkan validation callbacks, GPU object naming utilities, and zero-cost debug instrumentation macros.
  */
 
@@ -25,7 +25,7 @@
 #   define ANVIL_DEBUG 0
 #endif
 
-namespace AnvilDebug
+namespace VulkanDebug
 {
     /**
      * @brief Vulkan validation layer callback intercepting SDK debug messages.
@@ -141,7 +141,7 @@ ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
  */
 #if ANVIL_DEBUG
 #   define ANVIL_DEBUG_NAME(dev, handle, type) \
-    AnvilDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
+    VulkanDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
 #else
 #   define ANVIL_DEBUG_NAME(dev, handle, type) do {} while (0)
 #endif

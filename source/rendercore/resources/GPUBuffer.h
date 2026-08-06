@@ -14,7 +14,7 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 
 /**
  * @brief Manages the lifecycle of a GPU Vulkan buffer and its backing VMA memory allocation.

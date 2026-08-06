@@ -7,7 +7,7 @@
 #include <cstring>
 #include <utility>
 
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 
 GPUBuffer::GPUBuffer(GPUBuffer&& other) noexcept
 {

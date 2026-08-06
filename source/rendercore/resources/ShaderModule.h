@@ -13,7 +13,7 @@
 
 #include "AnvilShaders.h"
 #include "AnvilVulkanContext.h"
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 
 /**
  * @brief Manages the lifecycle of a Vulkan shader module (`VkShaderModule`).

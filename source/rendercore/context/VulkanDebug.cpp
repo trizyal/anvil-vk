@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilVulkanDebug.h"
+#include "VulkanDebug.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -10,7 +10,7 @@
 #include <sstream>
 #include <cstring>
 
-namespace AnvilDebug
+namespace VulkanDebug
 {
     VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
