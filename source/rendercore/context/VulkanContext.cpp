@@ -18,6 +18,7 @@
 #include "VulkanDebug.h"
 #include "VulkanResult.h"
 #include "AnvilWindow.h"
+#include "VulkanConfig.h"
 
 void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 {
@@ -36,7 +37,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     // Create Instance
     vkb::InstanceBuilder vkb_instance_builder;
     vkb_instance_builder.set_app_name(inWindow.getWindowTitle().c_str());
-    vkb_instance_builder.require_api_version(1, 4, 0);
+    vkb_instance_builder.require_api_version(AnvilVulkan::API_VERSION);
 
 #   ifndef NDEBUG
     vkb_instance_builder.request_validation_layers(true);
@@ -97,7 +98,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 
     vkb::PhysicalDeviceSelector vkb_physical_device_selector{vkb_instance};
     vkb_physical_device_selector.set_surface(anvilSurface);
-    vkb_physical_device_selector.set_minimum_version(1, 3);
+    vkb_physical_device_selector.set_minimum_version(AnvilVulkan::API_VERSION_MAJOR, AnvilVulkan::API_VERSION_MINOR);
     vkb_physical_device_selector.add_required_extension_features(features13);
     vkb_physical_device_selector.add_required_extension_features(features11);
     vkb::Result<vkb::PhysicalDevice> vkb_physical_device_result = vkb_physical_device_selector.select();
@@ -159,7 +160,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     allocator_create_info.device = anvilDevice;
     allocator_create_info.instance = anvilInstance;
     allocator_create_info.pVulkanFunctions = &vma_vulkan_functions;
-    allocator_create_info.vulkanApiVersion = VK_API_VERSION_1_3;
+    allocator_create_info.vulkanApiVersion = AnvilVulkan::API_VERSION;
 
     const VkResult vma_result = vmaCreateAllocator(&allocator_create_info, &anvilAllocator);
     if (vma_result != VK_SUCCESS)

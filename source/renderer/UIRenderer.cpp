@@ -10,6 +10,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
+#include "VulkanConfig.h"
 #include "VulkanSwapchain.h"
 #include "VulkanContext.h"
 #include "VulkanDebug.h"
@@ -83,7 +84,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     ImGui_ImplGlfw_InitForVulkan(inWindow, true);
 
     ImGui_ImplVulkan_InitInfo init_info = {};
-    init_info.ApiVersion = VK_API_VERSION_1_3;
+    init_info.ApiVersion = AnvilVulkan::API_VERSION;
     init_info.Instance = inContext->anvilInstance;
     init_info.PhysicalDevice = inContext->anvilPhysicalDevice;
     init_info.Device = device;
