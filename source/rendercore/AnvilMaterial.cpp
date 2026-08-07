@@ -257,7 +257,7 @@ void AnvilMaterial::bindUniformBuffer(const std::string& name, const GPUBuffer& 
 
     // 1. Setup buffer info
     VkDescriptorBufferInfo buffer_info{};
-    buffer_info.buffer = inBuffer.buffer; // Assuming your AnvilBuffer holds a VkBuffer named 'buffer'
+    buffer_info.buffer = inBuffer.buffer;
     buffer_info.offset = 0;               // Offset into the buffer in bytes
     buffer_info.range  = VK_WHOLE_SIZE;   // Size of the range in bytes (or VK_WHOLE_SIZE)
     pendingBufferInfos.push_back(buffer_info);

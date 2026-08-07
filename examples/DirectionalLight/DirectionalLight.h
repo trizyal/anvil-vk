@@ -11,16 +11,10 @@
 #include "GPUMesh.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
+#include "Scene.h"
 #include "ShaderCompiler.h"
 #include "VulkanSwapchain.h"
 #include "TextureLoader.h"
-
-struct SceneData
-{
-    glm::vec4 lightDirection;   /**< w = unused/padding */
-    glm::vec4 lightColor;       /**< w = intensity */
-    glm::vec4 ambientColor;     /**< w = unused/padding */
-};
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -40,13 +34,11 @@ private:
     AnvilPipeline pipeline = {};
     GPUMesh meshBuffer;
     AnvilCamera camera;
+    Scene myScene;
 
     // Things for textures
     AnvilTexture myTexture;
     AnvilMaterial myMaterial;
-
-    GPUBuffer sceneUBO;
-    SceneData sceneLighting{};
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
