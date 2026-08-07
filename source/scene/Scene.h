@@ -51,10 +51,22 @@ public:
     GPUSceneData data{};
     GPUBuffer sceneUBO;
 
+    /**
+     * @brief Creates an empty scene with GPUBuffer that can be set and updated.
+     * @param inContext Reference to the context, needed for buffer creation.
+     */
     void createScene(VulkanContext& inContext);
 
+    /**
+     * @brief Sets the complete GPUSceneData at ones.
+     * @param inData Object containing scene data.
+     * @note Need to call updateGPUBuffer for changes to take effect.
+     */
     void setGPUSceneData(const GPUSceneData& inData);
 
+    /**
+     * @brief Updates the GPUBuffer with new SceneData.
+     */
     void updateGPUBuffer();
 };
 
