@@ -33,7 +33,7 @@ private:
 
     AnvilPipeline pipeline = {};
     GPUMesh meshBuffer;
-    AnvilCamera camera;
+    Camera camera;
     Scene myScene;
 
     // Things for textures

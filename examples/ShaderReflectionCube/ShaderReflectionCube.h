@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "AnvilCamera.h"
+#include "Camera.h"
 #include "AnvilMaterial.h"
 #include "GPUMesh.h"
 #include "VulkanContext.h"
@@ -30,7 +30,7 @@ private:
 
     AnvilPipeline pipeline = {};
     GPUMesh meshBuffer;
-    AnvilCamera camera;
+    Camera camera;
 
     // Things for textures
     AnvilTexture myTexture;

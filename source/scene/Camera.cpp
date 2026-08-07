@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilCamera.h"
+#include "Camera.h"
 
 #include <algorithm>
 #include <iostream>
@@ -10,7 +10,7 @@
 #include "AnvilInput.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-AnvilCamera::AnvilCamera(const glm::vec3 inStartPosition)
+Camera::Camera(const glm::vec3 inStartPosition)
 {
     position = inStartPosition;
     yawDegree = -90.0f; // Look straight ahead (negative Z)
@@ -19,12 +19,12 @@ AnvilCamera::AnvilCamera(const glm::vec3 inStartPosition)
     updateCameraVectors();
 }
 
-glm::mat4 AnvilCamera::getViewMatrix() const
+glm::mat4 Camera::getViewMatrix() const
 {
     return glm::lookAt(position, position + front, up);
 }
 
-glm::mat4 AnvilCamera::getProjectionMatrix(const float aspectRatio) const
+glm::mat4 Camera::getProjectionMatrix(const float aspectRatio) const
 {
     glm::mat4 projection = glm::perspective(glm::radians(fovDegrees), aspectRatio, 0.1f, 100.0f);
 
@@ -34,7 +34,7 @@ glm::mat4 AnvilCamera::getProjectionMatrix(const float aspectRatio) const
     return projection;
 }
 
-void AnvilCamera::updateCamera(float deltaTime)
+void Camera::updateCamera(float deltaTime)
 {
     float velocity = cameraSpeed * deltaTime;
 
@@ -77,7 +77,7 @@ void AnvilCamera::updateCamera(float deltaTime)
     }
 }
 
-void AnvilCamera::updateCameraVectors()
+void Camera::updateCameraVectors()
 {
     glm::vec3 newFront;
     newFront.x = cos(glm::radians(yawDegree)) * cos(glm::radians(pitchDegree));

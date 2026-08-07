@@ -5,7 +5,7 @@
 #define ANVIL_VK_CAMERA_H
 
 /**
- * @file AnvilCamera.h
+ * @file Camera.h
  * @brief First-person 3D camera abstraction producing Vulkan-compatible view and projection matrices.
  */
 
@@ -43,7 +43,7 @@ constexpr glm::vec3 WORLD_RIGHT = glm::vec3(1.0f, 0.0f, 0.0f);
  *
  * @todo Need to implement setters for camera speed and other things. Speed setters can be with scale or value.
  */
-class AnvilCamera
+class Camera
 {
 public:
 
@@ -60,14 +60,14 @@ public:
      *
      * @param inStartPosition Starting camera world coordinates. Defaults to 0, 0, 5.
      */
-    explicit AnvilCamera(glm::vec3 inStartPosition = defaultStartPosition);
-    ~AnvilCamera() = default;
+    explicit Camera(glm::vec3 inStartPosition = defaultStartPosition);
+    ~Camera() = default;
 
-    AnvilCamera(const AnvilCamera&) = delete;
-    AnvilCamera& operator=(const AnvilCamera&) = delete;
+    Camera(const Camera&) = delete;
+    Camera& operator=(const Camera&) = delete;
 
-    AnvilCamera(AnvilCamera&&) noexcept = default;
-    AnvilCamera& operator=(AnvilCamera&&) noexcept = default;
+    Camera(Camera&&) noexcept = default;
+    Camera& operator=(Camera&&) noexcept = default;
 
 private:
     glm::vec3 front = WORLD_FRONT;

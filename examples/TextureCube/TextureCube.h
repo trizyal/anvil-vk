@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "AnvilCamera.h"
+#include "Camera.h"
 #include "GPUMesh.h"
 #include "VulkanContext.h"
 #include "ShaderModule.h"
@@ -36,7 +36,7 @@ private:
 
     ShaderCompiler shaderCompiler;
 
-    AnvilCamera camera;
+    Camera camera;
 
     // Things for textures
     AnvilTexture myTexture;
