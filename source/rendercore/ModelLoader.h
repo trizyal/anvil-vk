@@ -51,12 +51,17 @@ struct CPUMaterial
     float roughnessFactor = 1.0f;
 };
 
-struct CPUMesh
+struct CPUMeshPrimitive
 {
-    std::string name;
     std::vector<MeshVertex> vertices;
     std::vector<uint32_t> indices;
     int materialIndex = -1;
+};
+
+struct CPUMesh
+{
+    std::string name;
+    std::vector<CPUMeshPrimitive> primitives;
 };
 
 struct CPUNode
@@ -96,7 +101,20 @@ namespace ModelLoader
      * disk I/O and parsing only; it does not allocate any Vulkan GPU resources.
      *
      * @param filePath Path to the `.gltf` or `.glb` file on disk.
-     * @return AnvilMesh populated with the extracted vertex, index, and material path data.
+     * @return CPUModel populated with extracted glTF scene data.
+     *
+     * @throws std::runtime_error If the file cannot be read, or if parsing fails.
+     */
+    CPUModel LoadGLTF(const std::string& filePath);
+
+    /**
+     * @brief Legacy convenience loader that returns the first mesh/primitive only.
+     *
+     * Reads `.gltf` or `.glb` files, extracting vertex positions, vertex colors, texture
+     * coordinates, and triangle indices into standard CPU vectors, for one / first mesh in the file.
+     *
+     * @param filePath Path to the `.gltf` or `.glb` file on disk.
+     * @return CPUMesh_Single populated with the extracted vertex, index, and material path data.
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
