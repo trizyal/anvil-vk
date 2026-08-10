@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "DirectionalLight.h"
+#include "TruckModel.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -14,12 +14,12 @@
 #include "TextureLoader.h"
 #include "UIRenderer.h"
 
-void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
 
-    const char* modelPath = PROJECT_DIR "/BoxTextured/glTF/BoxTextured.gltf";
+    const char* modelPath = PROJECT_DIR "/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf";
     const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
@@ -53,7 +53,7 @@ void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSw
     loadPipeline();
 }
 
-void DirectionalLight::cleanupProject()
+void TruckModel::cleanupProject()
 {
     if (ptrAContext)
     {
@@ -65,11 +65,11 @@ void DirectionalLight::cleanupProject()
     }
 }
 
-void DirectionalLight::loadPipeline()
+void TruckModel::loadPipeline()
 {
     shaderCompiler.resetSession();
 
-    std::cout << "Creating DirectionalLight pipeline." << std::endl;
+    std::cout << "Creating TruckModel pipeline." << std::endl;
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
@@ -77,8 +77,8 @@ void DirectionalLight::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"DirectionalLight", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"DirectionalLight", "fragmentMain", AnvilShaders::ST_Fragment};
+    AnvilShaders::ShaderCompileRequest vReq{"TruckModel", "vertexMain", AnvilShaders::ST_Vertex};
+    AnvilShaders::ShaderCompileRequest fReq{"TruckModel", "fragmentMain", AnvilShaders::ST_Fragment};
 
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
     myMaterial.buildMaterial(*ptrAContext, shaderCompiler, vReq, fReq);
@@ -110,10 +110,10 @@ void DirectionalLight::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout, "DirectionalLightPipeline");
+        .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout, "TruckModelPipeline");
 }
 
-void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
+void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
 {
     // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};
@@ -141,9 +141,9 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& in
     totalTime += deltaTime;
 
     // FIX: Rotate Cube Continuously using accumulated totalTime
-    float rotationSpeed = glm::radians(30.0f); // 30 degrees per second
-    glm::mat4 model = glm::rotate(glm::mat4(1.0f), totalTime * rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
-    // model = glm::scale(model, glm::vec3(5.0f));
+    // float rotationSpeed = glm::radians(30.0f); // 30 degrees per second
+    // glm::mat4 model = glm::rotate(glm::mat4(1.0f), totalTime * rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 model = glm::mat4(1.0f);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
