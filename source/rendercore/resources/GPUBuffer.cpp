@@ -20,9 +20,11 @@ GPUBuffer& GPUBuffer::operator=(GPUBuffer&& other) noexcept
     {
         buffer = other.buffer;
         allocation = other.allocation;
+        allocator = other.allocator;
 
         other.buffer = VK_NULL_HANDLE;
         other.allocation = VK_NULL_HANDLE;
+        other.allocator = nullptr;   // Optional, but good practice
     }
     return *this;
 }

@@ -23,6 +23,6 @@
 
 **Require fetch**
 
-- slang @ v2026.13 (July 2026)
+- slang @ v2026.14.1 (July 2026)
   - `python fetch_slang.py`
   - SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception

@@ -7,7 +7,7 @@ import platform
 
 # --- Configuration ---
 # Update this string to pull a newer version in the future
-SLANG_VERSION = "2026.13"
+SLANG_VERSION = "2026.14.1"
 
 # Set up paths relative to this script
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))

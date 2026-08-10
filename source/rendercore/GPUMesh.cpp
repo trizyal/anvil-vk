@@ -5,6 +5,30 @@
 
 #include "ModelLoader.h"
 
+GPUMesh::GPUMesh(GPUMesh&& other) noexcept
+{
+    *this = std::move(other);
+}
+
+GPUMesh& GPUMesh::operator=(GPUMesh&& other) noexcept
+{
+    if (this != &other)
+    {
+        vertexBuffer = std::move(other.vertexBuffer);
+        indexBuffer = std::move(other.indexBuffer);
+
+        indexCount = other.indexCount;
+
+        ptrAContext = other.ptrAContext;
+
+        // other.vertexBuffer.destroyBuffer();
+        // other.indexBuffer.destroyBuffer();
+        other.indexCount = 0;
+        other.ptrAContext = nullptr;
+    }
+    return *this;
+}
+
 void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMesh_Single& inMesh)
 {
     this->ptrAContext = &inContext;

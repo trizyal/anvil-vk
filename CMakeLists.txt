@@ -220,11 +220,11 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     if ((CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "") AND NOT MINGW)
         target_compile_options(${PROJECT_NAME} PRIVATE
                 -g
-                -fno-omit-frame-pointer
-                -fsanitize=address,undefined
+                # -fno-omit-frame-pointer
+                # -fsanitize=address,undefined
         )
         target_link_options(${PROJECT_NAME} PRIVATE
-                -fsanitize=address,undefined
+                # -fsanitize=address,undefined
         )
     endif ()
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

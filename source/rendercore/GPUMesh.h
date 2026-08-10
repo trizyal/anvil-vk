@@ -34,8 +34,8 @@ public:
     GPUMesh(const GPUMesh&) = delete;
     GPUMesh& operator=(const GPUMesh&) = delete;
 
-    GPUMesh(GPUMesh&&) noexcept = default;
-    GPUMesh& operator=(GPUMesh&&) noexcept = default;
+    GPUMesh(GPUMesh&&) noexcept;
+    GPUMesh& operator=(GPUMesh&&) noexcept;
 
     /** GPU buffer containing interleaved MeshVertex attributes. */
     GPUBuffer vertexBuffer;
