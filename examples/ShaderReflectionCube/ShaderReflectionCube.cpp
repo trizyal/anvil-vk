@@ -21,7 +21,7 @@ void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, Vulk
 
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
     const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
-    meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
+    meshBuffer.createGPUMesh(*ptrAContext, cubeMesh);
 
     if (!cubeMesh.texturePath.empty())
     {
@@ -49,7 +49,7 @@ void ShaderReflectionCube::cleanupProject()
     {
         myTexture.destroyAnvilTexture(ptrAContext);
         myMaterial.destroyMaterial();
-        meshBuffer.destroyAnvilMeshBuffer();
+        meshBuffer.destroyGPUMesh();
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
     }
 }

@@ -21,7 +21,7 @@ void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSw
 
     const char* modelPath = PROJECT_DIR "/BoxTextured/glTF/BoxTextured.gltf";
     const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
-    meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
+    meshBuffer.createGPUMesh(*ptrAContext, cubeMesh);
 
     if (!cubeMesh.texturePath.empty())
     {
@@ -60,7 +60,7 @@ void DirectionalLight::cleanupProject()
         myTexture.destroyAnvilTexture(ptrAContext);
         // myScene.destroyScene();
         myMaterial.destroyMaterial();
-        meshBuffer.destroyAnvilMeshBuffer();
+        meshBuffer.destroyGPUMesh();
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
     }
 }

@@ -22,7 +22,7 @@ void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapcha
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
     const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
 
-    meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
+    meshBuffer.createGPUMesh(*ptrAContext, cubeMesh);
 
     if (!cubeMesh.texturePath.empty())
     {
@@ -58,7 +58,7 @@ void TextureCube::cleanupProject()
             vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
         }
 
-        meshBuffer.destroyAnvilMeshBuffer();
+        meshBuffer.destroyGPUMesh();
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();

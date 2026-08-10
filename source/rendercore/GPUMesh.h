@@ -57,14 +57,25 @@ public:
      * @param inContext Reference to the active Anvil Vulkan context.
      * @param inMesh CPU-side mesh containing vertex and index vectors to upload.
      *
-     * @see AnvilMesh
+     * @see CPUMesh_Single
      */
-    void createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh_Single& inMesh);
+    void createGPUMesh(const VulkanContext& inContext, const CPUMesh_Single& inMesh);
+
+    /**
+     * @brief Allocates GPU buffers and uploads CPU-side geometry data from an MeshPrimitive.
+     *
+     * @param inContext Reference to the active Anvil Vulkan context.
+     * @param inMeshPrimitive CPU-side mesh primitive containing vertex and index vectors to upload.
+     *
+     * @see CPUMeshPrimitive
+     * @see CPUMesh
+     */
+    void createGPUMesh(const VulkanContext& inContext, const CPUMeshPrimitive& inMeshPrimitive);
 
     /**
      * @brief Destroys the underlying GPU vertex and index buffers.
      */
-    void destroyAnvilMeshBuffer();
+    void destroyGPUMesh();
 
     /**
      * @brief Returns the Vulkan vertex input binding description for interleaved MeshVertex data.

@@ -5,7 +5,7 @@
 
 #include "ModelLoader.h"
 
-void GPUMesh::createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh_Single& inMesh)
+void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMesh_Single& inMesh)
 {
     this->ptrAContext = &inContext;
 
@@ -29,7 +29,7 @@ void GPUMesh::createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMes
     );
 }
 
-void GPUMesh::destroyAnvilMeshBuffer()
+void GPUMesh::destroyGPUMesh()
 {
     vertexBuffer.destroyBuffer();
     indexBuffer.destroyBuffer();

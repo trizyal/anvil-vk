@@ -23,7 +23,7 @@ void BoxModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain&
     // const char* modelPath = PROJECT_DIR "/BoxInterleaved/glTF/BoxInterleaved.gltf";
     const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
 
-    meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
+    meshBuffer.createGPUMesh(*ptrAContext, cubeMesh);
 
     // Initialize shader compiler
     if (!shaderCompiler.initializeShaderCompiler())
@@ -39,7 +39,7 @@ void BoxModel::cleanupProject()
 {
     if (ptrAContext)
     {
-        meshBuffer.destroyAnvilMeshBuffer();
+        meshBuffer.destroyGPUMesh();
         vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
