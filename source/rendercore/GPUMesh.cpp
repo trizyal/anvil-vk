@@ -5,7 +5,7 @@
 
 #include "ModelLoader.h"
 
-void GPUMesh::createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh& inMesh)
+void GPUMesh::createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh_Single& inMesh)
 {
     this->ptrAContext = &inContext;
 

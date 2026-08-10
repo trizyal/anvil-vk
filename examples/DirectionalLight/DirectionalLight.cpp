@@ -20,7 +20,7 @@ void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSw
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/BoxTextured/glTF/BoxTextured.gltf";
-    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
+    const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 
     if (!cubeMesh.texturePath.empty())

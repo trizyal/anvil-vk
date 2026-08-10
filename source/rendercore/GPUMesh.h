@@ -59,7 +59,7 @@ public:
      *
      * @see AnvilMesh
      */
-    void createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh& inMesh);
+    void createAnvilMeshBuffer(const VulkanContext& inContext, const CPUMesh_Single& inMesh);
 
     /**
      * @brief Destroys the underlying GPU vertex and index buffers.

@@ -21,7 +21,7 @@ void BoxModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain&
     const char* modelPath = PROJECT_DIR "/Box/glTF/Box.gltf";
     // const char* modelPath = PROJECT_DIR "/BoxVertexColors/glTF/BoxVertexColors.gltf";
     // const char* modelPath = PROJECT_DIR "/BoxInterleaved/glTF/BoxInterleaved.gltf";
-    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
+    const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
 
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 

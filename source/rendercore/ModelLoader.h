@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 /**
  * @brief CPU-side representation of a single mesh vertex.
@@ -28,11 +29,58 @@ struct MeshVertex
 /**
  * @brief CPU-side container for indexed 3D geometry and associated material data.
  */
-struct CPUMesh
+struct CPUMesh_Single
 {
     std::vector<MeshVertex> vertices; /**< Contiguous list of unique vertex attributes. */
     std::vector<uint32_t> indices;    /**< Index list defining triangle faces (3 indices per triangle). */
     std::string texturePath;          /**< Absolute or relative file path to the associated diffuse/albedo texture. */
+};
+
+struct CPUTexture
+{
+    std::string name;
+    std::string imagePath;
+};
+
+struct CPUMaterial
+{
+    std::string name;
+    glm::vec4 baseColorFactor = glm::vec4(1.0f);
+    int baseColorTextureIndex = -1;
+    float metallicFactor = 1.0f;
+    float roughnessFactor = 1.0f;
+};
+
+struct CPUMesh
+{
+    std::string name;
+    std::vector<MeshVertex> vertices;
+    std::vector<uint32_t> indices;
+    int materialIndex = -1;
+};
+
+struct CPUNode
+{
+    std::string name;
+    int meshIndex = -1;
+    int parentIndex = -1;
+    std::vector<int> children;
+
+    glm::vec3 translation = glm::vec3(0.0f);
+    glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec3 scale = glm::vec3(1.0f);
+
+    glm::mat4 localMatrix = glm::mat4(1.0f);
+    glm::mat4 worldMatrix = glm::mat4(1.0f);
+};
+
+struct CPUModel
+{
+    std::vector<CPUTexture> textures;
+    std::vector<CPUMaterial> materials;
+    std::vector<CPUMesh> meshes;
+    std::vector<CPUNode> nodes;
+    std::vector<int> sceneRootNodes;
 };
 
 /**
@@ -52,7 +100,7 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    CPUMesh LoadGLTF(const std::string& filePath);
+    CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
 } //AnvilModelLoader
 
 #endif //ANVIL_VK_MODELLOADER_H

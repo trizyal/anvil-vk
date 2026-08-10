@@ -20,7 +20,7 @@ void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapcha
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
-    const CPUMesh cubeMesh = ModelLoader::LoadGLTF(modelPath);
+    const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
 
     meshBuffer.createAnvilMeshBuffer(*ptrAContext, cubeMesh);
 

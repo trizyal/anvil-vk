@@ -12,7 +12,7 @@
 namespace ModelLoader
 {
     // Only returns CPU data
-    CPUMesh LoadGLTF(const std::string& filePath)
+    CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath)
     {
         cgltf_options options{};
         cgltf_data* data = nullptr;
@@ -28,7 +28,7 @@ namespace ModelLoader
             throw std::runtime_error("Failed to load GLTF file: " + filePath);
         }
 
-        CPUMesh mesh_data;
+        CPUMesh_Single mesh_data;
         if (data->meshes_count > 0)
         {
             const cgltf_mesh* mesh = &data->meshes[0];
