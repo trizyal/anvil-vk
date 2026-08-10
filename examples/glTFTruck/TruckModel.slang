@@ -69,5 +69,6 @@ float4 fragmentMain(VertexOutput input) : SV_Target
 
     // Sample base texture and multiply by lighting
     float4 textureColor = texture.Sample(input.uv);
+    //textureColor = float4(0.4, 0.3, 0.4, 1.0);
     return float4(textureColor.rgb * finalLighting, textureColor.a);
 }

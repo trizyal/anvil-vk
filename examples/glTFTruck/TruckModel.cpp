@@ -20,17 +20,23 @@ void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchai
     ptrASwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf";
-    const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
-    meshBuffer.createGPUMesh(*ptrAContext, cubeMesh);
+    models = ModelLoader::LoadGLTF(modelPath);
 
-    if (!cubeMesh.texturePath.empty())
+    for (const auto& cpu_mesh : models.meshes)
     {
-        std::cout << "Loading texture: " << cubeMesh.texturePath << std::endl;
+        for (const auto& primitive : cpu_mesh.primitives)
+        {
+            GPUMesh gpu_mesh;
+            gpu_mesh.createGPUMesh(*ptrAContext, primitive);
 
-        myTexture = TextureLoader::LoadTexture(
-            cubeMesh.texturePath,
-            *ptrAContext
-        );
+            meshBuffers.push_back(std::move(gpu_mesh));
+        }
+    }
+
+    for (const auto& texture : models.textures)
+    {
+        textures.push_back(TextureLoader::LoadTexture(texture.imagePath, inAnvilContext));
+        std::cout << "Loading texture: " << texture.imagePath << std::endl;
     }
 
     // 1. Setup initial light values
@@ -57,10 +63,16 @@ void TruckModel::cleanupProject()
 {
     if (ptrAContext)
     {
-        myTexture.destroyAnvilTexture(ptrAContext);
         // myScene.destroyScene();
+        for (const auto& texture : textures)
+        {
+            texture.destroyAnvilTexture(ptrAContext);
+        }
         myMaterial.destroyMaterial();
-        meshBuffer.destroyGPUMesh();
+        for (auto & meshBuffer : meshBuffers)
+        {
+            meshBuffer.destroyGPUMesh();
+        }
         vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
     }
 }
@@ -86,9 +98,9 @@ void TruckModel::loadPipeline()
     myMaterial.bindUniformBuffer("sceneBuffer", myScene.sceneUBO);
 
     // Bind by name
-    if (myTexture.imageView != VK_NULL_HANDLE)
+    if (textures[0].imageView != VK_NULL_HANDLE)
     {
-        myMaterial.bindTexture("texture", myTexture);
+        myMaterial.bindTexture("texture", textures[0]);
     }
     myMaterial.updateDescriptorSets();
 
@@ -166,12 +178,16 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilS
     vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterial.materialDescriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
 
-    // This was VK_INDEX_TYPE_UINT16, but everything else uses 32
-    // Caused a bug where half the triangles were not being rendered.
-    vkCmdBindIndexBuffer(inCmd, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+    for (auto & meshBuffer : meshBuffers)
+    {
+        vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
 
-    // Draw
-    vkCmdDrawIndexed(inCmd, meshBuffer.indexCount, 1, 0, 0, 0);
+        // This was VK_INDEX_TYPE_UINT16, but everything else uses 32
+        // Caused a bug where half the triangles were not being rendered.
+        vkCmdBindIndexBuffer(inCmd, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+        // Draw
+        vkCmdDrawIndexed(inCmd, meshBuffer.indexCount, 1, 0, 0, 0);
+    }
 }

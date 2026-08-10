@@ -32,13 +32,14 @@ private:
     ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
-    GPUMesh meshBuffer;
     Camera camera;
     Scene myScene;
 
-    // Things for textures
-    AnvilTexture myTexture;
     AnvilMaterial myMaterial;
+
+    CPUModel models;
+    std::vector<GPUMesh> meshBuffers;
+    std::vector<AnvilTexture> textures;
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);

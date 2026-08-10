@@ -29,6 +29,29 @@ void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMesh_Single
     );
 }
 
+void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMeshPrimitive& inMeshPrimitive)
+{
+    this->ptrAContext = &inContext;
+
+    indexCount = static_cast<uint32_t>(inMeshPrimitive.indices.size());
+
+    vertexBuffer.createBuffer(
+        inContext.anvilAllocator,
+        inContext.anvilDevice,
+        inMeshPrimitive.vertices.data(),
+        inMeshPrimitive.vertices.size() * sizeof(MeshVertex),
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+    );
+
+    indexBuffer.createBuffer(
+        inContext.anvilAllocator,
+        inContext.anvilDevice,
+        inMeshPrimitive.indices.data(),
+        inMeshPrimitive.indices.size() * sizeof(uint32_t),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+    );
+}
+
 void GPUMesh::destroyGPUMesh()
 {
     vertexBuffer.destroyBuffer();
