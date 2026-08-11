@@ -18,6 +18,8 @@ GPUBuffer& GPUBuffer::operator=(GPUBuffer&& other) noexcept
 {
     if (this != &other)
     {
+        destroyBuffer();
+
         buffer = other.buffer;
         allocation = other.allocation;
         allocator = other.allocator;

@@ -14,15 +14,13 @@ GPUMesh& GPUMesh::operator=(GPUMesh&& other) noexcept
 {
     if (this != &other)
     {
+        destroyGPUMesh();
+
         vertexBuffer = std::move(other.vertexBuffer);
         indexBuffer = std::move(other.indexBuffer);
-
         indexCount = other.indexCount;
-
         pContext = other.pContext;
 
-        // other.vertexBuffer.destroyBuffer();
-        // other.indexBuffer.destroyBuffer();
         other.indexCount = 0;
         other.pContext = nullptr;
     }
