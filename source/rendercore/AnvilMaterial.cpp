@@ -94,7 +94,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     const AnvilShaders::ShaderCompileRequest& inVertReq,
     const AnvilShaders::ShaderCompileRequest& inFragReq)
 {
-    ptrAContext = &inContext;
+    pContext = &inContext;
     std::string material_debug_name = inVertReq.moduleName;
 
     // Compile Shaders internally
@@ -123,10 +123,10 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
     // Build Vulkan Shader Modules
     std::string debug_name = "MaterialVertexShader: " + inVertReq.moduleName;
-    vertexShader.createShaderModule(*ptrAContext, vertex_result, debug_name.c_str());
+    vertexShader.createShaderModule(*pContext, vertex_result, debug_name.c_str());
 
     debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
-    fragmentShader.createShaderModule(*ptrAContext, fragment_result, debug_name.c_str());
+    fragmentShader.createShaderModule(*pContext, fragment_result, debug_name.c_str());
 
     // Merge duplicate bindings
     std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> _merged_bindings_map;
@@ -162,10 +162,10 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     desc_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     desc_layout_info.bindingCount = static_cast<uint32_t>(final_bindings.size());
     desc_layout_info.pBindings = final_bindings.data();
-    CHECK(vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &desc_layout_info, nullptr, &materialDescriptorSetLayout));
+    CHECK(vkCreateDescriptorSetLayout(pContext->anvilDevice, &desc_layout_info, nullptr, &materialDescriptorSetLayout));
 
     debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
-    VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
+    VulkanDebug::SetAutoName(pContext->anvilDevice, materialDescriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
 
     if (!pool_sizes.empty())
     {
@@ -174,20 +174,20 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
         pool_info.pPoolSizes = pool_sizes.data();
         pool_info.maxSets = 1; //_pool_sizes.size()?
-        CHECK(vkCreateDescriptorPool(ptrAContext->anvilDevice, &pool_info, nullptr, &materialDescriptorPool));
+        CHECK(vkCreateDescriptorPool(pContext->anvilDevice, &pool_info, nullptr, &materialDescriptorPool));
 
         debug_name = "MaterialDescriptorPool: " + material_debug_name;
-        VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
+        VulkanDebug::SetAutoName(pContext->anvilDevice, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
 
         VkDescriptorSetAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         alloc_info.descriptorPool = materialDescriptorPool;
         alloc_info.descriptorSetCount = 1;
         alloc_info.pSetLayouts = &materialDescriptorSetLayout;
-        CHECK(vkAllocateDescriptorSets(ptrAContext->anvilDevice, &alloc_info, &materialDescriptorSet));
+        CHECK(vkAllocateDescriptorSets(pContext->anvilDevice, &alloc_info, &materialDescriptorSet));
 
         debug_name = "MaterialDescriptorSet: " + material_debug_name;
-        VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialDescriptorSet, VK_OBJECT_TYPE_DESCRIPTOR_SET, debug_name.c_str());
+        VulkanDebug::SetAutoName(pContext->anvilDevice, materialDescriptorSet, VK_OBJECT_TYPE_DESCRIPTOR_SET, debug_name.c_str());
     }
 
     // Push Constants and Pipeline Layout
@@ -216,10 +216,10 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         pipeline_layout_info.pushConstantRangeCount = 1; //?
         pipeline_layout_info.pPushConstantRanges = &merged_push_constant;
     }
-    CHECK(vkCreatePipelineLayout(ptrAContext->anvilDevice, &pipeline_layout_info, nullptr, &materialPipelineLayout));
+    CHECK(vkCreatePipelineLayout(pContext->anvilDevice, &pipeline_layout_info, nullptr, &materialPipelineLayout));
 
     debug_name = "MaterialPipelineLayout: " + material_debug_name;
-    VulkanDebug::SetAutoName(ptrAContext->anvilDevice, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
+    VulkanDebug::SetAutoName(pContext->anvilDevice, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
 }
 
 void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inTexture)
@@ -299,7 +299,7 @@ void AnvilMaterial::updateDescriptorSets()
         }
     }
 
-    vkUpdateDescriptorSets(ptrAContext->anvilDevice,
+    vkUpdateDescriptorSets(pContext->anvilDevice,
         static_cast<uint32_t>(pendingWrites.size()),
         pendingWrites.data(),
         0, nullptr);
@@ -311,22 +311,22 @@ void AnvilMaterial::updateDescriptorSets()
 
 void AnvilMaterial::destroyMaterial() const
 {
-    if (ptrAContext)
+    if (pContext)
     {
         vertexShader.destroyShaderModule();
         fragmentShader.destroyShaderModule();
 
         if (materialDescriptorPool)
         {
-            vkDestroyDescriptorPool(ptrAContext->anvilDevice, materialDescriptorPool, nullptr);
+            vkDestroyDescriptorPool(pContext->anvilDevice, materialDescriptorPool, nullptr);
         }
         if (materialDescriptorSetLayout)
         {
-            vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, materialDescriptorSetLayout, nullptr);
+            vkDestroyDescriptorSetLayout(pContext->anvilDevice, materialDescriptorSetLayout, nullptr);
         }
         if (materialPipelineLayout)
         {
-            vkDestroyPipelineLayout(ptrAContext->anvilDevice, materialPipelineLayout, nullptr);
+            vkDestroyPipelineLayout(pContext->anvilDevice, materialPipelineLayout, nullptr);
         }
     }
 }

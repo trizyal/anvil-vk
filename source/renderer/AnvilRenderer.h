@@ -67,8 +67,8 @@ public:
     AnvilRenderer& operator=(AnvilRenderer&&) = delete;
 
 private:
-    VulkanContext* ptrAContext = nullptr;
-    VulkanSwapchain* ptrASwapchain = nullptr;
+    VulkanContext* pContext = nullptr;
+    VulkanSwapchain* pSwapchain = nullptr;
 
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
     uint32_t anvilFrameIndex = 0;

@@ -12,12 +12,12 @@ Scene::~Scene()
 
 void Scene::createScene(VulkanContext& inContext)
 {
-    ptrContext = &inContext;
+    pContext = &inContext;
 
     // Create the UBO
     sceneUBO.createBuffer(
-        ptrContext->anvilAllocator,
-        ptrContext->anvilDevice,
+        pContext->anvilAllocator,
+        pContext->anvilDevice,
         &data,
         sizeof(GPUSceneData),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
@@ -42,7 +42,7 @@ void Scene::updateGPUBuffer()
     // Use VMA mapped memory to instantly update the lighting values on the GPU
     if (sceneUBO.allocation != VK_NULL_HANDLE)
     {
-        vmaCopyMemoryToAllocation(ptrContext->anvilAllocator, &data, sceneUBO.allocation, 0, sizeof(GPUSceneData));
+        vmaCopyMemoryToAllocation(pContext->anvilAllocator, &data, sceneUBO.allocation, 0, sizeof(GPUSceneData));
         isDirty = false;
     }
 }

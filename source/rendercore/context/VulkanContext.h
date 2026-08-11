@@ -77,7 +77,7 @@ public:
 
 private:
     /** Pointer to the application window. */
-    AnvilWindow* ptrAWindow = nullptr;
+    AnvilWindow* pWindow = nullptr;
 
     // ------------------------------------------------------------------------
     // Immediate Submit Members

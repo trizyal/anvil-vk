@@ -16,8 +16,8 @@
 
 void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
 {
-    ptrAContext = &inAnvilContext;
-    ptrASwapchain = &inAnvilSwapchain;
+    pContext = &inAnvilContext;
+    pSwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf";
     models = ModelLoader::LoadGLTF(modelPath);
@@ -27,7 +27,7 @@ void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchai
         for (const auto& primitive : cpu_mesh.primitives)
         {
             GPUMesh gpu_mesh;
-            gpu_mesh.createGPUMesh(*ptrAContext, primitive);
+            gpu_mesh.createGPUMesh(*pContext, primitive);
 
             meshBuffers.push_back(std::move(gpu_mesh));
         }
@@ -45,7 +45,7 @@ void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchai
     sceneLighting.lightColor = glm::vec4(1.0f, 0.95f, 0.8f, 2.0f);   // Warm sunlight, intensity = 2.0
     sceneLighting.ambientColor = glm::vec4(0.08f, 0.1f, 0.15f, 1.0f); // Cool blue sky ambient
 
-    myScene.createScene(*ptrAContext);
+    myScene.createScene(*pContext);
     myScene.setGPUSceneData(sceneLighting);
     myScene.updateGPUBuffer();
 
@@ -61,19 +61,19 @@ void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchai
 
 void TruckModel::cleanupProject()
 {
-    if (ptrAContext)
+    if (pContext)
     {
         // myScene.destroyScene();
         for (const auto& texture : textures)
         {
-            texture.destroyAnvilTexture(ptrAContext);
+            texture.destroyAnvilTexture(pContext);
         }
         myMaterial.destroyMaterial();
         for (auto & meshBuffer : meshBuffers)
         {
             meshBuffer.destroyGPUMesh();
         }
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
     }
 }
 
@@ -84,7 +84,7 @@ void TruckModel::loadPipeline()
     std::cout << "Creating TruckModel pipeline." << std::endl;
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
         myMaterial.destroyMaterial();
     }
 
@@ -93,7 +93,7 @@ void TruckModel::loadPipeline()
     AnvilShaders::ShaderCompileRequest fReq{"TruckModel", "fragmentMain", AnvilShaders::ST_Fragment};
 
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
-    myMaterial.buildMaterial(*ptrAContext, shaderCompiler, vReq, fReq);
+    myMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
 
     myMaterial.bindUniformBuffer("sceneBuffer", myScene.sceneUBO);
 
@@ -115,14 +115,14 @@ void TruckModel::loadPipeline()
     PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(myMaterial.vertexShader.get(), myMaterial.fragmentShader.get())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
-        .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
+        .setColorAttachmentFormat(pSwapchain->swapchainFormat)
+        .setDepthAttachmentFormat(pSwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout, "TruckModelPipeline");
+        .buildPipeline(pContext->anvilDevice, myMaterial.materialPipelineLayout, "TruckModelPipeline");
 }
 
 void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)

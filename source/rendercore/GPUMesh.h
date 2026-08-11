@@ -48,7 +48,7 @@ public:
 
 private:
     /** Cached context used for self-contained destruction. */
-    const VulkanContext* ptrAContext = nullptr;
+    const VulkanContext* pContext = nullptr;
 
 public:
     /**

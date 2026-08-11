@@ -80,7 +80,7 @@ public:
     VkShaderStageFlags pushConstantStages = 0;
 
 private:
-    VulkanContext* ptrAContext = nullptr;
+    VulkanContext* pContext = nullptr;
 
     std::unordered_map<std::string, ShaderBinding> bindingMap;
     std::vector<VkWriteDescriptorSet> pendingWrites;

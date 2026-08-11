@@ -55,7 +55,7 @@ namespace
 
 bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, VulkanSwapchain* inSwapchain)
 {
-    ptrAContext = inContext;
+    pContext = inContext;
 
     VkDevice device = inContext->anvilDevice;
 
@@ -129,9 +129,9 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 
 UIRenderer::~UIRenderer()
 {
-    if (ptrAContext->anvilDevice)
+    if (pContext->anvilDevice)
     {
-        vkDeviceWaitIdle(ptrAContext->anvilDevice);
+        vkDeviceWaitIdle(pContext->anvilDevice);
     }
 
     // CRITICAL: Force ImGui to destroy viewport command buffers before shutting down
@@ -147,7 +147,7 @@ UIRenderer::~UIRenderer()
 
     if (imguiPool != VK_NULL_HANDLE)
     {
-        vkDestroyDescriptorPool(ptrAContext->anvilDevice, imguiPool, nullptr);
+        vkDestroyDescriptorPool(pContext->anvilDevice, imguiPool, nullptr);
         imguiPool = VK_NULL_HANDLE;
     }
 }

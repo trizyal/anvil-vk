@@ -81,7 +81,7 @@ public:
 
 private:
     /** Cached pointer to the parent Vulkan context. */
-    VulkanContext *ptrAContext = nullptr;
+    VulkanContext* pContext = nullptr;
 
 public:
     /**

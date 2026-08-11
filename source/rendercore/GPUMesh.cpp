@@ -19,19 +19,19 @@ GPUMesh& GPUMesh::operator=(GPUMesh&& other) noexcept
 
         indexCount = other.indexCount;
 
-        ptrAContext = other.ptrAContext;
+        pContext = other.pContext;
 
         // other.vertexBuffer.destroyBuffer();
         // other.indexBuffer.destroyBuffer();
         other.indexCount = 0;
-        other.ptrAContext = nullptr;
+        other.pContext = nullptr;
     }
     return *this;
 }
 
 void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMesh_Single& inMesh)
 {
-    this->ptrAContext = &inContext;
+    this->pContext = &inContext;
 
     indexCount = static_cast<uint32_t>(inMesh.indices.size());
 
@@ -55,7 +55,7 @@ void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMesh_Single
 
 void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMeshPrimitive& inMeshPrimitive)
 {
-    this->ptrAContext = &inContext;
+    this->pContext = &inContext;
 
     indexCount = static_cast<uint32_t>(inMeshPrimitive.indices.size());
 

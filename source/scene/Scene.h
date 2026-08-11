@@ -44,7 +44,7 @@ public:
     Scene& operator=(Scene&&) noexcept = default;
 
 private:
-    VulkanContext* ptrContext = nullptr;
+    VulkanContext* pContext = nullptr;
     bool isDirty = true;
 
 public:

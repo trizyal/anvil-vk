@@ -24,7 +24,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 {
     std::cout << "Initialising AnvilVulkanContext..." << std::endl;
 
-    ptrAWindow = &inWindow;
+    pWindow = &inWindow;
 
     // --------------------------------
     // Initialise Volk

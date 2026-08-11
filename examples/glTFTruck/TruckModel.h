@@ -27,8 +27,8 @@ struct PushConstants
 class TruckModel
 {
 private:
-    VulkanContext* ptrAContext = nullptr;
-    VulkanSwapchain* ptrASwapchain = nullptr;
+    VulkanContext* pContext = nullptr;
+    VulkanSwapchain* pSwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};

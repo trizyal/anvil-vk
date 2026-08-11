@@ -52,7 +52,7 @@ public:
     VkFormat depthFormat = VK_FORMAT_UNDEFINED;
 
 private:
-    VulkanContext* ptrAContext = nullptr;
+    VulkanContext* pContext = nullptr;
 
     /** Dedicated descriptor pool allocated for Dear ImGui internal resources. */
     VkDescriptorPool imguiPool = VK_NULL_HANDLE;
