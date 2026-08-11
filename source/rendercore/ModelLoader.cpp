@@ -323,7 +323,7 @@ namespace
     {
         for (cgltf_size node_index = 0; node_index < gltf_data->nodes_count; ++node_index)
         {
-            CPUNode cpu_node = cpu_model.nodes[node_index];
+            CPUNode& cpu_node = cpu_model.nodes[node_index];
             const cgltf_node& gltf_node = gltf_data->nodes[node_index];
 
             cpu_node.name = gltf_node.name ? gltf_node.name : "Node_" + std::to_string(node_index);
@@ -342,8 +342,6 @@ namespace
             }
 
             cpu_node.worldMatrix = cpu_node.localMatrix;
-
-            cpu_model.nodes.push_back(std::move(cpu_node));
         }
 
         // Node children

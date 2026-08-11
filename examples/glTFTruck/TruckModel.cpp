@@ -157,37 +157,71 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilS
     // glm::mat4 model = glm::rotate(glm::mat4(1.0f), totalTime * rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 model = glm::mat4(1.0f);
 
-    vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
+vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
     camera.updateCamera(deltaTime);
 
-    //  Draw Setup
     const float aspect = static_cast<float>(inAnvilSwapchain.swapchainExtent.width) / static_cast<float>(inAnvilSwapchain.swapchainExtent.height);
-
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
     UIRenderer::DrawDebugAxis(view);
 
-    PushConstants constants{};
-    constants.renderMatrix = projection * view * model;
-    constants.modelMatrix = model;
-    constants.camera = camera.position;
-    vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(PushConstants), &constants);
-
     vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterial.materialDescriptorSet, 0, nullptr);
 
+    // Global model transform (e.g., to rotate or move the ENTIRE truck in your game world)
+    glm::mat4 globalModelMatrix = glm::mat4(1.0f);
     VkDeviceSize offset = 0;
 
-    for (auto & meshBuffer : meshBuffers)
+    // --- NEW: RECURSIVE SCENE GRAPH TRAVERSAL ---
+
+    // Define a recursive lambda function
+    auto drawNode = [&](int nodeIndex, glm::mat4 parentMatrix, auto& drawNodeRef) -> void
     {
-        vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
+        // 1. Get the current node (Assuming TruckModel holds onto cpuModel.nodes!)
+        const CPUNode& node = this->models.nodes[nodeIndex];
 
-        // This was VK_INDEX_TYPE_UINT16, but everything else uses 32
-        // Caused a bug where half the triangles were not being rendered.
-        vkCmdBindIndexBuffer(inCmd, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        // 2. Compute this node's absolute transform in the world
+        glm::mat4 nodeWorldMatrix = parentMatrix * node.localMatrix;
 
-        // Draw
-        vkCmdDrawIndexed(inCmd, meshBuffer.indexCount, 1, 0, 0, 0);
+        // 3. If this node has a mesh attached, draw it!
+        if (node.meshIndex >= 0)
+        {
+            // Update push constants with THIS node's position/rotation
+            PushConstants constants{};
+            constants.renderMatrix = projection * view * nodeWorldMatrix;
+            constants.modelMatrix = nodeWorldMatrix;
+            constants.camera = camera.position;
+
+            vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(PushConstants), &constants);
+
+            // Fetch the GPU primitives for this mesh.
+            // *NOTE: You need to map node.meshIndex to your meshBuffers here.*
+            // Assuming gpuMeshes is a std::vector<std::vector<GPUMesh>> matching cpuModel.meshes
+            const auto& primitives = this->meshBuffers[node.meshIndex];
+
+            // In future this should be a list of lists
+            // for (const GPUMesh& meshBuffer : primitives)
+            {
+                auto& meshBuffer = primitives;
+                vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
+                vkCmdBindIndexBuffer(inCmd, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+                vkCmdDrawIndexed(inCmd, meshBuffer.indexCount, 1, 0, 0, 0);
+            }
+        }
+
+        // 4. Recursively draw all children (like the wheels attached to the axles)
+        for (int childIndex : node.children)
+        {
+            drawNodeRef(childIndex, nodeWorldMatrix, drawNodeRef);
+        }
+    };
+
+    // --- START THE TRAVERSAL ---
+
+    // Start drawing from the root nodes
+    for (int rootNodeIndex : this->models.sceneRootNodes)
+    {
+        drawNode(rootNodeIndex, globalModelMatrix, drawNode);
     }
 }
