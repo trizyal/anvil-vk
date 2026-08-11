@@ -13,6 +13,7 @@
 namespace
 {
     std::string GetBaseDirectory(const std::string& filePath);
+    std::string JoinPath(const std::string& baseDirectory, const char* uri);
 
     void LoadTextures(CPUModel& model, const cgltf_data* gltf_data, const std::string& base_directory);
     void LoadMaterials(CPUModel& model, const cgltf_data* gltf_data);
@@ -24,8 +25,10 @@ namespace
     int GetMeshIndex(const cgltf_data* data, const cgltf_mesh* mesh);
     int GetNodeIndex(const cgltf_data* data, const cgltf_node* node);
 
+    glm::mat4 ConvertMatrix(const cgltf_float* inMatrix);
+    glm::mat4 MakeLocalMatrix(const CPUNode& cpu_node);
     void ReadNodeTRS(CPUNode& cpu_node, const cgltf_node* gltf_node);
-    void ComputeWorldMatrices(CPUModel& model, int nodeIndex, const glm::mat4& parentMatrix);
+    void ComputeWorldMatrices(CPUModel& cpu_model, int node_index, const glm::mat4& parent_matrix);
 }
 
 namespace ModelLoader
@@ -46,24 +49,24 @@ namespace ModelLoader
             throw std::runtime_error("Failed to load GLTF file: " + filePath);
         }
 
-        CPUModel model;
+        CPUModel cpu_model;
         const std::string base_directory = GetBaseDirectory(filePath);
 
         // Get textures from gltf
-        model.textures.reserve(gltf_data->textures_count);
-        LoadTextures(model, gltf_data, base_directory);
+        cpu_model.textures.reserve(gltf_data->textures_count);
+        LoadTextures(cpu_model, gltf_data, base_directory);
 
         // Get materials from gltf
-        model.materials.reserve(gltf_data->materials_count);
-        LoadMaterials(model, gltf_data);
+        cpu_model.materials.reserve(gltf_data->materials_count);
+        LoadMaterials(cpu_model, gltf_data);
 
         // Get mesh data from gltf
-        model.meshes.reserve(gltf_data->meshes_count);
-        LoadMeshes(model, gltf_data);
+        cpu_model.meshes.reserve(gltf_data->meshes_count);
+        LoadMeshes(cpu_model, gltf_data);
 
         // Get nodes from gltf
-        model.nodes.resize(gltf_data->nodes_count);
-        LoadNodes(model, gltf_data);
+        cpu_model.nodes.resize(gltf_data->nodes_count);
+        LoadNodes(cpu_model, gltf_data);
 
         // Get scene data from gltf
         const cgltf_scene* scene = gltf_data->scene;
@@ -74,25 +77,36 @@ namespace ModelLoader
 
         if (scene)
         {
-            model.sceneRootNodes.reserve(scene->nodes_count);
+            cpu_model.sceneRootNodes.reserve(scene->nodes_count);
             for (cgltf_size root_index = 0; root_index < scene->nodes_count; ++root_index)
             {
                 const int node_index = GetNodeIndex(gltf_data, scene->nodes[root_index]);
                 if (node_index >= 0)
                 {
-                    model.sceneRootNodes.push_back(node_index);
+                    cpu_model.sceneRootNodes.push_back(node_index);
                 }
             }
         }
 
-        for (const int root_node : model.sceneRootNodes)
+        if (cpu_model.sceneRootNodes.empty())
+        {
+            for (int nodeIndex = 0; nodeIndex < static_cast<int>(cpu_model.nodes.size()); ++nodeIndex)
+            {
+                if (cpu_model.nodes[nodeIndex].parentIndex < 0)
+                {
+                    cpu_model.sceneRootNodes.push_back(nodeIndex);
+                }
+            }
+        }
+
+        for (const int root_node_index : cpu_model.sceneRootNodes)
         {
             // Root nodes don't have parents, so their world matrices have to be set.
-            ComputeWorldMatrices(model, root_node, glm::mat4(1.0f));
+            ComputeWorldMatrices(cpu_model, root_node_index, glm::mat4(1.0f));
         }
 
         cgltf_free(gltf_data);
-        return model;
+        return cpu_model;
     }
 
     // Only returns CPU data
@@ -143,6 +157,22 @@ namespace
         return parent.string() + std::string(1, std::filesystem::path::preferred_separator);
     }
 
+    std::string JoinPath(const std::string& baseDirectory, const char* uri)
+    {
+        if (!uri)
+        {
+            return {};
+        }
+
+        const std::filesystem::path uri_path(uri);
+        if (uri_path.is_absolute())
+        {
+            return uri_path.string();
+        }
+
+        return (std::filesystem::path(baseDirectory) / uri_path).string();
+    }
+
     void LoadTextures(CPUModel& model, const cgltf_data* gltf_data, const std::string& base_directory)
     {
         for (cgltf_size texture_index = 0; texture_index < gltf_data->textures_count; ++texture_index)
@@ -150,14 +180,11 @@ namespace
             CPUTexture cpu_texture;
             const cgltf_texture& gltf_texture = gltf_data->textures[texture_index];
 
-            if (gltf_texture.name)
-            {
-                cpu_texture.name = gltf_texture.name;
-            }
+            cpu_texture.name = gltf_texture.name ? gltf_texture.name : ("Texture_" + std::to_string(texture_index));
 
             if (gltf_texture.image && gltf_texture.image->uri)
             {
-                cpu_texture.imagePath = base_directory + gltf_texture.image->uri;
+                cpu_texture.imagePath = JoinPath(base_directory, gltf_texture.image->uri);
             }
 
             model.textures.push_back(cpu_texture);
@@ -171,10 +198,7 @@ namespace
             CPUMaterial cpu_material;
             const cgltf_material& gltf_material = gltf_data->materials[material_index];
 
-            if (gltf_material.name)
-            {
-                cpu_material.name = gltf_material.name;
-            }
+            cpu_material.name = gltf_material.name ? gltf_material.name : "Material_" + std::to_string(material_index);
 
             if (gltf_material.has_pbr_metallic_roughness)
             {
@@ -187,9 +211,9 @@ namespace
                     static_cast<float>(pbr.base_color_factor[3])
                 );
 
+                cpu_material.baseColorTextureIndex = GetTextureIndex(gltf_data, pbr.base_color_texture.texture);
                 cpu_material.metallicFactor = static_cast<float>(pbr.metallic_factor);
                 cpu_material.roughnessFactor = static_cast<float>(pbr.roughness_factor);
-                cpu_material.baseColorTextureIndex = GetTextureIndex(gltf_data, pbr.base_color_texture.texture);
             }
 
             model.materials.push_back(cpu_material);
@@ -203,10 +227,7 @@ namespace
             CPUMesh cpu_mesh;
             const cgltf_mesh& gltf_mesh = gltf_data->meshes[mesh_index];
 
-            if (gltf_mesh.name)
-            {
-                cpu_mesh.name = gltf_mesh.name;
-            }
+            cpu_mesh.name = gltf_mesh.name ? gltf_mesh.name : "Mesh_" + std::to_string(mesh_index);
 
             cpu_mesh.primitives.reserve(gltf_mesh.primitives_count);
             for (cgltf_size primitive_index = 0; primitive_index < gltf_mesh.primitives_count; ++primitive_index)
@@ -264,18 +285,10 @@ namespace
                     {
                         cgltf_accessor_read_float(normal_accessor, vertex_index, &vertex.normal.x, 3);
                     }
-                    else
-                    {
-                        vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-                    }
 
                     if (uv_accessor)
                     {
                         cgltf_accessor_read_float(uv_accessor, vertex_index, &vertex.uv.x, 2);
-                    }
-                    else
-                    {
-                        vertex.uv = glm::vec2(0.0f, 0.0f);
                     }
 
                     cpu_mesh_primitive.vertices[vertex_index] = vertex;
@@ -313,19 +326,39 @@ namespace
             CPUNode cpu_node = cpu_model.nodes[node_index];
             const cgltf_node& gltf_node = gltf_data->nodes[node_index];
 
-            if (gltf_node.name)
-            {
-                cpu_node.name = gltf_node.name;
-            }
+            cpu_node.name = gltf_node.name ? gltf_node.name : "Node_" + std::to_string(node_index);
 
             cpu_node.meshIndex = GetMeshIndex(gltf_data, gltf_node.mesh);
             cpu_node.parentIndex = GetNodeIndex(gltf_data, gltf_node.parent);
             ReadNodeTRS(cpu_node, &gltf_node);
 
-            cpu_node.children.reserve(gltf_node.children_count);
+            if (gltf_node.has_matrix)
+            {
+                cpu_node.localMatrix = ConvertMatrix(gltf_node.matrix);
+            }
+            else
+            {
+                cpu_node.localMatrix = MakeLocalMatrix(cpu_node);
+            }
+
+            cpu_node.worldMatrix = cpu_node.localMatrix;
+
+            cpu_model.nodes.push_back(std::move(cpu_node));
+        }
+
+        // Node children
+        for (cgltf_size node_index = 0; node_index < gltf_data->nodes_count; ++node_index)
+        {
+            const cgltf_node& gltf_node = gltf_data->nodes[node_index];
+
             for (cgltf_size child_index = 0; child_index < gltf_node.children_count; ++child_index)
             {
-                cpu_node.children.push_back(GetNodeIndex(gltf_data, gltf_node.children[child_index]));
+                const int model_child_index = GetNodeIndex(gltf_data, gltf_node.children[child_index]);
+
+                if (model_child_index >= 0)
+                {
+                    cpu_model.nodes[node_index].children.push_back(model_child_index);
+                }
             }
         }
     }
@@ -402,22 +435,45 @@ namespace
         return -1;
     }
 
+    glm::mat4 ConvertMatrix(const cgltf_float* inMatrix)
+    {
+        glm::mat4 result(1.0f);
+
+        // cgltf stores the glTF matrix values in column-major order.
+        for (int column = 0; column < 4; ++column)
+        {
+            for (int row = 0; row < 4; ++row)
+            {
+                result[column][row] = inMatrix[column * 4 + row];
+            }
+        }
+
+        return result;
+    }
+
+    glm::mat4 MakeLocalMatrix(const CPUNode& cpu_node)
+    {
+        const glm::mat4 translation = glm::translate(glm::mat4(1.0f), cpu_node.translation);
+        const glm::mat4 rotation = glm::mat4_cast(cpu_node.rotation);
+        const glm::mat4 scale = glm::scale(glm::mat4(1.0f), cpu_node.scale);
+
+        return translation * rotation * scale;
+    }
+
     void ReadNodeTRS(CPUNode& cpu_node, const cgltf_node* gltf_node)
     {
-        glm::vec3 translation(0.0f);
         if (gltf_node->has_translation)
         {
-            translation = glm::vec3(
+            cpu_node.translation = glm::vec3(
                 static_cast<float>(gltf_node->translation[0]),
                 static_cast<float>(gltf_node->translation[1]),
                 static_cast<float>(gltf_node->translation[2])
             );
         }
 
-        glm::quat rotation(1.0f, 0.0f, 0.0f, 0.0f);
         if (gltf_node->has_rotation)
         {
-            rotation = glm::quat(
+            cpu_node.rotation = glm::quat(
                 static_cast<float>(gltf_node->rotation[3]),
                 static_cast<float>(gltf_node->rotation[0]),
                 static_cast<float>(gltf_node->rotation[1]),
@@ -425,53 +481,30 @@ namespace
             );
         }
 
-        glm::vec3 scale(1.0f);
         if (gltf_node->has_scale)
         {
-            scale = glm::vec3(
+            cpu_node.scale = glm::vec3(
                 static_cast<float>(gltf_node->scale[0]),
                 static_cast<float>(gltf_node->scale[1]),
                 static_cast<float>(gltf_node->scale[2])
             );
         }
-
-        if (gltf_node->has_matrix)
-        {
-            glm::mat4 matrix(1.0f);
-
-            for (int column = 0; column < 4; ++column)
-            {
-                for (int row = 0; row < 4; ++row)
-                {
-                    matrix[column][row] = static_cast<float>(gltf_node->matrix[column * 4 + row]);
-                }
-            }
-
-            cpu_node.localMatrix = matrix;
-        }
-        else
-        {
-            const glm::mat4 t = glm::translate(glm::mat4(1.0f), translation);
-            const glm::mat4 r = glm::mat4_cast(rotation); //toMat4 call mat4_cast under the hood, but is experimental
-            const glm::mat4 s = glm::scale(glm::mat4(1.0f), scale);
-
-            cpu_node.localMatrix = t * r * s;
-        }
-
-        cpu_node.translation = translation;
-        cpu_node.rotation = rotation;
-        cpu_node.scale = scale;
     }
 
-    void ComputeWorldMatrices(CPUModel& model, const int nodeIndex, const glm::mat4& parentMatrix)
+    void ComputeWorldMatrices(CPUModel& cpu_model, const int node_index, const glm::mat4& parent_matrix)
     {
-        CPUNode& node = model.nodes[nodeIndex];
-        node.worldMatrix = parentMatrix * node.localMatrix;
+        if (node_index < 0 || node_index >= static_cast<int>(cpu_model.nodes.size()))
+        {
+            return;
+        }
+
+        CPUNode& node = cpu_model.nodes[node_index];
+        node.worldMatrix = parent_matrix * node.localMatrix;
 
         for (const int child_index : node.children)
         {
             // Some recursion, hopefully does not causes crashes
-            ComputeWorldMatrices(model, child_index, node.worldMatrix);
+            ComputeWorldMatrices(cpu_model, child_index, node.worldMatrix);
         }
     }
 }

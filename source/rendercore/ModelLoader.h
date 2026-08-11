@@ -21,13 +21,13 @@
  */
 struct MeshVertex
 {
-    glm::vec3 position; /**< 3D position coordinates in local object space. */
-    glm::vec3 normal;
-    glm::vec2 uv;       /**< 2D texture coordinates for sampling diffuse/albedo maps. */
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec2 uv= glm::vec2(0.0f);
 };
 
 /**
- * @brief CPU-side container for indexed 3D geometry and associated material data.
+ * @brief Legacy CPU-side container for indexed 3D geometry and associated material data.
  */
 struct CPUMesh_Single
 {
@@ -36,12 +36,20 @@ struct CPUMesh_Single
     std::string texturePath;          /**< Absolute or relative file path to the associated diffuse/albedo texture. */
 };
 
+/**
+ * @brief CPU-side texture metadata extracted from glTF.
+ */
 struct CPUTexture
 {
     std::string name;
     std::string imagePath;
 };
 
+/**
+ * @brief CPU-side material metadata extracted from glTF.
+ *
+ * baseColorTextureIndex indexes CPUModel::textures.
+ */
 struct CPUMaterial
 {
     std::string name;
@@ -51,6 +59,11 @@ struct CPUMaterial
     float roughnessFactor = 1.0f;
 };
 
+/**
+ * @brief CPU-side draw primitive.
+ *
+ * @note materialIndex indexes CPUModel::materials.
+ */
 struct CPUMeshPrimitive
 {
     std::vector<MeshVertex> vertices;
@@ -58,12 +71,20 @@ struct CPUMeshPrimitive
     int materialIndex = -1;
 };
 
+/**
+ * @brief CPU-side mesh containing one or more primitives.
+ */
 struct CPUMesh
 {
     std::string name;
     std::vector<CPUMeshPrimitive> primitives;
 };
 
+/**
+ * @brief CPU-side scene node.
+ *
+ * @note meshIndex indexes CPUModel::meshes.
+ */
 struct CPUNode
 {
     std::string name;
@@ -79,6 +100,10 @@ struct CPUNode
     glm::mat4 worldMatrix = glm::mat4(1.0f);
 };
 
+
+/**
+ * @brief Full CPU-side model and scene data.
+ */
 struct CPUModel
 {
     std::vector<CPUTexture> textures;
