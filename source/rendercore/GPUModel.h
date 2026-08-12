@@ -79,9 +79,29 @@ public:
     std::vector<GPUModelMaterial> gpuMaterials;
     std::vector<GPUModelDrawItem> drawItems;
 
-    void createGPUModel();
+    void createGPUModel(
+        VulkanContext& inContext,
+        const CPUModel& inModel,
+        const AnvilMaterial& ioMaterial,
+        const std::string& sceneBufferName,
+        const GPUBuffer& sceneBuffer,
+        const std::string& textureName
+    );
 
     void destroyGPUModel();
+
+private:
+    void createTextures(const CPUModel& inModel);
+
+    void createMaterialDescriptorSets(
+        const CPUModel& inModel,
+        const AnvilMaterial& inMaterial,
+        const std::string& sceneBufferName,
+        const GPUBuffer& sceneBuffer,
+        const std::string& textureName
+    );
+
+    void createMeshesAndDrawItems(const CPUModel& inCPUModel);
 };
 
 #endif //ANVIL_VK_GPUMODEL_H

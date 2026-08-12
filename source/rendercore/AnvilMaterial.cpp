@@ -173,7 +173,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
         pool_info.pPoolSizes = pool_sizes.data();
-        pool_info.maxSets = 1; //_pool_sizes.size()?
+        pool_info.maxSets = 1000; //_pool_sizes.size()?
         CHECK(vkCreateDescriptorPool(pContext->anvilDevice, &pool_info, nullptr, &materialDescriptorPool));
 
         debug_name = "MaterialDescriptorPool: " + material_debug_name;

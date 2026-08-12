@@ -5,7 +5,8 @@ struct PushConstants
 {
     float4x4 renderMatrix; // Projection * View * Model
     float4x4 modelMatrix;  // Model rotation for world-space normals
-    float3 camera;
+    float4 camera;
+    float4 baseColorFactor;
 }
 
 // [[vk::push_constant]] tells Slang to map this to Vulkan Push Constants
@@ -69,6 +70,6 @@ float4 fragmentMain(VertexOutput input) : SV_Target
 
     // Sample base texture and multiply by lighting
     float4 textureColor = texture.Sample(input.uv);
-    //textureColor = float4(0.4, 0.3, 0.4, 1.0);
+    textureColor *= pushConstants.baseColorFactor;
     return float4(textureColor.rgb * finalLighting, textureColor.a);
 }
