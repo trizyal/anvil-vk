@@ -152,7 +152,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
         VkDescriptorPoolSize pool_size{};
         pool_size.type = binding.descriptorType;
-        pool_size.descriptorCount = binding.descriptorCount; // 1?
+        pool_size.descriptorCount = binding.descriptorCount * 1000; // 1000 material instances
 
         pool_sizes.push_back(pool_size);
     }
@@ -178,16 +178,6 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
         debug_name = "MaterialDescriptorPool: " + material_debug_name;
         VulkanDebug::SetAutoName(pContext->anvilDevice, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
-
-        VkDescriptorSetAllocateInfo alloc_info{};
-        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = materialDescriptorPool;
-        alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &materialDescriptorSetLayout;
-        CHECK(vkAllocateDescriptorSets(pContext->anvilDevice, &alloc_info, &materialDescriptorSet));
-
-        debug_name = "MaterialDescriptorSet: " + material_debug_name;
-        VulkanDebug::SetAutoName(pContext->anvilDevice, materialDescriptorSet, VK_OBJECT_TYPE_DESCRIPTOR_SET, debug_name.c_str());
     }
 
     // Push Constants and Pipeline Layout
@@ -222,91 +212,39 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     VulkanDebug::SetAutoName(pContext->anvilDevice, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
 }
 
-void AnvilMaterial::bindTexture(const std::string& name, const AnvilTexture& inTexture)
+MaterialInstance AnvilMaterial::createInstance() const
 {
-    if (!bindingMap.contains(name))
+    MaterialInstance instance;
+    instance.pContext = pContext;
+    instance.pParentMaterial = this;
+
+    if (materialDescriptorPool != VK_NULL_HANDLE && materialDescriptorSetLayout != VK_NULL_HANDLE)
     {
-        return;
+        VkDescriptorSetAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        alloc_info.descriptorPool = materialDescriptorPool;
+        alloc_info.descriptorSetCount = 1;
+        alloc_info.pSetLayouts = &materialDescriptorSetLayout;
+
+        CHECK(vkAllocateDescriptorSets(pContext->anvilDevice, &alloc_info, &instance.descriptorSet));
     }
 
-    const ShaderBinding shader_binding = bindingMap[name];
-
-    VkDescriptorImageInfo image_info{};
-    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    image_info.imageView = inTexture.imageView;
-    image_info.sampler = inTexture.sampler;
-    pendingImageInfos.push_back(image_info);
-
-    VkWriteDescriptorSet descriptor_write{};
-    descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptor_write.dstBinding = shader_binding.binding;
-    descriptor_write.dstArrayElement = 0;
-    descriptor_write.descriptorType = shader_binding.descriptorType;
-    descriptor_write.descriptorCount = 1; //?
-    pendingWrites.push_back(descriptor_write);
+    return instance;
 }
 
-void AnvilMaterial::bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer)
+bool AnvilMaterial::hasBinding(const std::string& name) const
 {
-    if (!bindingMap.contains(name))
-    {
-        return;
-    }
-
-    const ShaderBinding _shader_binding = bindingMap[name];
-
-    // 1. Setup buffer info
-    VkDescriptorBufferInfo buffer_info{};
-    buffer_info.buffer = inBuffer.buffer;
-    buffer_info.offset = 0;               // Offset into the buffer in bytes
-    buffer_info.range  = VK_WHOLE_SIZE;   // Size of the range in bytes (or VK_WHOLE_SIZE)
-    pendingBufferInfos.push_back(buffer_info);
-
-    // 2. Setup write descriptor set
-    VkWriteDescriptorSet descriptor_write{};
-    descriptor_write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptor_write.dstBinding      = _shader_binding.binding;
-    descriptor_write.dstArrayElement = 0;
-    descriptor_write.descriptorType  = _shader_binding.descriptorType; // e.g., VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-    descriptor_write.descriptorCount = 1;
-
-    pendingWrites.push_back(descriptor_write);
+    return bindingMap.contains(name);
 }
 
-void AnvilMaterial::updateDescriptorSets()
+ShaderBinding AnvilMaterial::getBinding(const std::string& name) const
 {
-    if (pendingWrites.empty())
+    const auto it = bindingMap.find(name);
+    if (it == bindingMap.end())
     {
-        return;
+        throw std::runtime_error("AnvilMaterial binding does not exist: " + name);
     }
-
-    size_t image_index = 0;
-    size_t buffer_index = 0;
-
-    for (auto& write : pendingWrites)
-    {
-        write.dstSet = materialDescriptorSet;
-        if (write.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
-            write.descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
-        {
-            write.pImageInfo = &pendingImageInfos[image_index];
-            image_index++;
-        }
-        else if (write.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
-        {
-            write.pBufferInfo = &pendingBufferInfos[buffer_index];
-            buffer_index++;
-        }
-    }
-
-    vkUpdateDescriptorSets(pContext->anvilDevice,
-        static_cast<uint32_t>(pendingWrites.size()),
-        pendingWrites.data(),
-        0, nullptr);
-
-    pendingWrites.clear();
-    pendingImageInfos.clear();
-    pendingBufferInfos.clear();
+    return it->second;
 }
 
 void AnvilMaterial::destroyMaterial() const

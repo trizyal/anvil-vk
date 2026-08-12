@@ -67,6 +67,8 @@ private:
     std::vector<PendingTextureBind> pendingTextures;
     std::vector<PendingBufferBind> pendingBuffers;
 
+    [[maybe_unused]] bool bDirty = false;
+
 public:
     /** The Vulkan descriptor set unique to this instance. */
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;

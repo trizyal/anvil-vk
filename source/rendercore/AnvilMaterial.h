@@ -16,6 +16,7 @@
 #include <slang-com-ptr.h>
 
 #include "GPUBuffer.h"
+#include "MaterialInstance.h"
 #include "ShaderCompiler.h"
 #include "ShaderModule.h"
 #include "TextureLoader.h"
@@ -71,9 +72,6 @@ public:
     /** Pool allocated specifically for this material's descriptor sets. */
     VkDescriptorPool materialDescriptorPool = VK_NULL_HANDLE;
 
-    /** Allocated descriptor set instance for binding resources. */
-    // VkDescriptorSet materialDescriptorSet = VK_NULL_HANDLE;
-
     /** Layout describing descriptor sets and push constants for this material. */
     VkPipelineLayout materialPipelineLayout = VK_NULL_HANDLE;
 
@@ -117,7 +115,7 @@ public:
      *
      * @return A ready-to-use MaterialInstance tied to this material's layout.
      */
-    [[nodiscard]] AnvilMaterial createInstance() const;
+    [[nodiscard]] MaterialInstance createInstance() const;
 
     /**
      * @brief Returns true if this material reflected a binding with the given shader variable name.
