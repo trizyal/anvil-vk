@@ -17,6 +17,7 @@
 
 #include "AnvilMaterial.h"
 #include "GPUMesh.h"
+#include "MaterialInstance.h"
 #include "ModelLoader.h"
 #include "TextureLoader.h"
 
@@ -29,22 +30,23 @@ class VulkanContext;
  */
 struct GPUModelMaterial
 {
-    int materialIndex = -1;
-    int baseColorTextureIndex = -1;
+    int materialIndex = -1; /**< Index corresponding to CPUModel::materials. */
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    MaterialInstance instance; /**< Descriptor set manager for this specific material. */
 };
 
 /**
- * @brief One renderable primitive instance.
+ * @brief One renderable primitive instance in the flattened draw list.
+ *
+ * Represents a single Vulkan draw call containing exactly what is needed to render it.
  *
  * gpuMeshIndex indexes GPUModel::gpuMeshes.
  * gpuMaterialIndex indexes GPUModel::gpuMaterials.
  */
 struct GPUModelDrawItem
 {
-    uint32_t gpuMeshIndex = 0;
-    int gpuMaterialIndex = -1;
+    uint32_t gpuMeshIndex = 0; /**< Index into GPUModel::gpuMeshes. */
+    int gpuMaterialIndex = -1; /**< Index into GPUModel::gpuMaterials. */
     glm::mat4 worldMatrix = glm::mat4(1.0f);
 };
 
