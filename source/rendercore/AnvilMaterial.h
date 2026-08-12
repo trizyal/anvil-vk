@@ -153,6 +153,8 @@ public:
      */
     void updateDescriptorSets();
 
+    [[nodiscard]] bool hasBinding(std::string name) const;
+
 private:
     /**
      * @brief Inspects Slang reflection metadata to populate descriptor layouts and push constant ranges.
