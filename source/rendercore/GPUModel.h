@@ -48,6 +48,7 @@ struct GPUModelDrawItem
     uint32_t gpuMeshIndex = 0; /**< Index into GPUModel::gpuMeshes. */
     int gpuMaterialIndex = -1; /**< Index into GPUModel::gpuMaterials. */
     glm::mat4 worldMatrix = glm::mat4(1.0f);
+    int cpuNodeIndex = -1; /**< Map back to CPU node for animation matrix updates. */
 };
 
 /**
@@ -79,6 +80,9 @@ public:
     std::vector<GPUModelMaterial> gpuMaterials;
     std::vector<GPUModelDrawItem> drawItems;
 
+    /**
+     * @brief Uploads a CPUModel to GPU-side resources and generates a draw list.
+     */
     void createGPUModel(
         VulkanContext& inContext,
         const CPUModel& inModel,
@@ -87,6 +91,11 @@ public:
         const GPUBuffer& sceneBuffer,
         const std::string& textureName
     );
+
+    /**
+     * @brief Synchronizes the GPU draw list matrices with the latest CPU node matrices.
+     */
+    void updateTransforms(const CPUModel& inModel);
 
     void destroyGPUModel();
 

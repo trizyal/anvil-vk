@@ -42,6 +42,8 @@ private:
     CPUModel cpuModel;
     GPUModel gpuModel;
 
+    float animationTime = 0.0f;
+
 public:
     void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
     void cleanupProject();

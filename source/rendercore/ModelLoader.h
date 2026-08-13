@@ -100,6 +100,29 @@ struct CPUNode
     glm::mat4 worldMatrix = glm::mat4(1.0f);
 };
 
+/**
+ * @brief A single animation channel targeting a node's transform.
+ */
+struct CPUAnimationChannel
+{
+    int targetNodeIndex = -1;
+
+    // For the current stage, we only care about rotation, but
+    // a full engine would support translation and scale too.
+    std::vector<float> keyframeTimes;
+    std::vector<glm::quat> keyframeRotations;
+};
+
+/**
+ * @brief A full animation clip containing multiple channels.
+ */
+struct CPUAnimation
+{
+    std::string name;
+    float duration = 0.0f;
+    std::vector<CPUAnimationChannel> channels;
+};
+
 
 /**
  * @brief Full CPU-side model and scene data.
@@ -111,6 +134,8 @@ struct CPUModel
     std::vector<CPUMesh> meshes;
     std::vector<CPUNode> nodes;
     std::vector<int> sceneRootNodes;
+
+    std::vector<CPUAnimation> animations;
 };
 
 /**
@@ -144,6 +169,8 @@ namespace ModelLoader
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
     CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
+
+    void UpdateAllMatrices(CPUModel& cpu_model);
 } //AnvilModelLoader
 
 #endif //ANVIL_VK_MODELLOADER_H

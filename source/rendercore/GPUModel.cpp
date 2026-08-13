@@ -65,6 +65,18 @@ void GPUModel::destroyGPUModel()
     pContext = nullptr;
 }
 
+void GPUModel::updateTransforms(const CPUModel& inModel)
+{
+    // Fast path to sync animated matrices from CPU to GPU draw items
+    for (GPUModelDrawItem& item : drawItems)
+    {
+        if (item.cpuNodeIndex >= 0 && item.cpuNodeIndex < static_cast<int>(inModel.nodes.size()))
+        {
+            item.worldMatrix = inModel.nodes[item.cpuNodeIndex].worldMatrix;
+        }
+    }
+}
+
 void GPUModel::createTextures(const CPUModel& inModel)
 {
     textures.reserve(inModel.textures.size());
@@ -155,8 +167,9 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 
     if (!inCPUModel.nodes.empty())
     {
-        for (const CPUNode& node : inCPUModel.nodes)
+        for (int node_index = 0; node_index < static_cast<int>(inCPUModel.nodes.size()); node_index++)
         {
+            const CPUNode& node = inCPUModel.nodes[node_index];
             if (node.meshIndex < 0 || node.meshIndex >= static_cast<int>(inCPUModel.meshes.size()))
             {
                 continue;
@@ -173,6 +186,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
                 draw_item.gpuMeshIndex = primitive_gpu_indices[primitive_index];
                 draw_item.gpuMaterialIndex = primitive.materialIndex;
                 draw_item.worldMatrix = node.worldMatrix;
+                draw_item.cpuNodeIndex = node_index;
 
                 drawItems.push_back(draw_item);
             }
@@ -180,6 +194,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
         return;
     }
 
+    // Fallback if no nodes
     for (size_t cpu_mesh_index = 0; cpu_mesh_index < inCPUModel.meshes.size(); cpu_mesh_index++)
     {
         const CPUMesh& cpu_mesh = inCPUModel.meshes[cpu_mesh_index];
@@ -193,6 +208,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
             draw_item.gpuMeshIndex = primitive_gpu_indices[primitive_index];
             draw_item.gpuMaterialIndex = primitive.materialIndex;
             draw_item.worldMatrix = glm::mat4(1.0f);
+            draw_item.cpuNodeIndex = -1; // Unmapped
 
             drawItems.push_back(draw_item);
         }

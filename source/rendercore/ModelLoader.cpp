@@ -19,6 +19,7 @@ namespace
     void LoadMaterials(CPUModel& model, const cgltf_data* gltf_data);
     void LoadMeshes(CPUModel& cpu_model, const cgltf_data* gltf_data);
     void LoadNodes(CPUModel& cpu_model, const cgltf_data* gltf_data);
+    void LoadAnimations(CPUModel& cpu_model, const cgltf_data* gltf_data);
 
     int GetTextureIndex(const cgltf_data* data, const cgltf_texture* texture);
     int GetMaterialIndex(const cgltf_data* data, const cgltf_material* material);
@@ -29,10 +30,19 @@ namespace
     glm::mat4 MakeLocalMatrix(const CPUNode& cpu_node);
     void ReadNodeTRS(CPUNode& cpu_node, const cgltf_node* gltf_node);
     void ComputeWorldMatrices(CPUModel& cpu_model, int node_index, const glm::mat4& parent_matrix);
+    void UpdateAllMatrices(CPUModel& cpu_model);
 }
 
 namespace ModelLoader
 {
+    void UpdateAllMatrices(CPUModel& cpu_model)
+    {
+        for (const int rootNodeIndex : cpu_model.sceneRootNodes)
+        {
+            ComputeWorldMatrices(cpu_model, rootNodeIndex, glm::mat4(1.0f));
+        }
+    }
+
     CPUModel LoadGLTF(const std::string& filePath)
     {
         cgltf_options options{};
@@ -99,11 +109,11 @@ namespace ModelLoader
             }
         }
 
-        for (const int root_node_index : cpu_model.sceneRootNodes)
-        {
-            // Root nodes don't have parents, so their world matrices have to be set.
-            ComputeWorldMatrices(cpu_model, root_node_index, glm::mat4(1.0f));
-        }
+        // Get animations from gltf
+        cpu_model.animations.reserve(gltf_data->animations_count);
+        LoadAnimations(cpu_model, gltf_data);
+
+        UpdateAllMatrices(cpu_model);
 
         cgltf_free(gltf_data);
         return cpu_model;
@@ -358,6 +368,59 @@ namespace
                     cpu_model.nodes[node_index].children.push_back(model_child_index);
                 }
             }
+        }
+    }
+
+    void LoadAnimations(CPUModel& cpu_model, const cgltf_data* gltf_data)
+    {
+        for (cgltf_size animation_index = 0; animation_index < gltf_data->animations_count; ++animation_index)
+        {
+            const cgltf_animation& gltf_animation = gltf_data->animations[animation_index];
+            CPUAnimation cpu_animation;
+            cpu_animation.name = gltf_animation.name ? gltf_animation.name : ("Animation_" + std::to_string(animation_index));
+
+            for (cgltf_size channel_index = 0; channel_index < gltf_animation.channels_count; ++channel_index)
+            {
+                const cgltf_animation_channel& gltf_channel = gltf_animation.channels[channel_index];
+
+                // Only handling rotation channels for now
+                if (gltf_channel.target_path != cgltf_animation_path_type_rotation)
+                {
+                    continue;
+                }
+
+                CPUAnimationChannel cpu_channel;
+                cpu_channel.targetNodeIndex = GetNodeIndex(gltf_data, gltf_channel.target_node);
+
+                if (cpu_channel.targetNodeIndex < 0 || !gltf_channel.sampler)
+                {
+                    continue;
+                }
+
+                const cgltf_accessor* input_accessor = gltf_channel.sampler->input;
+                const cgltf_accessor* output_accessor = gltf_channel.sampler->output;
+
+                // Extract Keyframe Times
+                cpu_channel.keyframeTimes.resize(input_accessor->count);
+                for (cgltf_size time_index = 0; time_index < input_accessor->count; ++time_index)
+                {
+                    cgltf_accessor_read_float(input_accessor, time_index, &cpu_channel.keyframeTimes[time_index], 1);
+                    cpu_animation.duration = std::max(cpu_animation.duration, cpu_channel.keyframeTimes[time_index]);
+                }
+
+                // Extract Keyframe Rotations
+                cpu_channel.keyframeRotations.resize(output_accessor->count);
+                for (cgltf_size rotation_index = 0; rotation_index < output_accessor->count; ++rotation_index)
+                {
+                    float rotation[4]; // gltf quaternions as [x, y, z, w]
+                    cgltf_accessor_read_float(output_accessor, rotation_index, rotation, 4);
+                    // glm::quat expects [w, x, y, z]
+                    cpu_channel.keyframeRotations[rotation_index] = glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]);
+                }
+
+                cpu_animation.channels.push_back(std::move(cpu_channel));
+            }
+            cpu_model.animations.push_back(std::move(cpu_animation));
         }
     }
 
