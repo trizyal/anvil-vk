@@ -168,7 +168,7 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
+    [[deprecated]] CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
 
     void UpdateAllMatrices(CPUModel& cpu_model);
 } //AnvilModelLoader

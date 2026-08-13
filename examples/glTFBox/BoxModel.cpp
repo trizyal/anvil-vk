@@ -132,15 +132,8 @@ void BoxModel::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.createShaderModule(ptrAContext->anvilDevice, vSpirv, "MaterialVertexShader"))
-    {
-        throw std::runtime_error("Failed to create vertex shader module!");
-    }
-
-    if (!fragmentShader.createShaderModule(ptrAContext->anvilDevice, fSpirv, "MaterialFragmentShader"))
-    {
-        throw std::runtime_error("Failed to create fragment shader module!");
-    }
+    vertexShader.createShaderModule(*ptrAContext, vSpirv, "MaterialVertexShader");
+    fragmentShader.createShaderModule(*ptrAContext, fSpirv, "MaterialFragmentShader");
 
     auto something = GPUMesh::getAttributeDescriptions();
 

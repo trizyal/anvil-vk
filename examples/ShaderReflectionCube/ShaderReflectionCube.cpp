@@ -90,7 +90,7 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain
     constants.renderMatrix = projection * view;
     vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(PushConstants), &constants);
 
-    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterial.materialDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterialInstance.descriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
@@ -125,8 +125,9 @@ void ShaderReflectionCube::loadPipeline()
     // Bind by name
     if (myTexture.imageView != VK_NULL_HANDLE)
     {
-        myMaterial.bindTexture("texSampler", myTexture);
-        myMaterial.updateDescriptorSets();
+        myMaterialInstance = myMaterial.createInstance(); // Spawn it!
+        myMaterialInstance.bindTexture("texSampler", myTexture);
+        myMaterialInstance.updateDescriptorSets();
     }
 
     auto attributesArray = GPUMesh::getAttributeDescriptions();

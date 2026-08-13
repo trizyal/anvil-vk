@@ -200,15 +200,8 @@ void HelloCube::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.createShaderModule(*ptrAContext, vSpirv))
-    {
-        throw std::runtime_error("Failed to create vertex shader module!");
-    }
-
-    if (!fragmentShader.createShaderModule(*ptrAContext, fSpirv))
-    {
-        throw std::runtime_error("Failed to create fragment shader module!");
-    }
+    vertexShader.createShaderModule(*ptrAContext, vSpirv);
+    fragmentShader.createShaderModule(*ptrAContext, fSpirv);
 
     // Vertex Descriptions
     std::vector<VkVertexInputBindingDescription> bindings = {
