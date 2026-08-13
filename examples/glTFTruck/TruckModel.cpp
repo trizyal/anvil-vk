@@ -40,8 +40,6 @@ void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchai
 
     shaderCompiler.addSearchPath(PROJECT_DIR);
     loadPipeline();
-
-    gpuModel.createGPUModel( *pContext, cpuModel, myMaterial, "sceneBuffer", myScene.sceneUBO, "texture");
 }
 
 void TruckModel::cleanupProject()
@@ -102,6 +100,8 @@ void TruckModel::loadPipeline()
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
         .buildPipeline(pContext->anvilDevice, myMaterial.materialPipelineLayout, "TruckModelPipeline");
+
+    gpuModel.createGPUModel( *pContext, cpuModel, myMaterial, "sceneBuffer", myScene.sceneUBO, "texture");
 }
 
 void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
