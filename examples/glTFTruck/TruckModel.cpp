@@ -137,44 +137,10 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilS
         animationTime += deltaTime;
         animationTime = fmod(animationTime, cpuModel.animations[0].duration);
 
-        for (const CPUAnimationChannel& channel : cpuModel.animations[0].channels)
-        {
-            if (channel.targetNodeIndex < 0 || channel.keyframeTimes.size() < 2) continue;
+        // Update matrices in the CPU
+        cpuModel.applyAnimation(0, animationTime);
 
-            size_t prevIdx = 0;
-            size_t nextIdx = 1;
-
-            for (size_t i = 0; i < channel.keyframeTimes.size() - 1; ++i)
-            {
-                if (animationTime >= channel.keyframeTimes[i] && animationTime <= channel.keyframeTimes[i + 1])
-                {
-                    prevIdx = i;
-                    nextIdx = i + 1;
-                    break;
-                }
-            }
-
-            float t0 = channel.keyframeTimes[prevIdx];
-            float t1 = channel.keyframeTimes[nextIdx];
-            float factor = (t1 > t0) ? (animationTime - t0) / (t1 - t0) : 0.0f;
-
-            glm::quat q0 = channel.keyframeRotations[prevIdx];
-            glm::quat q1 = channel.keyframeRotations[nextIdx];
-
-            // SLERP smoothly blends between the two rotations
-            glm::quat currentRot = glm::normalize(glm::slerp(q0, q1, factor));
-
-            CPUNode& node = cpuModel.nodes[channel.targetNodeIndex];
-            node.rotation = currentRot;
-
-            // Reconstruct the node's local matrix with the new rotation
-            node.localMatrix = glm::translate(glm::mat4(1.0f), node.translation) *
-                               glm::mat4_cast(node.rotation) *
-                               glm::scale(glm::mat4(1.0f), node.scale);
-        }
-
-        // Recursively update world matrices down the tree, then sync to GPU
-        ModelLoader::UpdateAllMatrices(cpuModel);
+        // Update the matrices in the GPU buffers.
         gpuModel.updateTransforms(cpuModel);
     }
 

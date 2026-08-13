@@ -123,12 +123,14 @@ struct CPUAnimation
     std::vector<CPUAnimationChannel> channels;
 };
 
-
 /**
  * @brief Full CPU-side model and scene data.
+ *
+ * @note Currently this class is copyable and movable both.
  */
-struct CPUModel
+class CPUModel
 {
+public:
     std::vector<CPUTexture> textures;
     std::vector<CPUMaterial> materials;
     std::vector<CPUMesh> meshes;
@@ -136,6 +138,32 @@ struct CPUModel
     std::vector<int> sceneRootNodes;
 
     std::vector<CPUAnimation> animations;
+
+    /**
+     * @brief Parses a glTF 2.0 file from disk and populates CPUModel.
+     *
+     * Reads `.gltf` or `.glb` files, extracting vertex positions, vertex colors, texture
+     * coordinates, and triangle indices into standard CPU vectors. This function performs
+     * disk I/O and parsing only; it does not allocate any Vulkan GPU resources.
+     *
+     * @param filePath Path to the `.gltf` or `.glb` file on disk.
+     *
+     * @throws std::runtime_error If the file cannot be read, or if parsing fails.
+     */
+    void loadGLTF(const std::string& filePath);
+
+    /**
+     * @brief Calculate all node and children matrices.
+     */
+    void updateAllMatrices();
+
+    /**
+     * @brief Interpolates and applies animation keyframes to the model's nodes.
+     *
+     * @param animationIndex The index of the CPUModel::animation to play.
+     * @param time The current playback time in seconds.
+     */
+    void applyAnimation(int animationIndex, float time);
 };
 
 /**
@@ -155,7 +183,7 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    CPUModel LoadGLTF(const std::string& filePath);
+    [[deprecated]] CPUModel LoadGLTF(const std::string& filePath);
 
     /**
      * @brief Legacy convenience loader that returns the first mesh/primitive only.
