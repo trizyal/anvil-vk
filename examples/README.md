@@ -44,6 +44,11 @@ Passing data via a uniform buffer `SceneData` with light direction, color and am
 - **Focus:** Complex meshes with scene nodes.
 - **Description:** Material refactored into material instance. Added simple rotation animation.
 
+### 08. BoxAnimated
+- **Path:** [BoxAnimated](BoxAnimated)
+- **Focus:** Simple shapes with animation.
+- **Description:** 
+
 ---
 
 ## Project Asset Licenses
