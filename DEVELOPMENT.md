@@ -53,6 +53,8 @@ anvil-vk/
 │   ├── TextureCube/             # Load texture from gltf, map uv
 │   ├── ShaderReflectionCube/    # Same as TextureCube, but using shader reflection instead
 │   ├── DirectionalLight/        # Load model, set up scene lighting and uniform buffers
+│   ├── glTFTruck
+│   ├── BoxAnimated/        
 │   └── # More to come   
 │      
 └── source/

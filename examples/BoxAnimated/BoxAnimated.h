@@ -1,8 +1,8 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef EXAMPLE_TRUCKMODEL_H
-#define EXAMPLE_TRUCKMODEL_H
+#ifndef EXAMPLE_BOXANIMATED_H
+#define EXAMPLE_BOXANIMATED_H
 
 #include <glm/glm.hpp>
 
@@ -25,18 +25,18 @@ struct PushConstants
     glm::vec4 baseColorFactor;
 };
 
-class TruckModel
+class BoxAnimated
 {
 private:
     VulkanContext* pContext = nullptr;
     VulkanSwapchain* pSwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
-    AnvilPipeline pipeline = {};
+    AnvilPipeline pipeline{};
     Camera camera;
-    Scene myScene;
+    Scene boxScene;
 
-    AnvilMaterial myMaterial;
+    AnvilMaterial boxMaterial;
 
     CPUModel cpuModel;
     GPUModel gpuModel;
@@ -44,13 +44,14 @@ private:
     float animationTime = 0.0f;
 
 public:
-    void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
+    void initializeProject(VulkanContext& inContext, VulkanSwapchain& inSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inSwapchain);
 
     void loadPipeline();
 };
 
-#endif //EXAMPLE_TRUCKMODEL_H
+
+#endif //EXAMPLE_BOXANIMATED_H
