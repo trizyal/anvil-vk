@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "GPUMesh.h"
-#include "ModelLoader.h"
+#include "CPUModel.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"
@@ -156,15 +156,8 @@ void TextureCube::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    if (!vertexShader.createShaderModule(*ptrAContext, vSpirv))
-    {
-        throw std::runtime_error("Failed to create vertex shader module!");
-    }
-
-    if (!fragmentShader.createShaderModule(*ptrAContext, fSpirv))
-    {
-        throw std::runtime_error("Failed to create fragment shader module!");
-    }
+    vertexShader.createShaderModule(*ptrAContext, vSpirv);
+    fragmentShader.createShaderModule(*ptrAContext, fSpirv);
 
     auto something = GPUMesh::getAttributeDescriptions();
 

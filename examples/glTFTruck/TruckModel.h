@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "AnvilMaterial.h"
 #include "GPUMesh.h"
+#include "GPUModel.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "Scene.h"
@@ -21,7 +22,8 @@ struct PushConstants
 {
     glm::mat4 renderMatrix; /**< Projection * View * Model */
     glm::mat4 modelMatrix;  /**< Model rotation for world-space normals */
-    glm::vec3 camera;
+    glm::vec4 camera;
+    glm::vec4 baseColorFactor;
 };
 
 class TruckModel
@@ -37,9 +39,10 @@ private:
 
     AnvilMaterial myMaterial;
 
-    CPUModel models;
-    std::vector<GPUMesh> meshBuffers;
-    std::vector<AnvilTexture> textures;
+    CPUModel cpuModel;
+    GPUModel gpuModel;
+
+    float animationTime = 0.0f;
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);

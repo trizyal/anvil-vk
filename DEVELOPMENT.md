@@ -70,16 +70,19 @@ anvil-vk/
     │   ├── AnvilMaterial.h
     │   ├── AnvilShaders.cpp
     │   ├── AnvilShaders.h
+    │   ├── CPUModel.cpp
+    │   ├── CPUModel.h
     │   ├── GPUMesh.cpp
     │   ├── GPUMesh.h
-    │   ├── ModelLoader.cpp
-    │   ├── ModelLoader.h
+    │   ├── GPUModel.cpp
+    │   ├── GPUModel.h
     │   ├── ShaderCompiler.cpp
     │   ├── ShaderCompiler.h
     │   ├── TextureLoader.cpp
     │   ├── TextureLoader.h
     │   │
     │   ├── context/
+    │   │   ├── VulkanConfig.h
     │   │   ├── VulkanContext.cpp
     │   │   ├── VulkanContext.h
     │   │   ├── VulkanDebug.cpp
@@ -106,8 +109,10 @@ anvil-vk/
     │   └── UIRenderer.h
     │
     └── scene/
-        ├── AnvilCamera.cpp
-        └── AnvilCamera.h
+        ├── Scene.cpp
+        ├── Scene.h
+        ├── Camera.cpp
+        └── Camera.h
 ```
 
 ## Conventions

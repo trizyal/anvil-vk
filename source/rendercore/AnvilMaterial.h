@@ -6,7 +6,7 @@
 
 /**
  * @file AnvilMaterial.h
- * @brief Material abstraction managing Slang shader compilation, reflection, and Vulkan descriptor binding.
+ * @brief Factory class managing Slang shader compilation, reflection, and Vulkan layouts.
  */
 
 #include <string>
@@ -16,6 +16,7 @@
 #include <slang-com-ptr.h>
 
 #include "GPUBuffer.h"
+#include "MaterialInstance.h"
 #include "ShaderCompiler.h"
 #include "ShaderModule.h"
 #include "TextureLoader.h"
@@ -37,13 +38,13 @@ struct ShaderBinding
 };
 
 /**
- * @brief Encapsulates shaders, pipeline layout, and GPU resource bindings for a renderable surface.
+ * @brief Encapsulates shaders and acts as a factory for Material Instances.
  *
- * Owns its vertex and fragment shader modules, Uses Slang reflection metadata during build time
+ * Owns the vertex and fragment shader modules. Uses Slang reflection metadata during build time
  * to automatically generate Vulkan descriptor set layouts, pipeline layouts, and descriptor pools.
- * Provides a string-based binding interface that batches descriptor updates on the CPU before flushing to the GPU.
+ * Creates and dispenses `AnvilMaterialInstance` objects for rendering.
  *
- * @note This class in non-copyable and non-movable. May need to change that.
+ * @note This class in non-copyable. Moving is allowed.
  *
  * @warning Only stores one pair of vertex and fragment shaders, may need re-architecting.
  */
@@ -55,8 +56,9 @@ public:
 
     AnvilMaterial(const AnvilMaterial&) = delete;
     AnvilMaterial& operator=(const AnvilMaterial&) = delete;
-    AnvilMaterial(AnvilMaterial&&) = delete;
-    AnvilMaterial& operator=(AnvilMaterial&&) = delete;
+
+    AnvilMaterial(AnvilMaterial&&) noexcept = default;
+    AnvilMaterial& operator=(AnvilMaterial&&) noexcept = default;
 
     /** Owned vertex shader module and associated SPIR-V bytecode. */
     ShaderModule vertexShader;
@@ -70,9 +72,6 @@ public:
     /** Pool allocated specifically for this material's descriptor sets. */
     VkDescriptorPool materialDescriptorPool = VK_NULL_HANDLE;
 
-    /** Allocated descriptor set instance for binding resources. */
-    VkDescriptorSet materialDescriptorSet = VK_NULL_HANDLE;
-
     /** Layout describing descriptor sets and push constants for this material. */
     VkPipelineLayout materialPipelineLayout = VK_NULL_HANDLE;
 
@@ -83,9 +82,9 @@ private:
     VulkanContext* pContext = nullptr;
 
     std::unordered_map<std::string, ShaderBinding> bindingMap;
-    std::vector<VkWriteDescriptorSet> pendingWrites;
-    std::vector<VkDescriptorImageInfo> pendingImageInfos;
-    std::vector<VkDescriptorBufferInfo> pendingBufferInfos;
+    // std::vector<VkWriteDescriptorSet> pendingWrites;
+    // std::vector<VkDescriptorImageInfo> pendingImageInfos;
+    // std::vector<VkDescriptorBufferInfo> pendingBufferInfos;
 
 public:
     /**
@@ -112,46 +111,23 @@ public:
     void destroyMaterial() const;
 
     /**
-     * @brief Queues a texture to be bound to a shader sampler variable by name.
+     * @brief Allocates a new material instance with its own Vulkan descriptor set.
      *
-     * Looks up the shader binding slot from reflection metadata and stages a descriptor write.
-     *
-     * @param name The variable name of the sampled texture in the Slang shader code.
-     * @param inTexture Reference to the loaded AnvilTexture resource.
-     *
-     * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
+     * @return A ready-to-use MaterialInstance tied to this material's layout.
      */
-    void bindTexture(const std::string& name, const AnvilTexture& inTexture);
+    [[nodiscard]] MaterialInstance createInstance() const;
 
     /**
-     * @brief Queues a uniform buffer to be bound to a shader uniform variable by name.
-     *
-     * Looks up the shader binding slot from reflection metadata and stages a descriptor write.
-     *
-     * @param name The variable name of the sampled texture in the Slang shader code.
-     * @param inBuffer Reference to the GPU buffer containing the Uniform data.
-     *
-     * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
+     * @brief Returns true if this material reflected a binding with the given shader variable name.
      */
-    void bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer);
+    [[nodiscard]] bool hasBinding(const std::string& name) const;
 
     /**
-     * @brief Flushes all queued texture and buffer bindings to the GPU descriptor set.
+     * @brief Retrieves reflected binding metadata by shader variable name.
      *
-     * Calls vkUpdateDescriptorSets for all pending writes staged via bindTexture() or
-     * bindUniformBuffer(), then clears the pending write queue.
-     *
-     * @note Only handles the following images and uniform buffers:
-     * @code
-     * VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
-     * VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-     * VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-     * @endcode
-     *
-     * @see bindTexture
-     * @see bindUniformBuffer
+     * @throws std::runtime_error If the binding does not exist.
      */
-    void updateDescriptorSets();
+    [[nodiscard]] ShaderBinding getBinding(const std::string& name) const;
 
 private:
     /**

@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "ModelLoader.h"
+#include "CPUModel.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -19,6 +19,7 @@ namespace
     void LoadMaterials(CPUModel& model, const cgltf_data* gltf_data);
     void LoadMeshes(CPUModel& cpu_model, const cgltf_data* gltf_data);
     void LoadNodes(CPUModel& cpu_model, const cgltf_data* gltf_data);
+    void LoadAnimations(CPUModel& cpu_model, const cgltf_data* gltf_data);
 
     int GetTextureIndex(const cgltf_data* data, const cgltf_texture* texture);
     int GetMaterialIndex(const cgltf_data* data, const cgltf_material* material);
@@ -31,81 +32,156 @@ namespace
     void ComputeWorldMatrices(CPUModel& cpu_model, int node_index, const glm::mat4& parent_matrix);
 }
 
+void CPUModel::loadGLTF(const std::string& filePath)
+{
+    cgltf_options options{};
+    cgltf_data* gltf_data = nullptr;
+
+    if (cgltf_parse_file(&options, filePath.c_str(), &gltf_data) != cgltf_result_success)
+    {
+        throw std::runtime_error("Failed to parse glTF file: " + filePath);
+    }
+
+    if (cgltf_load_buffers(&options, gltf_data, filePath.c_str()) != cgltf_result_success)
+    {
+        cgltf_free(gltf_data);
+        throw std::runtime_error("Failed to load GLTF file: " + filePath);
+    }
+
+    const std::string base_directory = GetBaseDirectory(filePath);
+
+    // Get textures from gltf
+    textures.reserve(gltf_data->textures_count);
+    LoadTextures(*this, gltf_data, base_directory);
+
+    // Get materials from gltf
+    materials.reserve(gltf_data->materials_count);
+    LoadMaterials(*this, gltf_data);
+
+    // Get mesh data from gltf
+    meshes.reserve(gltf_data->meshes_count);
+    LoadMeshes(*this, gltf_data);
+
+    // Get nodes from gltf
+    nodes.resize(gltf_data->nodes_count);
+    LoadNodes(*this, gltf_data);
+
+    // Get scene data from gltf
+    const cgltf_scene* scene = gltf_data->scene;
+    if (!scene && gltf_data->scenes_count > 0)
+    {
+        scene = &gltf_data->scenes[0];
+    }
+
+    if (scene)
+    {
+        sceneRootNodes.reserve(scene->nodes_count);
+        for (cgltf_size root_index = 0; root_index < scene->nodes_count; ++root_index)
+        {
+            const int node_index = GetNodeIndex(gltf_data, scene->nodes[root_index]);
+            if (node_index >= 0)
+            {
+                sceneRootNodes.push_back(node_index);
+            }
+        }
+    }
+
+    if (sceneRootNodes.empty())
+    {
+        for (int nodeIndex = 0; nodeIndex < static_cast<int>(nodes.size()); ++nodeIndex)
+        {
+            if (nodes[nodeIndex].parentIndex < 0)
+            {
+                sceneRootNodes.push_back(nodeIndex);
+            }
+        }
+    }
+
+    // Get animations from gltf
+    animations.reserve(gltf_data->animations_count);
+    LoadAnimations(*this, gltf_data);
+
+    updateAllMatrices();
+
+    cgltf_free(gltf_data);
+}
+
+void CPUModel::updateAllMatrices()
+{
+    for (const int rootNodeIndex : sceneRootNodes)
+    {
+        ComputeWorldMatrices(*this, rootNodeIndex, glm::mat4(1.0f));
+    }
+}
+
+void CPUModel::applyAnimation(int animationIndex, float time)
+{
+    if (animationIndex < 0 || animationIndex >= static_cast<int>(animations.size()))
+    {
+        return;
+    }
+
+    const CPUAnimation& animation = animations[animationIndex];
+
+    for (const CPUAnimationChannel& channel : animation.channels)
+    {
+        if (channel.targetNodeIndex < 0 || channel.keyframeTimes.size() < 2)
+        {
+            continue;
+        }
+
+        size_t previous_index = 0;
+        size_t next_index = 1;
+
+        // Find the keyframes we are currently between
+        for (size_t i = 0; i < channel.keyframeTimes.size() - 1; ++i)
+        {
+            if (time >= channel.keyframeTimes[i] && time <= channel.keyframeTimes[i + 1])
+            {
+                previous_index = i;
+                next_index = i + 1;
+                break;
+            }
+        }
+
+        // Calculate interpolation factor
+        const float t0 = channel.keyframeTimes[previous_index];
+        const float t1 = channel.keyframeTimes[next_index];
+        const float factor = (t1 > t0) ? (time - t0) / (t1 - t0) : 0.0f;
+
+        // Interpolate rotation
+        glm::quat q0 = channel.keyframeRotations[previous_index];
+        glm::quat q1 = channel.keyframeRotations[next_index];
+        glm::quat current_rotation = glm::normalize(glm::slerp(q0, q1, factor));
+
+        // Apply to CPU node
+        CPUNode& node = nodes[channel.targetNodeIndex];
+        node.rotation = current_rotation;
+
+        // Rebuild local matrix
+        node.localMatrix = glm::translate(glm::mat4(1.0f), node.translation) *
+                           glm::mat4_cast(node.rotation) *
+                           glm::scale(glm::mat4(1.0f), node.scale);
+    }
+
+    // Recursively update world matrices down the tree now that local transforms changed
+    updateAllMatrices();
+}
+
 namespace ModelLoader
 {
+    void UpdateAllMatrices(CPUModel& cpu_model)
+    {
+        for (const int rootNodeIndex : cpu_model.sceneRootNodes)
+        {
+            ComputeWorldMatrices(cpu_model, rootNodeIndex, glm::mat4(1.0f));
+        }
+    }
+
     CPUModel LoadGLTF(const std::string& filePath)
     {
-        cgltf_options options{};
-        cgltf_data* gltf_data = nullptr;
-
-        if (cgltf_parse_file(&options, filePath.c_str(), &gltf_data) != cgltf_result_success)
-        {
-            throw std::runtime_error("Failed to parse glTF file: " + filePath);
-        }
-
-        if (cgltf_load_buffers(&options, gltf_data, filePath.c_str()) != cgltf_result_success)
-        {
-            cgltf_free(gltf_data);
-            throw std::runtime_error("Failed to load GLTF file: " + filePath);
-        }
-
         CPUModel cpu_model;
-        const std::string base_directory = GetBaseDirectory(filePath);
-
-        // Get textures from gltf
-        cpu_model.textures.reserve(gltf_data->textures_count);
-        LoadTextures(cpu_model, gltf_data, base_directory);
-
-        // Get materials from gltf
-        cpu_model.materials.reserve(gltf_data->materials_count);
-        LoadMaterials(cpu_model, gltf_data);
-
-        // Get mesh data from gltf
-        cpu_model.meshes.reserve(gltf_data->meshes_count);
-        LoadMeshes(cpu_model, gltf_data);
-
-        // Get nodes from gltf
-        cpu_model.nodes.resize(gltf_data->nodes_count);
-        LoadNodes(cpu_model, gltf_data);
-
-        // Get scene data from gltf
-        const cgltf_scene* scene = gltf_data->scene;
-        if (!scene && gltf_data->scenes_count > 0)
-        {
-            scene = &gltf_data->scenes[0];
-        }
-
-        if (scene)
-        {
-            cpu_model.sceneRootNodes.reserve(scene->nodes_count);
-            for (cgltf_size root_index = 0; root_index < scene->nodes_count; ++root_index)
-            {
-                const int node_index = GetNodeIndex(gltf_data, scene->nodes[root_index]);
-                if (node_index >= 0)
-                {
-                    cpu_model.sceneRootNodes.push_back(node_index);
-                }
-            }
-        }
-
-        if (cpu_model.sceneRootNodes.empty())
-        {
-            for (int nodeIndex = 0; nodeIndex < static_cast<int>(cpu_model.nodes.size()); ++nodeIndex)
-            {
-                if (cpu_model.nodes[nodeIndex].parentIndex < 0)
-                {
-                    cpu_model.sceneRootNodes.push_back(nodeIndex);
-                }
-            }
-        }
-
-        for (const int root_node_index : cpu_model.sceneRootNodes)
-        {
-            // Root nodes don't have parents, so their world matrices have to be set.
-            ComputeWorldMatrices(cpu_model, root_node_index, glm::mat4(1.0f));
-        }
-
-        cgltf_free(gltf_data);
+        cpu_model.loadGLTF(filePath);
         return cpu_model;
     }
 
@@ -358,6 +434,59 @@ namespace
                     cpu_model.nodes[node_index].children.push_back(model_child_index);
                 }
             }
+        }
+    }
+
+    void LoadAnimations(CPUModel& cpu_model, const cgltf_data* gltf_data)
+    {
+        for (cgltf_size animation_index = 0; animation_index < gltf_data->animations_count; ++animation_index)
+        {
+            const cgltf_animation& gltf_animation = gltf_data->animations[animation_index];
+            CPUAnimation cpu_animation;
+            cpu_animation.name = gltf_animation.name ? gltf_animation.name : ("Animation_" + std::to_string(animation_index));
+
+            for (cgltf_size channel_index = 0; channel_index < gltf_animation.channels_count; ++channel_index)
+            {
+                const cgltf_animation_channel& gltf_channel = gltf_animation.channels[channel_index];
+
+                // Only handling rotation channels for now
+                if (gltf_channel.target_path != cgltf_animation_path_type_rotation)
+                {
+                    continue;
+                }
+
+                CPUAnimationChannel cpu_channel;
+                cpu_channel.targetNodeIndex = GetNodeIndex(gltf_data, gltf_channel.target_node);
+
+                if (cpu_channel.targetNodeIndex < 0 || !gltf_channel.sampler)
+                {
+                    continue;
+                }
+
+                const cgltf_accessor* input_accessor = gltf_channel.sampler->input;
+                const cgltf_accessor* output_accessor = gltf_channel.sampler->output;
+
+                // Extract Keyframe Times
+                cpu_channel.keyframeTimes.resize(input_accessor->count);
+                for (cgltf_size time_index = 0; time_index < input_accessor->count; ++time_index)
+                {
+                    cgltf_accessor_read_float(input_accessor, time_index, &cpu_channel.keyframeTimes[time_index], 1);
+                    cpu_animation.duration = std::max(cpu_animation.duration, cpu_channel.keyframeTimes[time_index]);
+                }
+
+                // Extract Keyframe Rotations
+                cpu_channel.keyframeRotations.resize(output_accessor->count);
+                for (cgltf_size rotation_index = 0; rotation_index < output_accessor->count; ++rotation_index)
+                {
+                    float rotation[4]; // gltf quaternions as [x, y, z, w]
+                    cgltf_accessor_read_float(output_accessor, rotation_index, rotation, 4);
+                    // glm::quat expects [w, x, y, z]
+                    cpu_channel.keyframeRotations[rotation_index] = glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]);
+                }
+
+                cpu_animation.channels.push_back(std::move(cpu_channel));
+            }
+            cpu_model.animations.push_back(std::move(cpu_animation));
         }
     }
 

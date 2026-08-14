@@ -39,6 +39,11 @@ uses reflected data to bind descriptors.
 - **Description:** Uniform buffer creation. Read normals from glTF file. Directional Light shaders doing a simple lighting equation. 
 Passing data via a uniform buffer `SceneData` with light direction, color and ambient color.
 
+### 07. glTFTruck
+- **Path:** [glTFTruck](glTFTruck)
+- **Focus:** Complex meshes with scene nodes.
+- **Description:** Material refactored into material instance. Added simple rotation animation.
+
 ---
 
 ## Project Asset Licenses

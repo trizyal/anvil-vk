@@ -35,6 +35,7 @@ private:
     // Things for textures
     AnvilTexture myTexture;
     AnvilMaterial myMaterial;
+    MaterialInstance myMaterialInstance;
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);

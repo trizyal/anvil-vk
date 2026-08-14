@@ -16,6 +16,7 @@ namespace VulkanResult
 								   "Call: " + functionName + "\n";
 
     		// Optional: Can also use std::cerr here if we want it in the console.
+    		std::cerr << error_message << std::endl;
     		throw std::runtime_error(error_message);
     	}
     }
