@@ -15,7 +15,7 @@
 
 #include "GPUBuffer.h"
 #include "VulkanContext.h"
-#include "ModelLoader.h"
+#include "CPUModel.h"
 
 /**
  * @brief Encapsulates GPU vertex and index buffers for an indexed 3D mesh.

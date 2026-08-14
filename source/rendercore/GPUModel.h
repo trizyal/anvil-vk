@@ -18,7 +18,7 @@
 #include "AnvilMaterial.h"
 #include "GPUMesh.h"
 #include "MaterialInstance.h"
-#include "ModelLoader.h"
+#include "CPUModel.h"
 #include "TextureLoader.h"
 
 class VulkanContext;

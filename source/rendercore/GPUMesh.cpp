@@ -3,7 +3,7 @@
 
 #include "GPUMesh.h"
 
-#include "ModelLoader.h"
+#include "CPUModel.h"
 
 GPUMesh::GPUMesh(GPUMesh&& other) noexcept
 {

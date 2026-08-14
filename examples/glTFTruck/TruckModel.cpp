@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "GPUMesh.h"
-#include "ModelLoader.h"
+#include "CPUModel.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"

@@ -5,7 +5,7 @@
 #define ANVIL_VK_MODELLOADER_H
 
 /**
- * @file ModelLoader.h
+ * @file CPUModel.h
  * @brief Utilities for loading 3D model files from disk into CPU-side mesh representations.
  */
 
