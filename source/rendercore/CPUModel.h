@@ -101,16 +101,30 @@ struct CPUNode
 };
 
 /**
+ * @brief
+ */
+enum class AnimationPath
+{
+    Unknown,
+    Translation,
+    Rotation,
+    Scale
+};
+
+/**
  * @brief A single animation channel targeting a node's transform.
  */
 struct CPUAnimationChannel
 {
     int targetNodeIndex = -1;
+    AnimationPath path = AnimationPath::Unknown;
 
     // For the current stage, we only care about rotation, but
     // a full engine would support translation and scale too.
     std::vector<float> keyframeTimes;
     std::vector<glm::quat> keyframeRotations;
+    std::vector<glm::vec3> keyframeTranslations;
+    std::vector<glm::vec3> keyframeScales;
 };
 
 /**

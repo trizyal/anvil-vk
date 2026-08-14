@@ -132,31 +132,63 @@ void CPUModel::applyAnimation(int animationIndex, float time)
 
         size_t previous_index = 0;
         size_t next_index = 1;
+        float factor = 0.0f;
 
-        // Find the keyframes we are currently between
-        for (size_t i = 0; i < channel.keyframeTimes.size() - 1; ++i)
+        // --- NEW CLAMPING LOGIC ---
+        if (time <= channel.keyframeTimes.front())
         {
-            if (time >= channel.keyframeTimes[i] && time <= channel.keyframeTimes[i + 1])
+            // Before the first frame: hold the first frame
+            previous_index = 0;
+            next_index = 0;
+            factor = 0.0f;
+        }
+        else if (time >= channel.keyframeTimes.back())
+        {
+            // After the last frame: hold the last frame
+            previous_index = channel.keyframeTimes.size() - 1;
+            next_index = channel.keyframeTimes.size() - 1;
+            factor = 0.0f;
+        }
+        else
+        {
+            // Find the keyframes we are currently between
+            for (size_t i = 0; i < channel.keyframeTimes.size() - 1; ++i)
             {
-                previous_index = i;
-                next_index = i + 1;
-                break;
+                if (time >= channel.keyframeTimes[i] && time <= channel.keyframeTimes[i + 1])
+                {
+                    previous_index = i;
+                    next_index = i + 1;
+
+                    const float t0 = channel.keyframeTimes[previous_index];
+                    const float t1 = channel.keyframeTimes[next_index];
+                    factor = (t1 > t0) ? (time - t0) / (t1 - t0) : 0.0f;
+                    break;
+                }
             }
         }
 
-        // Calculate interpolation factor
-        const float t0 = channel.keyframeTimes[previous_index];
-        const float t1 = channel.keyframeTimes[next_index];
-        const float factor = (t1 > t0) ? (time - t0) / (t1 - t0) : 0.0f;
-
-        // Interpolate rotation
-        glm::quat q0 = channel.keyframeRotations[previous_index];
-        glm::quat q1 = channel.keyframeRotations[next_index];
-        glm::quat current_rotation = glm::normalize(glm::slerp(q0, q1, factor));
-
         // Apply to CPU node
         CPUNode& node = nodes[channel.targetNodeIndex];
-        node.rotation = current_rotation;
+
+        // Apply interpolation based on path
+        if (channel.path == AnimationPath::Rotation)
+        {
+            glm::quat q0 = channel.keyframeRotations[previous_index];
+            glm::quat q1 = channel.keyframeRotations[next_index];
+            node.rotation = glm::normalize(glm::slerp(q0, q1, factor));
+        }
+        else if (channel.path == AnimationPath::Translation)
+        {
+            glm::vec3 v0 = channel.keyframeTranslations[previous_index];
+            glm::vec3 v1 = channel.keyframeTranslations[next_index];
+            node.translation = glm::mix(v0, v1, factor); // Linear interpolation
+        }
+        else if (channel.path == AnimationPath::Scale)
+        {
+            glm::vec3 s0 = channel.keyframeScales[previous_index];
+            glm::vec3 s1 = channel.keyframeScales[next_index];
+            node.scale = glm::mix(s0, s1, factor); // Linear interpolation
+        }
 
         // Rebuild local matrix
         node.localMatrix = glm::translate(glm::mat4(1.0f), node.translation) *
@@ -447,19 +479,32 @@ namespace
 
             for (cgltf_size channel_index = 0; channel_index < gltf_animation.channels_count; ++channel_index)
             {
+                CPUAnimationChannel cpu_channel;
                 const cgltf_animation_channel& gltf_channel = gltf_animation.channels[channel_index];
 
-                // Only handling rotation channels for now
-                if (gltf_channel.target_path != cgltf_animation_path_type_rotation)
-                {
-                    continue;
-                }
-
-                CPUAnimationChannel cpu_channel;
                 cpu_channel.targetNodeIndex = GetNodeIndex(gltf_data, gltf_channel.target_node);
 
                 if (cpu_channel.targetNodeIndex < 0 || !gltf_channel.sampler)
                 {
+                    continue;
+                }
+
+                // Determine the target path
+                if (gltf_channel.target_path == cgltf_animation_path_type_translation)
+                {
+                    cpu_channel.path = AnimationPath::Translation;
+                }
+                else if (gltf_channel.target_path == cgltf_animation_path_type_rotation)
+                {
+                    cpu_channel.path = AnimationPath::Rotation;
+                }
+                else if (gltf_channel.target_path == cgltf_animation_path_type_scale)
+                {
+                    cpu_channel.path = AnimationPath::Scale;
+                }
+                else
+                {
+                    // Skip weights/morphs for now
                     continue;
                 }
 
@@ -474,14 +519,35 @@ namespace
                     cpu_animation.duration = std::max(cpu_animation.duration, cpu_channel.keyframeTimes[time_index]);
                 }
 
-                // Extract Keyframe Rotations
-                cpu_channel.keyframeRotations.resize(output_accessor->count);
-                for (cgltf_size rotation_index = 0; rotation_index < output_accessor->count; ++rotation_index)
+                if (cpu_channel.path == AnimationPath::Rotation)
                 {
-                    float rotation[4]; // gltf quaternions as [x, y, z, w]
-                    cgltf_accessor_read_float(output_accessor, rotation_index, rotation, 4);
-                    // glm::quat expects [w, x, y, z]
-                    cpu_channel.keyframeRotations[rotation_index] = glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]);
+                    // Extract Keyframe Rotations
+                    cpu_channel.keyframeRotations.resize(output_accessor->count);
+                    for (cgltf_size rotation_index = 0; rotation_index < output_accessor->count; ++rotation_index)
+                    {
+                        float rotation[4]; // gltf quaternions as [x, y, z, w]
+                        cgltf_accessor_read_float(output_accessor, rotation_index, rotation, 4);
+                        // glm::quat expects [w, x, y, z]
+                        cpu_channel.keyframeRotations[rotation_index] = glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]);
+                    }
+                }
+                else if (cpu_channel.path == AnimationPath::Translation)
+                {
+                    cpu_channel.keyframeTranslations.resize(output_accessor->count);
+                    for (cgltf_size translation_index = 0; translation_index < output_accessor->count; ++translation_index)
+                    {
+                        auto& translations = cpu_channel.keyframeTranslations[translation_index];
+                        cgltf_accessor_read_float(output_accessor, translation_index, &translations.x, 3);
+                    }
+                }
+                else if (cpu_channel.path == AnimationPath::Scale)
+                {
+                    cpu_channel.keyframeScales.resize(output_accessor->count);
+                    for (cgltf_size scale_index = 0; scale_index < output_accessor->count; ++scale_index)
+                    {
+                        auto& scales = cpu_channel.keyframeScales[scale_index];
+                        cgltf_accessor_read_float(output_accessor, scale_index, &scales.x, 3);
+                    }
                 }
 
                 cpu_animation.channels.push_back(std::move(cpu_channel));
