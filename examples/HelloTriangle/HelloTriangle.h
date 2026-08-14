@@ -8,13 +8,13 @@
 #include "ShaderModule.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 
 class HelloTriangle
 {
 private:
     VulkanContext* ptrAContext = nullptr;
-    VulkanSwapchain* ptrASwapchain = nullptr;
+    Swapchain* ptrASwapchain = nullptr;
 
     ShaderModule vertexShader;
     ShaderModule fragmentShader;
@@ -24,11 +24,11 @@ private:
     ShaderCompiler shaderCompiler;
 
 public:
-    void initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
+    void initalizeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
 };

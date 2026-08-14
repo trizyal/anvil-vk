@@ -13,7 +13,7 @@
 #include "UIRenderer.h"
 #include "ShaderCompiler.h"
 
-void BoxAnimated::initializeProject(VulkanContext& inContext, VulkanSwapchain& inSwapchain)
+void BoxAnimated::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
 {
     pContext = &inContext;
     pSwapchain = &inSwapchain;
@@ -102,7 +102,7 @@ void BoxAnimated::loadPipeline()
     gpuModel.createGPUModel( *pContext, cpuModel, boxMaterial, "sceneBuffer", boxScene.sceneUBO, "texture");
 }
 
-void BoxAnimated::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inSwapchain)
+void BoxAnimated::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
         // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};

@@ -14,7 +14,7 @@
 #include "PipelineBuilder.h"
 #include "Scene.h"
 #include "ShaderCompiler.h"
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -29,7 +29,7 @@ class TruckModel
 {
 private:
     VulkanContext* pContext = nullptr;
-    VulkanSwapchain* pSwapchain = nullptr;
+    Swapchain* pSwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
@@ -44,11 +44,11 @@ private:
     float animationTime = 0.0f;
 
 public:
-    void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
+    void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
 };

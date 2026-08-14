@@ -10,7 +10,7 @@
  */
 
 #include <functional>
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 
 class AnvilWindow;
 /**
@@ -68,7 +68,7 @@ public:
 
 private:
     VulkanContext* pContext = nullptr;
-    VulkanSwapchain* pSwapchain = nullptr;
+    Swapchain* pSwapchain = nullptr;
 
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
     uint32_t anvilFrameIndex = 0;
@@ -87,7 +87,7 @@ public:
      *
      * @throws std::runtime_error If command pools, buffers, or sync objects fail to create.
      */
-    void initializeRenderer(VulkanContext* inAnvilContext, VulkanSwapchain* inAnvilSwapchain);
+    void initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain);
 
     /**
      * @brief Waits for the GPU to idle and destroys all per-frame Vulkan resources.
@@ -106,7 +106,7 @@ public:
      *
      * @note drawCallback is triggered after BeginRendering is called and before the UI renders.
      */
-    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& drawCallback);
+    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback);
 
 private:
     AnvilFrame& getCurrentFrame();

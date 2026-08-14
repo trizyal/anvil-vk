@@ -14,7 +14,7 @@
 #include "TextureLoader.h"
 #include "UIRenderer.h"
 
-void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void TruckModel::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     pContext = &inAnvilContext;
     pSwapchain = &inAnvilSwapchain;
@@ -104,7 +104,7 @@ void TruckModel::loadPipeline()
     gpuModel.createGPUModel( *pContext, cpuModel, myMaterial, "sceneBuffer", myScene.sceneUBO, "texture");
 }
 
-void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
+void TruckModel::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapchain)
 {
     // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};

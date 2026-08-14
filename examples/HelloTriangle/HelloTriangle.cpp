@@ -8,7 +8,7 @@
 
 #include "ShaderCompiler.h"
 
-void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -36,7 +36,7 @@ void HelloTriangle::cleanupProject()
     }
 }
 
-void HelloTriangle::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
+void HelloTriangle::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

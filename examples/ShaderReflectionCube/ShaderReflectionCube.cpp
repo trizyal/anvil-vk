@@ -14,7 +14,7 @@
 #include "TextureLoader.h"
 #include "UIRenderer.h"
 
-void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -54,7 +54,7 @@ void ShaderReflectionCube::cleanupProject()
     }
 }
 
-void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
+void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 
 #include <iostream>
 #include <sstream>
@@ -12,7 +12,7 @@
 #include "VulkanContext.h"
 #include "VulkanResult.h"
 
-void VulkanSwapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent)
+void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
     std::cout << "Creating AnvilSwapchain" << std::endl;
     pContext = &inAnvilContext;
@@ -66,7 +66,7 @@ void VulkanSwapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExten
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
 
-void VulkanSwapchain::recreateSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent)
+void Swapchain::recreateSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
     std::cout << "Re-Creating AnvilSwapchain" << std::endl;
 
@@ -156,7 +156,7 @@ void VulkanSwapchain::recreateSwapchain(VulkanContext& inAnvilContext, VkExtent2
     std::cout << "Finished creating AnvilSwapchain" << std::endl;
 }
 
-void VulkanSwapchain::createDepthAttachment()
+void Swapchain::createDepthAttachment()
 {
     // Create depth image via VMA
     VkImageCreateInfo depth_image_info{};
@@ -195,7 +195,7 @@ void VulkanSwapchain::createDepthAttachment()
     VulkanDebug::SetAutoName(pContext->anvilDevice, depthImage, VK_OBJECT_TYPE_IMAGE, "SwapchainDepthImage");
 }
 
-VulkanSwapchain::~VulkanSwapchain()
+Swapchain::~Swapchain()
 {
     for (VkImageView image_view: swapchainImageViews)
     {

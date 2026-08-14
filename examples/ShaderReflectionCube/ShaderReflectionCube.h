@@ -12,7 +12,7 @@
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 #include "TextureLoader.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
@@ -25,7 +25,7 @@ class ShaderReflectionCube
 {
 private:
     VulkanContext* ptrAContext = nullptr;
-    VulkanSwapchain* ptrASwapchain = nullptr;
+    Swapchain* ptrASwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
@@ -38,11 +38,11 @@ private:
     MaterialInstance myMaterialInstance;
 
 public:
-    void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
+    void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
 };

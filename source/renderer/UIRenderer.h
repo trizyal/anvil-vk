@@ -16,7 +16,7 @@
 #include "VulkanDebug.h"
 
 class VulkanContext;
-class VulkanSwapchain;
+class Swapchain;
 
 /**
  * @brief Subsystem responsible for initializing, recording, and rendering user interface overlay frames.
@@ -65,7 +65,7 @@ public:
      * @param inSwapchain Pointer to the active swapchain to query color and depth attachment formats.
      * @return `true` if ImGui initialization succeeded, `false` otherwise.
      */
-    bool initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, VulkanSwapchain* inSwapchain);
+    bool initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, Swapchain* inSwapchain);
 
     /**
      * @brief Starts a new ImGui frame for both the GLFW and Vulkan backends.

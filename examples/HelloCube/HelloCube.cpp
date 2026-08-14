@@ -87,7 +87,7 @@ const std::vector<uint16_t> cubeIndices = {
     20, 21, 22, 22, 23, 20
 };
 
-void HelloCube::initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void HelloCube::initalizeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -119,7 +119,7 @@ void HelloCube::cleanupProject()
     }
 }
 
-void HelloCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
+void HelloCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

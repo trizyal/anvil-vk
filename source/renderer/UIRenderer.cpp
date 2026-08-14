@@ -11,7 +11,7 @@
 #include <imgui_impl_vulkan.h>
 
 #include "VulkanConfig.h"
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 #include "VulkanContext.h"
 #include "VulkanDebug.h"
 #include "VulkanResult.h"
@@ -53,7 +53,7 @@ namespace
     };
 }
 
-bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, VulkanSwapchain* inSwapchain)
+bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, Swapchain* inSwapchain)
 {
     pContext = inContext;
 

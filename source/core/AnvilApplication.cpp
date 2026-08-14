@@ -47,7 +47,7 @@ void AnvilApplication::shutdownAnvil()
     anvilInitialized = false;
 }
 
-void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& renderCallback)
+void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback)
 {
     if (!anvilInitialized)
     {
@@ -109,7 +109,7 @@ VulkanContext& AnvilApplication::getAnvilContext()
     return anvilContext;
 }
 
-VulkanSwapchain& AnvilApplication::getAnvilSwapchain()
+Swapchain& AnvilApplication::getAnvilSwapchain()
 {
     return anvilSwapchain;
 }

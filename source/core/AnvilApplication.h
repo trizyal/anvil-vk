@@ -15,7 +15,7 @@
 
 #include "AnvilWindow.h"
 #include "VulkanContext.h"
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 #include "AnvilRenderer.h"
 #include "UIRenderer.h"
 
@@ -59,7 +59,7 @@ public:
 private:
     std::unique_ptr<AnvilWindow> anvilWindow;
     VulkanContext anvilContext;
-    VulkanSwapchain anvilSwapchain;
+    Swapchain anvilSwapchain;
     AnvilRenderer anvilRenderer;
     UIRenderer anvilUIRenderer;
     bool anvilInitialized = false;
@@ -87,7 +87,7 @@ public:
      * @throws std::runtime_error If the AnvilApplication is uninitialized or `drawFrame` throws.
      * @attention Shader reloading happening here is not ideal.
      */
-    void runAnvil(const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& renderCallback);
+    void runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback);
 
     /**
      * @brief Shuts down the engine and safely destroys all Vulkan and window resources.
@@ -123,7 +123,7 @@ public:
      * @return Reference to the AnvilSwapchain instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] VulkanSwapchain& getAnvilSwapchain();
+    [[nodiscard]] Swapchain& getAnvilSwapchain();
 
     /**
      * @brief Retrieves the main renderer responsible for command buffer orchestration.
