@@ -5,7 +5,7 @@
 #define ANVIL_VK_SWAPCHAIN_H
 
 /**
- * @file VulkanSwapchain.h
+ * @file Swapchain.h
  * @brief Encapsulates a Vulkan swapchain, color image views, and a dedicated depth buffer attachment.
  */
 

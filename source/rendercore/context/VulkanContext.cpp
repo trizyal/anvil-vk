@@ -15,7 +15,7 @@
 
 #include <VkBootstrap.h>
 
-#include "VulkanDebug.h"
+#include "DebugNames.h"
 #include "VulkanResult.h"
 #include "AnvilWindow.h"
 #include "VulkanConfig.h"

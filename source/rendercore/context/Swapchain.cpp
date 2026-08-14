@@ -8,7 +8,7 @@
 
 #include <VkBootstrap.h>
 
-#include "VulkanDebug.h"
+#include "DebugNames.h"
 #include "VulkanContext.h"
 #include "VulkanResult.h"
 

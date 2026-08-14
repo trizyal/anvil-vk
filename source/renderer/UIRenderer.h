@@ -13,7 +13,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "VulkanDebug.h"
+#include "DebugNames.h"
 
 class VulkanContext;
 class Swapchain;

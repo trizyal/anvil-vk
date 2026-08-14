@@ -13,7 +13,7 @@
 #include "VulkanConfig.h"
 #include "Swapchain.h"
 #include "VulkanContext.h"
-#include "VulkanDebug.h"
+#include "DebugNames.h"
 #include "VulkanResult.h"
 
 namespace

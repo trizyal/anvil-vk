@@ -10,7 +10,7 @@
 #include "UIRenderer.h"
 #include "VulkanContext.h"
 #include "AnvilWindow.h"
-#include "VulkanDebug.h"
+#include "DebugNames.h"
 #include "VulkanResult.h"
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)

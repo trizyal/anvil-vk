@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <ranges>
 
-#include "VulkanDebug.h"
+#include "DebugNames.h"
 #include "VulkanResult.h"
 
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
