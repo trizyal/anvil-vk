@@ -40,7 +40,7 @@ void AnvilApplication::shutdownAnvil()
         return;
     }
 
-    vkDeviceWaitIdle(anvilContext.anvilDevice);
+    vkDeviceWaitIdle(anvilContext.device);
 
     anvilWindow.reset();
 
@@ -71,7 +71,7 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, Swapch
                 std::cout << "[Anvil] Hot-reload triggered. Pausing GPU..." << std::endl;
 
                 // Safely wait for all GPU work to finish BEFORE the project destroys pipelines
-                vkDeviceWaitIdle(anvilContext.anvilDevice);
+                vkDeviceWaitIdle(anvilContext.device);
 
                 for (auto& callback : shaderReloadQueue) {
                     callback();
@@ -91,7 +91,7 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, Swapch
         UIRenderer::EndUIFrame();
     }
 
-    vkDeviceWaitIdle(anvilContext.anvilDevice);
+    vkDeviceWaitIdle(anvilContext.device);
 }
 
 void AnvilApplication::addShaderReloadCallback(const std::function<void()>& shaderCallback)

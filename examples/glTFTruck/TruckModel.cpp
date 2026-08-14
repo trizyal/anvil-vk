@@ -46,14 +46,14 @@ void TruckModel::cleanupProject()
 {
     if (pContext)
     {
-        vkDeviceWaitIdle(pContext->anvilDevice);
+        vkDeviceWaitIdle(pContext->device);
 
         gpuModel.destroyGPUModel();
         myMaterial.destroyMaterial();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
-            vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+            vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
             pipeline.pipeline = VK_NULL_HANDLE;
         }
 
@@ -69,7 +69,7 @@ void TruckModel::loadPipeline()
 
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         myMaterial.destroyMaterial();
     }
@@ -99,7 +99,7 @@ void TruckModel::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->anvilDevice, myMaterial.materialPipelineLayout, "TruckModelPipeline");
+        .buildPipeline(pContext->device, myMaterial.materialPipelineLayout, "TruckModelPipeline");
 
     gpuModel.createGPUModel( *pContext, cpuModel, myMaterial, "sceneBuffer", myScene.sceneUBO, "texture");
 }

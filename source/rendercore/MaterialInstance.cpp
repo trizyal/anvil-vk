@@ -124,7 +124,7 @@ void MaterialInstance::updateDescriptorSets()
         }
     }
 
-    vkUpdateDescriptorSets(pContext->anvilDevice, static_cast<uint32_t>(writes_vector.size()), writes_vector.data(), 0, nullptr);
+    vkUpdateDescriptorSets(pContext->device, static_cast<uint32_t>(writes_vector.size()), writes_vector.data(), 0, nullptr);
 
     pendingTextures.clear();
     pendingBuffers.clear();

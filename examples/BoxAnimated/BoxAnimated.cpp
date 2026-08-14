@@ -45,14 +45,14 @@ void BoxAnimated::cleanupProject()
 {
     if (pContext)
     {
-        vkDeviceWaitIdle(pContext->anvilDevice);
+        vkDeviceWaitIdle(pContext->device);
 
         gpuModel.destroyGPUModel();
         boxMaterial.destroyMaterial();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
-            vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+            vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
             pipeline.pipeline = VK_NULL_HANDLE;
         }
 
@@ -67,7 +67,7 @@ void BoxAnimated::loadPipeline()
     shaderCompiler.resetSession();
     if (pipeline.pipeline != VK_NULL_HANDLE)
     {
-        vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         boxMaterial.destroyMaterial();
     }
@@ -97,7 +97,7 @@ void BoxAnimated::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->anvilDevice, boxMaterial.materialPipelineLayout, "BoxAnimatedPipeline");
+        .buildPipeline(pContext->device, boxMaterial.materialPipelineLayout, "BoxAnimatedPipeline");
 
     gpuModel.createGPUModel( *pContext, cpuModel, boxMaterial, "sceneBuffer", boxScene.sceneUBO, "texture");
 }

@@ -61,7 +61,7 @@ void DirectionalLight::cleanupProject()
         // myScene.destroyScene();
         myMaterial.destroyMaterial();
         meshBuffer.destroyGPUMesh();
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
     }
 }
 
@@ -72,7 +72,7 @@ void DirectionalLight::loadPipeline()
     std::cout << "Creating DirectionalLight pipeline." << std::endl;
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
         myMaterial.destroyMaterial();
     }
 
@@ -110,7 +110,7 @@ void DirectionalLight::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout, "DirectionalLightPipeline");
+        .buildPipeline(ptrAContext->device, myMaterial.materialPipelineLayout, "DirectionalLightPipeline");
 }
 
 void DirectionalLight::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapchain)

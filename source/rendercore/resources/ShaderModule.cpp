@@ -28,7 +28,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& other) noexcept
 void ShaderModule::createShaderModule(const VulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
         ANVIL_DEBUG_DEFN)
 {
-    device = inContext.anvilDevice;
+    device = inContext.device;
     if (!inSPIRV.isValid())
     {
         throw std::runtime_error("Cannot create shader module from invalid SPIR-V bytecode.");

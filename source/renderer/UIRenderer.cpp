@@ -57,7 +57,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 {
     pContext = inContext;
 
-    VkDevice device = inContext->anvilDevice;
+    VkDevice device = inContext->device;
 
     createDescriptorPool(device, "ImGuiDescriptorPool");
 
@@ -85,11 +85,11 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.ApiVersion = AnvilVulkan::API_VERSION;
-    init_info.Instance = inContext->anvilInstance;
-    init_info.PhysicalDevice = inContext->anvilPhysicalDevice;
+    init_info.Instance = inContext->instance;
+    init_info.PhysicalDevice = inContext->physicalDevice;
     init_info.Device = device;
-    init_info.QueueFamily = inContext->anvilGraphicsQueueIndex;
-    init_info.Queue = inContext->anvilGraphicsQueue;
+    init_info.QueueFamily = inContext->graphicsQueueIndex;
+    init_info.Queue = inContext->graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = imguiPool;
     init_info.MinImageCount = 2;
@@ -119,7 +119,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
         [](const char* function_name, void* user_data) {
             return glfwGetInstanceProcAddress(*static_cast<VkInstance*>(user_data), function_name);
         },
-        &inContext->anvilInstance
+        &inContext->instance
     );
 
     ImGui_ImplVulkan_Init(&init_info);
@@ -129,9 +129,9 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 
 UIRenderer::~UIRenderer()
 {
-    if (pContext->anvilDevice)
+    if (pContext->device)
     {
-        vkDeviceWaitIdle(pContext->anvilDevice);
+        vkDeviceWaitIdle(pContext->device);
     }
 
     // CRITICAL: Force ImGui to destroy viewport command buffers before shutting down
@@ -147,7 +147,7 @@ UIRenderer::~UIRenderer()
 
     if (imguiPool != VK_NULL_HANDLE)
     {
-        vkDestroyDescriptorPool(pContext->anvilDevice, imguiPool, nullptr);
+        vkDestroyDescriptorPool(pContext->device, imguiPool, nullptr);
         imguiPool = VK_NULL_HANDLE;
     }
 }

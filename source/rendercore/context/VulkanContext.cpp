@@ -74,16 +74,16 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     }
 
     const vkb::Instance vkb_instance = vkb_instance_result.value();
-    anvilInstance = vkb_instance.instance;
-    anvilDebugMessenger = vkb_instance.debug_messenger;
+    instance = vkb_instance.instance;
+    debugMessenger = vkb_instance.debug_messenger;
 
     // --------------------------------
     // Load Instance functions into Volk
-    volkLoadInstance(anvilInstance);
+    volkLoadInstance(instance);
 
     // --------------------------------
     // Create Surface
-    anvilSurface = inWindow.createSurface(anvilInstance);
+    surface = inWindow.createSurface(instance);
 
     // --------------------------------
     // Select Physical Device
@@ -97,7 +97,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     features11.shaderDrawParameters = VK_TRUE;
 
     vkb::PhysicalDeviceSelector vkb_physical_device_selector{vkb_instance};
-    vkb_physical_device_selector.set_surface(anvilSurface);
+    vkb_physical_device_selector.set_surface(surface);
     vkb_physical_device_selector.set_minimum_version(AnvilVulkan::API_VERSION_MAJOR, AnvilVulkan::API_VERSION_MINOR);
     vkb_physical_device_selector.add_required_extension_features(features13);
     vkb_physical_device_selector.add_required_extension_features(features11);
@@ -122,7 +122,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     }
 
     const vkb::PhysicalDevice& vkb_physical_device = vkb_physical_device_result.value();
-    anvilPhysicalDevice = vkb_physical_device.physical_device;
+    physicalDevice = vkb_physical_device.physical_device;
 
     // --------------------------------
     // Build Logical Device
@@ -138,16 +138,16 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     }
 
     const vkb::Device& vkb_device = vkb_device_result.value();
-    anvilDevice = vkb_device.device;
+    device = vkb_device.device;
 
     // --------------------------------
     // Load Device functions into Volk
-    volkLoadDevice(anvilDevice);
+    volkLoadDevice(device);
 
     // --------------------------------
     // Get Queues
-    anvilGraphicsQueue = vkb_device.get_queue(vkb::QueueType::graphics).value();
-    anvilGraphicsQueueIndex = vkb_device.get_queue_index(vkb::QueueType::graphics).value();
+    graphicsQueue = vkb_device.get_queue(vkb::QueueType::graphics).value();
+    graphicsQueueIndex = vkb_device.get_queue_index(vkb::QueueType::graphics).value();
 
     // --------------------------------
     // Initialise Vulkan Memory Allocator
@@ -156,13 +156,13 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     vma_vulkan_functions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
 
     VmaAllocatorCreateInfo allocator_create_info = {};
-    allocator_create_info.physicalDevice = anvilPhysicalDevice;
-    allocator_create_info.device = anvilDevice;
-    allocator_create_info.instance = anvilInstance;
+    allocator_create_info.physicalDevice = physicalDevice;
+    allocator_create_info.device = device;
+    allocator_create_info.instance = instance;
     allocator_create_info.pVulkanFunctions = &vma_vulkan_functions;
     allocator_create_info.vulkanApiVersion = AnvilVulkan::API_VERSION;
 
-    const VkResult vma_result = vmaCreateAllocator(&allocator_create_info, &anvilAllocator);
+    const VkResult vma_result = vmaCreateAllocator(&allocator_create_info, &allocator);
     if (vma_result != VK_SUCCESS)
     {
         throw std::runtime_error(std::string("Failed to create Vulkan Memory Allocator. VkResult: ") + VulkanResult::ToString(vma_result));
@@ -173,9 +173,9 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     VkCommandPoolCreateInfo upload_pool_info{};
     upload_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     upload_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    upload_pool_info.queueFamilyIndex = anvilGraphicsQueueIndex;
+    upload_pool_info.queueFamilyIndex = graphicsQueueIndex;
 
-    const VkResult pool_result = vkCreateCommandPool(anvilDevice, &upload_pool_info, nullptr, &uploadCommandPool);
+    const VkResult pool_result = vkCreateCommandPool(device, &upload_pool_info, nullptr, &uploadCommandPool);
     if (pool_result != VK_SUCCESS)
     {
         throw std::runtime_error(std::string("Failed to create upload command pool. VkResult: ") + VulkanResult::ToString(pool_result));
@@ -184,7 +184,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
     VkFenceCreateInfo upload_fence_info{};
     upload_fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-    const VkResult fence_result = vkCreateFence(anvilDevice, &upload_fence_info, nullptr, &uploadFence);
+    const VkResult fence_result = vkCreateFence(device, &upload_fence_info, nullptr, &uploadFence);
     if (fence_result != VK_SUCCESS)
     {
         throw std::runtime_error(std::string("Failed to create upload fence. VkResult: ") + VulkanResult::ToString(fence_result));
@@ -202,7 +202,7 @@ void VulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&&
     alloc_info.commandBufferCount = 1;
 
     VkCommandBuffer cmd;
-    vkAllocateCommandBuffers(anvilDevice, &alloc_info, &cmd);
+    vkAllocateCommandBuffers(device, &alloc_info, &cmd);
 
     VkCommandBufferBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -217,23 +217,23 @@ void VulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&&
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd;
 
-    vkQueueSubmit(anvilGraphicsQueue, 1, &submit_info, uploadFence);
-    vkWaitForFences(anvilDevice, 1, &uploadFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(anvilDevice, 1, &uploadFence);
+    vkQueueSubmit(graphicsQueue, 1, &submit_info, uploadFence);
+    vkWaitForFences(device, 1, &uploadFence, VK_TRUE, UINT64_MAX);
+    vkResetFences(device, 1, &uploadFence);
 
-    vkFreeCommandBuffers(anvilDevice, uploadCommandPool, 1, &cmd);
+    vkFreeCommandBuffers(device, uploadCommandPool, 1, &cmd);
 }
 
 VulkanContext::~VulkanContext()
 {
-    vkDestroyFence(anvilDevice, uploadFence, nullptr);
-    vkDestroyCommandPool(anvilDevice, uploadCommandPool, nullptr);
-    vmaDestroyAllocator(anvilAllocator);
+    vkDestroyFence(device, uploadFence, nullptr);
+    vkDestroyCommandPool(device, uploadCommandPool, nullptr);
+    vmaDestroyAllocator(allocator);
 
-    vkDestroyDevice(anvilDevice, nullptr);
-    vkDestroySurfaceKHR(anvilInstance, anvilSurface, nullptr);
+    vkDestroyDevice(device, nullptr);
+    vkDestroySurfaceKHR(instance, surface, nullptr);
 #ifndef NDEBUG
-    vkb::destroy_debug_utils_messenger(anvilInstance, anvilDebugMessenger);
+    vkb::destroy_debug_utils_messenger(instance, debugMessenger);
 #endif
-    vkDestroyInstance(anvilInstance, nullptr);
+    vkDestroyInstance(instance, nullptr);
 }

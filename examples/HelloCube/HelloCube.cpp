@@ -112,8 +112,8 @@ void HelloCube::cleanupProject()
     {
         vertexBuffer.destroyBuffer();
         indexBuffer.destroyBuffer();
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
         fragmentShader.destroyShaderModule();
     }
@@ -170,8 +170,8 @@ void HelloCube::loadPipeline()
 
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
     }
     vertexShader.destroyShaderModule();
     fragmentShader.destroyShaderModule();
@@ -186,7 +186,7 @@ void HelloCube::loadPipeline()
     layoutInfo.pushConstantRangeCount = 1;
     layoutInfo.pPushConstantRanges = &pushConstantRange;
 
-    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(ptrAContext->device, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create pipeline layout!");
     }
@@ -223,14 +223,14 @@ void HelloCube::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, pipelineLayout);
+        .buildPipeline(ptrAContext->device, pipelineLayout);
 }
 
 void HelloCube::createBuffers()
 {
     vertexBuffer.createBuffer(
-        ptrAContext->anvilAllocator,
-        ptrAContext->anvilDevice,
+        ptrAContext->allocator,
+        ptrAContext->device,
         cubeVertices.data(),
         cubeVertices.size() * sizeof(Vertex),
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -238,8 +238,8 @@ void HelloCube::createBuffers()
     );
 
     indexBuffer.createBuffer(
-        ptrAContext->anvilAllocator,
-        ptrAContext->anvilDevice,
+        ptrAContext->allocator,
+        ptrAContext->device,
         cubeIndices.data(),
         cubeIndices.size() * sizeof(uint16_t),
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
