@@ -12,9 +12,17 @@
  */
 
 #include <glm/glm.hpp>
+#include <imgui.h>
 
 namespace UI
 {
+    inline const char* FontPath = ASSETS_DIR "/fonts/Open_Sans/OpenSans-Regular.ttf";
+    inline ImFont* base = nullptr;
+    inline ImFont* debugUI = nullptr;
+    inline ImFont* debugLog = nullptr;
+
+    void LoadFonts();
+
     void FrameStats(const FrameStats& stats, bool* pOpen = nullptr);
 
     /**
