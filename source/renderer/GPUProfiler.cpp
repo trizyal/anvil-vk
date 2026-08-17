@@ -17,6 +17,7 @@ void GPUProfiler::initializeGPUProfiler(VulkanContext* inContext, float inTimePe
     query_pool_info.queryCount = 2; // 0 = Start, 1 = End
 
     queryPools.resize(maxFramesInFlight);
+    querySubmitted.resize(maxFramesInFlight, 0);
     for (uint32_t i = 0; i < maxFramesInFlight; i++)
     {
         CHECK(vkCreateQueryPool(pContext->device, &query_pool_info, nullptr, &queryPools[i]));
@@ -44,14 +45,22 @@ void GPUProfiler::beginGPUProfilerFrame(VkCommandBuffer inCmdBuffer, const uint3
     vkCmdWriteTimestamp(inCmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPools[frameIndex], 0);
 }
 
-void GPUProfiler::endGPUProfilerFrame(VkCommandBuffer inCmdBuffer, const uint32_t frameIndex) const
+void GPUProfiler::endGPUProfilerFrame(VkCommandBuffer inCmdBuffer, const uint32_t frameIndex)
 {
     // Write Bottom of Pipe (after all graphics commands finish)
     vkCmdWriteTimestamp(inCmdBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[frameIndex], 1);
+
+    // Mark this query as successfully recorded so we can safely read it next time!
+    querySubmitted[frameIndex] = 1;
 }
 
 float GPUProfiler::getGPUTime(uint32_t frameIndex) const
 {
+    if (!querySubmitted[frameIndex])
+    {
+        return 0.0f;
+    }
+
     uint64_t timestamps[2] = {0, 0};
 
     // Attempt to read the results. If VK_NOT_READY is returned, it means the GPU

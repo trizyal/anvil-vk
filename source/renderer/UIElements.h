@@ -4,6 +4,8 @@
 #ifndef ANVIL_VK_UIELEMENTS_H
 #define ANVIL_VK_UIELEMENTS_H
 
+#include "FrameStats.h"
+
 /**
  * @file UIElements.h
  * @brief Free functions for different UI elements.
@@ -13,7 +15,7 @@
 
 namespace UI
 {
-    void FrameStats();
+    void FrameStats(const FrameStats& stats, bool* pOpen = nullptr);
 
     /**
      * @brief Renders a debug 3D orientation axis overlay in a corner of the viewport.

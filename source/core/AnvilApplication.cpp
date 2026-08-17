@@ -56,6 +56,8 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, Swapch
 
     while (!anvilWindow->bShouldClose())
     {
+        auto frame_start = std::chrono::high_resolution_clock::now();
+
         AnvilWindow::pollEvents();
         AnvilInput::UpdateInputs();
 
@@ -89,6 +91,9 @@ void AnvilApplication::runAnvil(const std::function<void(VkCommandBuffer, Swapch
         anvilRenderer.drawFrame(*anvilWindow, renderCallback);
 
         UIRenderer::EndUIFrame();
+
+        auto frame_end = std::chrono::high_resolution_clock::now();
+        AnvilRenderer::engineStats.frameTime = std::chrono::duration<float, std::milli>(frame_end - frame_start).count();
     }
 
     vkDeviceWaitIdle(anvilContext.device);

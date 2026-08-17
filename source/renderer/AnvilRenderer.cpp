@@ -11,6 +11,7 @@
 #include "VulkanContext.h"
 #include "AnvilWindow.h"
 #include "DebugNames.h"
+#include "UIElements.h"
 #include "VulkanResult.h"
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
@@ -111,6 +112,9 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     VkCommandBuffer cmd = frame.cmdBuffer;
     vkResetCommandBuffer(cmd, 0);
 
+    engineStats.resetFrameStats();
+    auto cpu_start = std::chrono::high_resolution_clock::now();
+
     VkCommandBufferBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -158,6 +162,8 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         drawCallback(cmd, pSwapchain);
     }
 
+    engineStats.fps = 1000.f/engineStats.frameTime;
+    UI::FrameStats(engineStats);
     UIRenderer::RecordUICommands(cmd);
 
     vkCmdEndRendering(cmd);
@@ -171,6 +177,9 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
 
     // End command buffer
     vkEndCommandBuffer(cmd);
+
+    auto cpu_end = std::chrono::high_resolution_clock::now();
+    engineStats.cpuTime = std::chrono::duration<float, std::milli>(cpu_end - cpu_start).count();
 
     // Submit command buffer
     VkSubmitInfo submit_info{};
@@ -219,7 +228,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         throw std::runtime_error(error_stream.str());
     }
 
-    // std::cout << gpuProfiler.getGPUTime(anvilFrameIndex) << std::endl;
+    engineStats.gpuTime = gpuProfiler.getGPUTime(anvilFrameIndex);
 
     anvilFrameIndex++;
     assert(sizeof(anvilFrames) / sizeof(AnvilFrame) == FRAMES_IN_FLIGHT);

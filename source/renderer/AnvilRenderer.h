@@ -11,6 +11,7 @@
 
 #include <functional>
 
+#include "FrameStats.h"
 #include "GPUProfiler.h"
 #include "Swapchain.h"
 
@@ -83,6 +84,8 @@ private:
     GPUProfiler gpuProfiler;
 
 public:
+    inline static FrameStats engineStats;
+
     /**
      * @brief Initializes frame resources, command pools, and synchronization primitives.
      *

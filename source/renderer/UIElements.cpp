@@ -31,6 +31,65 @@ namespace
 
 namespace UI
 {
+    void FrameStats(const ::FrameStats& stats, bool* pOpen)
+    {
+        const float PAD = 10.0f;
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 workPos = viewport->WorkPos;
+        ImVec2 workSize = viewport->WorkSize;
+        ImVec2 windowPos(workPos.x + workSize.x - PAD, workPos.y + PAD);
+
+        ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+        ImGui::SetNextWindowBgAlpha(0.6f); // UE5 transparent black
+
+        ImGuiWindowFlags flags =
+            ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_AlwaysAutoResize |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_NoFocusOnAppearing |
+            ImGuiWindowFlags_NoNav |
+            ImGuiWindowFlags_NoMove;
+
+        if (ImGui::Begin("AnvilStatUnitOverlay", pOpen, flags))
+        {
+            auto getMetricColor = [](float ms) -> ImVec4 {
+                if (ms < 16.67f) return ImVec4(0.4f, 1.0f, 0.4f, 1.0f); // Green
+                if (ms < 33.33f) return ImVec4(1.0f, 0.8f, 0.2f, 1.0f); // Yellow
+                return ImVec4(1.0f, 0.3f, 0.3f, 1.0f);                  // Red
+            };
+
+            ImGui::TextDisabled("STAT UNIT");
+            ImGui::Separator();
+
+            ImGui::Text("FPS:");
+            ImGui::SameLine(80.0f);
+            ImGui::TextColored(getMetricColor(1000.0f / (stats.fps + 0.001f)), "%.1f", stats.fps);
+
+            ImGui::Text("Frame:");
+            ImGui::SameLine(80.0f);
+            ImGui::TextColored(getMetricColor(stats.frameTime), "%.2f ms", stats.frameTime);
+
+            ImGui::Text("CPU:");
+            ImGui::SameLine(80.0f);
+            ImGui::TextColored(getMetricColor(stats.cpuTime), "%.2f ms", stats.cpuTime);
+
+            ImGui::Text("GPU:");
+            ImGui::SameLine(80.0f);
+            ImGui::TextColored(getMetricColor(stats.gpuTime), "%.2f ms", stats.gpuTime);
+
+            ImGui::Separator();
+
+            ImGui::Text("Draws:");
+            ImGui::SameLine(80.0f);
+            ImGui::Text("%u", stats.drawCalls);
+
+            ImGui::Text("Prims:");
+            ImGui::SameLine(80.0f);
+            ImGui::Text("%u", stats.primitiveCount);
+        }
+        ImGui::End();
+    }
+
     void RenderWorldAxes(const glm::mat4& viewMatrix)
     {
         // TODO: Clean up the DrawDebugAxis function

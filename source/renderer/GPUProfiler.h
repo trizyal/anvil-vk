@@ -10,6 +10,7 @@
  */
 
 #include <volk.h>
+#include <cstdint>
 #include <vector>
 
 class VulkanContext;
@@ -33,6 +34,7 @@ private:
     VulkanContext* pContext = nullptr;
 
     std::vector<VkQueryPool> queryPools;
+    std::vector<uint8_t> querySubmitted;
     float timestampPeriod = 1.0f;
 
 public:
@@ -61,7 +63,7 @@ public:
      * @param inCmdBuffer Active Vulkan command buffer.
      * @param frameIndex Current frame actively being rendered.
      */
-    void endGPUProfilerFrame(VkCommandBuffer inCmdBuffer, uint32_t frameIndex) const;
+    void endGPUProfilerFrame(VkCommandBuffer inCmdBuffer, uint32_t frameIndex);
 
     /**
      * @brief Retrieves the time delta between beginFrame and endFrame in milliseconds.

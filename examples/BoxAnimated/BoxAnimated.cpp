@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 
+#include "AnvilRenderer.h"
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "UIRenderer.h"
@@ -199,5 +200,7 @@ void BoxAnimated::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         vkCmdBindVertexBuffers(inCmd, 0, 1, &gpu_mesh.vertexBuffer.buffer, &offset);
         vkCmdBindIndexBuffer(inCmd, gpu_mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
         vkCmdDrawIndexed(inCmd, gpu_mesh.indexCount, 1, 0, 0, 0);
+        AnvilRenderer::engineStats.drawCalls++;
+        AnvilRenderer::engineStats.primitiveCount += (gpu_mesh.indexCount/3);
     }
 }
