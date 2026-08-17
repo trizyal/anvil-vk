@@ -87,12 +87,6 @@ public:
      */
     static void EndUIFrame();
 
-    /**
-     * @brief Renders a debug 3D orientation axis overlay in a corner of the viewport.
-     * @param viewMatrix Current active camera view matrix used to orient the widget's axes.
-     */
-    static void DrawDebugAxis(const glm::mat4& viewMatrix);
-
 private:
     /**
      * @brief Internal helper to allocate the dedicated descriptor pool required by ImGui.

@@ -12,6 +12,7 @@
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
+#include "UIElements.h"
 #include "UIRenderer.h"
 
 void TextureCube::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
@@ -96,7 +97,7 @@ void TextureCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapch
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants;
     constants.renderMatrix = projection * view;

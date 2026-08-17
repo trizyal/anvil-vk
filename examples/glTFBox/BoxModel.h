@@ -43,7 +43,7 @@ public:
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, const Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
 };

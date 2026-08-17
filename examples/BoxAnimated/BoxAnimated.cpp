@@ -12,6 +12,7 @@
 #include "CPUModel.h"
 #include "UIRenderer.h"
 #include "ShaderCompiler.h"
+#include "UIElements.h"
 
 void BoxAnimated::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
 {
@@ -151,7 +152,7 @@ void BoxAnimated::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

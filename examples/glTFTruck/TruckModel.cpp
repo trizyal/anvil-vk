@@ -13,6 +13,7 @@
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"
+#include "UIElements.h"
 
 void TruckModel::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
@@ -153,7 +154,7 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapcha
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

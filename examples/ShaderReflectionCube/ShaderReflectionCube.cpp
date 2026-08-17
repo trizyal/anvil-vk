@@ -12,6 +12,7 @@
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
+#include "UIElements.h"
 #include "UIRenderer.h"
 
 void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
@@ -84,7 +85,7 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAn
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants{};
     constants.renderMatrix = projection * view;

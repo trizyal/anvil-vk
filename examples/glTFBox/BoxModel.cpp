@@ -6,11 +6,10 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
+#include "UIElements.h"
 #include "UIRenderer.h"
 
 void BoxModel::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
@@ -47,7 +46,7 @@ void BoxModel::cleanupProject()
     }
 }
 
-void BoxModel::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
+void BoxModel::recordCommands(VkCommandBuffer inCmd, const Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -77,7 +76,7 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants;
     constants.renderMatrix = projection * view;

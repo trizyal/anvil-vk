@@ -13,6 +13,7 @@
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"
+#include "UIElements.h"
 
 void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
@@ -82,15 +83,16 @@ void DirectionalLight::loadPipeline()
 
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
     myMaterial.buildMaterial(*ptrAContext, shaderCompiler, vReq, fReq);
+    myMaterialInstance = myMaterial.createInstance();
 
-    myMaterial.bindUniformBuffer("sceneBuffer", myScene.sceneUBO);
+    myMaterialInstance.bindUniformBuffer("sceneBuffer", myScene.sceneUBO);
 
     // Bind by name
     if (myTexture.imageView != VK_NULL_HANDLE)
     {
-        myMaterial.bindTexture("texture", myTexture);
+        myMaterialInstance.bindTexture("texture", myTexture);
     }
-    myMaterial.updateDescriptorSets();
+    myMaterialInstance.updateDescriptorSets();
 
     auto attributesArray = GPUMesh::getAttributeDescriptions();
 
@@ -155,7 +157,7 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilS
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants{};
     constants.renderMatrix = projection * view * model;
@@ -163,7 +165,7 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilS
     constants.camera = camera.position;
     vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(PushConstants), &constants);
 
-    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterial.materialDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterialInstance.descriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
