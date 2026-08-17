@@ -18,25 +18,6 @@
 
 namespace
 {
-    namespace Color
-    {
-        /** Bright red for x axis. */
-        inline constexpr ImU32 X_AXIS    = IM_COL32(255, 50, 50, 255);
-
-        /** Bright green for y axis. */
-        inline constexpr ImU32 Y_AXIS  = IM_COL32(50, 255, 50, 255);
-
-        /** Light blue for z axis. Lighter to contrast with dark backgrounds */
-        inline constexpr ImU32 Z_AXIS   = IM_COL32(50, 150, 255, 255);
-    } //Color
-
-    namespace Axis
-    {
-        inline constexpr glm::vec3 X = glm::vec3(1.0f, 0.0f, 0.0f);
-        inline constexpr glm::vec3 Y = glm::vec3(0.0f, 1.0f, 0.0f);
-        inline constexpr glm::vec3 Z = glm::vec3(0.0f, 0.0f, 1.0f);
-    } //Axis
-
     VkDescriptorPoolSize ImGuiPoolSizes[] =
     {
         { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },

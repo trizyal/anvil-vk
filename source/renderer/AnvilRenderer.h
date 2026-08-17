@@ -10,6 +10,8 @@
  */
 
 #include <functional>
+
+#include "GPUProfiler.h"
 #include "Swapchain.h"
 
 class AnvilWindow;
@@ -77,6 +79,8 @@ private:
     std::vector<VkSemaphore> renderFinishedSemaphores;
 
     bool recreateSwapchain = false;
+
+    GPUProfiler gpuProfiler;
 
 public:
     /**

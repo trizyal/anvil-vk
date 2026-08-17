@@ -123,6 +123,7 @@ void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
 
     const vkb::PhysicalDevice& vkb_physical_device = vkb_physical_device_result.value();
     physicalDevice = vkb_physical_device.physical_device;
+    physicalDeviceProperties = vkb_physical_device.properties;
 
     // --------------------------------
     // Build Logical Device

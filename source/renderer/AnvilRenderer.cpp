@@ -22,6 +22,9 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
     setupCommandBuffers();
     setupSyncStructures();
 
+    const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
+    gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
+
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
 
@@ -112,6 +115,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin_info);
+    gpuProfiler.beginGPUProfilerFrame(cmd, anvilFrameIndex);
 
     // Transition image here
     transitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
@@ -163,6 +167,8 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
+    gpuProfiler.endGPUProfilerFrame(cmd, anvilFrameIndex);
+
     // End command buffer
     vkEndCommandBuffer(cmd);
 
@@ -212,6 +218,8 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         error_stream << "   Error: " << VulkanResult::ToString(present_result) << std::endl;
         throw std::runtime_error(error_stream.str());
     }
+
+    // std::cout << gpuProfiler.getGPUTime(anvilFrameIndex) << std::endl;
 
     anvilFrameIndex++;
     assert(sizeof(anvilFrames) / sizeof(AnvilFrame) == FRAMES_IN_FLIGHT);

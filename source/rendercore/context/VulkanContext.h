@@ -67,6 +67,8 @@ public:
     /** Vulkan Memory Allocator (VMA) instance for GPU memory management. */
     VmaAllocator allocator = VK_NULL_HANDLE;
 
+    VkPhysicalDeviceProperties physicalDeviceProperties{};
+
     /**
      * @brief Initializes the Vulkan instance, device, VMA, and rendering surface.
      * @param inWindow Reference to the application window used to create the Vulkan surface.
