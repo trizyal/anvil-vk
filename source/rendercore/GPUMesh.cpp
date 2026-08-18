@@ -90,7 +90,7 @@ VkVertexInputBindingDescription GPUMesh::getBindingDescription()
     return binding_description;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> GPUMesh::getAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescriptions()
 {
     std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions{};
 

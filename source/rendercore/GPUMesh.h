@@ -96,7 +96,7 @@ public:
      *
      * @return A 3-element array of VkVertexInputAttributeDescription structures.
      */
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
+    static std::array<VkVertexInputAttributeDescription, 3> get3AttributeDescriptions();
 };
 
 #endif //ANVIL_VK_GPUMESH_H
