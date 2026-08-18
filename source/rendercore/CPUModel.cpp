@@ -120,7 +120,7 @@ void CPUModel::updateAllMatrices()
     }
 }
 
-void CPUModel::applyAnimation(int animationIndex, float time)
+void CPUModel::applyAnimation(const int animationIndex, const float time)
 {
     if (animationIndex < 0 || animationIndex >= static_cast<int>(animations.size()))
     {
@@ -204,6 +204,34 @@ void CPUModel::applyAnimation(int animationIndex, float time)
 
     // Recursively update world matrices down the tree now that local transforms changed
     updateAllMatrices();
+}
+
+void CPUModel::computeJointMatrices(const int nodeIndex, std::vector<glm::mat4>& matrices) const
+{
+    if (nodeIndex < 0 || nodeIndex >= static_cast<int>(nodes.size()))
+    {
+        return;
+    }
+
+    const CPUNode& node = nodes[nodeIndex];
+
+    // If this node not have a skin, we do not neet joint matrices
+    if (node.skinIndex < 0 || node.skinIndex >= static_cast<int>(skins.size()))
+    {
+        matrices.clear();
+        return;
+    }
+
+    const CPUSkin& skin = skins[node.skinIndex];
+    matrices.resize(skin.jointNodes.size());
+
+    // glTF spec: JointMatrix = inverse(MeshWorld) * JointWorld * InverseBind
+    glm::mat4 inverse_mesh_transform = glm::inverse(node.worldMatrix);
+    for (size_t joint_nodes_index = 0; joint_nodes_index < skin.jointNodes.size(); ++joint_nodes_index)
+    {
+        const CPUNode& joint_node = nodes[skin.jointNodes[joint_nodes_index]];
+        matrices[joint_nodes_index] = inverse_mesh_transform * joint_node.worldMatrix * skin.inverseBindMatrices[joint_nodes_index];
+    }
 }
 
 namespace ModelLoader

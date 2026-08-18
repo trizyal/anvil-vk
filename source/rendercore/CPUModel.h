@@ -197,6 +197,22 @@ public:
      * @param time The current playback time in seconds.
      */
     void applyAnimation(int animationIndex, float time);
+
+    /**
+     * @brief Computes the final skinning matrices for all joints affecting a specific skinned mesh node.
+     *
+     * Calculates the transformation matrix for each joint by multiplying the inverse of the
+     * mesh's world matrix, the joint's current animated world matrix, and the joint's inverse
+     * bind matrix. The resulting matrices represent the delta transform from the bind pose
+     * and are intended to be uploaded to a GPU Storage Buffer (SSBO) for vertex skinning.
+     *
+     * @param nodeIndex The index of the CPUNode representing the rigged mesh. If the node
+     * does not have an associated skin, the output vector is cleared.
+     *
+     * @param matrices A reference to a vector that will be resized and populated with
+     * the computed glm::mat4 joint matrices.
+     */
+    void computeJointMatrices(int nodeIndex, std::vector<glm::mat4>& matrices) const;
 };
 
 /**
