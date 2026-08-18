@@ -1,12 +1,12 @@
 #include <iostream>
 
-#include "AnvilApplication.h"
+#include "Anvil.h"
 
 #include "TextureCube.h"
 
 int main()
 {
-    AnvilApplication anvil;
+    Anvil anvil;
     anvil.initializeAnvil({
         .width = 1280,
         .height = 720,
@@ -14,7 +14,7 @@ int main()
     });
 
     TextureCube project;
-    project.initializeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
+    project.initializeProject(anvil.getContext(), anvil.getSwapchain());
 
     // Register hot-reload event
     anvil.addShaderReloadCallback([&]() {

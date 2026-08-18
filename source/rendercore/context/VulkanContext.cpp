@@ -17,10 +17,10 @@
 
 #include "DebugNames.h"
 #include "VulkanResult.h"
-#include "AnvilWindow.h"
+#include "Window.h"
 #include "VulkanConfig.h"
 
-void VulkanContext::initializeVulkanContext(AnvilWindow& inWindow)
+void VulkanContext::initializeVulkanContext(Window& inWindow)
 {
     std::cout << "Initialising AnvilVulkanContext..." << std::endl;
 

@@ -7,7 +7,7 @@
 #include <iostream>
 #include <ostream>
 
-#include "AnvilInput.h"
+#include "Input.h"
 #include "glm/gtc/matrix_transform.hpp"
 
 Camera::Camera(const glm::vec3 inStartPosition)
@@ -40,28 +40,28 @@ void Camera::updateCamera(float deltaTime)
 
     // Mouse Look
     // Only rotate if the mouse button is held down
-    if (AnvilInput::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+    if (Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
     {
         // Hide and lock the cursor
-        AnvilInput::SetCursorMode(GLFW_CURSOR_DISABLED);
+        Input::SetCursorMode(GLFW_CURSOR_DISABLED);
 
         // Sprinting
         // TODO: This camera velocity should be configurable
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f;
+        if (Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) velocity *= 2.5f;
 
         // Keyboard Movement
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_W)) position += front * velocity;
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_S)) position -= front * velocity;
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_A)) position -= right * velocity;
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_D)) position += right * velocity;
+        if (Input::IsKeyPressed(GLFW_KEY_W)) position += front * velocity;
+        if (Input::IsKeyPressed(GLFW_KEY_S)) position -= front * velocity;
+        if (Input::IsKeyPressed(GLFW_KEY_A)) position -= right * velocity;
+        if (Input::IsKeyPressed(GLFW_KEY_D)) position += right * velocity;
 
         // Vertical movement
         // if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += up * velocity;
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_E)) position += WORLD_UP * velocity;
+        if (Input::IsKeyPressed(GLFW_KEY_E)) position += WORLD_UP * velocity;
         // if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= up * velocity;
-        if (AnvilInput::IsKeyPressed(GLFW_KEY_Q)) position -= WORLD_UP * velocity;
+        if (Input::IsKeyPressed(GLFW_KEY_Q)) position -= WORLD_UP * velocity;
 
-        glm::vec2 mouseDelta = AnvilInput::GetMouseDelta();
+        glm::vec2 mouseDelta = Input::GetMouseDelta();
         yawDegree += mouseDelta.x * cameraSensitivity;
         pitchDegree += mouseDelta.y * cameraSensitivity;
 
@@ -73,7 +73,7 @@ void Camera::updateCamera(float deltaTime)
     else
     {
         // Release the cursor when the user lets go of right-click
-        AnvilInput::SetCursorMode(GLFW_CURSOR_NORMAL);
+        Input::SetCursorMode(GLFW_CURSOR_NORMAL);
     }
 }
 

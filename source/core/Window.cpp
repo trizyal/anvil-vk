@@ -1,13 +1,13 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilWindow.h"
+#include "Window.h"
 
 #include <iostream>
 #include <stdexcept>
 #include <utility>
 
-AnvilWindow::AnvilWindow(const uint32_t inWidth, const uint32_t inHeight, std::string inTitle)
+Window::Window(const uint32_t inWidth, const uint32_t inHeight, std::string inTitle)
     : width(inWidth), height(inHeight), anvilTitle(std::move(inTitle))
 {
     std::cout << "Creating AnvilWindow..." << std::endl;
@@ -31,33 +31,33 @@ AnvilWindow::AnvilWindow(const uint32_t inWidth, const uint32_t inHeight, std::s
     std::cout << "Finishing creating AnvilWindow" << std::endl;
 }
 
-AnvilWindow::~AnvilWindow()
+Window::~Window()
 {
     glfwDestroyWindow(glfwWindow);
     glfwTerminate();
 }
 
-bool AnvilWindow::bShouldClose() const
+bool Window::bShouldClose() const
 {
     return glfwWindowShouldClose(glfwWindow);
 }
 
-void AnvilWindow::pollEvents()
+void Window::pollEvents()
 {
     glfwPollEvents();
 }
 
-std::string AnvilWindow::getWindowTitle() const
+std::string Window::getWindowTitle() const
 {
     return anvilTitle;
 }
 
-GLFWwindow* AnvilWindow::getGLFWWindow() const
+GLFWwindow* Window::getGLFWWindow() const
 {
     return glfwWindow;
 }
 
-VkSurfaceKHR AnvilWindow::createSurface(VkInstance inInstance) const
+VkSurfaceKHR Window::createSurface(VkInstance inInstance) const
 {
     VkSurfaceKHR surface;
 
@@ -69,7 +69,7 @@ VkSurfaceKHR AnvilWindow::createSurface(VkInstance inInstance) const
     return surface;
 }
 
-VkExtent2D AnvilWindow::getFramebufferExtent() const
+VkExtent2D Window::getFramebufferExtent() const
 {
     int fbWidth = 0;
     int fbHeight = 0;

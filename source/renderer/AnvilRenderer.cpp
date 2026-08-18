@@ -9,7 +9,7 @@
 #include "ShaderCompiler.h"
 #include "UIRenderer.h"
 #include "VulkanContext.h"
-#include "AnvilWindow.h"
+#include "Window.h"
 #include "DebugNames.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
@@ -48,7 +48,7 @@ AnvilRenderer::~AnvilRenderer()
     }
 }
 
-void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback)
+void AnvilRenderer::drawFrame(Window& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback)
 {
     // Recreate swapchain maybe
     if (recreateSwapchain)

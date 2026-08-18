@@ -15,7 +15,7 @@
 #include "GPUProfiler.h"
 #include "Swapchain.h"
 
-class AnvilWindow;
+class Window;
 /**
  * @brief Per-frame GPU resources required for flight synchronized rendering.
  */
@@ -113,7 +113,7 @@ public:
      *
      * @note drawCallback is triggered after BeginRendering is called and before the UI renders.
      */
-    void drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback);
+    void drawFrame(Window& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback);
 
 private:
     AnvilFrame& getCurrentFrame();

@@ -1,12 +1,12 @@
 #include <iostream>
 
-#include "AnvilApplication.h"
+#include "Anvil.h"
 
 #include "HelloTriangle.h"
 
 int main()
 {
-    AnvilApplication anvil;
+    Anvil anvil;
     anvil.initializeAnvil({
         .width = 1280,
         .height = 720,
@@ -14,7 +14,7 @@ int main()
     });
 
     HelloTriangle project;
-    project.initalizeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
+    project.initalizeProject(anvil.getContext(), anvil.getSwapchain());
 
     // Register hot-reload event
     anvil.addShaderReloadCallback([&]() {

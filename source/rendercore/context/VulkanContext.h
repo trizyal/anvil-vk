@@ -14,7 +14,7 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-class AnvilWindow;
+class Window;
 
 /**
  * @brief Root Vulkan context managing the instance, logical device, allocator and submission queues.
@@ -75,11 +75,11 @@ public:
      *
      * @throws std::runtime_error If Vulkan instance creation, device selection, or VMA initialization fails.
      */
-    void initializeVulkanContext(AnvilWindow& inWindow);
+    void initializeVulkanContext(Window& inWindow);
 
 private:
     /** Pointer to the application window. */
-    AnvilWindow* pWindow = nullptr;
+    Window* pWindow = nullptr;
 
     // ------------------------------------------------------------------------
     // Immediate Submit Members

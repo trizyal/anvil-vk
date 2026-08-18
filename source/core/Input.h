@@ -5,7 +5,7 @@
 #define ANVIL_VK_INPUT_H
 
 /**
- * @file AnvilInput.h
+ * @file Input.h
  * @brief Keyboard and mouse input logic.
  */
 
@@ -39,17 +39,17 @@ constexpr uint32_t BUTTON_COUNT = GLFW_KEY_LAST + 1;
  *
  * @todo May need functions that listen to key being released instead of pressed.
  */
-class AnvilInput
+class Input
 {
 public:
-    AnvilInput() = default;
-    ~AnvilInput() = default;
+    Input() = default;
+    ~Input() = default;
 
-    AnvilInput(const AnvilInput&) = delete;
-    AnvilInput& operator=(const AnvilInput&) = delete;
+    Input(const Input&) = delete;
+    Input& operator=(const Input&) = delete;
 
-    AnvilInput(AnvilInput&&) = delete;
-    AnvilInput& operator=(AnvilInput&&) = delete;
+    Input(Input&&) = delete;
+    Input& operator=(Input&&) = delete;
 
 private:
     static GLFWwindow* s_glfwWindow;
