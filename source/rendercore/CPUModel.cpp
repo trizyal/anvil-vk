@@ -12,8 +12,8 @@
 
 namespace
 {
-    std::string GetBaseDirectory(const std::string& filePath);
-    std::string JoinPath(const std::string& baseDirectory, const char* uri);
+    std::string GetBaseDirectory(const std::string& file_path);
+    std::string JoinPath(const std::string& base_directory, const char* uri);
 
     void LoadTextures(CPUModel& model, const cgltf_data* gltf_data, const std::string& base_directory);
     void LoadMaterials(CPUModel& model, const cgltf_data* gltf_data);
@@ -26,7 +26,7 @@ namespace
     int GetMeshIndex(const cgltf_data* data, const cgltf_mesh* mesh);
     int GetNodeIndex(const cgltf_data* data, const cgltf_node* node);
 
-    glm::mat4 ConvertMatrix(const cgltf_float* inMatrix);
+    glm::mat4 ConvertMatrix(const cgltf_float* cgltf_matrix);
     glm::mat4 MakeLocalMatrix(const CPUNode& cpu_node);
     void ReadNodeTRS(CPUNode& cpu_node, const cgltf_node* gltf_node);
     void ComputeWorldMatrices(CPUModel& cpu_model, int node_index, const glm::mat4& parent_matrix);
@@ -202,11 +202,11 @@ void CPUModel::applyAnimation(int animationIndex, float time)
 
 namespace ModelLoader
 {
-    void UpdateAllMatrices(CPUModel& cpu_model)
+    void UpdateAllMatrices(CPUModel& cpuModel)
     {
-        for (const int rootNodeIndex : cpu_model.sceneRootNodes)
+        for (const int rootNodeIndex : cpuModel.sceneRootNodes)
         {
-            ComputeWorldMatrices(cpu_model, rootNodeIndex, glm::mat4(1.0f));
+            ComputeWorldMatrices(cpuModel, rootNodeIndex, glm::mat4(1.0f));
         }
     }
 
@@ -252,9 +252,9 @@ namespace ModelLoader
 
 namespace
 {
-    std::string GetBaseDirectory(const std::string& filePath)
+    std::string GetBaseDirectory(const std::string& file_path)
     {
-        const std::filesystem::path path(filePath);
+        const std::filesystem::path path(file_path);
         const std::filesystem::path parent = path.parent_path();
 
         if (parent.empty())
@@ -265,7 +265,7 @@ namespace
         return parent.string() + std::string(1, std::filesystem::path::preferred_separator);
     }
 
-    std::string JoinPath(const std::string& baseDirectory, const char* uri)
+    std::string JoinPath(const std::string& base_directory, const char* uri)
     {
         if (!uri)
         {
@@ -278,7 +278,7 @@ namespace
             return uri_path.string();
         }
 
-        return (std::filesystem::path(baseDirectory) / uri_path).string();
+        return (std::filesystem::path(base_directory) / uri_path).string();
     }
 
     void LoadTextures(CPUModel& model, const cgltf_data* gltf_data, const std::string& base_directory)
@@ -628,7 +628,7 @@ namespace
         return -1;
     }
 
-    glm::mat4 ConvertMatrix(const cgltf_float* inMatrix)
+    glm::mat4 ConvertMatrix(const cgltf_float* cgltf_matrix)
     {
         glm::mat4 result(1.0f);
 
@@ -637,7 +637,7 @@ namespace
         {
             for (int row = 0; row < 4; ++row)
             {
-                result[column][row] = inMatrix[column * 4 + row];
+                result[column][row] = cgltf_matrix[column * 4 + row];
             }
         }
 

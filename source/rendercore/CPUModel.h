@@ -24,6 +24,10 @@ struct MeshVertex
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec2 uv= glm::vec2(0.0f);
+
+    // Max 4 bones per vertex
+    glm::uvec4 joints = glm::uvec4(0);
+    glm::vec4 weights = glm::vec4(0.0f);
 };
 
 /**
@@ -81,14 +85,30 @@ struct CPUMesh
 };
 
 /**
+ * @brief CPU-side skin.
+ *
+ * @note skeletonRootNode indexes CPUModel::nodes.
+ */
+struct CPUSkin
+{
+    std::string name;
+    int skeletonRootNode = -1;
+    std::vector<int> jointNodes; /**< CPU nodes that act as bones */
+    std::vector<glm::mat4> inverseBindMatrices; /**< Rest pose inverse matrices. */
+};
+
+/**
  * @brief CPU-side scene node.
  *
  * @note meshIndex indexes CPUModel::meshes.
+ * @note skinIndex indexes CPUModel::skins.
+ * @note parentIndex indexes CPUModel::nodes.
  */
 struct CPUNode
 {
     std::string name;
     int meshIndex = -1;
+    int skinIndex = -1;
     int parentIndex = -1;
     std::vector<int> children;
 
@@ -119,8 +139,6 @@ struct CPUAnimationChannel
     int targetNodeIndex = -1;
     AnimationPath path = AnimationPath::Unknown;
 
-    // For the current stage, we only care about rotation, but
-    // a full engine would support translation and scale too.
     std::vector<float> keyframeTimes;
     std::vector<glm::quat> keyframeRotations;
     std::vector<glm::vec3> keyframeTranslations;
@@ -152,6 +170,7 @@ public:
     std::vector<int> sceneRootNodes;
 
     std::vector<CPUAnimation> animations;
+    std::vector<CPUSkin> skins;
 
     /**
      * @brief Parses a glTF 2.0 file from disk and populates CPUModel.
@@ -212,7 +231,12 @@ namespace ModelLoader
      */
     [[deprecated]] CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
 
-    void UpdateAllMatrices(CPUModel& cpu_model);
+    /**
+     * @brief Legacy convenience function to update all matrices in nodes according to their parents.
+     *
+     * @param cpuModel CPUModel that stores the model data and matrices.
+     */
+    [[deprecated]] void UpdateAllMatrices(CPUModel& cpuModel);
 } //AnvilModelLoader
 
 #endif //ANVIL_VK_MODELLOADER_H
