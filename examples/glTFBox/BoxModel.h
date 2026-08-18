@@ -13,7 +13,7 @@
 #include "ShaderModule.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct PushConstants
@@ -25,7 +25,7 @@ class BoxModel
 {
 private:
     VulkanContext* ptrAContext = nullptr;
-    VulkanSwapchain* ptrASwapchain = nullptr;
+    Swapchain* ptrASwapchain = nullptr;
 
     ShaderModule vertexShader;
     ShaderModule fragmentShader;
@@ -39,11 +39,11 @@ private:
     Camera camera;
 
 public:
-    void initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain);
+    void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, const Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
 };

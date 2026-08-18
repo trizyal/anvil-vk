@@ -3,13 +3,13 @@
 
 #include <iostream>
 
-#include "AnvilApplication.h"
+#include "Anvil.h"
 
 #include "ShaderReflectionCube.h"
 
 int main()
 {
-    AnvilApplication anvil;
+    Anvil anvil;
     anvil.initializeAnvil({
         .width = 1280,
         .height = 720,
@@ -17,7 +17,7 @@ int main()
     });
 
     ShaderReflectionCube project;
-    project.initializeProject(anvil.getAnvilContext(), anvil.getAnvilSwapchain());
+    project.initializeProject(anvil.getContext(), anvil.getSwapchain());
 
     // Register hot-reload event
     anvil.addShaderReloadCallback([&]() {
@@ -26,7 +26,7 @@ int main()
 
     try
     {
-        anvil.runAnvil([&](VkCommandBuffer cmd, VulkanSwapchain* swapchain)
+        anvil.runAnvil([&](VkCommandBuffer cmd, Swapchain* swapchain)
         {
             project.recordCommands(cmd, *swapchain);
         });

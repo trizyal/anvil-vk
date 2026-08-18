@@ -13,8 +13,9 @@
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"
+#include "UIElements.h"
 
-void TruckModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void TruckModel::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     pContext = &inAnvilContext;
     pSwapchain = &inAnvilSwapchain;
@@ -46,14 +47,14 @@ void TruckModel::cleanupProject()
 {
     if (pContext)
     {
-        vkDeviceWaitIdle(pContext->anvilDevice);
+        vkDeviceWaitIdle(pContext->device);
 
         gpuModel.destroyGPUModel();
         myMaterial.destroyMaterial();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
-            vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+            vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
             pipeline.pipeline = VK_NULL_HANDLE;
         }
 
@@ -69,7 +70,7 @@ void TruckModel::loadPipeline()
 
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         myMaterial.destroyMaterial();
     }
@@ -99,12 +100,12 @@ void TruckModel::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->anvilDevice, myMaterial.materialPipelineLayout, "TruckModelPipeline");
+        .buildPipeline(pContext->device, myMaterial.materialPipelineLayout, "TruckModelPipeline");
 
     gpuModel.createGPUModel( *pContext, cpuModel, myMaterial, "sceneBuffer", myScene.sceneUBO, "texture");
 }
 
-void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
+void TruckModel::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapchain)
 {
     // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};
@@ -153,7 +154,7 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilS
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 

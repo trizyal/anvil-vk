@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_VULKANDEBUG_H
-#define ANVIL_VK_VULKANDEBUG_H
+#ifndef ANVIL_VK_DEBUGNAMES_H
+#define ANVIL_VK_DEBUGNAMES_H
 
 /**
- * @file VulkanDebug.h
+ * @file DebugNames.h
  * @brief Vulkan validation callbacks, GPU object naming utilities, and zero-cost debug instrumentation macros.
  */
 
@@ -153,4 +153,4 @@ ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
  */
 #define ANVIL_NAME_OF(var) #var
 
-#endif //ANVIL_VK_VULKANDEBUG_H
+#endif //ANVIL_VK_DEBUGNAMES_H

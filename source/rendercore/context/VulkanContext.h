@@ -14,7 +14,7 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-class AnvilWindow;
+class Window;
 
 /**
  * @brief Root Vulkan context managing the instance, logical device, allocator and submission queues.
@@ -44,28 +44,30 @@ public:
     VulkanContext& operator=(VulkanContext&&) = delete;
 
     /** Vulkan API instance handle. */
-    VkInstance anvilInstance = VK_NULL_HANDLE;
+    VkInstance instance = VK_NULL_HANDLE;
 
     /** Dedicated debug callback messenger for validation layers. */
-    VkDebugUtilsMessengerEXT anvilDebugMessenger = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 
     /** Window system integration (WSI) rendering surface. */
-    VkSurfaceKHR anvilSurface = VK_NULL_HANDLE;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     /** Selected GPU physical device handle. */
-    VkPhysicalDevice anvilPhysicalDevice = VK_NULL_HANDLE;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
     /** Logical GPU device handle used for resource creation. */
-    VkDevice anvilDevice = VK_NULL_HANDLE;
+    VkDevice device = VK_NULL_HANDLE;
 
     /** Queue handle for graphics and transfer command submissions. */
-    VkQueue anvilGraphicsQueue = VK_NULL_HANDLE;
+    VkQueue graphicsQueue = VK_NULL_HANDLE;
 
     /** Queue family index corresponding to anvilGraphicsQueue. */
-    uint32_t anvilGraphicsQueueIndex = 0;
+    uint32_t graphicsQueueIndex = 0;
 
     /** Vulkan Memory Allocator (VMA) instance for GPU memory management. */
-    VmaAllocator anvilAllocator = VK_NULL_HANDLE;
+    VmaAllocator allocator = VK_NULL_HANDLE;
+
+    VkPhysicalDeviceProperties physicalDeviceProperties{};
 
     /**
      * @brief Initializes the Vulkan instance, device, VMA, and rendering surface.
@@ -73,11 +75,11 @@ public:
      *
      * @throws std::runtime_error If Vulkan instance creation, device selection, or VMA initialization fails.
      */
-    void initializeVulkanContext(AnvilWindow& inWindow);
+    void initializeVulkanContext(Window& inWindow);
 
 private:
     /** Pointer to the application window. */
-    AnvilWindow* pWindow = nullptr;
+    Window* pWindow = nullptr;
 
     // ------------------------------------------------------------------------
     // Immediate Submit Members

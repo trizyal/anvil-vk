@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "VulkanDebug.h"
+#include "DebugNames.h"
 
 #include <iostream>
 #include <unordered_map>

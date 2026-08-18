@@ -5,7 +5,7 @@
 #define ANVIL_VK_SWAPCHAIN_H
 
 /**
- * @file VulkanSwapchain.h
+ * @file Swapchain.h
  * @brief Encapsulates a Vulkan swapchain, color image views, and a dedicated depth buffer attachment.
  */
 
@@ -29,25 +29,25 @@ class VulkanContext;
  * @warning Will need to decouple the depth from swapchain when moving to
  * deferred rendering, shadow mapping or post processing.
  */
-class VulkanSwapchain
+class Swapchain
 {
 public:
     /**
      * @brief Constructs an uninitialized Vulkan swapchain container.
      */
-    VulkanSwapchain() = default;
+    Swapchain() = default;
 
     /**
      * @brief Destroys the swapchain, all presentation views, and the depth attachment.
      */
-    ~VulkanSwapchain();
+    ~Swapchain();
 
 
-    VulkanSwapchain(const VulkanSwapchain&) = delete;
-    VulkanSwapchain& operator=(const VulkanSwapchain&) = delete;
+    Swapchain(const Swapchain&) = delete;
+    Swapchain& operator=(const Swapchain&) = delete;
 
-    VulkanSwapchain(VulkanSwapchain&&) = delete;
-    VulkanSwapchain& operator=(VulkanSwapchain&&) = delete;
+    Swapchain(Swapchain&&) = delete;
+    Swapchain& operator=(Swapchain&&) = delete;
 
     /** Underlying Vulkan swapchain handle. */
     VkSwapchainKHR anvilSwapchain = VK_NULL_HANDLE;

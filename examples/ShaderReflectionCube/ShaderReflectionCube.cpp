@@ -12,9 +12,10 @@
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
+#include "UIElements.h"
 #include "UIRenderer.h"
 
-void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -50,11 +51,11 @@ void ShaderReflectionCube::cleanupProject()
         myTexture.destroyAnvilTexture(ptrAContext);
         myMaterial.destroyMaterial();
         meshBuffer.destroyGPUMesh();
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
     }
 }
 
-void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
+void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -84,7 +85,7 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants{};
     constants.renderMatrix = projection * view;
@@ -111,7 +112,7 @@ void ShaderReflectionCube::loadPipeline()
 
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
         myMaterial.destroyMaterial();
     }
 
@@ -148,5 +149,5 @@ void ShaderReflectionCube::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout);
+        .buildPipeline(ptrAContext->device, myMaterial.materialPipelineLayout);
 }

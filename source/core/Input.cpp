@@ -1,26 +1,26 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilInput.h"
+#include "Input.h"
 
 #include <cstring>
 
 // Define static variables
-GLFWwindow* AnvilInput::s_glfwWindow = nullptr;
-bool AnvilInput::s_CurrentKeys[KEY_COUNT] = {false};
-bool AnvilInput::s_PreviousKeys[KEY_COUNT] = {false};
-bool AnvilInput::s_CurrentMouseButtons[BUTTON_COUNT] = {false};
-bool AnvilInput::s_PreviousMouseButtons[BUTTON_COUNT] = {false};
-glm::vec2 AnvilInput::s_MousePosition = {0.0f, 0.0f};
-glm::vec2 AnvilInput::s_MouseDelta = {0.0f, 0.0f};
-bool AnvilInput::s_FirstMouseUpdate = true;
+GLFWwindow* Input::s_glfwWindow = nullptr;
+bool Input::s_CurrentKeys[KEY_COUNT] = {false};
+bool Input::s_PreviousKeys[KEY_COUNT] = {false};
+bool Input::s_CurrentMouseButtons[BUTTON_COUNT] = {false};
+bool Input::s_PreviousMouseButtons[BUTTON_COUNT] = {false};
+glm::vec2 Input::s_MousePosition = {0.0f, 0.0f};
+glm::vec2 Input::s_MouseDelta = {0.0f, 0.0f};
+bool Input::s_FirstMouseUpdate = true;
 
-void AnvilInput::InitializeInputSystem(GLFWwindow* inWindow)
+void Input::InitializeInputSystem(GLFWwindow* inWindow)
 {
     s_glfwWindow = inWindow;
 }
 
-void AnvilInput::UpdateInputs()
+void Input::UpdateInputs()
 {
     // Save previous frame's states
     std::memcpy(s_PreviousKeys, s_CurrentKeys, sizeof(s_CurrentKeys));
@@ -55,37 +55,37 @@ void AnvilInput::UpdateInputs()
     s_MousePosition = newMousePosition;
 }
 
-bool AnvilInput::IsKeyPressed(const int inKey)
+bool Input::IsKeyPressed(const int inKey)
 {
     return s_CurrentKeys[inKey];
 }
 
-bool AnvilInput::IsKeyPressed_Frame(const int inKey)
+bool Input::IsKeyPressed_Frame(const int inKey)
 {
     return s_CurrentKeys[inKey] && !s_PreviousKeys[inKey];
 }
 
-bool AnvilInput::IsMouseButtonPressed(const int inButton)
+bool Input::IsMouseButtonPressed(const int inButton)
 {
     return s_CurrentMouseButtons[inButton];
 }
 
-bool AnvilInput::IsMouseButtonPressed_Frame(const int inButton)
+bool Input::IsMouseButtonPressed_Frame(const int inButton)
 {
     return s_CurrentMouseButtons[inButton] && !s_PreviousMouseButtons[inButton];
 }
 
-glm::vec2 AnvilInput::GetMousePosition()
+glm::vec2 Input::GetMousePosition()
 {
     return s_MousePosition;
 }
 
-glm::vec2 AnvilInput::GetMouseDelta()
+glm::vec2 Input::GetMouseDelta()
 {
     return s_MouseDelta;
 }
 
-void AnvilInput::SetCursorMode(const int inMode)
+void Input::SetCursorMode(const int inMode)
 {
     glfwSetInputMode(s_glfwWindow, GLFW_CURSOR, inMode);
 }

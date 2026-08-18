@@ -8,7 +8,7 @@
 
 #include "ShaderCompiler.h"
 
-void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -29,14 +29,14 @@ void HelloTriangle::cleanupProject()
 {
     if (ptrAContext)
     {
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
         fragmentShader.destroyShaderModule();
     }
 }
 
-void HelloTriangle::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
+void HelloTriangle::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -67,8 +67,8 @@ void HelloTriangle::loadPipeline()
 
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
     }
     vertexShader.destroyShaderModule();
     fragmentShader.destroyShaderModule();
@@ -88,7 +88,7 @@ void HelloTriangle::loadPipeline()
     // Create pipeline layout
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(ptrAContext->device, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create pipeline layout!");
     }
@@ -103,5 +103,5 @@ void HelloTriangle::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, pipelineLayout, "HelloTrianglePipeline");
+        .buildPipeline(ptrAContext->device, pipelineLayout, "HelloTrianglePipeline");
 }

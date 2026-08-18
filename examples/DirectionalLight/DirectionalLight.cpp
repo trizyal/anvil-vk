@@ -13,8 +13,9 @@
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
 #include "UIRenderer.h"
+#include "UIElements.h"
 
-void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void DirectionalLight::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -61,7 +62,7 @@ void DirectionalLight::cleanupProject()
         // myScene.destroyScene();
         myMaterial.destroyMaterial();
         meshBuffer.destroyGPUMesh();
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
     }
 }
 
@@ -72,7 +73,7 @@ void DirectionalLight::loadPipeline()
     std::cout << "Creating DirectionalLight pipeline." << std::endl;
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
         myMaterial.destroyMaterial();
     }
 
@@ -82,15 +83,16 @@ void DirectionalLight::loadPipeline()
 
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
     myMaterial.buildMaterial(*ptrAContext, shaderCompiler, vReq, fReq);
+    myMaterialInstance = myMaterial.createInstance();
 
-    myMaterial.bindUniformBuffer("sceneBuffer", myScene.sceneUBO);
+    myMaterialInstance.bindUniformBuffer("sceneBuffer", myScene.sceneUBO);
 
     // Bind by name
     if (myTexture.imageView != VK_NULL_HANDLE)
     {
-        myMaterial.bindTexture("texture", myTexture);
+        myMaterialInstance.bindTexture("texture", myTexture);
     }
-    myMaterial.updateDescriptorSets();
+    myMaterialInstance.updateDescriptorSets();
 
     auto attributesArray = GPUMesh::getAttributeDescriptions();
 
@@ -110,10 +112,10 @@ void DirectionalLight::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, myMaterial.materialPipelineLayout, "DirectionalLightPipeline");
+        .buildPipeline(ptrAContext->device, myMaterial.materialPipelineLayout, "DirectionalLightPipeline");
 }
 
-void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inAnvilSwapchain)
+void DirectionalLight::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapchain)
 {
     // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};
@@ -155,7 +157,7 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& in
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants{};
     constants.renderMatrix = projection * view * model;
@@ -163,7 +165,7 @@ void DirectionalLight::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& in
     constants.camera = camera.position;
     vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(PushConstants), &constants);
 
-    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterial.materialDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterialInstance.descriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);

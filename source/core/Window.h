@@ -5,7 +5,7 @@
 #define ANVIL_VK_WINDOW_H
 
 /**
- * @file AnvilWindow.h
+ * @file Window.h
  * @brief GLFW Window creation, input polling, Vulkan surface creation, Framebuffer extent querying
  */
 
@@ -24,7 +24,7 @@
  *
  * @note This class is non-copyable and non-movable due to GLFW.
  */
-class AnvilWindow
+class Window
 {
 public:
     /**
@@ -34,18 +34,18 @@ public:
      * @param inTitle Window title bar text.
      * @todo Creates a resizeable window, should be configurable.
      */
-    AnvilWindow(uint32_t inWidth, uint32_t inHeight, std::string inTitle);
+    Window(uint32_t inWidth, uint32_t inHeight, std::string inTitle);
 
     /**
      * @brief Destroys the GLFW window and terminates GLFW.
      */
-    ~AnvilWindow();
+    ~Window();
 
-    AnvilWindow(const AnvilWindow&) = delete;
-    AnvilWindow& operator=(const AnvilWindow&) = delete;
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
 
-    AnvilWindow(AnvilWindow&&) = delete;
-    AnvilWindow& operator=(AnvilWindow&&) = delete;
+    Window(Window&&) = delete;
+    Window& operator=(Window&&) = delete;
 
 private:
     GLFWwindow* glfwWindow = nullptr;

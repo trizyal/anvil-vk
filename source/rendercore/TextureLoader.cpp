@@ -28,8 +28,8 @@ namespace TextureLoader
         // CPU-visible staging buffer
         GPUBuffer stagingBuffer;
         stagingBuffer.createBuffer(
-            inContext.anvilAllocator,
-            inContext.anvilDevice,
+            inContext.allocator,
+            inContext.device,
             pixels,
             imageSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -57,13 +57,13 @@ namespace TextureLoader
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
         AnvilTexture texture;
-        if (vmaCreateImage(inContext.anvilAllocator, &imageInfo, &allocInfo, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
+        if (vmaCreateImage(inContext.allocator, &imageInfo, &allocInfo, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create texture image: " + imageName);
         }
 
         std::string textureDebugName = "TextureImage: " + imageName;
-        VulkanDebug::SetAutoName(inContext.anvilDevice, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
+        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -114,8 +114,8 @@ namespace TextureLoader
         viewInfo.subresourceRange.layerCount = 1;
 
         std::string imageViewDebugName = "TextureImageView: " + imageName;
-        CHECK(vkCreateImageView(inContext.anvilDevice, &viewInfo, nullptr, &texture.imageView));
-        VulkanDebug::SetAutoName(inContext.anvilDevice, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
+        CHECK(vkCreateImageView(inContext.device, &viewInfo, nullptr, &texture.imageView));
+        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
 
         // Create Sampler
         VkSamplerCreateInfo samplerInfo{};
@@ -133,8 +133,8 @@ namespace TextureLoader
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
         std::string samplerDebugName = "TextureSampler: " + imageName;
-        CHECK(vkCreateSampler(inContext.anvilDevice, &samplerInfo, nullptr, &texture.sampler));
-        VulkanDebug::SetAutoName(inContext.anvilDevice, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
+        CHECK(vkCreateSampler(inContext.device, &samplerInfo, nullptr, &texture.sampler));
+        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
 
         return texture;
     }

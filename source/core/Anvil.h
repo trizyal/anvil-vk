@@ -1,11 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_APPLICATION_H
-#define ANVIL_VK_APPLICATION_H
+#ifndef ANVIL_VK_ANVIL_H
+#define ANVIL_VK_ANVIL_H
 
 /**
- * @file AnvilApplication.h
+ * @file Anvil.h
  * @brief High-level application lifecycle, window management, and main loop orchestration.
  */
 
@@ -13,16 +13,16 @@
 #include <string>
 #include <functional>
 
-#include "AnvilWindow.h"
+#include "Window.h"
 #include "VulkanContext.h"
-#include "VulkanSwapchain.h"
+#include "Swapchain.h"
 #include "AnvilRenderer.h"
 #include "UIRenderer.h"
 
 /**
  * @brief Configuration settings for initializing an AnvilApplication instance.
  */
-struct AnvilApplicationCreateInfo
+struct AnvilCreateInfo
 {
     uint32_t width = 1280;          /**< Initial window viewport height in pixels. */
     uint32_t height = 720;          /**< Initial window viewport height in pixels. */
@@ -38,31 +38,31 @@ struct AnvilApplicationCreateInfo
  *
  * @note This class is non-copyable and non-movable due to underlying GLFW.
  */
-class AnvilApplication
+class Anvil
 {
 public:
-    AnvilApplication()= default;
-    ~AnvilApplication() = default;
+    Anvil()= default;
+    ~Anvil() = default;
 
     /** Copy construction is disabled */
-    AnvilApplication(const AnvilApplication&) = delete;
+    Anvil(const Anvil&) = delete;
 
     /** Copy assignment is disabled */
-    AnvilApplication& operator=(const AnvilApplication&) = delete;
+    Anvil& operator=(const Anvil&) = delete;
 
     /** Move construction is disabled */
-    AnvilApplication(AnvilApplication&&) = delete;
+    Anvil(Anvil&&) = delete;
 
     /** Move assignment is disabled */
-    AnvilApplication& operator=(AnvilApplication&&) = delete;
+    Anvil& operator=(Anvil&&) = delete;
 
 private:
-    std::unique_ptr<AnvilWindow> anvilWindow;
-    VulkanContext anvilContext;
-    VulkanSwapchain anvilSwapchain;
-    AnvilRenderer anvilRenderer;
-    UIRenderer anvilUIRenderer;
-    bool anvilInitialized = false;
+    std::unique_ptr<Window> window;
+    VulkanContext context;
+    Swapchain swapchain;
+    AnvilRenderer renderer;
+    UIRenderer uiRenderer;
+    bool initialized = false;
 
     std::vector<std::function<void()>> shaderReloadQueue;
 
@@ -75,7 +75,7 @@ public:
      * @param inCreateInfo Optional window and startup configuration struct.
      * @throws std::runtime_error If GLFW or any core Vulkan subsystems fail to initialize.
      */
-    void initializeAnvil(const AnvilApplicationCreateInfo& inCreateInfo = {});
+    void initializeAnvil(const AnvilCreateInfo& inCreateInfo = {});
 
     /**
      * @brief Starts the main application event loop and provides the renderer with the draw callback.
@@ -87,7 +87,7 @@ public:
      * @throws std::runtime_error If the AnvilApplication is uninitialized or `drawFrame` throws.
      * @attention Shader reloading happening here is not ideal.
      */
-    void runAnvil(const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& renderCallback);
+    void runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback);
 
     /**
      * @brief Shuts down the engine and safely destroys all Vulkan and window resources.
@@ -109,28 +109,28 @@ public:
      * @return Reference to the AnvilWindow instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] AnvilWindow& getAnvilWindow() const;
+    [[nodiscard]] Window& getWindow() const;
 
     /**
      * @brief Retrieves the core Vulkan context (instance, device, memory allocator).
      * @return Reference to the AnvilVulkanContext instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] VulkanContext& getAnvilContext();
+    [[nodiscard]] VulkanContext& getContext();
 
     /**
      * @brief Retrieves the active Vulkan swapchain.
      * @return Reference to the AnvilSwapchain instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] VulkanSwapchain& getAnvilSwapchain();
+    [[nodiscard]] Swapchain& getSwapchain();
 
     /**
      * @brief Retrieves the main renderer responsible for command buffer orchestration.
      * @return Reference to the AnvilRenderer instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] AnvilRenderer& getAnvilRenderer();
+    [[nodiscard]] AnvilRenderer& getRenderer();
 };
 
-#endif //ANVIL_VK_APPLICATION_H
+#endif //ANVIL_VK_ANVIL_H

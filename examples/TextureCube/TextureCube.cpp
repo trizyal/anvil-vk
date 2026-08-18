@@ -12,9 +12,10 @@
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
 #include "TextureLoader.h"
+#include "UIElements.h"
 #include "UIRenderer.h"
 
-void TextureCube::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void TextureCube::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -52,21 +53,21 @@ void TextureCube::cleanupProject()
         myTexture.destroyAnvilTexture(ptrAContext);
 
         if (descriptorPool) {
-            vkDestroyDescriptorPool(ptrAContext->anvilDevice, descriptorPool, nullptr);
+            vkDestroyDescriptorPool(ptrAContext->device, descriptorPool, nullptr);
         }
         if (descriptorSetLayout) {
-            vkDestroyDescriptorSetLayout(ptrAContext->anvilDevice, descriptorSetLayout, nullptr);
+            vkDestroyDescriptorSetLayout(ptrAContext->device, descriptorSetLayout, nullptr);
         }
 
         meshBuffer.destroyGPUMesh();
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
         fragmentShader.destroyShaderModule();
     }
 }
 
-void TextureCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
+void TextureCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -96,7 +97,7 @@ void TextureCube::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvil
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants;
     constants.renderMatrix = projection * view;
@@ -123,8 +124,8 @@ void TextureCube::loadPipeline()
 
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
     }
     vertexShader.destroyShaderModule();
     fragmentShader.destroyShaderModule();
@@ -142,7 +143,7 @@ void TextureCube::loadPipeline()
     layoutInfo.setLayoutCount = 1;
     layoutInfo.pSetLayouts = &descriptorSetLayout;
 
-    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(ptrAContext->device, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create pipeline layout!");
     }
@@ -177,7 +178,7 @@ void TextureCube::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, pipelineLayout);
+        .buildPipeline(ptrAContext->device, pipelineLayout);
 }
 
 void TextureCube::setupDescriptors()
@@ -194,7 +195,7 @@ void TextureCube::setupDescriptors()
     layoutInfo.bindingCount = 1;
     layoutInfo.pBindings = &layoutBinding;
 
-    if (vkCreateDescriptorSetLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+    if (vkCreateDescriptorSetLayout(ptrAContext->device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create descriptor set layout!");
     }
@@ -210,7 +211,7 @@ void TextureCube::setupDescriptors()
     poolInfo.pPoolSizes = &poolSize;
     poolInfo.maxSets = 1;
 
-    if (vkCreateDescriptorPool(ptrAContext->anvilDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(ptrAContext->device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create descriptor pool!");
     }
@@ -222,7 +223,7 @@ void TextureCube::setupDescriptors()
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = &descriptorSetLayout;
 
-    if (vkAllocateDescriptorSets(ptrAContext->anvilDevice, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+    if (vkAllocateDescriptorSets(ptrAContext->device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
         throw std::runtime_error("Failed to allocate descriptor set!");
     }
 
@@ -241,5 +242,5 @@ void TextureCube::setupDescriptors()
     descriptorWrite.descriptorCount = 1;
     descriptorWrite.pImageInfo = &imageInfo;
 
-    vkUpdateDescriptorSets(ptrAContext->anvilDevice, 1, &descriptorWrite, 0, nullptr);
+    vkUpdateDescriptorSets(ptrAContext->device, 1, &descriptorWrite, 0, nullptr);
 }

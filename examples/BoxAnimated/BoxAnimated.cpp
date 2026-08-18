@@ -8,12 +8,14 @@
 
 #include <glm/glm.hpp>
 
+#include "AnvilRenderer.h"
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "UIRenderer.h"
 #include "ShaderCompiler.h"
+#include "UIElements.h"
 
-void BoxAnimated::initializeProject(VulkanContext& inContext, VulkanSwapchain& inSwapchain)
+void BoxAnimated::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
 {
     pContext = &inContext;
     pSwapchain = &inSwapchain;
@@ -45,14 +47,14 @@ void BoxAnimated::cleanupProject()
 {
     if (pContext)
     {
-        vkDeviceWaitIdle(pContext->anvilDevice);
+        vkDeviceWaitIdle(pContext->device);
 
         gpuModel.destroyGPUModel();
         boxMaterial.destroyMaterial();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
-            vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+            vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
             pipeline.pipeline = VK_NULL_HANDLE;
         }
 
@@ -67,7 +69,7 @@ void BoxAnimated::loadPipeline()
     shaderCompiler.resetSession();
     if (pipeline.pipeline != VK_NULL_HANDLE)
     {
-        vkDestroyPipeline(pContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         boxMaterial.destroyMaterial();
     }
@@ -97,12 +99,12 @@ void BoxAnimated::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->anvilDevice, boxMaterial.materialPipelineLayout, "BoxAnimatedPipeline");
+        .buildPipeline(pContext->device, boxMaterial.materialPipelineLayout, "BoxAnimatedPipeline");
 
     gpuModel.createGPUModel( *pContext, cpuModel, boxMaterial, "sceneBuffer", boxScene.sceneUBO, "texture");
 }
 
-void BoxAnimated::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inSwapchain)
+void BoxAnimated::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
         // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};
@@ -151,7 +153,7 @@ void BoxAnimated::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inSwapc
     const glm::mat4 projection = camera.getProjectionMatrix(aspect);
     const glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -198,5 +200,7 @@ void BoxAnimated::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain& inSwapc
         vkCmdBindVertexBuffers(inCmd, 0, 1, &gpu_mesh.vertexBuffer.buffer, &offset);
         vkCmdBindIndexBuffer(inCmd, gpu_mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
         vkCmdDrawIndexed(inCmd, gpu_mesh.indexCount, 1, 0, 0, 0);
+        AnvilRenderer::engineStats.drawCalls++;
+        AnvilRenderer::engineStats.primitiveCount += (gpu_mesh.indexCount/3);
     }
 }

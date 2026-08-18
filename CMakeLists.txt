@@ -201,6 +201,7 @@ endif ()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
         ANVIL_SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
+        ASSETS_DIR=\"${CMAKE_SOURCE_DIR}/assets\"
 )
 
 # --------------------------------------------------

@@ -6,14 +6,13 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
+#include "UIElements.h"
 #include "UIRenderer.h"
 
-void BoxModel::initializeProject(VulkanContext& inAnvilContext, VulkanSwapchain& inAnvilSwapchain)
+void BoxModel::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
     ptrAContext = &inAnvilContext;
     ptrASwapchain = &inAnvilSwapchain;
@@ -40,14 +39,14 @@ void BoxModel::cleanupProject()
     if (ptrAContext)
     {
         meshBuffer.destroyGPUMesh();
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
         vertexShader.destroyShaderModule();
         fragmentShader.destroyShaderModule();
     }
 }
 
-void BoxModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwapchain)
+void BoxModel::recordCommands(VkCommandBuffer inCmd, const Swapchain &inAnvilSwapchain)
 {
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
@@ -77,7 +76,7 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, VulkanSwapchain &inAnvilSwa
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
     glm::mat4 view = camera.getViewMatrix();
 
-    UIRenderer::DrawDebugAxis(view);
+    UI::RenderWorldAxes(view);
 
     PushConstants constants;
     constants.renderMatrix = projection * view;
@@ -102,8 +101,8 @@ void BoxModel::loadPipeline()
 
     // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->anvilDevice, pipeline.pipeline, nullptr);
-        vkDestroyPipelineLayout(ptrAContext->anvilDevice, pipelineLayout, nullptr);
+        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
+        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
     }
     vertexShader.destroyShaderModule();
     fragmentShader.destroyShaderModule();
@@ -118,7 +117,7 @@ void BoxModel::loadPipeline()
     layoutInfo.pushConstantRangeCount = 1;
     layoutInfo.pPushConstantRanges = &pushConstantRange;
 
-    if (vkCreatePipelineLayout(ptrAContext->anvilDevice, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(ptrAContext->device, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to create pipeline layout!");
     }
@@ -153,6 +152,6 @@ void BoxModel::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->anvilDevice, pipelineLayout);
+        .buildPipeline(ptrAContext->device, pipelineLayout);
 }
 

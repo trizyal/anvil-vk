@@ -9,11 +9,12 @@
 #include "ShaderCompiler.h"
 #include "UIRenderer.h"
 #include "VulkanContext.h"
-#include "AnvilWindow.h"
-#include "VulkanDebug.h"
+#include "Window.h"
+#include "DebugNames.h"
+#include "UIElements.h"
 #include "VulkanResult.h"
 
-void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, VulkanSwapchain* inAnvilSwapchain)
+void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
     std::cout << "Initializing AnvilRenderer" << std::endl;
     this->pContext = inAnvilContext;
@@ -22,34 +23,37 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, VulkanSwap
     setupCommandBuffers();
     setupSyncStructures();
 
+    const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
+    gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
+
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
 
 AnvilRenderer::~AnvilRenderer()
 {
     // Wait for GPU
-    vkDeviceWaitIdle(pContext->anvilDevice);
+    vkDeviceWaitIdle(pContext->device);
 
     for (const AnvilFrame& anvil_frame : anvilFrames)
     {
-        vkDestroySemaphore(pContext->anvilDevice, anvil_frame.imageAvailableSemaphore, nullptr);
-        vkDestroyFence(pContext->anvilDevice, anvil_frame.frameDoneFence, nullptr);
-        vkDestroyCommandPool(pContext->anvilDevice, anvil_frame.cmdPool, nullptr);
+        vkDestroySemaphore(pContext->device, anvil_frame.imageAvailableSemaphore, nullptr);
+        vkDestroyFence(pContext->device, anvil_frame.frameDoneFence, nullptr);
+        vkDestroyCommandPool(pContext->device, anvil_frame.cmdPool, nullptr);
     }
 
     // Clean up per-image semaphores
     for (const VkSemaphore& semaphore : renderFinishedSemaphores)
     {
-        vkDestroySemaphore(pContext->anvilDevice, semaphore, nullptr);
+        vkDestroySemaphore(pContext->device, semaphore, nullptr);
     }
 }
 
-void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(VkCommandBuffer, VulkanSwapchain*)>& drawCallback)
+void AnvilRenderer::drawFrame(Window& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback)
 {
     // Recreate swapchain maybe
     if (recreateSwapchain)
     {
-        vkDeviceWaitIdle(pContext->anvilDevice);
+        vkDeviceWaitIdle(pContext->device);
         pSwapchain->recreateSwapchain(*pContext, inWindow.getFramebufferExtent());
         recreateSwapchain = false;
     }
@@ -57,7 +61,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     AnvilFrame& frame = getCurrentFrame();
 
     // Wait for previous frame
-    VkResult fence_result = vkWaitForFences(pContext->anvilDevice, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX);
+    VkResult fence_result = vkWaitForFences(pContext->device, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX);
     if (fence_result != VK_SUCCESS)
     {
         std::ostringstream error_stream;
@@ -68,7 +72,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
 
     // Request image from swapchain
     uint32_t image_index = 0;
-    VkResult acquired_result = vkAcquireNextImageKHR(pContext->anvilDevice,
+    VkResult acquired_result = vkAcquireNextImageKHR(pContext->device,
         pSwapchain->anvilSwapchain,
         UINT64_MAX,
         frame.imageAvailableSemaphore,
@@ -92,7 +96,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     }
 
     // Reset fences after vkAcquireNextImageKHR
-    fence_result = vkResetFences(pContext->anvilDevice, 1, &frame.frameDoneFence);
+    fence_result = vkResetFences(pContext->device, 1, &frame.frameDoneFence);
     if (fence_result != VK_SUCCESS)
     {
         std::ostringstream error_stream;
@@ -108,10 +112,14 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     VkCommandBuffer cmd = frame.cmdBuffer;
     vkResetCommandBuffer(cmd, 0);
 
+    engineStats.resetFrameStats();
+    auto cpu_start = std::chrono::high_resolution_clock::now();
+
     VkCommandBufferBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin_info);
+    gpuProfiler.beginGPUProfilerFrame(cmd, anvilFrameIndex);
 
     // Transition image here
     transitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
@@ -154,6 +162,8 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         drawCallback(cmd, pSwapchain);
     }
 
+    engineStats.fps = 1000.f/engineStats.frameTime;
+    UI::FrameStats(engineStats);
     UIRenderer::RecordUICommands(cmd);
 
     vkCmdEndRendering(cmd);
@@ -163,8 +173,13 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
+    gpuProfiler.endGPUProfilerFrame(cmd, anvilFrameIndex);
+
     // End command buffer
     vkEndCommandBuffer(cmd);
+
+    auto cpu_end = std::chrono::high_resolution_clock::now();
+    engineStats.cpuTime = std::chrono::duration<float, std::milli>(cpu_end - cpu_start).count();
 
     // Submit command buffer
     VkSubmitInfo submit_info{};
@@ -184,7 +199,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
 
-    CHECK(vkQueueSubmit(pContext->anvilGraphicsQueue, 1, &submit_info, frame.frameDoneFence));
+    CHECK(vkQueueSubmit(pContext->graphicsQueue, 1, &submit_info, frame.frameDoneFence));
 
     // Present
     VkPresentInfoKHR present_info{};
@@ -198,7 +213,7 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
     present_info.pSwapchains = &swapchain;
     present_info.pImageIndices = &image_index;
 
-    VkResult present_result = vkQueuePresentKHR(pContext->anvilGraphicsQueue, &present_info);
+    VkResult present_result = vkQueuePresentKHR(pContext->graphicsQueue, &present_info);
 
     if (present_result == VK_ERROR_OUT_OF_DATE_KHR || present_result == VK_SUBOPTIMAL_KHR)
     {
@@ -213,6 +228,8 @@ void AnvilRenderer::drawFrame(AnvilWindow& inWindow, const std::function<void(Vk
         throw std::runtime_error(error_stream.str());
     }
 
+    engineStats.gpuTime = gpuProfiler.getGPUTime(anvilFrameIndex);
+
     anvilFrameIndex++;
     assert(sizeof(anvilFrames) / sizeof(AnvilFrame) == FRAMES_IN_FLIGHT);
     anvilFrameIndex %= FRAMES_IN_FLIGHT;
@@ -224,12 +241,12 @@ void AnvilRenderer::setupCommandBuffers()
     VkCommandPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    pool_info.queueFamilyIndex = pContext->anvilGraphicsQueueIndex;
+    pool_info.queueFamilyIndex = pContext->graphicsQueueIndex;
 
     for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
     {
         AnvilFrame& anvil_frame = anvilFrames[i];
-        if (vkCreateCommandPool(pContext->anvilDevice, &pool_info, nullptr, &anvil_frame.cmdPool) != VK_SUCCESS)
+        if (vkCreateCommandPool(pContext->device, &pool_info, nullptr, &anvil_frame.cmdPool) != VK_SUCCESS)
         {
             // TODO: Provide better error message
             throw std::runtime_error("Failed to create command pool.");
@@ -241,7 +258,7 @@ void AnvilRenderer::setupCommandBuffers()
         alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         alloc_info.commandBufferCount = 1;
 
-        CHECK(vkAllocateCommandBuffers(pContext->anvilDevice, &alloc_info, &anvil_frame.cmdBuffer));
+        CHECK(vkAllocateCommandBuffers(pContext->device, &alloc_info, &anvil_frame.cmdBuffer));
 
 #if ANVIL_DEBUG
         // When function structure doesn't allow ANVIL_DEBUG_NAME, we can directly use the SetAutoName function
@@ -249,10 +266,10 @@ void AnvilRenderer::setupCommandBuffers()
         std::string cmd_name  = "AnvilFrame[" + std::to_string(i) + "]_CommandBuffer";
 
         // We can rely on the default std::source_location parameter here!
-        VulkanDebug::SetAutoName(pContext->anvilDevice, reinterpret_cast<uint64_t>(anvil_frame.cmdPool),
+        VulkanDebug::SetAutoName(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdPool),
                                 VK_OBJECT_TYPE_COMMAND_POOL, pool_name.c_str());
 
-        VulkanDebug::SetAutoName(pContext->anvilDevice, reinterpret_cast<uint64_t>(anvil_frame.cmdBuffer),
+        VulkanDebug::SetAutoName(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdBuffer),
                                 VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
 #endif
     }
@@ -271,31 +288,31 @@ void AnvilRenderer::setupSyncStructures()
     {
         AnvilFrame& anvil_frame = anvilFrames[i];
 
-        if (vkCreateSemaphore(pContext->anvilDevice, &semaphore_info, nullptr, &anvil_frame.imageAvailableSemaphore) != VK_SUCCESS)
+        if (vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &anvil_frame.imageAvailableSemaphore) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create imageAvailableSemaphore.");
         }
         std::string debug_name = "Frame[" + std::to_string(i) + "]_ImageAvailableSemaphore";
-        VulkanDebug::SetAutoName(pContext->anvilDevice, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE, debug_name.c_str());
+        VulkanDebug::SetAutoName(pContext->device, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE, debug_name.c_str());
 
-        if (vkCreateFence(pContext->anvilDevice, &fence_info, nullptr, &anvil_frame.frameDoneFence) != VK_SUCCESS)
+        if (vkCreateFence(pContext->device, &fence_info, nullptr, &anvil_frame.frameDoneFence) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create frameDoneFence.");
         }
         debug_name = "Frame[" + std::to_string(i) + "]_FrameDoneFence";
-        VulkanDebug::SetAutoName(pContext->anvilDevice, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE, debug_name.c_str());
+        VulkanDebug::SetAutoName(pContext->device, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE, debug_name.c_str());
     }
 
     // Create semaphores based on swapchain images count
     renderFinishedSemaphores.resize(pSwapchain->swapchainImages.size());
     for (uint32_t i = 0; i < renderFinishedSemaphores.size(); i++)
     {
-        if (vkCreateSemaphore(pContext->anvilDevice, &semaphore_info, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS)
+        if (vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create renderFinishedSemaphore.");
         }
         std::string render_finished_name = "SwapchainImage[" + std::to_string(i) + "]_RenderFinishedSemaphore";
-        VulkanDebug::SetAutoName(pContext->anvilDevice, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, render_finished_name.c_str());
+        VulkanDebug::SetAutoName(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, render_finished_name.c_str());
     }
 }
 

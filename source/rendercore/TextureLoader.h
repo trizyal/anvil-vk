@@ -46,15 +46,15 @@ struct AnvilTexture
     {
         if (sampler)
         {
-            vkDestroySampler(inContext->anvilDevice, sampler, nullptr);
+            vkDestroySampler(inContext->device, sampler, nullptr);
         }
         if (imageView)
         {
-            vkDestroyImageView(inContext->anvilDevice, imageView, nullptr);
+            vkDestroyImageView(inContext->device, imageView, nullptr);
         }
         if (image)
         {
-            vmaDestroyImage(inContext->anvilAllocator, image, allocation);
+            vmaDestroyImage(inContext->allocator, image, allocation);
         }
     }
 };
