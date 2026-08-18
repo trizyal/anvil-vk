@@ -24,6 +24,12 @@
 class VulkanContext;
 
 /**
+ * @brief Max number of Joints allowed.
+ * 256 glm::mat4 matrices (16KB total)
+ */
+constexpr size_t MAX_BONES = 256;
+
+/**
  * @brief Per-material GPU-side binding packet.
  *
  * materialIndex maps back to CPUModel::materials.
@@ -80,6 +86,8 @@ public:
     std::vector<GPUModelMaterial> gpuMaterials;
     std::vector<GPUModelDrawItem> drawItems;
 
+    GPUBuffer jointBuffer;
+
     /**
      * @brief Uploads a CPUModel to GPU-side resources and generates a draw list.
      */
@@ -97,6 +105,8 @@ public:
      */
     void updateTransforms(const CPUModel& inModel);
 
+    void updateJoints(const CPUModel& inModel) const;
+
     void destroyGPUModel();
 
 private:
@@ -111,6 +121,8 @@ private:
     );
 
     void createMeshesAndDrawItems(const CPUModel& inCPUModel);
+
+    void createJointBuffer();
 };
 
 #endif //ANVIL_VK_GPUMODEL_H

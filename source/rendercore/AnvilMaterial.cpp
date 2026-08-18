@@ -67,7 +67,17 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
             slang::TypeReflection::Kind kind = type_layout->getKind();
             if (kind == slang::TypeReflection::Kind::Resource)
             {
-                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                SlangResourceShape shape = type_layout->getResourceShape();
+
+                // Had a bug here where all resources were being mapped as Images.
+                if (shape == SLANG_STRUCTURED_BUFFER)
+                {
+                    layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                }
+                else
+                {
+                    layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                }
             }
             else if (kind == slang::TypeReflection::Kind::ConstantBuffer)
             {

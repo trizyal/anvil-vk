@@ -50,6 +50,15 @@ void MaterialInstance::bindUniformBuffer(const std::string& name, const GPUBuffe
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
 
+void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffer& inBuffer)
+{
+    if (!pParentMaterial || !pParentMaterial->hasBinding(name))
+    {
+        return;
+    }
+    pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
+}
+
 void MaterialInstance::updateDescriptorSets()
 {
     if (pendingTextures.empty() && pendingBuffers.empty())
@@ -117,7 +126,8 @@ void MaterialInstance::updateDescriptorSets()
             write.pImageInfo = &image_infos_vector[image_index];
             image_index++;
         }
-        else if (write.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+        else if (write.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
+            write.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
         {
             write.pBufferInfo = &buffer_infos_vector[buffer_index];
             buffer_index++;

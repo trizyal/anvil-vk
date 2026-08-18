@@ -35,6 +35,7 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
 
     pContext = &inContext;
 
+    createJointBuffer();
     createTextures(inModel);
     createMaterialDescriptorSets(inModel, inMaterial, sceneBufferName, sceneBuffer, textureName);
     createMeshesAndDrawItems(inModel);
@@ -46,6 +47,8 @@ void GPUModel::destroyGPUModel()
     {
         return;
     }
+
+    jointBuffer.destroyBuffer();
 
     for (AnvilTexture& texture : textures)
     {
@@ -73,6 +76,59 @@ void GPUModel::updateTransforms(const CPUModel& inModel)
         if (item.cpuNodeIndex >= 0 && item.cpuNodeIndex < static_cast<int>(inModel.nodes.size()))
         {
             item.worldMatrix = inModel.nodes[item.cpuNodeIndex].worldMatrix;
+        }
+    }
+}
+
+void GPUModel::updateJoints(const CPUModel& inModel) const
+{
+    if (jointBuffer.buffer != VK_NULL_HANDLE && !inModel.skins.empty())
+    {
+        std::vector<glm::mat4> jointMatrices;
+        bool foundSkinnedNode = false;
+
+        // Find the first node that is rigged to a skeleton
+        for (int i = 0; i < static_cast<int>(inModel.nodes.size()); ++i)
+        {
+            if (inModel.nodes[i].skinIndex >= 0)
+            {
+                foundSkinnedNode = true;
+                std::cout << "[Anim Debug] Found rigged node! Node " << i
+                          << " is using Skin " << inModel.nodes[i].skinIndex << std::endl;
+
+                // Const-cast to use the compute function
+                const_cast<CPUModel&>(inModel).computeJointMatrices(i, jointMatrices);
+
+                std::cout << "[Anim Debug] computeJointMatrices generated "
+                      << jointMatrices.size() << " matrices." << std::endl;
+                break;
+            }
+        }
+
+        if (!foundSkinnedNode)
+        {
+            std::cout << "[Anim Debug] ERROR: Checked all " << inModel.nodes.size()
+                      << " nodes, but NONE of them had a skinIndex >= 0!" << std::endl;
+        }
+
+        // Upload to the Vulkan buffer
+        if (!jointMatrices.empty())
+        {
+            // Print the X translation of the first bone
+            std::cout << "Bone 0 X-Transform: " << jointMatrices[0][3][0] << std::endl;
+
+            // Calculate size, clamping it to the 256 bones we allocated
+            size_t copySize = jointMatrices.size() * sizeof(glm::mat4);
+            constexpr size_t maxBufferSize = MAX_BONES * sizeof(glm::mat4);
+            if (copySize > maxBufferSize)
+            {
+                copySize = maxBufferSize;
+            }
+
+            void* data = nullptr;
+            vmaMapMemory(pContext->allocator, jointBuffer.allocation, &data);
+            std::memcpy(data, jointMatrices.data(), copySize);
+            vmaUnmapMemory(pContext->allocator, jointBuffer.allocation);
         }
     }
 }
@@ -112,6 +168,11 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         if (inMaterial.hasBinding(sceneBufferName))
         {
             gpu_material.instance.bindUniformBuffer(sceneBufferName, sceneBuffer);
+        }
+
+        if (inMaterial.hasBinding("jointMatrices"))
+        {
+            gpu_material.instance.bindStorageBuffer("jointMatrices", jointBuffer);
         }
 
         if (inMaterial.hasBinding(textureName))
@@ -212,5 +273,23 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 
             drawItems.push_back(draw_item);
         }
+    }
+}
+
+void GPUModel::createJointBuffer()
+{
+    // We must provide initial data because GPUBuffer::createBuffer always calls std::memcpy.
+    // Initializing with Identity Matrices means vertices won't stretch to infinity on frame 0.
+    std::vector<glm::mat4> initial_matrices(MAX_BONES, glm::mat4(1.0f));
+
+    if (jointBuffer.buffer == VK_NULL_HANDLE)
+    {
+        jointBuffer.createBuffer(
+            pContext->allocator,
+            pContext->device,
+            initial_matrices.data(),
+            sizeof(glm::mat4) * MAX_BONES,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+        );
     }
 }

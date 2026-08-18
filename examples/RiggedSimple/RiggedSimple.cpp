@@ -74,12 +74,10 @@ void RiggedSimple::loadPipeline()
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
     boxMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
 
-    const auto attributesArray = GPUMesh::get3AttributeDescriptions();
+    const auto attributes = GPUMesh::getAttributeDescriptions();
 
     // Vertex Descriptions
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
-    std::vector<VkVertexInputAttributeDescription> attributes =
-    {attributesArray[0], attributesArray[1], attributesArray[2]};
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
@@ -135,6 +133,11 @@ void RiggedSimple::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 
         // Update the matrices in the GPU buffers.
         gpuModel.updateTransforms(cpuModel);
+    }
+
+    if (!cpuModel.skins.empty())
+    {
+        gpuModel.updateJoints(cpuModel);
     }
 
     // ----------------------------------------

@@ -218,11 +218,17 @@ void CPUModel::computeJointMatrices(const int nodeIndex, std::vector<glm::mat4>&
     // If this node not have a skin, we do not neet joint matrices
     if (node.skinIndex < 0 || node.skinIndex >= static_cast<int>(skins.size()))
     {
+        std::cout << "[Anim Error] Node skin index is invalid!" << std::endl;
         matrices.clear();
         return;
     }
 
     const CPUSkin& skin = skins[node.skinIndex];
+
+    // --- DIAGNOSTIC PRINT ---
+    std::cout << "[Anim Debug] Skin " << node.skinIndex << " contains "
+              << skin.jointNodes.size() << " joints." << std::endl;
+
     matrices.resize(skin.jointNodes.size());
 
     // glTF spec: JointMatrix = inverse(MeshWorld) * JointWorld * InverseBind
@@ -530,7 +536,7 @@ namespace
     {
         for (cgltf_size skin_index = 0; skin_index < gltf_data->skins_count; ++skin_index)
         {
-            CPUSkin cpu_skin;
+            CPUSkin &cpu_skin = cpu_model.skins[skin_index];
             const cgltf_skin& gltf_skin = gltf_data->skins[skin_index];
 
             cpu_skin.name = gltf_skin.name ? gltf_skin.name : "Skin_" + std::to_string(skin_index);
@@ -560,8 +566,6 @@ namespace
             {
                 cpu_skin.inverseBindMatrices.resize(gltf_skin.joints_count, glm::mat4(1.0f));
             }
-
-            cpu_model.skins.push_back(std::move(cpu_skin));
         }
     }
 
