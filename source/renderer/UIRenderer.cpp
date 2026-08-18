@@ -14,6 +14,7 @@
 #include "Swapchain.h"
 #include "VulkanContext.h"
 #include "DebugNames.h"
+#include "UIElements.h"
 #include "VulkanResult.h"
 
 namespace
@@ -104,6 +105,8 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     );
 
     ImGui_ImplVulkan_Init(&init_info);
+
+    UI::LoadFonts();
 
     return true;
 }

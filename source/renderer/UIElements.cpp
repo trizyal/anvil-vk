@@ -4,6 +4,7 @@
 #include "UIElements.h"
 
 #include <algorithm>
+#include <iostream>
 
 #include "imgui.h"
 
@@ -31,6 +32,19 @@ namespace
 
 namespace UI
 {
+    void LoadFonts()
+    {
+        ImGuiIO& io = ImGui::GetIO();
+
+        base = io.Fonts->AddFontFromFileTTF(FontPath, 22.0f);
+        debugUI = io.Fonts->AddFontFromFileTTF(FontPath, 18.0f);
+
+        if (base == nullptr)
+        {
+            std::cerr << "Warning: Failed to load font at " << FontPath << ". Falling back to default." << std::endl;
+        }
+    }
+
     void FrameStats(const ::FrameStats& stats, bool* pOpen)
     {
         const float PAD = 10.0f;
@@ -58,9 +72,12 @@ namespace UI
                 return ImVec4(1.0f, 0.3f, 0.3f, 1.0f);                  // Red
             };
 
+            ImGui::PushFont(base);
             ImGui::TextDisabled("STAT UNIT");
             ImGui::Separator();
+            ImGui::PopFont();
 
+            ImGui::PushFont(debugUI);
             ImGui::Text("FPS:");
             ImGui::SameLine(80.0f);
             ImGui::TextColored(getMetricColor(1000.0f / (stats.fps + 0.001f)), "%.1f", stats.fps);
@@ -86,6 +103,7 @@ namespace UI
             ImGui::Text("Prims:");
             ImGui::SameLine(80.0f);
             ImGui::Text("%u", stats.primitiveCount);
+            ImGui::PopFont();
         }
         ImGui::End();
     }
