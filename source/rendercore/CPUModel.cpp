@@ -19,12 +19,14 @@ namespace
     void LoadMaterials(CPUModel& model, const cgltf_data* gltf_data);
     void LoadMeshes(CPUModel& cpu_model, const cgltf_data* gltf_data);
     void LoadNodes(CPUModel& cpu_model, const cgltf_data* gltf_data);
+    void LoadSkins(CPUModel& cpu_model, const cgltf_data* gltf_data);
     void LoadAnimations(CPUModel& cpu_model, const cgltf_data* gltf_data);
 
     int GetTextureIndex(const cgltf_data* data, const cgltf_texture* texture);
     int GetMaterialIndex(const cgltf_data* data, const cgltf_material* material);
     int GetMeshIndex(const cgltf_data* data, const cgltf_mesh* mesh);
     int GetNodeIndex(const cgltf_data* data, const cgltf_node* node);
+    int GetSkinIndex(const cgltf_data* data, const cgltf_skin* skin);
 
     glm::mat4 ConvertMatrix(const cgltf_float* cgltf_matrix);
     glm::mat4 MakeLocalMatrix(const CPUNode& cpu_node);
@@ -65,6 +67,10 @@ void CPUModel::loadGLTF(const std::string& filePath)
     // Get nodes from gltf
     nodes.resize(gltf_data->nodes_count);
     LoadNodes(*this, gltf_data);
+
+    // Get skins from gltf
+    skins.resize(gltf_data->skins_count);
+    LoadSkins(*this, gltf_data);
 
     // Get scene data from gltf
     const cgltf_scene* scene = gltf_data->scene;
@@ -353,6 +359,10 @@ namespace
                 const cgltf_accessor* normal_accessor = nullptr;
                 const cgltf_accessor* uv_accessor = nullptr;
 
+                // Pointers for skinning accessors
+                const cgltf_accessor* joints_accessor = nullptr;
+                const cgltf_accessor* weights_accessor = nullptr;
+
                 for (cgltf_size attribute_index = 0; attribute_index < gltf_primitive.attributes_count; ++attribute_index)
                 {
                     const cgltf_attribute& attribute = gltf_primitive.attributes[attribute_index];
@@ -368,6 +378,14 @@ namespace
                     else if (attribute.type == cgltf_attribute_type_texcoord && attribute.index == 0)
                     {
                         uv_accessor = attribute.data;
+                    }
+                    else if (attribute.type == cgltf_attribute_type_joints)
+                    {
+                        joints_accessor = attribute.data;
+                    }
+                    else if (attribute.type == cgltf_attribute_type_weights)
+                    {
+                        weights_accessor = attribute.data;
                     }
                     else
                     {
@@ -397,6 +415,16 @@ namespace
                     if (uv_accessor)
                     {
                         cgltf_accessor_read_float(uv_accessor, vertex_index, &vertex.uv.x, 2);
+                    }
+
+                    if (joints_accessor)
+                    {
+                        cgltf_accessor_read_uint(joints_accessor, vertex_index, &vertex.joints.x, 4);
+                    }
+
+                    if (weights_accessor)
+                    {
+                        cgltf_accessor_read_float(weights_accessor, vertex_index, &vertex.weights.x, 4);
                     }
 
                     cpu_mesh_primitive.vertices[vertex_index] = vertex;
@@ -437,6 +465,7 @@ namespace
             cpu_node.name = gltf_node.name ? gltf_node.name : "Node_" + std::to_string(node_index);
 
             cpu_node.meshIndex = GetMeshIndex(gltf_data, gltf_node.mesh);
+            cpu_node.skinIndex = GetSkinIndex(gltf_data, gltf_node.skin);
             cpu_node.parentIndex = GetNodeIndex(gltf_data, gltf_node.parent);
             ReadNodeTRS(cpu_node, &gltf_node);
 
@@ -466,6 +495,45 @@ namespace
                     cpu_model.nodes[node_index].children.push_back(model_child_index);
                 }
             }
+        }
+    }
+
+    void LoadSkins(CPUModel& cpu_model, const cgltf_data* gltf_data)
+    {
+        for (cgltf_size skin_index = 0; skin_index < gltf_data->skins_count; ++skin_index)
+        {
+            CPUSkin cpu_skin;
+            const cgltf_skin& gltf_skin = gltf_data->skins[skin_index];
+
+            cpu_skin.name = gltf_skin.name ? gltf_skin.name : "Skin_" + std::to_string(skin_index);
+
+            if (gltf_skin.skeleton)
+            {
+                cpu_skin.skeletonRootNode = GetNodeIndex(gltf_data, gltf_skin.skeleton);
+            }
+
+            cpu_skin.jointNodes.resize(gltf_skin.joints_count);
+            for (cgltf_size joint_index = 0; joint_index < gltf_skin.joints_count; ++joint_index)
+            {
+                cpu_skin.jointNodes[joint_index] = GetNodeIndex(gltf_data, gltf_skin.joints[joint_index]);
+            }
+
+            if (gltf_skin.inverse_bind_matrices)
+            {
+                cpu_skin.inverseBindMatrices.resize(gltf_skin.joints_count);
+                for (cgltf_size joint_index = 0; joint_index < gltf_skin.joints_count; ++joint_index)
+                {
+                    cgltf_float inverse_bind[16];
+                    cgltf_accessor_read_float(gltf_skin.inverse_bind_matrices, joint_index, inverse_bind, 16);
+                    cpu_skin.inverseBindMatrices[joint_index] = ConvertMatrix(inverse_bind);
+                }
+            }
+            else
+            {
+                cpu_skin.inverseBindMatrices.resize(gltf_skin.joints_count, glm::mat4(1.0f));
+            }
+
+            cpu_model.skins.push_back(std::move(cpu_skin));
         }
     }
 
@@ -625,6 +693,16 @@ namespace
             }
         }
 
+        return -1;
+    }
+
+    int GetSkinIndex(const cgltf_data* data, const cgltf_skin* skin)
+    {
+        if (!skin) return -1;
+        for (cgltf_size i = 0; i < data->skins_count; ++i)
+        {
+            if (&data->skins[i] == skin) return static_cast<int>(i);
+        }
         return -1;
     }
 
