@@ -186,7 +186,7 @@ public:
     void loadGLTF(const std::string& filePath);
 
     /**
-     * @brief Calculate all node and children matrices.
+     * @brief Update all matrices in nodes according to their parents
      */
     void updateAllMatrices();
 
@@ -221,7 +221,7 @@ public:
 namespace ModelLoader
 {
     /**
-     * @brief Parses a glTF 2.0 file from disk and extracts its primary mesh and texture data.
+     * @brief Legacy function to parse a glTF 2.0 file from disk and extracts its primary mesh and texture data.
      *
      * Reads `.gltf` or `.glb` files, extracting vertex positions, vertex colors, texture
      * coordinates, and triangle indices into standard CPU vectors. This function performs
@@ -232,7 +232,8 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    [[deprecated]] CPUModel LoadGLTF(const std::string& filePath);
+    [[deprecated("CPUModel now provides loadGLTF() as a member function.")]]
+    CPUModel LoadGLTF(const std::string& filePath);
 
     /**
      * @brief Legacy convenience loader that returns the first mesh/primitive only.
@@ -245,14 +246,19 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    [[deprecated]] CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
+    [[deprecated("CPUModel now provides loadGLTF() as a member function.")]]
+    CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
 
     /**
      * @brief Legacy convenience function to update all matrices in nodes according to their parents.
      *
      * @param cpuModel CPUModel that stores the model data and matrices.
+     *
+     * @note Legacy code. No improvements will be made here.
+     * @see CPUModel::updateAllMatrices().
      */
-    [[deprecated]] void UpdateAllMatrices(CPUModel& cpuModel);
+    [[deprecated("CPUModel now provides updateAllMatrices() as a member function.")]]
+    void UpdateAllMatrices(CPUModel& cpuModel);
 } //AnvilModelLoader
 
 #endif //ANVIL_VK_MODELLOADER_H

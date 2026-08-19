@@ -85,38 +85,20 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
     if (jointBuffer.buffer != VK_NULL_HANDLE && !inModel.skins.empty())
     {
         std::vector<glm::mat4> jointMatrices;
-        bool foundSkinnedNode = false;
 
         // Find the first node that is rigged to a skeleton
         for (int i = 0; i < static_cast<int>(inModel.nodes.size()); ++i)
         {
             if (inModel.nodes[i].skinIndex >= 0)
             {
-                foundSkinnedNode = true;
-                std::cout << "[Anim Debug] Found rigged node! Node " << i
-                          << " is using Skin " << inModel.nodes[i].skinIndex << std::endl;
-
-                // Const-cast to use the compute function
-                const_cast<CPUModel&>(inModel).computeJointMatrices(i, jointMatrices);
-
-                std::cout << "[Anim Debug] computeJointMatrices generated "
-                      << jointMatrices.size() << " matrices." << std::endl;
+                inModel.computeJointMatrices(i, jointMatrices);
                 break;
             }
-        }
-
-        if (!foundSkinnedNode)
-        {
-            std::cout << "[Anim Debug] ERROR: Checked all " << inModel.nodes.size()
-                      << " nodes, but NONE of them had a skinIndex >= 0!" << std::endl;
         }
 
         // Upload to the Vulkan buffer
         if (!jointMatrices.empty())
         {
-            // Print the X translation of the first bone
-            std::cout << "Bone 0 X-Transform: " << jointMatrices[0][3][0] << std::endl;
-
             // Calculate size, clamping it to the 256 bones we allocated
             size_t copySize = jointMatrices.size() * sizeof(glm::mat4);
             constexpr size_t maxBufferSize = MAX_BONES * sizeof(glm::mat4);

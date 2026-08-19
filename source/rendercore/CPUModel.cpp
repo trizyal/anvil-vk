@@ -53,15 +53,15 @@ void CPUModel::loadGLTF(const std::string& filePath)
     const std::string base_directory = GetBaseDirectory(filePath);
 
     // Get textures from gltf
-    textures.reserve(gltf_data->textures_count);
+    textures.resize(gltf_data->textures_count);
     LoadTextures(*this, gltf_data, base_directory);
 
     // Get materials from gltf
-    materials.reserve(gltf_data->materials_count);
+    materials.resize(gltf_data->materials_count);
     LoadMaterials(*this, gltf_data);
 
     // Get mesh data from gltf
-    meshes.reserve(gltf_data->meshes_count);
+    meshes.resize(gltf_data->meshes_count);
     LoadMeshes(*this, gltf_data);
 
     // Get nodes from gltf
@@ -104,7 +104,7 @@ void CPUModel::loadGLTF(const std::string& filePath)
     }
 
     // Get animations from gltf
-    animations.reserve(gltf_data->animations_count);
+    animations.resize(gltf_data->animations_count);
     LoadAnimations(*this, gltf_data);
 
     updateAllMatrices();
@@ -224,11 +224,6 @@ void CPUModel::computeJointMatrices(const int nodeIndex, std::vector<glm::mat4>&
     }
 
     const CPUSkin& skin = skins[node.skinIndex];
-
-    // --- DIAGNOSTIC PRINT ---
-    std::cout << "[Anim Debug] Skin " << node.skinIndex << " contains "
-              << skin.jointNodes.size() << " joints." << std::endl;
-
     matrices.resize(skin.jointNodes.size());
 
     // glTF spec: JointMatrix = inverse(MeshWorld) * JointWorld * InverseBind
@@ -325,7 +320,7 @@ namespace
     {
         for (cgltf_size texture_index = 0; texture_index < gltf_data->textures_count; ++texture_index)
         {
-            CPUTexture cpu_texture;
+            CPUTexture& cpu_texture = model.textures[texture_index];
             const cgltf_texture& gltf_texture = gltf_data->textures[texture_index];
 
             cpu_texture.name = gltf_texture.name ? gltf_texture.name : ("Texture_" + std::to_string(texture_index));
@@ -335,7 +330,7 @@ namespace
                 cpu_texture.imagePath = JoinPath(base_directory, gltf_texture.image->uri);
             }
 
-            model.textures.push_back(cpu_texture);
+            // model.textures.push_back(cpu_texture);
         }
     }
 
@@ -343,7 +338,7 @@ namespace
     {
         for (cgltf_size material_index = 0; material_index < gltf_data->materials_count; ++material_index)
         {
-            CPUMaterial cpu_material;
+            CPUMaterial& cpu_material = model.materials[material_index];
             const cgltf_material& gltf_material = gltf_data->materials[material_index];
 
             cpu_material.name = gltf_material.name ? gltf_material.name : "Material_" + std::to_string(material_index);
@@ -364,7 +359,7 @@ namespace
                 cpu_material.roughnessFactor = static_cast<float>(pbr.roughness_factor);
             }
 
-            model.materials.push_back(cpu_material);
+            // model.materials.push_back(cpu_material);
         }
     }
 
@@ -372,15 +367,15 @@ namespace
     {
         for (cgltf_size mesh_index = 0; mesh_index < gltf_data->meshes_count; ++mesh_index)
         {
-            CPUMesh cpu_mesh;
+            CPUMesh& cpu_mesh = cpu_model.meshes[mesh_index];
             const cgltf_mesh& gltf_mesh = gltf_data->meshes[mesh_index];
 
             cpu_mesh.name = gltf_mesh.name ? gltf_mesh.name : "Mesh_" + std::to_string(mesh_index);
 
-            cpu_mesh.primitives.reserve(gltf_mesh.primitives_count);
+            cpu_mesh.primitives.resize(gltf_mesh.primitives_count);
             for (cgltf_size primitive_index = 0; primitive_index < gltf_mesh.primitives_count; ++primitive_index)
             {
-                CPUMeshPrimitive cpu_mesh_primitive;
+                CPUMeshPrimitive& cpu_mesh_primitive = cpu_mesh.primitives[primitive_index];
                 const cgltf_primitive& gltf_primitive = gltf_mesh.primitives[primitive_index];
 
                 if (gltf_primitive.type != cgltf_primitive_type_triangles)
@@ -483,9 +478,9 @@ namespace
                     }
                 }
 
-                cpu_mesh.primitives.push_back(std::move(cpu_mesh_primitive));
+                // cpu_mesh.primitives.push_back(std::move(cpu_mesh_primitive));
             }
-            cpu_model.meshes.push_back(std::move(cpu_mesh));
+            // cpu_model.meshes.push_back(std::move(cpu_mesh));
         }
     }
 
@@ -573,13 +568,14 @@ namespace
     {
         for (cgltf_size animation_index = 0; animation_index < gltf_data->animations_count; ++animation_index)
         {
+            CPUAnimation& cpu_animation = cpu_model.animations[animation_index];
             const cgltf_animation& gltf_animation = gltf_data->animations[animation_index];
-            CPUAnimation cpu_animation;
             cpu_animation.name = gltf_animation.name ? gltf_animation.name : ("Animation_" + std::to_string(animation_index));
 
+            cpu_animation.channels.resize(gltf_animation.channels_count);
             for (cgltf_size channel_index = 0; channel_index < gltf_animation.channels_count; ++channel_index)
             {
-                CPUAnimationChannel cpu_channel;
+                CPUAnimationChannel& cpu_channel = cpu_animation.channels[channel_index];
                 const cgltf_animation_channel& gltf_channel = gltf_animation.channels[channel_index];
 
                 cpu_channel.targetNodeIndex = GetNodeIndex(gltf_data, gltf_channel.target_node);
@@ -650,9 +646,9 @@ namespace
                     }
                 }
 
-                cpu_animation.channels.push_back(std::move(cpu_channel));
+                // cpu_animation.channels.push_back(std::move(cpu_channel));
             }
-            cpu_model.animations.push_back(std::move(cpu_animation));
+            // cpu_model.animations.push_back(std::move(cpu_animation));
         }
     }
 
