@@ -34,9 +34,9 @@ private:
 
     AnvilPipeline pipeline{};
     Camera camera;
-    Scene boxScene;
+    Scene riggedScene;
 
-    AnvilMaterial boxMaterial;
+    AnvilMaterial riggedMaterial;
 
     CPUModel cpuModel;
     GPUModel gpuModel;

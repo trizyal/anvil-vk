@@ -22,9 +22,9 @@ void RiggedSimple::initializeProject(VulkanContext& inContext, Swapchain& inSwap
     sceneLighting.lightColor = glm::vec4(1.0f, 0.95f, 0.8f, 1.0f); // Warm sunlight, intensity = 2.0
     sceneLighting.ambientColor = glm::vec4(0.08f, 0.1f, 0.15f, 1.0f); // Cool blue sky ambient
 
-    boxScene.createScene(*pContext);
-    boxScene.setGPUSceneData(sceneLighting);
-    boxScene.updateGPUBuffer();
+    riggedScene.createScene(*pContext);
+    riggedScene.setGPUSceneData(sceneLighting);
+    riggedScene.updateGPUBuffer();
 
     // Initialize shader compiler
     if (!shaderCompiler.initializeShaderCompiler())
@@ -43,7 +43,7 @@ void RiggedSimple::cleanupProject()
         vkDeviceWaitIdle(pContext->device);
 
         gpuModel.destroyGPUModel();
-        boxMaterial.destroyMaterial();
+        riggedMaterial.destroyMaterial();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -64,7 +64,7 @@ void RiggedSimple::loadPipeline()
     {
         vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
-        boxMaterial.destroyMaterial();
+        riggedMaterial.destroyMaterial();
     }
 
     // Create shader compilation request
@@ -72,7 +72,7 @@ void RiggedSimple::loadPipeline()
     AnvilShaders::ShaderCompileRequest fReq{"RiggedSimple", "fragmentMain", AnvilShaders::ST_Fragment};
 
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
-    boxMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
+    riggedMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
 
     const auto attributes = GPUMesh::getAttributeDescriptions();
 
@@ -81,7 +81,7 @@ void RiggedSimple::loadPipeline()
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(boxMaterial.vertexShader.get(), boxMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(riggedMaterial.vertexShader.get(), riggedMaterial.fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(pSwapchain->swapchainFormat)
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
@@ -90,9 +90,9 @@ void RiggedSimple::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->device, boxMaterial.materialPipelineLayout, "RiggedSimplePipeline");
+        .buildPipeline(pContext->device, riggedMaterial.materialPipelineLayout, "RiggedSimplePipeline");
 
-    gpuModel.createGPUModel( *pContext, cpuModel, boxMaterial, "sceneBuffer", boxScene.sceneUBO, "texture");
+    gpuModel.createGPUModel( *pContext, cpuModel, riggedMaterial, "sceneBuffer", riggedScene.sceneUBO, "texture");
 }
 
 void RiggedSimple::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
@@ -178,7 +178,7 @@ void RiggedSimple::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         // Bind the specific descriptor set for this material (textures + scene UBO)
         if (descriptor_set != VK_NULL_HANDLE)
         {
-            vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, boxMaterial.materialPipelineLayout,
+            vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, riggedMaterial.materialPipelineLayout,
                 0, 1, &descriptor_set, 0, nullptr);
         }
 
@@ -189,7 +189,7 @@ void RiggedSimple::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         constants.camera = glm::vec4(camera.position, 1.0f);
         constants.baseColorFactor = base_color_factor;
 
-        vkCmdPushConstants(inCmd, boxMaterial.materialPipelineLayout, boxMaterial.pushConstantStages, 0,
+        vkCmdPushConstants(inCmd, riggedMaterial.materialPipelineLayout, riggedMaterial.pushConstantStages, 0,
             sizeof(PushConstants), &constants);
 
         // Bind buffers and draw
