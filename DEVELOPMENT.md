@@ -11,18 +11,16 @@
 - Shader hot reloading
 - Basic glTF 2.0 mesh loading (`cgltf`)
 - ImGui integration and overlay rendering
-
-### Work in Progress (WIP)
-
 - Directional lighting support
-- Normals and normal maps
 - Uniform Buffers support
 - Complex glTF models support
 
+### Work in Progress (WIP)
+
+- Normals and normal maps
+
 ### Future
 
-- Unified asset loading directory (`utilities`/`assets`)
-- Dedicated UI subsystem directory
 - Configurable INI file parsing for runtime settings
 
 ## Project Structure
@@ -38,8 +36,8 @@ anvil-vk/
 │   ├── cgltf/
 │   ├── glfw/
 │   ├── glm/
-│   ├── slang/                   # Run fetch_slang.py to get the directory
 │   ├── imgui/
+│   ├── slang/                   # Run fetch_slang.py to get the directory
 │   ├── vk-bootstrap/
 │   ├── volk/
 │   ├── Vulkan-Headers/
@@ -55,17 +53,18 @@ anvil-vk/
 │   ├── DirectionalLight/        # Load model, set up scene lighting and uniform buffers
 │   ├── glTFTruck
 │   ├── BoxAnimated/        
+│   ├── RiggedSimple/        
 │   └── # More to come   
 │      
 └── source/
     │
     ├── core/
-    │   ├── AnvilApplication.cpp
-    │   ├── AnvilApplication.h
-    │   ├── AnvilInput.cpp
-    │   ├── AnvilInput.h
-    │   ├── AnvilWindow.cpp
-    │   └── AnvilWindow.h
+    │   ├── Anvil.cpp
+    │   ├── Anvi.h
+    │   ├── Input.cpp
+    │   ├── Input.h
+    │   ├── Window.cpp
+    │   └── Window.h
     │
     ├── rendercore/
     │   ├── AnvilMaterial.cpp
@@ -78,21 +77,23 @@ anvil-vk/
     │   ├── GPUMesh.h
     │   ├── GPUModel.cpp
     │   ├── GPUModel.h
+    │   ├── MaterialInstance.cpp
+    │   ├── MaterialInstance.h
     │   ├── ShaderCompiler.cpp
     │   ├── ShaderCompiler.h
     │   ├── TextureLoader.cpp
     │   ├── TextureLoader.h
     │   │
     │   ├── context/
+    │   │   ├── DebugNames.cpp
+    │   │   ├── DebugNames.h
+    │   │   ├── Swapchain.cpp
+    │   │   ├── Swapchain.h
     │   │   ├── VulkanConfig.h
     │   │   ├── VulkanContext.cpp
     │   │   ├── VulkanContext.h
-    │   │   ├── VulkanDebug.cpp
-    │   │   ├── VulkanDebug.h
     │   │   ├── VulkanResult.cpp
-    │   │   ├── VulkanResult.h
-    │   │   ├── VulkanSwapchain.cpp
-    │   │   └── VulkanSwapchain.h
+    │   │   └── VulkanResult.h
     │   │
     │   └── resources/
     │       ├── GPUBuffer.cpp
@@ -105,16 +106,19 @@ anvil-vk/
     ├── renderer/
     │   ├── AnvilRenderer.cpp
     │   ├── AnvilRenderer.h
+    │   ├── FrameStats.h
     │   ├── ScreenLogger.cpp
     │   ├── ScreenLogger.h
+    │   ├── UIElements.cpp
+    │   ├── UIElements.h
     │   ├── UIRenderer.cpp
     │   └── UIRenderer.h
     │
     └── scene/
-        ├── Scene.cpp
-        ├── Scene.h
         ├── Camera.cpp
-        └── Camera.h
+        ├── Camera.h
+        ├── Scene.cpp
+        └── Scene.h
 ```
 
 ## Conventions
