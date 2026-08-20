@@ -13,7 +13,7 @@ int main()
     anvil.initializeAnvil({
         .width = 1280,
         .height = 720,
-        .title = "Anvil glTF Truck Example"
+        .title = "Anvil Rigging Example"
     });
 
     RiggedSimple project;

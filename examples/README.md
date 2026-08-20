@@ -51,7 +51,12 @@ Passing data via a uniform buffer `SceneData` with light direction, color and am
 
 ### 09. RiggedSimple
 - **Path:** [RiggedSimple](RiggedSimple)
-- - **Focus:** Rigging a simple model.
+- **Focus:** Rigging a simple model.
+- **Description:**
+
+### 10. CesiumMan
+- **Path:** [CesiumMan](CesiumMan)
+- **Focus:** Texturing, skeletal skinning matrices, SSBO joint buffers, and animations together.
 - **Description:**
 
 ---
