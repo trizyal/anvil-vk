@@ -160,7 +160,7 @@ void TextureCube::loadPipeline()
     vertexShader.createShaderModule(*ptrAContext, vSpirv);
     fragmentShader.createShaderModule(*ptrAContext, fSpirv);
 
-    auto something = GPUMesh::getAttributeDescriptions();
+    auto something = GPUMesh::get3AttributeDescriptions();
 
     // Vertex Descriptions
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};

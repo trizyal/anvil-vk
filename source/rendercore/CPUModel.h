@@ -24,6 +24,10 @@ struct MeshVertex
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec2 uv= glm::vec2(0.0f);
+
+    // Max 4 bones per vertex
+    glm::uvec4 joints = glm::uvec4(0);
+    glm::vec4 weights = glm::vec4(0.0f);
 };
 
 /**
@@ -81,14 +85,30 @@ struct CPUMesh
 };
 
 /**
+ * @brief CPU-side skin.
+ *
+ * @note skeletonRootNode indexes CPUModel::nodes.
+ */
+struct CPUSkin
+{
+    std::string name;
+    int skeletonRootNode = -1;
+    std::vector<int> jointNodes; /**< CPU nodes that act as bones */
+    std::vector<glm::mat4> inverseBindMatrices; /**< Rest pose inverse matrices. */
+};
+
+/**
  * @brief CPU-side scene node.
  *
  * @note meshIndex indexes CPUModel::meshes.
+ * @note skinIndex indexes CPUModel::skins.
+ * @note parentIndex indexes CPUModel::nodes.
  */
 struct CPUNode
 {
     std::string name;
     int meshIndex = -1;
+    int skinIndex = -1;
     int parentIndex = -1;
     std::vector<int> children;
 
@@ -119,8 +139,6 @@ struct CPUAnimationChannel
     int targetNodeIndex = -1;
     AnimationPath path = AnimationPath::Unknown;
 
-    // For the current stage, we only care about rotation, but
-    // a full engine would support translation and scale too.
     std::vector<float> keyframeTimes;
     std::vector<glm::quat> keyframeRotations;
     std::vector<glm::vec3> keyframeTranslations;
@@ -152,6 +170,7 @@ public:
     std::vector<int> sceneRootNodes;
 
     std::vector<CPUAnimation> animations;
+    std::vector<CPUSkin> skins;
 
     /**
      * @brief Parses a glTF 2.0 file from disk and populates CPUModel.
@@ -167,7 +186,7 @@ public:
     void loadGLTF(const std::string& filePath);
 
     /**
-     * @brief Calculate all node and children matrices.
+     * @brief Update all matrices in nodes according to their parents
      */
     void updateAllMatrices();
 
@@ -178,6 +197,22 @@ public:
      * @param time The current playback time in seconds.
      */
     void applyAnimation(int animationIndex, float time);
+
+    /**
+     * @brief Computes the final skinning matrices for all joints affecting a specific skinned mesh node.
+     *
+     * Calculates the transformation matrix for each joint by multiplying the inverse of the
+     * mesh's world matrix, the joint's current animated world matrix, and the joint's inverse
+     * bind matrix. The resulting matrices represent the delta transform from the bind pose
+     * and are intended to be uploaded to a GPU Storage Buffer (SSBO) for vertex skinning.
+     *
+     * @param nodeIndex The index of the CPUNode representing the rigged mesh. If the node
+     * does not have an associated skin, the output vector is cleared.
+     *
+     * @param matrices A reference to a vector that will be resized and populated with
+     * the computed glm::mat4 joint matrices.
+     */
+    void computeJointMatrices(int nodeIndex, std::vector<glm::mat4>& matrices) const;
 };
 
 /**
@@ -186,7 +221,7 @@ public:
 namespace ModelLoader
 {
     /**
-     * @brief Parses a glTF 2.0 file from disk and extracts its primary mesh and texture data.
+     * @brief Legacy function to parse a glTF 2.0 file from disk and extracts its primary mesh and texture data.
      *
      * Reads `.gltf` or `.glb` files, extracting vertex positions, vertex colors, texture
      * coordinates, and triangle indices into standard CPU vectors. This function performs
@@ -197,7 +232,8 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    [[deprecated]] CPUModel LoadGLTF(const std::string& filePath);
+    [[deprecated("CPUModel now provides loadGLTF() as a member function.")]]
+    CPUModel LoadGLTF(const std::string& filePath);
 
     /**
      * @brief Legacy convenience loader that returns the first mesh/primitive only.
@@ -210,9 +246,19 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    [[deprecated]] CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
+    [[deprecated("CPUModel now provides loadGLTF() as a member function.")]]
+    CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
 
-    void UpdateAllMatrices(CPUModel& cpu_model);
+    /**
+     * @brief Legacy convenience function to update all matrices in nodes according to their parents.
+     *
+     * @param cpuModel CPUModel that stores the model data and matrices.
+     *
+     * @note Legacy code. No improvements will be made here.
+     * @see CPUModel::updateAllMatrices().
+     */
+    [[deprecated("CPUModel now provides updateAllMatrices() as a member function.")]]
+    void UpdateAllMatrices(CPUModel& cpuModel);
 } //AnvilModelLoader
 
 #endif //ANVIL_VK_MODELLOADER_H

@@ -134,7 +134,7 @@ void BoxModel::loadPipeline()
     vertexShader.createShaderModule(*ptrAContext, vSpirv, "MaterialVertexShader");
     fragmentShader.createShaderModule(*ptrAContext, fSpirv, "MaterialFragmentShader");
 
-    auto something = GPUMesh::getAttributeDescriptions();
+    auto something = GPUMesh::get3AttributeDescriptions();
 
     // Vertex Descriptions
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};

@@ -90,7 +90,7 @@ VkVertexInputBindingDescription GPUMesh::getBindingDescription()
     return binding_description;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> GPUMesh::getAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescriptions()
 {
     std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions{};
 
@@ -111,6 +111,43 @@ std::array<VkVertexInputAttributeDescription, 3> GPUMesh::getAttributeDescriptio
     attribute_descriptions[2].location = 2;
     attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
     attribute_descriptions[2].offset = offsetof(MeshVertex, uv);
+
+    return attribute_descriptions;
+}
+
+std::vector<VkVertexInputAttributeDescription> GPUMesh::getAttributeDescriptions()
+{
+    std::vector<VkVertexInputAttributeDescription> attribute_descriptions(5);
+
+    // 0: Position
+    attribute_descriptions[0].binding = 0;
+    attribute_descriptions[0].location = 0;
+    attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attribute_descriptions[0].offset = offsetof(MeshVertex, position);
+
+    // 1: Color
+    attribute_descriptions[1].binding = 0;
+    attribute_descriptions[1].location = 1;
+    attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attribute_descriptions[1].offset = offsetof(MeshVertex, normal);
+
+    // 2: UV
+    attribute_descriptions[2].binding = 0;
+    attribute_descriptions[2].location = 2;
+    attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attribute_descriptions[2].offset = offsetof(MeshVertex, uv);
+
+    // 3: Joints (4x 32-bit Unsigned Integers)
+    attribute_descriptions[3].binding = 0;
+    attribute_descriptions[3].location = 3;
+    attribute_descriptions[3].format = VK_FORMAT_R32G32B32A32_UINT;
+    attribute_descriptions[3].offset = offsetof(MeshVertex, joints);
+
+    // 4: Weights (4x 32-bit Floats)
+    attribute_descriptions[4].binding = 0;
+    attribute_descriptions[4].location = 4;
+    attribute_descriptions[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attribute_descriptions[4].offset = offsetof(MeshVertex, weights);
 
     return attribute_descriptions;
 }

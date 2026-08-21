@@ -86,12 +86,22 @@ public:
     /**
      * @brief Queues a uniform buffer to be bound to a shader uniform variable by name.
      *
-     * @param name The variable name of the sampled texture in the Slang shader code.
+     * @param name The variable name of uneform buffer in the Slang shader code.
      * @param inBuffer Reference to the GPU buffer containing the Uniform data.
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
     void bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer);
+
+    /**
+     * @brief Queues a storage buffer (SSBO) to be bound to a shader variable by name.
+     *
+     * @param name The variable name of the storage buffer in the Slang shader code.
+     * @param inBuffer Reference to the GPU buffer containing the Uniform data.
+     *
+     * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
+     */
+    void bindStorageBuffer(const std::string& name, const GPUBuffer& inBuffer);
 
     /**
      * @brief Flushes all queued texture and buffer bindings to the GPU descriptor set.
