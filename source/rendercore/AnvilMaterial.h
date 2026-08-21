@@ -37,6 +37,12 @@ struct ShaderBinding
     VkDescriptorType descriptorType;
 };
 
+struct ReflectedBinding
+{
+    uint32_t set;
+    VkDescriptorSetLayoutBinding binding;
+};
+
 /**
  * @brief Encapsulates shaders and acts as a factory for Material Instances.
  *
@@ -67,7 +73,11 @@ public:
     ShaderModule fragmentShader;
 
     /** Reflected layout for the material's descriptor set. */
+    [[deprecated]]
     VkDescriptorSetLayout materialDescriptorSetLayout = VK_NULL_HANDLE;
+
+    /** Reflected layouts for the material's descriptor sets (Index 0 = Set 0, etc). */
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
     /** Pool allocated specifically for this material's descriptor sets. */
     VkDescriptorPool materialDescriptorPool = VK_NULL_HANDLE;
@@ -115,19 +125,31 @@ public:
      *
      * @return A ready-to-use MaterialInstance tied to this material's layout.
      */
-    [[nodiscard]] MaterialInstance createInstance() const;
+    [[deprecated]][[nodiscard]]
+    MaterialInstance createInstance() const;
+
+    /**
+     * @brief Allocates a new instance for a specific Descriptor Set Index.
+     *
+     * @param setIndex The index this new set exists in.
+     * @return A ready-to-use MaterialInstance.
+     */
+    [[nodiscard]]
+    MaterialInstance allocateSet(uint32_t setIndex) const;
 
     /**
      * @brief Returns true if this material reflected a binding with the given shader variable name.
      */
-    [[nodiscard]] bool hasBinding(const std::string& name) const;
+    [[nodiscard]]
+    bool hasBinding(const std::string& name) const;
 
     /**
      * @brief Retrieves reflected binding metadata by shader variable name.
      *
      * @throws std::runtime_error If the binding does not exist.
      */
-    [[nodiscard]] ShaderBinding getBinding(const std::string& name) const;
+    [[nodiscard]]
+    ShaderBinding getBinding(const std::string& name) const;
 
 private:
     /**
@@ -140,7 +162,7 @@ private:
      */
     void reflectShader(slang::IComponentType* linkedProgram,
         VkShaderStageFlagBits stage,
-        std::vector<VkDescriptorSetLayoutBinding>& outLayoutBindings,
+        std::vector<ReflectedBinding>& outLayoutBindings,
         std::vector<VkPushConstantRange>& outPushConstants);
 };
 

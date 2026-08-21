@@ -13,7 +13,7 @@
 
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                                   const VkShaderStageFlagBits stage,
-                                  std::vector<VkDescriptorSetLayoutBinding>& outLayoutBindings,
+                                  std::vector<ReflectedBinding>& outLayoutBindings,
                                   std::vector<VkPushConstantRange>& outPushConstants)
 {
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
@@ -88,7 +88,11 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                 continue;
             }
 
-            outLayoutBindings.push_back(layout_binding);
+            ReflectedBinding reflected_binding{};
+            reflected_binding.set = var_layout->getBindingSpace();
+            reflected_binding.binding = layout_binding;
+
+            outLayoutBindings.push_back(reflected_binding);
 
             ShaderBinding shader_binding{};
             shader_binding.set = var_layout->getBindingSpace();
@@ -112,7 +116,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     const auto fragment_result = inCompiler.compileToSPIRV(inFragReq);
 
     // Reflect Shaders
-    std::vector<VkDescriptorSetLayoutBinding> _raw_bindings;
+    std::vector<ReflectedBinding> _raw_bindings;
     std::vector<VkPushConstantRange> _raw_push_constants;
 
     if (vertex_result.reflection)
@@ -142,13 +146,13 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> _merged_bindings_map;
     for (const auto& _b : _raw_bindings)
     {
-        if (_merged_bindings_map.contains(_b.binding))
+        if (_merged_bindings_map.contains(_b.binding.binding))
         {
-            _merged_bindings_map[_b.binding].stageFlags |= _b.stageFlags;
+            _merged_bindings_map[_b.binding.binding].stageFlags |= _b.binding.stageFlags;
         }
         else
         {
-            _merged_bindings_map[_b.binding] = _b;
+            _merged_bindings_map[_b.binding.binding] = _b.binding;
         }
     }
 
@@ -235,6 +239,26 @@ MaterialInstance AnvilMaterial::createInstance() const
         alloc_info.descriptorPool = materialDescriptorPool;
         alloc_info.descriptorSetCount = 1;
         alloc_info.pSetLayouts = &materialDescriptorSetLayout;
+
+        CHECK(vkAllocateDescriptorSets(pContext->device, &alloc_info, &instance.descriptorSet));
+    }
+
+    return instance;
+}
+
+MaterialInstance AnvilMaterial::allocateSet(uint32_t setIndex) const
+{
+    MaterialInstance instance;
+    instance.pContext = pContext;
+    instance.pParentMaterial = this;
+
+    if (materialDescriptorPool != VK_NULL_HANDLE && setIndex < descriptorSetLayouts.size())
+    {
+        VkDescriptorSetAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        alloc_info.descriptorPool = materialDescriptorPool;
+        alloc_info.descriptorSetCount = 1;
+        alloc_info.pSetLayouts = &descriptorSetLayouts[setIndex];
 
         CHECK(vkAllocateDescriptorSets(pContext->device, &alloc_info, &instance.descriptorSet));
     }
