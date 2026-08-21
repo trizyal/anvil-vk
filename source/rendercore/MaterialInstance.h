@@ -73,11 +73,16 @@ public:
     /** The Vulkan descriptor set unique to this instance. */
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
+    /** The descriptor set index this instance represents. */
+    uint32_t setIndex = 0;
+
     /**
      * @brief Queues a texture to be bound to a shader sampler variable by name.
      *
      * @param name The variable name of the sampled texture in the Slang shader code.
      * @param inTexture Reference to the loaded AnvilTexture resource.
+     *
+     * @throws std::runtime_error if parent set does not match instance set.
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */

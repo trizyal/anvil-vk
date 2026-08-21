@@ -38,6 +38,14 @@ void MaterialInstance::bindTexture(const std::string& name, const AnvilTexture& 
         return;
     }
 
+    // Prevent binding cross contamination
+    if (pParentMaterial->getBinding(name).set != setIndex)
+    {
+        throw std::runtime_error("MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).set)
+            + " but this instance is managing Set " + std::to_string(setIndex));
+    }
+
     pendingTextures.push_back({.name = name, .texture = &inTexture});
 }
 

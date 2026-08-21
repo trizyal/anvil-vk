@@ -154,6 +154,16 @@ anvil-vk/
 *This section is currently being restructured as we are changing some architectural 
 structure of anvil and core vulkan resources.*
 
+### Descriptor Sets
+
+Currently, anvil crams global scene data, model-specific bone matrices, and 
+material-specific textures into a single Vulkan Descriptor Set (`Set 0`). 
+We are going to split these into three frequencies:
+
+* **Set 0:** Global Data (Scene UBO) — Managed by the Project (`CesiumMan` / `Sponza`).
+* **Set 1:** Model Data (Joint Matrices) — Managed by `GPUModel`.
+* **Set 2:** Material Data (Textures) — Managed by the individual `GPUModelMaterial` instances.
+
 ---
 
 ## Documentation
