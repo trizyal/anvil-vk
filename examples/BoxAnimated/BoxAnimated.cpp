@@ -24,7 +24,7 @@ void BoxAnimated::initializeProject(VulkanContext& inContext, Swapchain& inSwapc
     cpuModel.loadGLTF(modelPath);
 
     // Setup initial light values
-    GPUSceneData sceneLighting{};
+    DirectionalLighting sceneLighting{};
     sceneLighting.lightDirection = glm::vec4(-1.0f, -1.0f, -0.5f, 0.0f); // Sunlight pointing down-left
     sceneLighting.lightColor = glm::vec4(1.0f, 0.95f, 0.8f, 1.0f); // Warm sunlight, intensity = 2.0
     sceneLighting.ambientColor = glm::vec4(0.08f, 0.1f, 0.15f, 1.0f); // Cool blue sky ambient

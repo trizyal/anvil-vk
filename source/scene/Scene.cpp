@@ -19,14 +19,14 @@ void Scene::createScene(VulkanContext& inContext)
         pContext->allocator,
         pContext->device,
         &data,
-        sizeof(GPUSceneData),
+        sizeof(DirectionalLighting),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
     );
 
     isDirty = false;
 }
 
-void Scene::setGPUSceneData(const GPUSceneData& inData)
+void Scene::setGPUSceneData(const DirectionalLighting& inData)
 {
     data = inData;
     isDirty = true;
@@ -42,7 +42,7 @@ void Scene::updateGPUBuffer()
     // Use VMA mapped memory to instantly update the lighting values on the GPU
     if (sceneUBO.allocation != VK_NULL_HANDLE)
     {
-        vmaCopyMemoryToAllocation(pContext->allocator, &data, sceneUBO.allocation, 0, sizeof(GPUSceneData));
+        vmaCopyMemoryToAllocation(pContext->allocator, &data, sceneUBO.allocation, 0, sizeof(DirectionalLighting));
         isDirty = false;
     }
 }

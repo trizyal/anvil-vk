@@ -64,7 +64,7 @@ VertexOutput vertexMain(VertexInput input)
     VertexOutput output;
 
     // Transform position to clip space
-    output.position = mul(localPos, pushConstants.renderMatrix);
+    output.position = mul(pushConstants.renderMatrix, localPos);
 
     // Rotate normal to world space (w = 0.0 ignores translation)
     output.worldNormal = mul((float3x3)pushConstants.modelMatrix, localNormal);

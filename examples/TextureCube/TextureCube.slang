@@ -33,7 +33,7 @@ VertexOutput vertexMain(VertexInput input)
 
     // Apply the C++ matrix transform
     // This multiplication if other way around, was breaking things
-    output.position = mul(float4(input.position,1), pushConstants.renderMatrix);
+    output.position = mul(pushConstants.renderMatrix, float4(input.position,1));
     output.color = input.color;
     output.uv = input.uv;
 

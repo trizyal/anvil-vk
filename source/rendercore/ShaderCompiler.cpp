@@ -110,6 +110,9 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         session_desc.targets = &target_desc;
         session_desc.targetCount = 1;
 
+        // Vulkan uses column major
+        session_desc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
+
         // Apply Search Paths
         std::vector<const char*> search_paths;
         for (const auto& path : searchPaths)

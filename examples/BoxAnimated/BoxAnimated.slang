@@ -47,10 +47,10 @@ VertexOutput vertexMain(VertexInput input)
     float4 worldPosition = mul(pushConstants.modelMatrix, float4(input.position, 1.0));
 
     // Transform position to clip space
-    output.position = mul(float4(input.position, 1), pushConstants.renderMatrix);
+    output.position = mul(pushConstants.renderMatrix, float4(input.position, 1));
 
     // Rotate normal to world space (w = 0.0 ignores translation)
-    output.worldNormal = mul(float4(input.normal, 0.0), pushConstants.modelMatrix).xyz;
+    output.worldNormal = mul(pushConstants.modelMatrix, float4(input.normal, 0.0)).xyz;
 
     output.uv = input.uv;
     output.worldPosition = worldPosition.xyz;
