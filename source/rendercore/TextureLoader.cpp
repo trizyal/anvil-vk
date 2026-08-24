@@ -139,7 +139,7 @@ namespace TextureLoader
         return texture;
     }
 
-    AnvilTexture CreateSolidColorTexture(uint8_t color[4], VulkanContext& inContext)
+    AnvilTexture CreateSolidColorTexture(const uint8_t color[4], VulkanContext& inContext)
     {
         GPUBuffer staging_buffer;
         staging_buffer.createBuffer(

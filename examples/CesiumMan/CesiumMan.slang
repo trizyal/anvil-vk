@@ -33,10 +33,23 @@ struct PushConstants
     float4 baseColorFactor;
 };
 
+struct SceneData
+{
+    float4 lightDirection;
+    float4 lightColor;
+    float4 ambientColor;
+};
+
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
 
-// Set 0, Binding 0: Dynamic Bone Matrix SSBO
-[[vk::binding(0, 0)]] StructuredBuffer<float4x4> jointMatrices;
+// SET 0: Scene
+[[vk::binding(0, 0)]] ConstantBuffer<SceneData> sceneBuffer;
+
+// SET 1: Model
+[[vk::binding(0, 1)]] StructuredBuffer<float4x4> jointMatrices;
+
+// SET 2: Material
+[[vk::binding(0, 2)]] Sampler2D baseColorTexture;
 
 // ==========================================
 // VERTEX SHADER
@@ -80,24 +93,11 @@ VertexOutput vertexMain(VertexInput input)
 // FRAGMENT SHADER
 // ==========================================
 
-struct SceneData
-{
-    float4 lightDirection;
-    float4 lightColor;
-    float4 ambientColor;
-};
-
-// Set 0, Binding 1: Lighting UBO
-[[vk::binding(1, 0)]] ConstantBuffer<SceneData> sceneBuffer;
-
-// Set 0, Binding 2: Base Color Texture Sampler
-[[vk::binding(2, 0)]] Sampler2D texture;
-
 [shader("fragment")]
 float4 fragmentMain(VertexOutput input) : SV_Target
 {
     // Sample the texture and multiply by the material base color factor
-    float4 albedo = texture.Sample(input.uv) * pushConstants.baseColorFactor;
+    float4 albedo = baseColorTexture.Sample(input.uv) * pushConstants.baseColorFactor;
 
     // Directional lighting calculation
     float3 normal = normalize(input.worldNormal);

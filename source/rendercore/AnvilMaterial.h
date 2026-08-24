@@ -151,6 +151,9 @@ public:
     [[nodiscard]]
     ShaderBinding getBinding(const std::string& name) const;
 
+    [[nodiscard]]
+    bool hasSet(uint32_t setIndex) const;
+
 private:
     /**
      * @brief Inspects Slang reflection metadata to populate descriptor layouts and push constant ranges.

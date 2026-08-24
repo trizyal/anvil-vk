@@ -262,6 +262,8 @@ MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
 
     if (materialDescriptorPool != VK_NULL_HANDLE && setIndex < descriptorSetLayouts.size())
     {
+        instance.setIndex = setIndex;
+        
         VkDescriptorSetAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         alloc_info.descriptorPool = materialDescriptorPool;
@@ -287,6 +289,11 @@ ShaderBinding AnvilMaterial::getBinding(const std::string& name) const
         throw std::runtime_error("AnvilMaterial binding does not exist: " + name);
     }
     return it->second;
+}
+
+bool AnvilMaterial::hasSet(uint32_t setIndex) const
+{
+    return setIndex < descriptorSetLayouts.size() && descriptorSetLayouts[setIndex] != VK_NULL_HANDLE;
 }
 
 void AnvilMaterial::destroyMaterial() const

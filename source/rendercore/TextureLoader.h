@@ -88,7 +88,7 @@ namespace TextureLoader
      *
      * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.
      */
-    AnvilTexture CreateSolidColorTexture(uint8_t color[4], VulkanContext& inContext);
+    AnvilTexture CreateSolidColorTexture(const uint8_t color[4], VulkanContext& inContext);
 }
 
 #endif //ANVIL_VK_TEXTURELOADER_H

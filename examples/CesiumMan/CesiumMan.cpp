@@ -69,6 +69,10 @@ void CesiumMan::loadPipeline()
     // Compile, reflect, and build bindings (handles textures, UBOs, and SSBOs automatically)
     cesiumMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
 
+    globalSet = cesiumMaterial.allocateSet(0);
+    globalSet.bindUniformBuffer("sceneBuffer", cesiumScene.sceneUBO);
+    globalSet.updateDescriptorSets();
+
     const auto attributes = GPUMesh::getAttributeDescriptions();
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
 
@@ -84,7 +88,7 @@ void CesiumMan::loadPipeline()
         .disableBlending()
         .buildPipeline(pContext->device, cesiumMaterial.materialPipelineLayout, "CesiumManPipeline");
 
-    gpuModel.createGPUModel(*pContext, cpuModel, cesiumMaterial, "sceneBuffer", cesiumScene.sceneUBO, "texture");
+    gpuModel.createGPUModel(*pContext, cpuModel, cesiumMaterial);
 }
 
 void CesiumMan::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
@@ -152,15 +156,29 @@ void CesiumMan::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         if (draw_item.gpuMaterialIndex >= 0 &&
             draw_item.gpuMaterialIndex < static_cast<int>(gpuModel.gpuMaterials.size()))
         {
-            const GPUModelMaterial& material = gpuModel.gpuMaterials[draw_item.gpuMaterialIndex];
-            descriptor_set = material.instance.descriptorSet;
-            base_color_factor = material.baseColorFactor;
+            descriptor_set = gpuModel.gpuMaterials[draw_item.gpuMaterialIndex].instance.descriptorSet;
+            base_color_factor = gpuModel.gpuMaterials[draw_item.gpuMaterialIndex].baseColorFactor;
         }
 
+        // Bind all active sets
+        std::vector<VkDescriptorSet> sets_to_bind;
+        if (globalSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(globalSet.descriptorSet);
+        }
+        if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(gpuModel.modelSet.descriptorSet);
+        }
         if (descriptor_set != VK_NULL_HANDLE)
         {
+            sets_to_bind.push_back(descriptor_set);
+        }
+
+        if (!sets_to_bind.empty())
+        {
             vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, cesiumMaterial.materialPipelineLayout,
-                0, 1, &descriptor_set, 0, nullptr);
+                0, static_cast<uint32_t>(sets_to_bind.size()), sets_to_bind.data(), 0, nullptr);
         }
 
         PushConstants constants{};

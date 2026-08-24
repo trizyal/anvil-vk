@@ -35,6 +35,7 @@ private:
     GPUModel gpuModel;
 
     AnvilMaterial cesiumMaterial;
+    MaterialInstance globalSet;
     Scene cesiumScene;
     Camera camera;
 

@@ -22,10 +22,12 @@ MaterialInstance& MaterialInstance::operator=(MaterialInstance&& other) noexcept
         pendingTextures = std::move(other.pendingTextures);
         pendingBuffers = std::move(other.pendingBuffers);
         descriptorSet = other.descriptorSet;
+        setIndex = other.setIndex;
 
         other.descriptorSet = VK_NULL_HANDLE;
         other.pContext = nullptr;
         other.pParentMaterial = nullptr;
+        other.setIndex = 0; // Reset the moved-from object
     }
     return *this;
 }
@@ -41,9 +43,11 @@ void MaterialInstance::bindTexture(const std::string& name, const AnvilTexture& 
     // Prevent binding cross contamination
     if (pParentMaterial->getBinding(name).setIndex != setIndex)
     {
-        throw std::runtime_error("MaterialInstance Error: '" + name + "' belongs to Set "
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
             + std::to_string(pParentMaterial->getBinding(name).setIndex)
-            + " but this instance is managing Set " + std::to_string(setIndex));
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
     }
 
     pendingTextures.push_back({.name = name, .texture = &inTexture});
@@ -55,6 +59,14 @@ void MaterialInstance::bindUniformBuffer(const std::string& name, const GPUBuffe
     {
         return;
     }
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
+    }
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
 
@@ -63,6 +75,14 @@ void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffe
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
         return;
+    }
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
     }
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }

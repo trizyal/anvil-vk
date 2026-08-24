@@ -94,6 +94,8 @@ public:
      * @param name The variable name of uneform buffer in the Slang shader code.
      * @param inBuffer Reference to the GPU buffer containing the Uniform data.
      *
+     * @throws std::runtime_error if parent set does not match instance set.
+     *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
     void bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer);
@@ -103,6 +105,8 @@ public:
      *
      * @param name The variable name of the storage buffer in the Slang shader code.
      * @param inBuffer Reference to the GPU buffer containing the Uniform data.
+     *
+     * @throws std::runtime_error if parent set does not match instance set.
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
