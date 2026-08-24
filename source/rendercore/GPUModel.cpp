@@ -239,6 +239,19 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
             }
         }
 
+        // Metallic Roughness Color
+        if (inMaterial.hasBinding("metallicRoughnessTexture"))
+        {
+            if (cpu_material.baseColorTextureIndex >= 0)
+            {
+                gpu_material.instance.bindTexture("metallicRoughnessTexture", textures[cpu_material.metallicRoughnessTextureIndex]);
+            }
+            else
+            {
+                gpu_material.instance.bindTexture("metallicRoughnessTexture", defaultTransparentTexture);
+            }
+        }
+
         // Normal Map
         if (inMaterial.hasBinding("normalTexture"))
         {
@@ -255,7 +268,6 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         gpu_material.instance.updateDescriptorSets();
         gpuMaterials.push_back(std::move(gpu_material));
     }
-
 }
 
 void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)

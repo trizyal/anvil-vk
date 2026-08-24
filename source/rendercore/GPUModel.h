@@ -24,7 +24,8 @@
 class VulkanContext;
 
 constexpr uint8_t WhiteColor[4] = {255, 255, 255, 255};
-constexpr uint8_t NormalColor[4] = {255, 255, 255, 255}; // Flat Z-up normal
+constexpr uint8_t NormalColor[4] = {128, 128, 255, 255}; // Flat Z-up normal
+constexpr uint8_t TransparentColor[4] = {0, 0, 0, 0}; //
 
 /**
  * @brief Max number of Joints allowed.
@@ -86,6 +87,7 @@ private:
 public:
     AnvilTexture defaultWhiteTexture;
     AnvilTexture defaultNormalTexture;
+    AnvilTexture defaultTransparentTexture;
 
     MaterialInstance modelSet; // Set 1
 
@@ -134,7 +136,7 @@ public:
 private:
     void createTextures(const CPUModel& inModel);
 
-    [[deprecated]]
+    [[deprecated("Use the multi-set architecture instead.")]]
     void createMaterialDescriptorSets(
         const CPUModel& inModel,
         const AnvilMaterial& inMaterial,
