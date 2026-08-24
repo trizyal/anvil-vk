@@ -28,10 +28,10 @@
 struct ShaderBinding
 {
     /** Descriptor set index (e.g., set = 0) */
-    uint32_t set;
+    uint32_t setIndex;
 
     /** Binding slot index within the descriptor set. */
-    uint32_t binding;
+    uint32_t bindingIndex;
 
     /** Vulkan resource type (e.g., VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER). */
     VkDescriptorType descriptorType;
@@ -39,8 +39,8 @@ struct ShaderBinding
 
 struct ReflectedBinding
 {
-    uint32_t set;
-    VkDescriptorSetLayoutBinding binding;
+    uint32_t setIndex;
+    VkDescriptorSetLayoutBinding bindingData;
 };
 
 /**

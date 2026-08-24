@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <ranges>
+#include <unordered_map>
 
 #include "DebugNames.h"
 #include "VulkanResult.h"
@@ -89,14 +90,14 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
             }
 
             ReflectedBinding reflected_binding{};
-            reflected_binding.set = var_layout->getBindingSpace();
-            reflected_binding.binding = layout_binding;
+            reflected_binding.setIndex = var_layout->getBindingSpace();
+            reflected_binding.bindingData = layout_binding;
 
             outLayoutBindings.push_back(reflected_binding);
 
             ShaderBinding shader_binding{};
-            shader_binding.set = var_layout->getBindingSpace();
-            shader_binding.binding = layout_binding.binding;
+            shader_binding.setIndex = var_layout->getBindingSpace();
+            shader_binding.bindingIndex = layout_binding.binding;
             shader_binding.descriptorType = layout_binding.descriptorType;
             bindingMap[name] = shader_binding;
         }
@@ -115,24 +116,36 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     const auto vertex_result = inCompiler.compileToSPIRV(inVertReq);
     const auto fragment_result = inCompiler.compileToSPIRV(inFragReq);
 
-    // Reflect Shaders
-    std::vector<ReflectedBinding> _raw_bindings;
-    std::vector<VkPushConstantRange> _raw_push_constants;
+    // -----------------------
+    // RAW REFLECTION DATA
+    // -----------------------
+    // raw_reflected_bindings: A flat list storing every individual descriptor binding discovered
+    // in the shaders. If a resource (like a Scene UBO) is used in BOTH the Vertex and
+    // Fragment shaders, it will be added to this list twice.
+    std::vector<ReflectedBinding> raw_reflected_bindings;
 
+    // raw_reflected_push_constants: A flat list of push constant ranges extracted from the shaders.
+    // Like bindings, if multiple shader stages use push constants, we will get multiple
+    // entries here that need to be combined later.
+    std::vector<VkPushConstantRange> raw_reflected_push_constants;
+
+    // We pass stage flags (e.g., VK_SHADER_STAGE_VERTEX_BIT) into the reflection parser.
+    // This tags the discovered bindings so Vulkan knows EXACTLY which programmable stage
+    // of the GPU pipeline (Vertex processing vs. Pixel processing) is allowed to read them.
     if (vertex_result.reflection)
     {
         reflectShader(vertex_result.reflection.get(),
             VK_SHADER_STAGE_VERTEX_BIT,
-            _raw_bindings,
-            _raw_push_constants);
+            raw_reflected_bindings,
+            raw_reflected_push_constants);
     }
 
     if (fragment_result.reflection)
     {
         reflectShader(fragment_result.reflection.get(),
             VK_SHADER_STAGE_FRAGMENT_BIT,
-            _raw_bindings,
-            _raw_push_constants);
+            raw_reflected_bindings,
+            raw_reflected_push_constants);
     }
 
     // Build Vulkan Shader Modules
@@ -142,44 +155,57 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
     fragmentShader.createShaderModule(*pContext, fragment_result, debug_name.c_str());
 
-    // Merge duplicate bindings
-    std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> _merged_bindings_map;
-    for (const auto& _b : _raw_bindings)
+    uint32_t max_set = 0;
+
+    // ------------------
+    // MERGE BINDINGS
+    // ------------------
+    // merged_set_bindings: A nested map used to de-duplicate the raw_reflected_bindings list.
+    // - the outer map's key is the Descriptor `Set` Index
+    // - the inner map's key is the `Binding` slot index within that set.
+    // If a binding exists in multiple shader stages, we use this map to merge them
+    // into a single binding that has a combined stageFlag.
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>> merged_set_bindings;
+
+    for (const auto& b : raw_reflected_bindings)
     {
-        if (_merged_bindings_map.contains(_b.binding.binding))
+        max_set = std::max(max_set, b.setIndex);
+
+        // If the binding slot already exists in this set, merge the stage flags via a bitwise OR.
+        if (merged_set_bindings[b.setIndex].contains(b.bindingData.binding))
         {
-            _merged_bindings_map[_b.binding.binding].stageFlags |= _b.binding.stageFlags;
+            merged_set_bindings[b.setIndex][b.bindingData.binding].stageFlags |= b.bindingData.stageFlags;
         }
         else
         {
-            _merged_bindings_map[_b.binding.binding] = _b.binding;
+            merged_set_bindings[b.setIndex][b.bindingData.binding] = b.bindingData;
         }
     }
 
-    std::vector<VkDescriptorSetLayoutBinding> final_bindings;
+    descriptorSetLayouts.resize(max_set + 1, VK_NULL_HANDLE);
     std::vector<VkDescriptorPoolSize> pool_sizes;
-
-    // for (auto it=_merged_bindings_map.begin() ; it!=_merged_bindings_map.end() ; ++it)
-    for (const auto& binding : _merged_bindings_map | std::views::values)
+    for (uint32_t set_index = 0; set_index <= max_set; ++set_index)
     {
-        final_bindings.push_back(binding);
+        std::vector<VkDescriptorSetLayoutBinding> set_bindings;
+        if (merged_set_bindings.contains(set_index))
+        {
+            // Extract the merged bindings from our map back into a flat vector for Vulkan
+            for (const auto& binding_data : merged_set_bindings[set_index] | std::views::values)
+            {
+                set_bindings.push_back(binding_data);
+                pool_sizes.push_back({.type = binding_data.descriptorType, .descriptorCount = binding_data.descriptorCount * 1000});
+            }
+        }
 
-        VkDescriptorPoolSize pool_size{};
-        pool_size.type = binding.descriptorType;
-        pool_size.descriptorCount = binding.descriptorCount * 1000; // 1000 material instances
+        VkDescriptorSetLayoutCreateInfo descriptor_layout_info{};
+        descriptor_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_layout_info.bindingCount = static_cast<uint32_t>(set_bindings.size());
+        descriptor_layout_info.pBindings = set_bindings.data();
+        CHECK(vkCreateDescriptorSetLayout(pContext->device, &descriptor_layout_info, nullptr, &descriptorSetLayouts[set_index]));
 
-        pool_sizes.push_back(pool_size);
+        debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
+        VulkanDebug::SetAutoName(pContext->device, descriptorSetLayouts[set_index], VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
     }
-
-    // Create Layouts and Allocate Sizes
-    VkDescriptorSetLayoutCreateInfo desc_layout_info{};
-    desc_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    desc_layout_info.bindingCount = static_cast<uint32_t>(final_bindings.size());
-    desc_layout_info.pBindings = final_bindings.data();
-    CHECK(vkCreateDescriptorSetLayout(pContext->device, &desc_layout_info, nullptr, &materialDescriptorSetLayout));
-
-    debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
-    VulkanDebug::SetAutoName(pContext->device, materialDescriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
 
     if (!pool_sizes.empty())
     {
@@ -196,13 +222,13 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
     // Push Constants and Pipeline Layout
     VkPushConstantRange merged_push_constant{};
-    if (!_raw_push_constants.empty())
+    if (!raw_reflected_push_constants.empty())
     {
-        merged_push_constant = _raw_push_constants[0];
-        for (size_t i = 1; i < _raw_push_constants.size(); ++i)
+        merged_push_constant = raw_reflected_push_constants[0];
+        for (size_t i = 1; i < raw_reflected_push_constants.size(); ++i)
         {
-            merged_push_constant.size = std::max(merged_push_constant.size, _raw_push_constants[i].size);
-            merged_push_constant.stageFlags |= _raw_push_constants[i].stageFlags;
+            merged_push_constant.size = std::max(merged_push_constant.size, raw_reflected_push_constants[i].size);
+            merged_push_constant.stageFlags |= raw_reflected_push_constants[i].stageFlags;
         }
 
         pushConstantStages = merged_push_constant.stageFlags;
@@ -210,14 +236,11 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
     VkPipelineLayoutCreateInfo pipeline_layout_info{};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (materialDescriptorSetLayout != VK_NULL_HANDLE)
-    {
-        pipeline_layout_info.setLayoutCount = 1; //static_cast<uint32_t>(_final_bindings.size())?
-        pipeline_layout_info.pSetLayouts = &materialDescriptorSetLayout;
-    }
+    pipeline_layout_info.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+    pipeline_layout_info.pSetLayouts = descriptorSetLayouts.data();
     if (merged_push_constant.size > 0)
     {
-        pipeline_layout_info.pushConstantRangeCount = 1; //?
+        pipeline_layout_info.pushConstantRangeCount = 1;
         pipeline_layout_info.pPushConstantRanges = &merged_push_constant;
     }
     CHECK(vkCreatePipelineLayout(pContext->device, &pipeline_layout_info, nullptr, &materialPipelineLayout));
@@ -228,25 +251,10 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
 MaterialInstance AnvilMaterial::createInstance() const
 {
-    MaterialInstance instance;
-    instance.pContext = pContext;
-    instance.pParentMaterial = this;
-
-    if (materialDescriptorPool != VK_NULL_HANDLE && materialDescriptorSetLayout != VK_NULL_HANDLE)
-    {
-        VkDescriptorSetAllocateInfo alloc_info{};
-        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = materialDescriptorPool;
-        alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &materialDescriptorSetLayout;
-
-        CHECK(vkAllocateDescriptorSets(pContext->device, &alloc_info, &instance.descriptorSet));
-    }
-
-    return instance;
+    return allocateSet(0);
 }
 
-MaterialInstance AnvilMaterial::allocateSet(uint32_t setIndex) const
+MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
 {
     MaterialInstance instance;
     instance.pContext = pContext;
@@ -292,9 +300,12 @@ void AnvilMaterial::destroyMaterial() const
         {
             vkDestroyDescriptorPool(pContext->device, materialDescriptorPool, nullptr);
         }
-        if (materialDescriptorSetLayout)
+        for (VkDescriptorSetLayout layout : descriptorSetLayouts)
         {
-            vkDestroyDescriptorSetLayout(pContext->device, materialDescriptorSetLayout, nullptr);
+            if (layout != VK_NULL_HANDLE)
+            {
+                vkDestroyDescriptorSetLayout(pContext->device, layout, nullptr);
+            }
         }
         if (materialPipelineLayout)
         {
