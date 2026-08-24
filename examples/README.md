@@ -59,6 +59,11 @@ Passing data via a uniform buffer `SceneData` with light direction, color and am
 - **Focus:** Texturing, skeletal skinning matrices, SSBO joint buffers, and animations together.
 - **Description:**
 
+### 11. Sponza
+- **Path:** [Sponza](Sponza)
+- **Focus:** PBR implementation, normal mapping.
+- **Description:**
+
 ---
 
 ## Project Asset Licenses
