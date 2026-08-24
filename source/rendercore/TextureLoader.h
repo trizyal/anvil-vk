@@ -78,6 +78,17 @@ namespace TextureLoader
      * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
     AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext);
+
+    /**
+     * @brief Create a solid texture image, upload it to device-local GPU memory.
+     *
+     * @param color The rgba value in unsigned 8-bit format.
+     * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @return A fully populated AnvilTexture ready for descriptor set binding.
+     *
+     * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.
+     */
+    AnvilTexture CreateSolidColorTexture(uint8_t color[4], VulkanContext& inContext);
 }
 
 #endif //ANVIL_VK_TEXTURELOADER_H
