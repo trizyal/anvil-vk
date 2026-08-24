@@ -58,9 +58,14 @@ struct CPUMaterial
 {
     std::string name;
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
+
     int baseColorTextureIndex = -1;
+    int normalTextureIndex = -1;
+    int metallicRoughnessTextureIndex = -1;
+
     float metallicFactor = 1.0f;
     float roughnessFactor = 1.0f;
+    float alphaCutoff = 0.5f;
 };
 
 /**

@@ -342,6 +342,7 @@ namespace
             const cgltf_material& gltf_material = gltf_data->materials[material_index];
 
             cpu_material.name = gltf_material.name ? gltf_material.name : "Material_" + std::to_string(material_index);
+            cpu_material.alphaCutoff = static_cast<float>(gltf_material.alpha_cutoff);
 
             if (gltf_material.has_pbr_metallic_roughness)
             {
@@ -355,11 +356,15 @@ namespace
                 );
 
                 cpu_material.baseColorTextureIndex = GetTextureIndex(gltf_data, pbr.base_color_texture.texture);
+                cpu_material.metallicRoughnessTextureIndex = GetTextureIndex(gltf_data, pbr.metallic_roughness_texture.texture);
                 cpu_material.metallicFactor = static_cast<float>(pbr.metallic_factor);
                 cpu_material.roughnessFactor = static_cast<float>(pbr.roughness_factor);
             }
 
-            // model.materials.push_back(cpu_material);
+            if (gltf_material.normal_texture.texture)
+            {
+                cpu_material.normalTextureIndex = GetTextureIndex(gltf_data, gltf_material.normal_texture.texture);
+            }
         }
     }
 
