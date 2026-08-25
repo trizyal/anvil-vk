@@ -81,8 +81,9 @@ void Sponza::loadPipeline()
     globalSet.bindUniformBuffer("sceneBuffer", sponzaScene.sceneUBO);
     globalSet.updateDescriptorSets();
 
-    auto attributes = GPUMesh::GetAttributeDescriptions5();
-    attributes.resize(3);
+    auto attributes = GPUMesh::GetAttributeDescriptions(
+        {POSITION, NORMAL, UV }
+    );
 
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
 

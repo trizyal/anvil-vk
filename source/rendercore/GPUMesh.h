@@ -17,6 +17,16 @@
 #include "VulkanContext.h"
 #include "CPUModel.h"
 
+enum VertexAttribute
+{
+    POSITION,
+    UV,
+    NORMAL,
+    TANGENT,
+    JOINTS,
+    WEIGHTS
+};
+
 /**
  * @brief Encapsulates GPU vertex and index buffers for an indexed 3D mesh.
  *
@@ -91,26 +101,53 @@ public:
      *
      * Configures three vertex shader input attributes:
      * * Location 0: 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
-     * * Location 1: RGB Color (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * Location 1: RGB Color/ 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
      * * Location 2: 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
      *
      * @return A 3-element array of VkVertexInputAttributeDescription structures.
      */
+    [[deprecated("Use GetAttributeDescriptions with the initializer list support.")]]
     static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptionsArray3();
 
     /**
      * @brief Returns attribute descriptions mapping MeshVertex fields to shader locations.
      *
-     * Configures three vertex shader input attributes:
+     * Configures 5 vertex shader input attributes:
      * * Location 0: 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
-     * * Location 1: RGB Color (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * Location 1: 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
      * * Location 2: 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
      * * Location 3: 4D Rotation Joints  (`glm::uvec4`, `VK_FORMAT_R32G32B32A32_UINT`)
      * * Location 4: 4D Weights (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
      *
      * @return A 5-element vector of VkVertexInputAttributeDescription structures.
+     *
+     * @see GetAttributeDescriptions();
      */
+    [[deprecated("Use GetAttributeDescriptions with the initializer list support.")]]
     static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions5();
+
+    /**
+     * @brief Returns attribute descriptions mapping Vertex Attributes provided to shader locations.
+     *
+     * Configures a maximum of 6 vertex shader input attributes:
+     * * 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * 4D Tangents (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
+     * * 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
+     * * 4D Rotation Joints  (`glm::uvec4`, `VK_FORMAT_R32G32B32A32_UINT`)
+     * * 4D Weights (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
+     * in the order of attributes passed to the function.
+     *
+     * @param attributes Initializer list containing VertexAttribute enums.
+     *
+     * @return An n-element vector of VkVertexInputAttributeDescription structures.
+     *
+     * @note Binds to only the 0 position.
+     *
+     * @see VertexAttribute
+     */
+    static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions(
+        const std::vector<VertexAttribute>& attributes);
 };
 
 #endif //ANVIL_VK_GPUMESH_H
