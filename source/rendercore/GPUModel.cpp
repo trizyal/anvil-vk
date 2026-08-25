@@ -151,7 +151,7 @@ void GPUModel::createTextures(const CPUModel& inModel)
         }
         catch (...)
         {
-            std::cout << "Color Space is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
+            std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
             textures.push_back(defaultWhiteTexture);
         }
     }

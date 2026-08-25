@@ -16,55 +16,55 @@ namespace TextureLoader
 {
     AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext, bool bIsSRGB)
     {
-        std::string imageName = std::filesystem::path(filepath).filename().string();
-        int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, 4);
+        std::string image_name = std::filesystem::path(filepath).filename().string();
+        int tex_width, tex_height, tex_channels;
+        stbi_uc* pixels = stbi_load(filepath.c_str(), &tex_width, &tex_height, &tex_channels, 4);
         if (!pixels) {
             throw std::runtime_error("Failed to load texture image: " + filepath);
         }
 
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
+        VkDeviceSize image_size = tex_width * tex_height * 4;
         VkFormat texture_format = bIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
 
         // CPU-visible staging buffer
-        GPUBuffer stagingBuffer;
-        stagingBuffer.createBuffer(
+        GPUBuffer staging_buffer;
+        staging_buffer.createBuffer(
             inContext.allocator,
             inContext.device,
             pixels,
-            imageSize,
+            image_size,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             "TextureStagingBuffer");
 
         stbi_image_free(pixels);
 
         // GPU-Only Image
-        VkImageCreateInfo imageInfo{};
-        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = static_cast<uint32_t>(texWidth);
-        imageInfo.extent.height = static_cast<uint32_t>(texHeight);
-        imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = texture_format;
-        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        VkImageCreateInfo image_info{};
+        image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_info.imageType = VK_IMAGE_TYPE_2D;
+        image_info.extent.width = static_cast<uint32_t>(tex_width);
+        image_info.extent.height = static_cast<uint32_t>(tex_height);
+        image_info.extent.depth = 1;
+        image_info.mipLevels = 1;
+        image_info.arrayLayers = 1;
+        image_info.format = texture_format;
+        image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 
-        VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        VmaAllocationCreateInfo alloc_info{};
+        alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
         AnvilTexture texture;
-        if (vmaCreateImage(inContext.allocator, &imageInfo, &allocInfo, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
+        if (vmaCreateImage(inContext.allocator, &image_info, &alloc_info, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
         {
-            throw std::runtime_error("Failed to create texture image: " + imageName);
+            throw std::runtime_error("Failed to create texture image: " + image_name);
         }
 
-        std::string textureDebugName = "TextureImage: " + imageName;
-        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
+        std::string texture_debug_name = "TextureImage: " + image_name;
+        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -88,9 +88,9 @@ namespace TextureLoader
             VkBufferImageCopy region{};
             region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             region.imageSubresource.layerCount = 1;
-            region.imageExtent = {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1};
+            region.imageExtent = {static_cast<uint32_t>(tex_width), static_cast<uint32_t>(tex_height), 1};
 
-            vkCmdCopyBufferToImage(cmd, stagingBuffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+            vkCmdCopyBufferToImage(cmd, staging_buffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -100,43 +100,43 @@ namespace TextureLoader
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
         });
 
-        stagingBuffer.destroyBuffer();
+        staging_buffer.destroyBuffer();
 
         // Create ImageView
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = texture.image;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = texture_format;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
+        VkImageViewCreateInfo image_view_info{};
+        image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        image_view_info.image = texture.image;
+        image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        image_view_info.format = texture_format;
+        image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_view_info.subresourceRange.baseMipLevel = 0;
+        image_view_info.subresourceRange.levelCount = 1;
+        image_view_info.subresourceRange.baseArrayLayer = 0;
+        image_view_info.subresourceRange.layerCount = 1;
 
-        std::string imageViewDebugName = "TextureImageView: " + imageName;
-        CHECK(vkCreateImageView(inContext.device, &viewInfo, nullptr, &texture.imageView));
-        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
+        std::string image_view_debug_name = "TextureImageView: " + image_name;
+        CHECK(vkCreateImageView(inContext.device, &image_view_info, nullptr, &texture.imageView));
+        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, image_view_debug_name.c_str());
 
         // Create Sampler
-        VkSamplerCreateInfo samplerInfo{};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = inContext.physicalDeviceProperties.limits.maxSamplerAnisotropy;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        VkSamplerCreateInfo sampler_info{};
+        sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_info.magFilter = VK_FILTER_LINEAR;
+        sampler_info.minFilter = VK_FILTER_LINEAR;
+        sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.anisotropyEnable = VK_TRUE;
+        sampler_info.maxAnisotropy = inContext.physicalDeviceProperties.limits.maxSamplerAnisotropy;
+        sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        sampler_info.unnormalizedCoordinates = VK_FALSE;
+        sampler_info.compareEnable = VK_FALSE;
+        sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+        sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-        std::string samplerDebugName = "TextureSampler: " + imageName;
-        CHECK(vkCreateSampler(inContext.device, &samplerInfo, nullptr, &texture.sampler));
-        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
+        std::string sampler_debug_name = "TextureSampler: " + image_name;
+        CHECK(vkCreateSampler(inContext.device, &sampler_info, nullptr, &texture.sampler));
+        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, sampler_debug_name.c_str());
 
         return texture;
     }
