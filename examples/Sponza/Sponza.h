@@ -19,7 +19,6 @@ struct PushConstants
     glm::mat4 renderMatrix;
     glm::mat4 modelMatrix;
     glm::vec4 camera;
-    glm::vec4 baseColorFactor;
 };
 
 class Sponza

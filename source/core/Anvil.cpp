@@ -61,6 +61,14 @@ void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& ren
         Window::pollEvents();
         Input::UpdateInputs();
 
+        // FIX: Catch the minimized window state
+       if (window->isMinimised())
+       {
+           // Skip the rest of the loop entirely!
+           // ImGui never starts, rendering never happens.
+           continue;
+       }
+
         // Check for Shader Reload
         const bool isCtrl = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
         const bool isDot = Input::IsKeyPressed_Frame(GLFW_KEY_PERIOD);

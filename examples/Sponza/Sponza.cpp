@@ -5,6 +5,9 @@
 
 #include <iostream>
 
+#include "AnvilRenderer.h"
+#include "UIElements.h"
+
 void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
 {
     std::cout << "Initialize project" << std::endl;
@@ -40,7 +43,21 @@ void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
 
 void Sponza::cleanupProject()
 {
+    if (pContext)
+    {
+        vkDeviceWaitIdle(pContext->device);
 
+        gpuModel.destroyGPUModel();
+        sponzaMaterial.destroyMaterial();
+
+        if (pipeline.pipeline != VK_NULL_HANDLE)
+        {
+            vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
+            pipeline.pipeline = VK_NULL_HANDLE;
+        }
+
+        shaderCompiler.shutdownShaderCompiler();
+    }
 }
 
 void Sponza::loadPipeline()
@@ -88,5 +105,89 @@ void Sponza::loadPipeline()
 
 void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(inSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inSwapchain.swapchainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(inCmd, 0, 1, &viewport);
 
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = inSwapchain.swapchainExtent;
+    vkCmdSetScissor(inCmd, 0, 1, &scissor);
+
+    static auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastFrameTime).count();
+    lastFrameTime = currentTime;
+
+    camera.updateCamera(deltaTime);
+
+    const float aspect = static_cast<float>(inSwapchain.swapchainExtent.width) /
+                         static_cast<float>(inSwapchain.swapchainExtent.height);
+
+    const glm::mat4 projection = camera.getProjectionMatrix(aspect);
+    const glm::mat4 view = camera.getViewMatrix();
+
+    UI::RenderWorldAxes(view);
+
+    vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
+
+    VkDeviceSize offset = 0;
+    for (const GPUModelDrawItem& draw_item : gpuModel.drawItems)
+    {
+        if (draw_item.gpuMeshIndex >= gpuModel.gpuMeshes.size())
+        {
+            continue;
+        }
+
+        const GPUMesh& gpu_mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];
+
+        VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
+
+        if (draw_item.gpuMaterialIndex >= 0 &&
+            draw_item.gpuMaterialIndex < static_cast<int>(gpuModel.gpuMaterials.size()))
+        {
+            descriptor_set = gpuModel.gpuMaterials[draw_item.gpuMaterialIndex].instance.descriptorSet;
+        }
+
+        // Bind all active sets
+        std::vector<VkDescriptorSet> sets_to_bind;
+        if (globalSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(globalSet.descriptorSet);
+        }
+        if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(gpuModel.modelSet.descriptorSet);
+        }
+        if (descriptor_set != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(descriptor_set);
+        }
+
+        if (!sets_to_bind.empty())
+        {
+            vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, sponzaMaterial.materialPipelineLayout,
+                0, static_cast<uint32_t>(sets_to_bind.size()), sets_to_bind.data(), 0, nullptr);
+        }
+
+        PushConstants constants{};
+        constants.renderMatrix = projection * view * draw_item.worldMatrix;
+        constants.modelMatrix = draw_item.worldMatrix;
+        constants.camera = glm::vec4(camera.position, 1.0f);
+
+        vkCmdPushConstants(inCmd, sponzaMaterial.materialPipelineLayout, sponzaMaterial.pushConstantStages, 0,
+            sizeof(PushConstants), &constants);
+
+        vkCmdBindVertexBuffers(inCmd, 0, 1, &gpu_mesh.vertexBuffer.buffer, &offset);
+        vkCmdBindIndexBuffer(inCmd, gpu_mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(inCmd, gpu_mesh.indexCount, 1, 0, 0, 0);
+
+        AnvilRenderer::engineStats.drawCalls++;
+        AnvilRenderer::engineStats.primitiveCount += (gpu_mesh.indexCount / 3);
+    }
 }
