@@ -26,6 +26,9 @@ namespace TextureLoader
         VkDeviceSize image_size = tex_width * tex_height * 4;
         VkFormat texture_format = bIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
 
+        // Calculate how many mip levels we need
+        uint32_t mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+
         // CPU-visible staging buffer
         GPUBuffer staging_buffer;
         staging_buffer.createBuffer(
@@ -45,12 +48,15 @@ namespace TextureLoader
         image_info.extent.width = static_cast<uint32_t>(tex_width);
         image_info.extent.height = static_cast<uint32_t>(tex_height);
         image_info.extent.depth = 1;
-        image_info.mipLevels = 1;
+        image_info.mipLevels = mip_levels;
         image_info.arrayLayers = 1;
         image_info.format = texture_format;
         image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
         image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+        // Add TRANSFER_SRC_BIT so we can read from the image to generate the next mip level
+        image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
         image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -77,7 +83,11 @@ namespace TextureLoader
             barrier.image = texture.image;
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             barrier.subresourceRange.baseMipLevel = 0;
-            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.levelCount = mip_levels; // Transition all mips
+
+            // Transition all mips to Transfer Destination
+            barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.subresourceRange.baseArrayLayer = 0;
             barrier.subresourceRange.layerCount = 1;
             barrier.srcAccessMask = 0;
@@ -85,8 +95,11 @@ namespace TextureLoader
 
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
+            // Copy pixel data from buffer into Mip Level 0
             VkBufferImageCopy region{};
             region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.imageSubresource.mipLevel = 0; // Only copy to level 0
+            region.imageSubresource.baseArrayLayer = 0;
             region.imageSubresource.layerCount = 1;
             region.imageExtent = {static_cast<uint32_t>(tex_width), static_cast<uint32_t>(tex_height), 1};
 
