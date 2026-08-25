@@ -48,6 +48,7 @@ struct CPUTexture
 {
     std::string name;
     std::string imagePath;
+    bool isSRGB = true; // false = UNORM
 };
 
 /**

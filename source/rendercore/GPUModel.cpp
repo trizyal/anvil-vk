@@ -147,10 +147,11 @@ void GPUModel::createTextures(const CPUModel& inModel)
     {
         try
         {
-            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext));
+            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext, cpu_texture.isSRGB));
         }
         catch (...)
         {
+            std::cout << "Color Space is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
             textures.push_back(defaultWhiteTexture);
         }
     }

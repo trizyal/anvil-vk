@@ -357,6 +357,13 @@ namespace
 
                 cpu_material.baseColorTextureIndex = GetTextureIndex(gltf_data, pbr.base_color_texture.texture);
                 cpu_material.metallicRoughnessTextureIndex = GetTextureIndex(gltf_data, pbr.metallic_roughness_texture.texture);
+
+                // Flag metallic/roughness as Linear
+                if (cpu_material.metallicRoughnessTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.metallicRoughnessTextureIndex].isSRGB = false;
+                }
+
                 cpu_material.metallicFactor = static_cast<float>(pbr.metallic_factor);
                 cpu_material.roughnessFactor = static_cast<float>(pbr.roughness_factor);
             }
@@ -364,6 +371,12 @@ namespace
             if (gltf_material.normal_texture.texture)
             {
                 cpu_material.normalTextureIndex = GetTextureIndex(gltf_data, gltf_material.normal_texture.texture);
+
+                // Flag normals as Linear
+                if (cpu_material.normalTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.normalTextureIndex].isSRGB = false;
+                }
             }
         }
     }

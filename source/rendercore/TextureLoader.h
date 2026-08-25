@@ -71,19 +71,24 @@ namespace TextureLoader
      * submits a transfer command to upload it to a device-local Vulkan image, and creates an
      * associated image view and default sampler.
      *
+     * Base Color (Albedo) should be sRGB because it represents visual colors.
+     * Normal, Metallic, and Roughness Maps represent raw math data, not colors. They MUST be linear (UNORM).
+     *
      * @param filepath  Absolute or relative filesystem path to the source image file.
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @param bIsSRGB true means we load with sRGB, otherwise UNORM.
      * @return A fully populated AnvilTexture ready for descriptor set binding.
      *
      * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
-    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext);
+    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext, bool bIsSRGB = true);
 
     /**
      * @brief Create a solid texture image, upload it to device-local GPU memory.
      *
      * @param color The rgba value in unsigned 8-bit format.
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @param bIsSRGB true means we create with sRGB, otherwise UNORM.
      * @return A fully populated AnvilTexture ready for descriptor set binding.
      *
      * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.
