@@ -80,7 +80,7 @@ void GPUMesh::destroyGPUMesh()
     indexBuffer.destroyBuffer();
 }
 
-VkVertexInputBindingDescription GPUMesh::getBindingDescription()
+VkVertexInputBindingDescription GPUMesh::GetBindingDescription()
 {
     VkVertexInputBindingDescription binding_description{};
     binding_description.binding = 0;
@@ -90,7 +90,7 @@ VkVertexInputBindingDescription GPUMesh::getBindingDescription()
     return binding_description;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> GPUMesh::GetAttributeDescriptionsArray3()
 {
     std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions{};
 
@@ -115,7 +115,7 @@ std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescripti
     return attribute_descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> GPUMesh::getAttributeDescriptions()
+std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions5()
 {
     std::vector<VkVertexInputAttributeDescription> attribute_descriptions(5);
 

@@ -73,8 +73,8 @@ void CesiumMan::loadPipeline()
     globalSet.bindUniformBuffer("sceneBuffer", cesiumScene.sceneUBO);
     globalSet.updateDescriptorSets();
 
-    const auto attributes = GPUMesh::getAttributeDescriptions();
-    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
+    const auto attributes = GPUMesh::GetAttributeDescriptions5();
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
 
     PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(cesiumMaterial.vertexShader.get(), cesiumMaterial.fragmentShader.get())

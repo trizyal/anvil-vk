@@ -94,10 +94,10 @@ void DirectionalLight::loadPipeline()
     }
     myMaterialInstance.updateDescriptorSets();
 
-    auto attributesArray = GPUMesh::get3AttributeDescriptions();
+    auto attributesArray = GPUMesh::GetAttributeDescriptionsArray3();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
     {attributesArray[0], attributesArray[1], attributesArray[2]};
 

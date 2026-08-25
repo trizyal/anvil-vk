@@ -84,7 +84,7 @@ public:
      *
      * @return A populated VkVertexInputBindingDescription structure for pipeline creation.
      */
-    static VkVertexInputBindingDescription getBindingDescription();
+    static VkVertexInputBindingDescription GetBindingDescription();
 
     /**
      * @brief Returns attribute descriptions mapping MeshVertex fields to shader locations.
@@ -96,7 +96,7 @@ public:
      *
      * @return A 3-element array of VkVertexInputAttributeDescription structures.
      */
-    static std::array<VkVertexInputAttributeDescription, 3> get3AttributeDescriptions();
+    static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptionsArray3();
 
     /**
      * @brief Returns attribute descriptions mapping MeshVertex fields to shader locations.
@@ -110,7 +110,7 @@ public:
      *
      * @return A 5-element vector of VkVertexInputAttributeDescription structures.
      */
-    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+    static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions5();
 };
 
 #endif //ANVIL_VK_GPUMESH_H
