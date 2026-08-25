@@ -423,7 +423,7 @@ namespace
                     }
                     else
                     {
-                        std::cerr << "Found attribute not accounted for in mesh: " << cpu_mesh.name << std::endl;
+                        std::cerr << "Found attribute " << attribute.name << " not accounted for in mesh: " << cpu_mesh.name << std::endl;
                     }
                 }
 

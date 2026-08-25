@@ -39,7 +39,7 @@ struct SceneData
 
 // SET 2: Material
 [[vk::binding(0, 2)]] Sampler2D baseColorTexture;
-[[vk::binding(1, 2)]] Sampler2D normalTexture;
+// [[vk::binding(1, 2)]] Sampler2D normalTexture;
 
 [shader("vertex")]
 VertexOutput vertexMain(VertexInput input)
