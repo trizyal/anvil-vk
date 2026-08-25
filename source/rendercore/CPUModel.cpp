@@ -392,6 +392,7 @@ namespace
                 const cgltf_accessor* position_accessor = nullptr;
                 const cgltf_accessor* normal_accessor = nullptr;
                 const cgltf_accessor* uv_accessor = nullptr;
+                const cgltf_accessor* tangent_accessor = nullptr;
 
                 // Pointers for skinning accessors
                 const cgltf_accessor* joints_accessor = nullptr;
@@ -412,6 +413,10 @@ namespace
                     else if (attribute.type == cgltf_attribute_type_texcoord && attribute.index == 0)
                     {
                         uv_accessor = attribute.data;
+                    }
+                    else if (attribute.type == cgltf_attribute_type_tangent)
+                    {
+                        tangent_accessor = attribute.data;
                     }
                     else if (attribute.type == cgltf_attribute_type_joints)
                     {
@@ -444,6 +449,11 @@ namespace
                     if (normal_accessor)
                     {
                         cgltf_accessor_read_float(normal_accessor, vertex_index, &vertex.normal.x, 3);
+                    }
+
+                    if (tangent_accessor)
+                    {
+                        cgltf_accessor_read_float(tangent_accessor, vertex_index, &vertex.tangent.x, 4);
                     }
 
                     if (uv_accessor)
