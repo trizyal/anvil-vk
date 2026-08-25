@@ -82,7 +82,7 @@ void Sponza::loadPipeline()
     globalSet.updateDescriptorSets();
 
     auto attributes = GPUMesh::GetAttributeDescriptions(
-        {POSITION, NORMAL, UV }
+        {POSITION, NORMAL, TANGENT, UV }
     );
 
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};

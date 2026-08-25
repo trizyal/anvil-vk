@@ -75,6 +75,7 @@ void GPUModel::destroyGPUModel()
     textures.clear();
     defaultWhiteTexture.destroyAnvilTexture(pContext);
     defaultNormalTexture.destroyAnvilTexture(pContext);
+    defaultTransparentTexture.destroyAnvilTexture(pContext);
 
     for (GPUMesh& mesh : gpuMeshes)
     {
@@ -139,6 +140,7 @@ void GPUModel::createTextures(const CPUModel& inModel)
 {
     defaultWhiteTexture = TextureLoader::CreateSolidColorTexture(WhiteColor, *pContext);
     defaultNormalTexture = TextureLoader::CreateSolidColorTexture(NormalColor, *pContext);
+    defaultTransparentTexture = TextureLoader::CreateSolidColorTexture(TransparentColor, *pContext);
 
     textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
@@ -242,7 +244,7 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Metallic Roughness Color
         if (inMaterial.hasBinding("metallicRoughnessTexture"))
         {
-            if (cpu_material.baseColorTextureIndex >= 0)
+            if (cpu_material.metallicRoughnessTextureIndex >= 0)
             {
                 gpu_material.instance.bindTexture("metallicRoughnessTexture", textures[cpu_material.metallicRoughnessTextureIndex]);
             }
