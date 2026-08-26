@@ -22,10 +22,12 @@ MaterialInstance& MaterialInstance::operator=(MaterialInstance&& other) noexcept
         pendingTextures = std::move(other.pendingTextures);
         pendingBuffers = std::move(other.pendingBuffers);
         descriptorSet = other.descriptorSet;
+        setIndex = other.setIndex;
 
         other.descriptorSet = VK_NULL_HANDLE;
         other.pContext = nullptr;
         other.pParentMaterial = nullptr;
+        other.setIndex = 0; // Reset the moved-from object
     }
     return *this;
 }
@@ -38,6 +40,16 @@ void MaterialInstance::bindTexture(const std::string& name, const AnvilTexture& 
         return;
     }
 
+    // Prevent binding cross contamination
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
+    }
+
     pendingTextures.push_back({.name = name, .texture = &inTexture});
 }
 
@@ -47,6 +59,14 @@ void MaterialInstance::bindUniformBuffer(const std::string& name, const GPUBuffe
     {
         return;
     }
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
+    }
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
 
@@ -55,6 +75,14 @@ void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffe
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
         return;
+    }
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
     }
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
@@ -89,7 +117,7 @@ void MaterialInstance::updateDescriptorSets()
         VkWriteDescriptorSet write{};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write.dstSet = descriptorSet;
-        write.dstBinding = shader_binding.binding;
+        write.dstBinding = shader_binding.bindingIndex;
         write.dstArrayElement = 0;
         write.descriptorType = shader_binding.descriptorType;
         write.descriptorCount = 1; //?
@@ -109,7 +137,7 @@ void MaterialInstance::updateDescriptorSets()
         VkWriteDescriptorSet write{};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write.dstSet = descriptorSet;
-        write.dstBinding = shader_binding.binding;
+        write.dstBinding = shader_binding.bindingIndex;
         write.dstArrayElement = 0;
         write.descriptorType = shader_binding.descriptorType;
         write.descriptorCount = 1; //?

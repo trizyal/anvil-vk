@@ -80,7 +80,7 @@ void GPUMesh::destroyGPUMesh()
     indexBuffer.destroyBuffer();
 }
 
-VkVertexInputBindingDescription GPUMesh::getBindingDescription()
+VkVertexInputBindingDescription GPUMesh::GetBindingDescription()
 {
     VkVertexInputBindingDescription binding_description{};
     binding_description.binding = 0;
@@ -90,7 +90,7 @@ VkVertexInputBindingDescription GPUMesh::getBindingDescription()
     return binding_description;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> GPUMesh::GetAttributeDescriptionsArray3()
 {
     std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions{};
 
@@ -115,7 +115,7 @@ std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescripti
     return attribute_descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> GPUMesh::getAttributeDescriptions()
+std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions5()
 {
     std::vector<VkVertexInputAttributeDescription> attribute_descriptions(5);
 
@@ -150,4 +150,49 @@ std::vector<VkVertexInputAttributeDescription> GPUMesh::getAttributeDescriptions
     attribute_descriptions[4].offset = offsetof(MeshVertex, weights);
 
     return attribute_descriptions;
+}
+
+std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions(const std::vector<VertexAttribute>& attributes)
+{
+    std::vector<VkVertexInputAttributeDescription> descriptions;
+    descriptions.reserve(attributes.size());
+
+    for (uint32_t location = 0; location < static_cast<uint32_t>(attributes.size()); ++location)
+    {
+        VkVertexInputAttributeDescription attribute_description{};
+        attribute_description.binding = 0;
+        attribute_description.location = location;
+
+        switch (attributes[location])
+        {
+        case POSITION:
+            attribute_description.format = VK_FORMAT_R32G32B32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, position);
+            break;
+        case NORMAL:
+            attribute_description.format = VK_FORMAT_R32G32B32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, normal);
+            break;
+        case UV:
+            attribute_description.format = VK_FORMAT_R32G32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, uv);
+            break;
+        case TANGENT:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, tangent);
+            break;
+        case JOINTS:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_UINT;
+            attribute_description.offset = offsetof(MeshVertex, joints);
+            break;
+        case WEIGHTS:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, weights);
+            break;
+        }
+
+        descriptions.push_back(attribute_description);
+    }
+
+    return descriptions;
 }

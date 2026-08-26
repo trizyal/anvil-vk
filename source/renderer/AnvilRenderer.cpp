@@ -32,19 +32,22 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
 AnvilRenderer::~AnvilRenderer()
 {
     // Wait for GPU
-    vkDeviceWaitIdle(pContext->device);
-
-    for (const AnvilFrame& anvil_frame : anvilFrames)
+    if (pContext && pContext->device)
     {
-        vkDestroySemaphore(pContext->device, anvil_frame.imageAvailableSemaphore, nullptr);
-        vkDestroyFence(pContext->device, anvil_frame.frameDoneFence, nullptr);
-        vkDestroyCommandPool(pContext->device, anvil_frame.cmdPool, nullptr);
-    }
+        vkDeviceWaitIdle(pContext->device);
 
-    // Clean up per-image semaphores
-    for (const VkSemaphore& semaphore : renderFinishedSemaphores)
-    {
-        vkDestroySemaphore(pContext->device, semaphore, nullptr);
+        for (const AnvilFrame& anvil_frame : anvilFrames)
+        {
+            vkDestroySemaphore(pContext->device, anvil_frame.imageAvailableSemaphore, nullptr);
+            vkDestroyFence(pContext->device, anvil_frame.frameDoneFence, nullptr);
+            vkDestroyCommandPool(pContext->device, anvil_frame.cmdPool, nullptr);
+        }
+
+        // Clean up per-image semaphores
+        for (const VkSemaphore& semaphore : renderFinishedSemaphores)
+        {
+            vkDestroySemaphore(pContext->device, semaphore, nullptr);
+        }
     }
 }
 

@@ -342,6 +342,7 @@ namespace
             const cgltf_material& gltf_material = gltf_data->materials[material_index];
 
             cpu_material.name = gltf_material.name ? gltf_material.name : "Material_" + std::to_string(material_index);
+            cpu_material.alphaCutoff = static_cast<float>(gltf_material.alpha_cutoff);
 
             if (gltf_material.has_pbr_metallic_roughness)
             {
@@ -355,11 +356,28 @@ namespace
                 );
 
                 cpu_material.baseColorTextureIndex = GetTextureIndex(gltf_data, pbr.base_color_texture.texture);
+                cpu_material.metallicRoughnessTextureIndex = GetTextureIndex(gltf_data, pbr.metallic_roughness_texture.texture);
+
+                // Flag metallic/roughness as Linear
+                if (cpu_material.metallicRoughnessTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.metallicRoughnessTextureIndex].isSRGB = false;
+                }
+
                 cpu_material.metallicFactor = static_cast<float>(pbr.metallic_factor);
                 cpu_material.roughnessFactor = static_cast<float>(pbr.roughness_factor);
             }
 
-            // model.materials.push_back(cpu_material);
+            if (gltf_material.normal_texture.texture)
+            {
+                cpu_material.normalTextureIndex = GetTextureIndex(gltf_data, gltf_material.normal_texture.texture);
+
+                // Flag normals as Linear
+                if (cpu_material.normalTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.normalTextureIndex].isSRGB = false;
+                }
+            }
         }
     }
 
@@ -387,6 +405,7 @@ namespace
                 const cgltf_accessor* position_accessor = nullptr;
                 const cgltf_accessor* normal_accessor = nullptr;
                 const cgltf_accessor* uv_accessor = nullptr;
+                const cgltf_accessor* tangent_accessor = nullptr;
 
                 // Pointers for skinning accessors
                 const cgltf_accessor* joints_accessor = nullptr;
@@ -408,6 +427,10 @@ namespace
                     {
                         uv_accessor = attribute.data;
                     }
+                    else if (attribute.type == cgltf_attribute_type_tangent)
+                    {
+                        tangent_accessor = attribute.data;
+                    }
                     else if (attribute.type == cgltf_attribute_type_joints)
                     {
                         joints_accessor = attribute.data;
@@ -418,7 +441,7 @@ namespace
                     }
                     else
                     {
-                        std::cerr << "Found attribute not accounted for in mesh: " << cpu_mesh.name << std::endl;
+                        std::cerr << "Found attribute " << attribute.name << " not accounted for in mesh: " << cpu_mesh.name << std::endl;
                     }
                 }
 
@@ -439,6 +462,11 @@ namespace
                     if (normal_accessor)
                     {
                         cgltf_accessor_read_float(normal_accessor, vertex_index, &vertex.normal.x, 3);
+                    }
+
+                    if (tangent_accessor)
+                    {
+                        cgltf_accessor_read_float(tangent_accessor, vertex_index, &vertex.tangent.x, 4);
                     }
 
                     if (uv_accessor)

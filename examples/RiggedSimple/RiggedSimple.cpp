@@ -74,10 +74,10 @@ void RiggedSimple::loadPipeline()
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
     riggedMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
 
-    const auto attributes = GPUMesh::getAttributeDescriptions();
+    const auto attributes = GPUMesh::GetAttributeDescriptions5();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;

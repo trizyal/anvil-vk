@@ -23,6 +23,10 @@
 
 class VulkanContext;
 
+constexpr uint8_t WhiteColor[4] = {255, 255, 255, 255};
+constexpr uint8_t NormalColor[4] = {128, 128, 255, 255}; // Flat Z-up normal
+constexpr uint8_t TransparentColor[4] = {0, 0, 0, 0}; //
+
 /**
  * @brief Max number of Joints allowed.
  * 256 glm::mat4 matrices (16KB total)
@@ -81,6 +85,12 @@ private:
     VulkanContext* pContext = nullptr;
 
 public:
+    AnvilTexture defaultWhiteTexture;
+    AnvilTexture defaultNormalTexture;
+    AnvilTexture defaultTransparentTexture;
+
+    MaterialInstance modelSet; // Set 1
+
     std::vector<AnvilTexture> textures;
     std::vector<GPUMesh> gpuMeshes;
     std::vector<GPUModelMaterial> gpuMaterials;
@@ -89,15 +99,29 @@ public:
     GPUBuffer jointBuffer;
 
     /**
+     * @brief Legacy function to upload a CPUModel to GPU-side resources and generates a draw list.
+     */
+    [[deprecated("Use the multi-set architecture instead.")]]
+    void createGPUModel(
+        VulkanContext& inContext,
+        const CPUModel& inModel,
+        const AnvilMaterial& inMaterial,
+        const std::string& sceneBufferName,
+        const GPUBuffer& sceneBuffer,
+        const std::string& textureName
+    );
+
+    /**
      * @brief Uploads a CPUModel to GPU-side resources and generates a draw list.
+     *
+     * @param inContext Reference to the active Anvil Vulkan context.
+     * @param inModel Reference to the model structure on CPU.
+     * @param inMaterial
      */
     void createGPUModel(
         VulkanContext& inContext,
         const CPUModel& inModel,
-        const AnvilMaterial& ioMaterial,
-        const std::string& sceneBufferName,
-        const GPUBuffer& sceneBuffer,
-        const std::string& textureName
+        const AnvilMaterial& inMaterial
     );
 
     /**
@@ -112,12 +136,18 @@ public:
 private:
     void createTextures(const CPUModel& inModel);
 
+    [[deprecated("Use the multi-set architecture instead.")]]
     void createMaterialDescriptorSets(
         const CPUModel& inModel,
         const AnvilMaterial& inMaterial,
         const std::string& sceneBufferName,
         const GPUBuffer& sceneBuffer,
         const std::string& textureName
+    );
+
+    void createMaterialDescriptorSets(
+        const CPUModel& inModel,
+        const AnvilMaterial& inMaterial
     );
 
     void createMeshesAndDrawItems(const CPUModel& inCPUModel);

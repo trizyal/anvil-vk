@@ -113,26 +113,26 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 
 UIRenderer::~UIRenderer()
 {
-    if (pContext->device)
+    if (pContext && pContext->device)
     {
         vkDeviceWaitIdle(pContext->device);
-    }
 
-    // CRITICAL: Force ImGui to destroy viewport command buffers before shutting down
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        ImGui::DestroyPlatformWindows();
-    }
+        // CRITICAL: Force ImGui to destroy viewport command buffers before shutting down
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::DestroyPlatformWindows();
+        }
 
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
 
-    if (imguiPool != VK_NULL_HANDLE)
-    {
-        vkDestroyDescriptorPool(pContext->device, imguiPool, nullptr);
-        imguiPool = VK_NULL_HANDLE;
+        if (imguiPool != VK_NULL_HANDLE)
+        {
+            vkDestroyDescriptorPool(pContext->device, imguiPool, nullptr);
+            imguiPool = VK_NULL_HANDLE;
+        }
     }
 }
 

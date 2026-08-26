@@ -138,14 +138,20 @@ anvil-vk/
 - enums values - `MACRO_CASE` or WEIRD stuff
 
 - class functions - `camelCase`
-- individual functions - `snake_case`
+- free functions - `snake_case`
 - static function - `PascalCase`
 - namespace function - `PascalCase`
+- anon namespace function - `snake_case`
 
 - variables:
   - class member - `camelCase`
   - struct member - `camelCase`
   - local - `snake_case`
+
+- iterators should be named.
+  - e.g., if iterating to index into image, the iteration should be called: `image_index`.
+
+- avoid naming vulkan info structs just `info` and prefer `image_info`.
 
 ---
 
@@ -153,6 +159,16 @@ anvil-vk/
 
 *This section is currently being restructured as we are changing some architectural 
 structure of anvil and core vulkan resources.*
+
+### Descriptor Sets
+
+Currently, anvil crams global scene data, model-specific bone matrices, and 
+material-specific textures into a single Vulkan Descriptor Set (`Set 0`). 
+We are going to split these into three frequencies:
+
+* **Set 0:** Global Data (Scene UBO) — Managed by the Project (`CesiumMan` / `Sponza`).
+* **Set 1:** Model Data (Joint Matrices) — Managed by `GPUModel`.
+* **Set 2:** Material Data (Textures) — Managed by the individual `GPUModelMaterial` instances.
 
 ---
 

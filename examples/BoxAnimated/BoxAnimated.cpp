@@ -81,10 +81,10 @@ void BoxAnimated::loadPipeline()
     // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
     boxMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
 
-    const auto attributesArray = GPUMesh::get3AttributeDescriptions();
+    const auto attributesArray = GPUMesh::GetAttributeDescriptionsArray3();
 
     // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::getBindingDescription()};
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
     std::vector<VkVertexInputAttributeDescription> attributes =
     {attributesArray[0], attributesArray[1], attributesArray[2]};
 

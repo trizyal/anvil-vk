@@ -9,36 +9,36 @@
 
 int main()
 {
-    Anvil anvil;
-    anvil.initializeAnvil({
-        .width = 1280,
-        .height = 720,
-        .title = "Anvil Rigging Example"
-    });
-
-    CesiumMan project;
-    project.initializeProject(anvil.getContext(), anvil.getSwapchain());
-
-    // Register hot-reload event
-    anvil.addShaderReloadCallback([&]() {
-        project.loadPipeline();
-    });
-
     try
     {
+        Anvil anvil;
+        anvil.initializeAnvil({
+            .width = 1280,
+            .height = 720,
+            .title = "Anvil Rigging Example"
+        });
+
+        CesiumMan project;
+        project.initializeProject(anvil.getContext(), anvil.getSwapchain());
+
+        // Register hot-reload event
+        anvil.addShaderReloadCallback([&]() {
+            project.loadPipeline();
+        });
+
         anvil.runAnvil([&](VkCommandBuffer cmd, Swapchain* swapchain)
         {
             project.recordCommands(cmd, *swapchain);
         });
+
+        project.cleanupProject();
+        anvil.shutdownAnvil();
     }
     catch (const std::exception& e)
     {
         std::cerr << "Fatal Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
-    project.cleanupProject();
-    anvil.shutdownAnvil();
 
     return EXIT_SUCCESS;
 }

@@ -65,6 +65,8 @@ public:
      */
     [[nodiscard]] bool bShouldClose() const;
 
+    [[nodiscard]] bool isMinimised() const;
+
     /**
      * @return Window title.
      */

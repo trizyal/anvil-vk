@@ -42,6 +42,17 @@ bool Window::bShouldClose() const
     return glfwWindowShouldClose(glfwWindow);
 }
 
+bool Window::isMinimised() const
+{
+    const VkExtent2D ext = getFramebufferExtent();
+    if (ext.width == 0 || ext.height == 0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 void Window::pollEvents()
 {
     glfwPollEvents();

@@ -66,6 +66,14 @@ void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& ren
         Window::pollEvents();
         Input::UpdateInputs();
 
+        // FIX: Catch the minimized window state
+       if (window->isMinimised())
+       {
+           // Skip the rest of the loop entirely!
+           // ImGui never starts, rendering never happens.
+           continue;
+       }
+
         // Check for Shader Reload
         const bool isCtrl = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
         const bool isDot = Input::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
@@ -550,6 +558,17 @@ bool Window::bShouldClose() const
     return glfwWindowShouldClose(glfwWindow);
 }
 
+bool Window::isMinimised() const
+{
+    const VkExtent2D ext = getFramebufferExtent();
+    if (ext.width == 0 || ext.height == 0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 void Window::pollEvents()
 {
     glfwPollEvents();
@@ -662,6 +681,8 @@ public:
      */
     [[nodiscard]] bool bShouldClose() const;
 
+    [[nodiscard]] bool isMinimised() const;
+
     /**
      * @return Window title.
      */
@@ -704,13 +725,14 @@ public:
 #include <stdexcept>
 #include <algorithm>
 #include <ranges>
+#include <unordered_map>
 
 #include "DebugNames.h"
 #include "VulkanResult.h"
 
 void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                                   const VkShaderStageFlagBits stage,
-                                  std::vector<VkDescriptorSetLayoutBinding>& outLayoutBindings,
+                                  std::vector<ReflectedBinding>& outLayoutBindings,
                                   std::vector<VkPushConstantRange>& outPushConstants)
 {
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
@@ -785,11 +807,15 @@ void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
                 continue;
             }
 
-            outLayoutBindings.push_back(layout_binding);
+            ReflectedBinding reflected_binding{};
+            reflected_binding.setIndex = var_layout->getBindingSpace();
+            reflected_binding.bindingData = layout_binding;
+
+            outLayoutBindings.push_back(reflected_binding);
 
             ShaderBinding shader_binding{};
-            shader_binding.set = var_layout->getBindingSpace();
-            shader_binding.binding = layout_binding.binding;
+            shader_binding.setIndex = var_layout->getBindingSpace();
+            shader_binding.bindingIndex = layout_binding.binding;
             shader_binding.descriptorType = layout_binding.descriptorType;
             bindingMap[name] = shader_binding;
         }
@@ -808,24 +834,36 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     const auto vertex_result = inCompiler.compileToSPIRV(inVertReq);
     const auto fragment_result = inCompiler.compileToSPIRV(inFragReq);
 
-    // Reflect Shaders
-    std::vector<VkDescriptorSetLayoutBinding> _raw_bindings;
-    std::vector<VkPushConstantRange> _raw_push_constants;
+    // -----------------------
+    // RAW REFLECTION DATA
+    // -----------------------
+    // raw_reflected_bindings: A flat list storing every individual descriptor binding discovered
+    // in the shaders. If a resource (like a Scene UBO) is used in BOTH the Vertex and
+    // Fragment shaders, it will be added to this list twice.
+    std::vector<ReflectedBinding> raw_reflected_bindings;
 
+    // raw_reflected_push_constants: A flat list of push constant ranges extracted from the shaders.
+    // Like bindings, if multiple shader stages use push constants, we will get multiple
+    // entries here that need to be combined later.
+    std::vector<VkPushConstantRange> raw_reflected_push_constants;
+
+    // We pass stage flags (e.g., VK_SHADER_STAGE_VERTEX_BIT) into the reflection parser.
+    // This tags the discovered bindings so Vulkan knows EXACTLY which programmable stage
+    // of the GPU pipeline (Vertex processing vs. Pixel processing) is allowed to read them.
     if (vertex_result.reflection)
     {
         reflectShader(vertex_result.reflection.get(),
             VK_SHADER_STAGE_VERTEX_BIT,
-            _raw_bindings,
-            _raw_push_constants);
+            raw_reflected_bindings,
+            raw_reflected_push_constants);
     }
 
     if (fragment_result.reflection)
     {
         reflectShader(fragment_result.reflection.get(),
             VK_SHADER_STAGE_FRAGMENT_BIT,
-            _raw_bindings,
-            _raw_push_constants);
+            raw_reflected_bindings,
+            raw_reflected_push_constants);
     }
 
     // Build Vulkan Shader Modules
@@ -835,44 +873,57 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
     fragmentShader.createShaderModule(*pContext, fragment_result, debug_name.c_str());
 
-    // Merge duplicate bindings
-    std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> _merged_bindings_map;
-    for (const auto& _b : _raw_bindings)
+    uint32_t max_set = 0;
+
+    // ------------------
+    // MERGE BINDINGS
+    // ------------------
+    // merged_set_bindings: A nested map used to de-duplicate the raw_reflected_bindings list.
+    // - the outer map's key is the Descriptor `Set` Index
+    // - the inner map's key is the `Binding` slot index within that set.
+    // If a binding exists in multiple shader stages, we use this map to merge them
+    // into a single binding that has a combined stageFlag.
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>> merged_set_bindings;
+
+    for (const auto& b : raw_reflected_bindings)
     {
-        if (_merged_bindings_map.contains(_b.binding))
+        max_set = std::max(max_set, b.setIndex);
+
+        // If the binding slot already exists in this set, merge the stage flags via a bitwise OR.
+        if (merged_set_bindings[b.setIndex].contains(b.bindingData.binding))
         {
-            _merged_bindings_map[_b.binding].stageFlags |= _b.stageFlags;
+            merged_set_bindings[b.setIndex][b.bindingData.binding].stageFlags |= b.bindingData.stageFlags;
         }
         else
         {
-            _merged_bindings_map[_b.binding] = _b;
+            merged_set_bindings[b.setIndex][b.bindingData.binding] = b.bindingData;
         }
     }
 
-    std::vector<VkDescriptorSetLayoutBinding> final_bindings;
+    descriptorSetLayouts.resize(max_set + 1, VK_NULL_HANDLE);
     std::vector<VkDescriptorPoolSize> pool_sizes;
-
-    // for (auto it=_merged_bindings_map.begin() ; it!=_merged_bindings_map.end() ; ++it)
-    for (const auto& binding : _merged_bindings_map | std::views::values)
+    for (uint32_t set_index = 0; set_index <= max_set; ++set_index)
     {
-        final_bindings.push_back(binding);
+        std::vector<VkDescriptorSetLayoutBinding> set_bindings;
+        if (merged_set_bindings.contains(set_index))
+        {
+            // Extract the merged bindings from our map back into a flat vector for Vulkan
+            for (const auto& binding_data : merged_set_bindings[set_index] | std::views::values)
+            {
+                set_bindings.push_back(binding_data);
+                pool_sizes.push_back({.type = binding_data.descriptorType, .descriptorCount = binding_data.descriptorCount * 1000});
+            }
+        }
 
-        VkDescriptorPoolSize pool_size{};
-        pool_size.type = binding.descriptorType;
-        pool_size.descriptorCount = binding.descriptorCount * 1000; // 1000 material instances
+        VkDescriptorSetLayoutCreateInfo descriptor_layout_info{};
+        descriptor_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_layout_info.bindingCount = static_cast<uint32_t>(set_bindings.size());
+        descriptor_layout_info.pBindings = set_bindings.data();
+        CHECK(vkCreateDescriptorSetLayout(pContext->device, &descriptor_layout_info, nullptr, &descriptorSetLayouts[set_index]));
 
-        pool_sizes.push_back(pool_size);
+        debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
+        VulkanDebug::SetAutoName(pContext->device, descriptorSetLayouts[set_index], VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
     }
-
-    // Create Layouts and Allocate Sizes
-    VkDescriptorSetLayoutCreateInfo desc_layout_info{};
-    desc_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    desc_layout_info.bindingCount = static_cast<uint32_t>(final_bindings.size());
-    desc_layout_info.pBindings = final_bindings.data();
-    CHECK(vkCreateDescriptorSetLayout(pContext->device, &desc_layout_info, nullptr, &materialDescriptorSetLayout));
-
-    debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
-    VulkanDebug::SetAutoName(pContext->device, materialDescriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
 
     if (!pool_sizes.empty())
     {
@@ -889,13 +940,13 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
     // Push Constants and Pipeline Layout
     VkPushConstantRange merged_push_constant{};
-    if (!_raw_push_constants.empty())
+    if (!raw_reflected_push_constants.empty())
     {
-        merged_push_constant = _raw_push_constants[0];
-        for (size_t i = 1; i < _raw_push_constants.size(); ++i)
+        merged_push_constant = raw_reflected_push_constants[0];
+        for (size_t i = 1; i < raw_reflected_push_constants.size(); ++i)
         {
-            merged_push_constant.size = std::max(merged_push_constant.size, _raw_push_constants[i].size);
-            merged_push_constant.stageFlags |= _raw_push_constants[i].stageFlags;
+            merged_push_constant.size = std::max(merged_push_constant.size, raw_reflected_push_constants[i].size);
+            merged_push_constant.stageFlags |= raw_reflected_push_constants[i].stageFlags;
         }
 
         pushConstantStages = merged_push_constant.stageFlags;
@@ -903,14 +954,11 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
     VkPipelineLayoutCreateInfo pipeline_layout_info{};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (materialDescriptorSetLayout != VK_NULL_HANDLE)
-    {
-        pipeline_layout_info.setLayoutCount = 1; //static_cast<uint32_t>(_final_bindings.size())?
-        pipeline_layout_info.pSetLayouts = &materialDescriptorSetLayout;
-    }
+    pipeline_layout_info.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+    pipeline_layout_info.pSetLayouts = descriptorSetLayouts.data();
     if (merged_push_constant.size > 0)
     {
-        pipeline_layout_info.pushConstantRangeCount = 1; //?
+        pipeline_layout_info.pushConstantRangeCount = 1;
         pipeline_layout_info.pPushConstantRanges = &merged_push_constant;
     }
     CHECK(vkCreatePipelineLayout(pContext->device, &pipeline_layout_info, nullptr, &materialPipelineLayout));
@@ -921,17 +969,24 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
 MaterialInstance AnvilMaterial::createInstance() const
 {
+    return allocateSet(0);
+}
+
+MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
+{
     MaterialInstance instance;
     instance.pContext = pContext;
     instance.pParentMaterial = this;
 
-    if (materialDescriptorPool != VK_NULL_HANDLE && materialDescriptorSetLayout != VK_NULL_HANDLE)
+    if (materialDescriptorPool != VK_NULL_HANDLE && setIndex < descriptorSetLayouts.size())
     {
+        instance.setIndex = setIndex;
+        
         VkDescriptorSetAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         alloc_info.descriptorPool = materialDescriptorPool;
         alloc_info.descriptorSetCount = 1;
-        alloc_info.pSetLayouts = &materialDescriptorSetLayout;
+        alloc_info.pSetLayouts = &descriptorSetLayouts[setIndex];
 
         CHECK(vkAllocateDescriptorSets(pContext->device, &alloc_info, &instance.descriptorSet));
     }
@@ -954,6 +1009,11 @@ ShaderBinding AnvilMaterial::getBinding(const std::string& name) const
     return it->second;
 }
 
+bool AnvilMaterial::hasSet(uint32_t setIndex) const
+{
+    return setIndex < descriptorSetLayouts.size() && descriptorSetLayouts[setIndex] != VK_NULL_HANDLE;
+}
+
 void AnvilMaterial::destroyMaterial() const
 {
     if (pContext)
@@ -965,9 +1025,12 @@ void AnvilMaterial::destroyMaterial() const
         {
             vkDestroyDescriptorPool(pContext->device, materialDescriptorPool, nullptr);
         }
-        if (materialDescriptorSetLayout)
+        for (VkDescriptorSetLayout layout : descriptorSetLayouts)
         {
-            vkDestroyDescriptorSetLayout(pContext->device, materialDescriptorSetLayout, nullptr);
+            if (layout != VK_NULL_HANDLE)
+            {
+                vkDestroyDescriptorSetLayout(pContext->device, layout, nullptr);
+            }
         }
         if (materialPipelineLayout)
         {
@@ -1011,13 +1074,19 @@ void AnvilMaterial::destroyMaterial() const
 struct ShaderBinding
 {
     /** Descriptor set index (e.g., set = 0) */
-    uint32_t set;
+    uint32_t setIndex;
 
     /** Binding slot index within the descriptor set. */
-    uint32_t binding;
+    uint32_t bindingIndex;
 
     /** Vulkan resource type (e.g., VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER). */
     VkDescriptorType descriptorType;
+};
+
+struct ReflectedBinding
+{
+    uint32_t setIndex;
+    VkDescriptorSetLayoutBinding bindingData;
 };
 
 /**
@@ -1050,7 +1119,11 @@ public:
     ShaderModule fragmentShader;
 
     /** Reflected layout for the material's descriptor set. */
+    [[deprecated]]
     VkDescriptorSetLayout materialDescriptorSetLayout = VK_NULL_HANDLE;
+
+    /** Reflected layouts for the material's descriptor sets (Index 0 = Set 0, etc). */
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
     /** Pool allocated specifically for this material's descriptor sets. */
     VkDescriptorPool materialDescriptorPool = VK_NULL_HANDLE;
@@ -1098,19 +1171,34 @@ public:
      *
      * @return A ready-to-use MaterialInstance tied to this material's layout.
      */
-    [[nodiscard]] MaterialInstance createInstance() const;
+    [[deprecated]][[nodiscard]]
+    MaterialInstance createInstance() const;
+
+    /**
+     * @brief Allocates a new instance for a specific Descriptor Set Index.
+     *
+     * @param setIndex The index this new set exists in.
+     * @return A ready-to-use MaterialInstance.
+     */
+    [[nodiscard]]
+    MaterialInstance allocateSet(uint32_t setIndex) const;
 
     /**
      * @brief Returns true if this material reflected a binding with the given shader variable name.
      */
-    [[nodiscard]] bool hasBinding(const std::string& name) const;
+    [[nodiscard]]
+    bool hasBinding(const std::string& name) const;
 
     /**
      * @brief Retrieves reflected binding metadata by shader variable name.
      *
      * @throws std::runtime_error If the binding does not exist.
      */
-    [[nodiscard]] ShaderBinding getBinding(const std::string& name) const;
+    [[nodiscard]]
+    ShaderBinding getBinding(const std::string& name) const;
+
+    [[nodiscard]]
+    bool hasSet(uint32_t setIndex) const;
 
 private:
     /**
@@ -1123,7 +1211,7 @@ private:
      */
     void reflectShader(slang::IComponentType* linkedProgram,
         VkShaderStageFlagBits stage,
-        std::vector<VkDescriptorSetLayoutBinding>& outLayoutBindings,
+        std::vector<ReflectedBinding>& outLayoutBindings,
         std::vector<VkPushConstantRange>& outPushConstants);
 };
 
@@ -1615,6 +1703,7 @@ namespace
             const cgltf_material& gltf_material = gltf_data->materials[material_index];
 
             cpu_material.name = gltf_material.name ? gltf_material.name : "Material_" + std::to_string(material_index);
+            cpu_material.alphaCutoff = static_cast<float>(gltf_material.alpha_cutoff);
 
             if (gltf_material.has_pbr_metallic_roughness)
             {
@@ -1628,11 +1717,28 @@ namespace
                 );
 
                 cpu_material.baseColorTextureIndex = GetTextureIndex(gltf_data, pbr.base_color_texture.texture);
+                cpu_material.metallicRoughnessTextureIndex = GetTextureIndex(gltf_data, pbr.metallic_roughness_texture.texture);
+
+                // Flag metallic/roughness as Linear
+                if (cpu_material.metallicRoughnessTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.metallicRoughnessTextureIndex].isSRGB = false;
+                }
+
                 cpu_material.metallicFactor = static_cast<float>(pbr.metallic_factor);
                 cpu_material.roughnessFactor = static_cast<float>(pbr.roughness_factor);
             }
 
-            // model.materials.push_back(cpu_material);
+            if (gltf_material.normal_texture.texture)
+            {
+                cpu_material.normalTextureIndex = GetTextureIndex(gltf_data, gltf_material.normal_texture.texture);
+
+                // Flag normals as Linear
+                if (cpu_material.normalTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.normalTextureIndex].isSRGB = false;
+                }
+            }
         }
     }
 
@@ -1660,6 +1766,7 @@ namespace
                 const cgltf_accessor* position_accessor = nullptr;
                 const cgltf_accessor* normal_accessor = nullptr;
                 const cgltf_accessor* uv_accessor = nullptr;
+                const cgltf_accessor* tangent_accessor = nullptr;
 
                 // Pointers for skinning accessors
                 const cgltf_accessor* joints_accessor = nullptr;
@@ -1681,6 +1788,10 @@ namespace
                     {
                         uv_accessor = attribute.data;
                     }
+                    else if (attribute.type == cgltf_attribute_type_tangent)
+                    {
+                        tangent_accessor = attribute.data;
+                    }
                     else if (attribute.type == cgltf_attribute_type_joints)
                     {
                         joints_accessor = attribute.data;
@@ -1691,7 +1802,7 @@ namespace
                     }
                     else
                     {
-                        std::cerr << "Found attribute not accounted for in mesh: " << cpu_mesh.name << std::endl;
+                        std::cerr << "Found attribute " << attribute.name << " not accounted for in mesh: " << cpu_mesh.name << std::endl;
                     }
                 }
 
@@ -1712,6 +1823,11 @@ namespace
                     if (normal_accessor)
                     {
                         cgltf_accessor_read_float(normal_accessor, vertex_index, &vertex.normal.x, 3);
+                    }
+
+                    if (tangent_accessor)
+                    {
+                        cgltf_accessor_read_float(tangent_accessor, vertex_index, &vertex.tangent.x, 4);
                     }
 
                     if (uv_accessor)
@@ -2112,6 +2228,7 @@ struct MeshVertex
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec2 uv= glm::vec2(0.0f);
+    glm::vec4 tangent = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 
     // Max 4 bones per vertex
     glm::uvec4 joints = glm::uvec4(0);
@@ -2135,6 +2252,7 @@ struct CPUTexture
 {
     std::string name;
     std::string imagePath;
+    bool isSRGB = true; // false = UNORM
 };
 
 /**
@@ -2146,9 +2264,14 @@ struct CPUMaterial
 {
     std::string name;
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
+
     int baseColorTextureIndex = -1;
+    int normalTextureIndex = -1;
+    int metallicRoughnessTextureIndex = -1;
+
     float metallicFactor = 1.0f;
     float roughnessFactor = 1.0f;
+    float alphaCutoff = 0.5f;
 };
 
 /**
@@ -2438,7 +2561,7 @@ void GPUMesh::destroyGPUMesh()
     indexBuffer.destroyBuffer();
 }
 
-VkVertexInputBindingDescription GPUMesh::getBindingDescription()
+VkVertexInputBindingDescription GPUMesh::GetBindingDescription()
 {
     VkVertexInputBindingDescription binding_description{};
     binding_description.binding = 0;
@@ -2448,7 +2571,7 @@ VkVertexInputBindingDescription GPUMesh::getBindingDescription()
     return binding_description;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> GPUMesh::GetAttributeDescriptionsArray3()
 {
     std::array<VkVertexInputAttributeDescription, 3> attribute_descriptions{};
 
@@ -2473,7 +2596,7 @@ std::array<VkVertexInputAttributeDescription, 3> GPUMesh::get3AttributeDescripti
     return attribute_descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> GPUMesh::getAttributeDescriptions()
+std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions5()
 {
     std::vector<VkVertexInputAttributeDescription> attribute_descriptions(5);
 
@@ -2510,6 +2633,51 @@ std::vector<VkVertexInputAttributeDescription> GPUMesh::getAttributeDescriptions
     return attribute_descriptions;
 }
 
+std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions(const std::vector<VertexAttribute>& attributes)
+{
+    std::vector<VkVertexInputAttributeDescription> descriptions;
+    descriptions.reserve(attributes.size());
+
+    for (uint32_t location = 0; location < static_cast<uint32_t>(attributes.size()); ++location)
+    {
+        VkVertexInputAttributeDescription attribute_description{};
+        attribute_description.binding = 0;
+        attribute_description.location = location;
+
+        switch (attributes[location])
+        {
+        case POSITION:
+            attribute_description.format = VK_FORMAT_R32G32B32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, position);
+            break;
+        case NORMAL:
+            attribute_description.format = VK_FORMAT_R32G32B32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, normal);
+            break;
+        case UV:
+            attribute_description.format = VK_FORMAT_R32G32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, uv);
+            break;
+        case TANGENT:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, tangent);
+            break;
+        case JOINTS:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_UINT;
+            attribute_description.offset = offsetof(MeshVertex, joints);
+            break;
+        case WEIGHTS:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, weights);
+            break;
+        }
+
+        descriptions.push_back(attribute_description);
+    }
+
+    return descriptions;
+}
+
 
 // ==========================================
 // GPUMesh.h
@@ -2533,6 +2701,16 @@ std::vector<VkVertexInputAttributeDescription> GPUMesh::getAttributeDescriptions
 #include "GPUBuffer.h"
 #include "VulkanContext.h"
 #include "CPUModel.h"
+
+enum VertexAttribute
+{
+    POSITION,
+    UV,
+    NORMAL,
+    TANGENT,
+    JOINTS,
+    WEIGHTS
+};
 
 /**
  * @brief Encapsulates GPU vertex and index buffers for an indexed 3D mesh.
@@ -2601,21 +2779,60 @@ public:
      *
      * @return A populated VkVertexInputBindingDescription structure for pipeline creation.
      */
-    static VkVertexInputBindingDescription getBindingDescription();
+    static VkVertexInputBindingDescription GetBindingDescription();
 
     /**
      * @brief Returns attribute descriptions mapping MeshVertex fields to shader locations.
      *
      * Configures three vertex shader input attributes:
      * * Location 0: 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
-     * * Location 1: RGB Color (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * Location 1: RGB Color/ 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
      * * Location 2: 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
      *
      * @return A 3-element array of VkVertexInputAttributeDescription structures.
      */
-    [[deprecated]]static std::array<VkVertexInputAttributeDescription, 3> get3AttributeDescriptions();
+    [[deprecated("Use GetAttributeDescriptions with the initializer list support.")]]
+    static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptionsArray3();
 
-    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+    /**
+     * @brief Returns attribute descriptions mapping MeshVertex fields to shader locations.
+     *
+     * Configures 5 vertex shader input attributes:
+     * * Location 0: 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * Location 1: 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * Location 2: 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
+     * * Location 3: 4D Rotation Joints  (`glm::uvec4`, `VK_FORMAT_R32G32B32A32_UINT`)
+     * * Location 4: 4D Weights (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
+     *
+     * @return A 5-element vector of VkVertexInputAttributeDescription structures.
+     *
+     * @see GetAttributeDescriptions();
+     */
+    [[deprecated("Use GetAttributeDescriptions with the initializer list support.")]]
+    static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions5();
+
+    /**
+     * @brief Returns attribute descriptions mapping Vertex Attributes provided to shader locations.
+     *
+     * Configures a maximum of 6 vertex shader input attributes:
+     * * 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * 4D Tangents (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
+     * * 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
+     * * 4D Rotation Joints  (`glm::uvec4`, `VK_FORMAT_R32G32B32A32_UINT`)
+     * * 4D Weights (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
+     * in the order of attributes passed to the function.
+     *
+     * @param attributes Initializer list containing VertexAttribute enums.
+     *
+     * @return An n-element vector of VkVertexInputAttributeDescription structures.
+     *
+     * @note Binds to only the 0 position.
+     *
+     * @see VertexAttribute
+     */
+    static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions(
+        const std::vector<VertexAttribute>& attributes);
 };
 
 #endif //ANVIL_VK_GPUMESH_H
@@ -2648,6 +2865,11 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
         gpuMeshes = std::move(other.gpuMeshes);
         gpuMaterials = std::move(other.gpuMaterials);
         drawItems = std::move(other.drawItems);
+        jointBuffer = std::move(other.jointBuffer);
+
+        // std::move because texture will be a class in future
+        defaultWhiteTexture = std::move(other.defaultWhiteTexture);
+        defaultNormalTexture = std::move(other.defaultNormalTexture);
 
         other.pContext = nullptr;
     }
@@ -2668,6 +2890,19 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
     createMeshesAndDrawItems(inModel);
 }
 
+void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial)
+{
+    // Destroy the old vulkan objects
+    destroyGPUModel();
+
+    pContext = &inContext;
+
+    createJointBuffer();
+    createTextures(inModel);
+    createMaterialDescriptorSets(inModel, inMaterial);
+    createMeshesAndDrawItems(inModel);
+}
+
 void GPUModel::destroyGPUModel()
 {
     if (!pContext)
@@ -2682,6 +2917,9 @@ void GPUModel::destroyGPUModel()
         texture.destroyAnvilTexture(pContext);
     }
     textures.clear();
+    defaultWhiteTexture.destroyAnvilTexture(pContext);
+    defaultNormalTexture.destroyAnvilTexture(pContext);
+    defaultTransparentTexture.destroyAnvilTexture(pContext);
 
     for (GPUMesh& mesh : gpuMeshes)
     {
@@ -2744,18 +2982,22 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
 
 void GPUModel::createTextures(const CPUModel& inModel)
 {
-    textures.reserve(inModel.textures.size());
+    defaultWhiteTexture = TextureLoader::CreateSolidColorTexture(WhiteColor, *pContext);
+    defaultNormalTexture = TextureLoader::CreateSolidColorTexture(NormalColor, *pContext);
+    defaultTransparentTexture = TextureLoader::CreateSolidColorTexture(TransparentColor, *pContext);
 
+    textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
     {
-        if (cpu_texture.imagePath.empty())
+        try
         {
-            textures.emplace_back();
-            continue;
+            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext, cpu_texture.isSRGB));
         }
-
-        std::cout << "Loading model texture: " << cpu_texture.name << std::endl;
-        textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext));
+        catch (...)
+        {
+            std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
+            textures.push_back(defaultWhiteTexture);
+        }
     }
 }
 
@@ -2799,6 +3041,74 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
             else
             {
                 std::cerr << "Unhandled Stuff" << std::endl;
+            }
+        }
+
+        gpu_material.instance.updateDescriptorSets();
+        gpuMaterials.push_back(std::move(gpu_material));
+    }
+}
+
+void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial)
+{
+    // Configure Set 1 - Model Data
+    if (inMaterial.hasSet(1))
+    {
+        modelSet = inMaterial.allocateSet(1);
+        if (inMaterial.hasBinding("jointMatrices"))
+        {
+            modelSet.bindStorageBuffer("jointMatrices", jointBuffer);
+        }
+        modelSet.updateDescriptorSets();
+    }
+
+    // Configure Set 2 - Material Data
+    gpuMaterials.clear();
+    gpuMaterials.reserve(inModel.materials.size());
+    for (size_t material_index = 0; material_index < inModel.materials.size(); material_index++)
+    {
+        const CPUMaterial& cpu_material = inModel.materials[material_index];
+        GPUModelMaterial gpu_material;
+        gpu_material.materialIndex = static_cast<int>(material_index);
+        gpu_material.baseColorFactor = cpu_material.baseColorFactor;
+        gpu_material.instance = inMaterial.allocateSet(2);
+
+        // Base Color
+        if (inMaterial.hasBinding("baseColorTexture"))
+        {
+            if (cpu_material.baseColorTextureIndex >= 0)
+            {
+                gpu_material.instance.bindTexture("baseColorTexture", textures[cpu_material.baseColorTextureIndex]);
+            }
+            else
+            {
+                gpu_material.instance.bindTexture("baseColorTexture", defaultWhiteTexture);
+            }
+        }
+
+        // Metallic Roughness Color
+        if (inMaterial.hasBinding("metallicRoughnessTexture"))
+        {
+            if (cpu_material.metallicRoughnessTextureIndex >= 0)
+            {
+                gpu_material.instance.bindTexture("metallicRoughnessTexture", textures[cpu_material.metallicRoughnessTextureIndex]);
+            }
+            else
+            {
+                gpu_material.instance.bindTexture("metallicRoughnessTexture", defaultTransparentTexture);
+            }
+        }
+
+        // Normal Map
+        if (inMaterial.hasBinding("normalTexture"))
+        {
+            if (cpu_material.normalTextureIndex >= 0)
+            {
+                gpu_material.instance.bindTexture("normalTexture", textures[cpu_material.normalTextureIndex]);
+            }
+            else
+            {
+                gpu_material.instance.bindTexture("normalTexture", defaultNormalTexture);
             }
         }
 
@@ -2933,6 +3243,10 @@ void GPUModel::createJointBuffer()
 
 class VulkanContext;
 
+constexpr uint8_t WhiteColor[4] = {255, 255, 255, 255};
+constexpr uint8_t NormalColor[4] = {128, 128, 255, 255}; // Flat Z-up normal
+constexpr uint8_t TransparentColor[4] = {0, 0, 0, 0}; //
+
 /**
  * @brief Max number of Joints allowed.
  * 256 glm::mat4 matrices (16KB total)
@@ -2991,6 +3305,12 @@ private:
     VulkanContext* pContext = nullptr;
 
 public:
+    AnvilTexture defaultWhiteTexture;
+    AnvilTexture defaultNormalTexture;
+    AnvilTexture defaultTransparentTexture;
+
+    MaterialInstance modelSet; // Set 1
+
     std::vector<AnvilTexture> textures;
     std::vector<GPUMesh> gpuMeshes;
     std::vector<GPUModelMaterial> gpuMaterials;
@@ -2999,15 +3319,29 @@ public:
     GPUBuffer jointBuffer;
 
     /**
+     * @brief Legacy function to upload a CPUModel to GPU-side resources and generates a draw list.
+     */
+    [[deprecated("Use the multi-set architecture instead.")]]
+    void createGPUModel(
+        VulkanContext& inContext,
+        const CPUModel& inModel,
+        const AnvilMaterial& inMaterial,
+        const std::string& sceneBufferName,
+        const GPUBuffer& sceneBuffer,
+        const std::string& textureName
+    );
+
+    /**
      * @brief Uploads a CPUModel to GPU-side resources and generates a draw list.
+     *
+     * @param inContext Reference to the active Anvil Vulkan context.
+     * @param inModel Reference to the model structure on CPU.
+     * @param inMaterial
      */
     void createGPUModel(
         VulkanContext& inContext,
         const CPUModel& inModel,
-        const AnvilMaterial& ioMaterial,
-        const std::string& sceneBufferName,
-        const GPUBuffer& sceneBuffer,
-        const std::string& textureName
+        const AnvilMaterial& inMaterial
     );
 
     /**
@@ -3022,12 +3356,18 @@ public:
 private:
     void createTextures(const CPUModel& inModel);
 
+    [[deprecated("Use the multi-set architecture instead.")]]
     void createMaterialDescriptorSets(
         const CPUModel& inModel,
         const AnvilMaterial& inMaterial,
         const std::string& sceneBufferName,
         const GPUBuffer& sceneBuffer,
         const std::string& textureName
+    );
+
+    void createMaterialDescriptorSets(
+        const CPUModel& inModel,
+        const AnvilMaterial& inMaterial
     );
 
     void createMeshesAndDrawItems(const CPUModel& inCPUModel);
@@ -3066,10 +3406,12 @@ MaterialInstance& MaterialInstance::operator=(MaterialInstance&& other) noexcept
         pendingTextures = std::move(other.pendingTextures);
         pendingBuffers = std::move(other.pendingBuffers);
         descriptorSet = other.descriptorSet;
+        setIndex = other.setIndex;
 
         other.descriptorSet = VK_NULL_HANDLE;
         other.pContext = nullptr;
         other.pParentMaterial = nullptr;
+        other.setIndex = 0; // Reset the moved-from object
     }
     return *this;
 }
@@ -3082,6 +3424,16 @@ void MaterialInstance::bindTexture(const std::string& name, const AnvilTexture& 
         return;
     }
 
+    // Prevent binding cross contamination
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
+    }
+
     pendingTextures.push_back({.name = name, .texture = &inTexture});
 }
 
@@ -3091,6 +3443,14 @@ void MaterialInstance::bindUniformBuffer(const std::string& name, const GPUBuffe
     {
         return;
     }
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
+    }
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
 
@@ -3099,6 +3459,14 @@ void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffe
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
         return;
+    }
+    if (pParentMaterial->getBinding(name).setIndex != setIndex)
+    {
+        const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
+            + std::to_string(pParentMaterial->getBinding(name).setIndex)
+            + " but this instance is managing Set " + std::to_string(setIndex);
+
+        throw std::runtime_error(err);
     }
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
@@ -3133,7 +3501,7 @@ void MaterialInstance::updateDescriptorSets()
         VkWriteDescriptorSet write{};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write.dstSet = descriptorSet;
-        write.dstBinding = shader_binding.binding;
+        write.dstBinding = shader_binding.bindingIndex;
         write.dstArrayElement = 0;
         write.descriptorType = shader_binding.descriptorType;
         write.descriptorCount = 1; //?
@@ -3153,7 +3521,7 @@ void MaterialInstance::updateDescriptorSets()
         VkWriteDescriptorSet write{};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write.dstSet = descriptorSet;
-        write.dstBinding = shader_binding.binding;
+        write.dstBinding = shader_binding.bindingIndex;
         write.dstArrayElement = 0;
         write.descriptorType = shader_binding.descriptorType;
         write.descriptorCount = 1; //?
@@ -3264,11 +3632,16 @@ public:
     /** The Vulkan descriptor set unique to this instance. */
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
+    /** The descriptor set index this instance represents. */
+    uint32_t setIndex = 0;
+
     /**
      * @brief Queues a texture to be bound to a shader sampler variable by name.
      *
      * @param name The variable name of the sampled texture in the Slang shader code.
      * @param inTexture Reference to the loaded AnvilTexture resource.
+     *
+     * @throws std::runtime_error if parent set does not match instance set.
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
@@ -3280,6 +3653,8 @@ public:
      * @param name The variable name of uneform buffer in the Slang shader code.
      * @param inBuffer Reference to the GPU buffer containing the Uniform data.
      *
+     * @throws std::runtime_error if parent set does not match instance set.
+     *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
     void bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer);
@@ -3289,6 +3664,8 @@ public:
      *
      * @param name The variable name of the storage buffer in the Slang shader code.
      * @param inBuffer Reference to the GPU buffer containing the Uniform data.
+     *
+     * @throws std::runtime_error if parent set does not match instance set.
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
@@ -3691,56 +4068,240 @@ private:
 
 namespace TextureLoader
 {
-    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext)
+    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext, bool bIsSRGB)
     {
-        std::string imageName = std::filesystem::path(filepath).filename().string();
-        int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, 4);
+        std::string image_name = std::filesystem::path(filepath).filename().string();
+        int tex_width, tex_height, tex_channels;
+        stbi_uc* pixels = stbi_load(filepath.c_str(), &tex_width, &tex_height, &tex_channels, 4);
         if (!pixels) {
             throw std::runtime_error("Failed to load texture image: " + filepath);
         }
 
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
+        VkDeviceSize image_size = tex_width * tex_height * 4;
+        VkFormat texture_format = bIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
+
+        // Calculate how many mip levels we need
+        uint32_t mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
 
         // CPU-visible staging buffer
-        GPUBuffer stagingBuffer;
-        stagingBuffer.createBuffer(
+        GPUBuffer staging_buffer;
+        staging_buffer.createBuffer(
             inContext.allocator,
             inContext.device,
             pixels,
-            imageSize,
+            image_size,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             "TextureStagingBuffer");
 
         stbi_image_free(pixels);
 
         // GPU-Only Image
-        VkImageCreateInfo imageInfo{};
-        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = static_cast<uint32_t>(texWidth);
-        imageInfo.extent.height = static_cast<uint32_t>(texHeight);
-        imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        VkImageCreateInfo image_info{};
+        image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_info.imageType = VK_IMAGE_TYPE_2D;
+        image_info.extent.width = static_cast<uint32_t>(tex_width);
+        image_info.extent.height = static_cast<uint32_t>(tex_height);
+        image_info.extent.depth = 1;
+        image_info.mipLevels = mip_levels;
+        image_info.arrayLayers = 1;
+        image_info.format = texture_format;
+        image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+        // Add TRANSFER_SRC_BIT so we can read from the image to generate the next mip level
+        image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+        image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+
+        VmaAllocationCreateInfo alloc_info{};
+        alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+        AnvilTexture texture;
+        if (vmaCreateImage(inContext.allocator, &image_info, &alloc_info, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create texture image: " + image_name);
+        }
+
+        std::string texture_debug_name = "TextureImage: " + image_name;
+        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
+
+        inContext.immediateSubmit([&](VkCommandBuffer cmd)
+        {
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = texture.image;
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = mip_levels; // Transition all mips
+
+            // Transition all mips to Transfer Destination
+            barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+            // Copy pixel data from buffer into Mip Level 0
+            VkBufferImageCopy region{};
+            region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.imageSubresource.mipLevel = 0; // Only copy to level 0
+            region.imageSubresource.baseArrayLayer = 0;
+            region.imageSubresource.layerCount = 1;
+            region.imageExtent = {static_cast<uint32_t>(tex_width), static_cast<uint32_t>(tex_height), 1};
+
+            vkCmdCopyBufferToImage(cmd, staging_buffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+            // Generate MipMaps
+            int32_t mip_width = tex_width;
+            int32_t mip_height = tex_height;
+
+            for (uint32_t i = 1; i < mip_levels; i++)
+            {
+                barrier.subresourceRange.baseMipLevel = i - 1;
+                barrier.subresourceRange.levelCount = 1;
+
+                // Transition previous mip level to SRC so we can read from it
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+                // Blit the image down to the next level
+                VkImageBlit blit{};
+                blit.srcOffsets[0] = {0, 0, 0};
+                blit.srcOffsets[1] = {mip_width, mip_height, 1};
+                blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.srcSubresource.mipLevel = i - 1;
+                blit.srcSubresource.baseArrayLayer = 0;
+                blit.srcSubresource.layerCount = 1;
+
+                blit.dstOffsets[0] = {0, 0, 0};
+                blit.dstOffsets[1].x = mip_width > 1 ? mip_width / 2 : 1;
+                blit.dstOffsets[1].y = mip_height > 1 ? mip_height / 2 : 1;
+                blit.dstOffsets[1].z = 1;
+                blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.dstSubresource.mipLevel = i;
+                blit.dstSubresource.baseArrayLayer = 0;
+                blit.dstSubresource.layerCount = 1;
+
+                vkCmdBlitImage(cmd, texture.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    1, &blit, VK_FILTER_LINEAR);
+
+                // Transition the previous mip level to SHADER_READ since we are done reading it
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+                if (mip_width > 1)
+                {
+                    mip_width = mip_width / 2;
+                }
+                if (mip_height > 1)
+                {
+                    mip_height = mip_height / 2;
+                }
+            }
+
+            // Transition the very last mip level
+            barrier.subresourceRange.baseMipLevel = mip_levels - 1;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        });
+
+        staging_buffer.destroyBuffer();
+
+        // Create ImageView
+        VkImageViewCreateInfo image_view_info{};
+        image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        image_view_info.image = texture.image;
+        image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        image_view_info.format = texture_format;
+        image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_view_info.subresourceRange.baseMipLevel = 0;
+        image_view_info.subresourceRange.levelCount = mip_levels;
+        image_view_info.subresourceRange.baseArrayLayer = 0;
+        image_view_info.subresourceRange.layerCount = 1;
+
+        std::string image_view_debug_name = "TextureImageView: " + image_name;
+        CHECK(vkCreateImageView(inContext.device, &image_view_info, nullptr, &texture.imageView));
+        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, image_view_debug_name.c_str());
+
+        // Create Sampler
+        VkSamplerCreateInfo sampler_info{};
+        sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_info.magFilter = VK_FILTER_LINEAR;
+        sampler_info.minFilter = VK_FILTER_LINEAR;
+        sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.anisotropyEnable = VK_TRUE;
+        sampler_info.maxAnisotropy = inContext.physicalDeviceProperties.limits.maxSamplerAnisotropy;
+        sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        sampler_info.unnormalizedCoordinates = VK_FALSE;
+        sampler_info.compareEnable = VK_FALSE;
+        sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+        sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler_info.minLod = 0.0f; // Start at max resolution
+        sampler_info.maxLod = static_cast<float>(mip_levels); // Max mip level it can scale down to
+        sampler_info.mipLodBias = 0.0f;
+
+        std::string sampler_debug_name = "TextureSampler: " + image_name;
+        CHECK(vkCreateSampler(inContext.device, &sampler_info, nullptr, &texture.sampler));
+        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, sampler_debug_name.c_str());
+
+        return texture;
+    }
+
+    AnvilTexture CreateSolidColorTexture(const uint8_t color[4], VulkanContext& inContext)
+    {
+        GPUBuffer staging_buffer;
+        staging_buffer.createBuffer(
+            inContext.allocator,
+            inContext.device,
+            color,
+            sizeof(uint8_t) * 4,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+
+        VkImageCreateInfo image_info{};
+        image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_info.imageType = VK_IMAGE_TYPE_2D;
+        image_info.extent = {1, 1, 1};
+        image_info.mipLevels = 1;
+        image_info.arrayLayers = 1;
+        image_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+        image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
         AnvilTexture texture;
-        if (vmaCreateImage(inContext.allocator, &imageInfo, &allocInfo, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
+        if (vmaCreateImage(inContext.allocator, &image_info, &allocInfo, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
         {
-            throw std::runtime_error("Failed to create texture image: " + imageName);
+            throw std::runtime_error("Failed to create solid texture image.");
         }
 
-        std::string textureDebugName = "TextureImage: " + imageName;
-        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
+        std::string texture_debug_name = "SolidTextureImage";
+        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -3764,9 +4325,9 @@ namespace TextureLoader
             VkBufferImageCopy region{};
             region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             region.imageSubresource.layerCount = 1;
-            region.imageExtent = {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1};
+            region.imageExtent = {1, 1, 1};
 
-            vkCmdCopyBufferToImage(cmd, stagingBuffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+            vkCmdCopyBufferToImage(cmd, staging_buffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -3776,22 +4337,22 @@ namespace TextureLoader
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
         });
 
-        stagingBuffer.destroyBuffer();
+        staging_buffer.destroyBuffer();
 
         // Create ImageView
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = texture.image;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
+        VkImageViewCreateInfo view_info{};
+        view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        view_info.image = texture.image;
+        view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        view_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+        view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        view_info.subresourceRange.baseMipLevel = 0;
+        view_info.subresourceRange.levelCount = 1;
+        view_info.subresourceRange.baseArrayLayer = 0;
+        view_info.subresourceRange.layerCount = 1;
 
-        std::string imageViewDebugName = "TextureImageView: " + imageName;
-        CHECK(vkCreateImageView(inContext.device, &viewInfo, nullptr, &texture.imageView));
+        std::string imageViewDebugName = "TextureImageView";
+        CHECK(vkCreateImageView(inContext.device, &view_info, nullptr, &texture.imageView));
         VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
 
         // Create Sampler
@@ -3799,17 +4360,15 @@ namespace TextureLoader
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_FALSE; // Turn on later when you want crisper textures at an angle
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.maxAnisotropy = inContext.physicalDeviceProperties.limits.maxSamplerAnisotropy;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-        std::string samplerDebugName = "TextureSampler: " + imageName;
+        std::string samplerDebugName = "TextureSampler";
         CHECK(vkCreateSampler(inContext.device, &samplerInfo, nullptr, &texture.sampler));
         VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
 
@@ -3895,13 +4454,28 @@ namespace TextureLoader
      * submits a transfer command to upload it to a device-local Vulkan image, and creates an
      * associated image view and default sampler.
      *
+     * Base Color (Albedo) should be sRGB because it represents visual colors.
+     * Normal, Metallic, and Roughness Maps represent raw math data, not colors. They MUST be linear (UNORM).
+     *
      * @param filepath  Absolute or relative filesystem path to the source image file.
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @param bIsSRGB true means we load with sRGB, otherwise UNORM.
      * @return A fully populated AnvilTexture ready for descriptor set binding.
      *
      * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
-    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext);
+    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext, bool bIsSRGB = true);
+
+    /**
+     * @brief Create a solid texture image, upload it to device-local GPU memory.
+     *
+     * @param color The rgba value in unsigned 8-bit format.
+     * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @return A fully populated AnvilTexture ready for descriptor set binding.
+     *
+     * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.
+     */
+    AnvilTexture CreateSolidColorTexture(const uint8_t color[4], VulkanContext& inContext);
 }
 
 #endif //ANVIL_VK_TEXTURELOADER_H
@@ -4682,6 +5256,9 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     // --------------------------------
     // Select Physical Device
+    VkPhysicalDeviceFeatures base_features{};
+    base_features.samplerAnisotropy = VK_TRUE;
+
     VkPhysicalDeviceVulkan13Features features13{};
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
     features13.dynamicRendering = VK_TRUE;
@@ -4694,6 +5271,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     vkb::PhysicalDeviceSelector vkb_physical_device_selector{vkb_instance};
     vkb_physical_device_selector.set_surface(surface);
     vkb_physical_device_selector.set_minimum_version(AnvilVulkan::API_VERSION_MAJOR, AnvilVulkan::API_VERSION_MINOR);
+    vkb_physical_device_selector.set_required_features(base_features);
     vkb_physical_device_selector.add_required_extension_features(features13);
     vkb_physical_device_selector.add_required_extension_features(features11);
     vkb::Result<vkb::PhysicalDevice> vkb_physical_device_result = vkb_physical_device_selector.select();
@@ -5812,19 +6390,22 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
 AnvilRenderer::~AnvilRenderer()
 {
     // Wait for GPU
-    vkDeviceWaitIdle(pContext->device);
-
-    for (const AnvilFrame& anvil_frame : anvilFrames)
+    if (pContext && pContext->device)
     {
-        vkDestroySemaphore(pContext->device, anvil_frame.imageAvailableSemaphore, nullptr);
-        vkDestroyFence(pContext->device, anvil_frame.frameDoneFence, nullptr);
-        vkDestroyCommandPool(pContext->device, anvil_frame.cmdPool, nullptr);
-    }
+        vkDeviceWaitIdle(pContext->device);
 
-    // Clean up per-image semaphores
-    for (const VkSemaphore& semaphore : renderFinishedSemaphores)
-    {
-        vkDestroySemaphore(pContext->device, semaphore, nullptr);
+        for (const AnvilFrame& anvil_frame : anvilFrames)
+        {
+            vkDestroySemaphore(pContext->device, anvil_frame.imageAvailableSemaphore, nullptr);
+            vkDestroyFence(pContext->device, anvil_frame.frameDoneFence, nullptr);
+            vkDestroyCommandPool(pContext->device, anvil_frame.cmdPool, nullptr);
+        }
+
+        // Clean up per-image semaphores
+        for (const VkSemaphore& semaphore : renderFinishedSemaphores)
+        {
+            vkDestroySemaphore(pContext->device, semaphore, nullptr);
+        }
     }
 }
 
@@ -7034,26 +7615,26 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 
 UIRenderer::~UIRenderer()
 {
-    if (pContext->device)
+    if (pContext && pContext->device)
     {
         vkDeviceWaitIdle(pContext->device);
-    }
 
-    // CRITICAL: Force ImGui to destroy viewport command buffers before shutting down
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        ImGui::DestroyPlatformWindows();
-    }
+        // CRITICAL: Force ImGui to destroy viewport command buffers before shutting down
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::DestroyPlatformWindows();
+        }
 
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
 
-    if (imguiPool != VK_NULL_HANDLE)
-    {
-        vkDestroyDescriptorPool(pContext->device, imguiPool, nullptr);
-        imguiPool = VK_NULL_HANDLE;
+        if (imguiPool != VK_NULL_HANDLE)
+        {
+            vkDestroyDescriptorPool(pContext->device, imguiPool, nullptr);
+            imguiPool = VK_NULL_HANDLE;
+        }
     }
 }
 

@@ -24,6 +24,7 @@ struct MeshVertex
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec2 uv= glm::vec2(0.0f);
+    glm::vec4 tangent = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 
     // Max 4 bones per vertex
     glm::uvec4 joints = glm::uvec4(0);
@@ -47,6 +48,7 @@ struct CPUTexture
 {
     std::string name;
     std::string imagePath;
+    bool isSRGB = true; // false = UNORM
 };
 
 /**
@@ -58,9 +60,14 @@ struct CPUMaterial
 {
     std::string name;
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
+
     int baseColorTextureIndex = -1;
+    int normalTextureIndex = -1;
+    int metallicRoughnessTextureIndex = -1;
+
     float metallicFactor = 1.0f;
     float roughnessFactor = 1.0f;
+    float alphaCutoff = 0.5f;
 };
 
 /**

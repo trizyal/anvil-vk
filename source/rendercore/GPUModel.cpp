@@ -21,6 +21,11 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
         gpuMeshes = std::move(other.gpuMeshes);
         gpuMaterials = std::move(other.gpuMaterials);
         drawItems = std::move(other.drawItems);
+        jointBuffer = std::move(other.jointBuffer);
+
+        // std::move because texture will be a class in future
+        defaultWhiteTexture = std::move(other.defaultWhiteTexture);
+        defaultNormalTexture = std::move(other.defaultNormalTexture);
 
         other.pContext = nullptr;
     }
@@ -41,6 +46,19 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
     createMeshesAndDrawItems(inModel);
 }
 
+void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial)
+{
+    // Destroy the old vulkan objects
+    destroyGPUModel();
+
+    pContext = &inContext;
+
+    createJointBuffer();
+    createTextures(inModel);
+    createMaterialDescriptorSets(inModel, inMaterial);
+    createMeshesAndDrawItems(inModel);
+}
+
 void GPUModel::destroyGPUModel()
 {
     if (!pContext)
@@ -55,6 +73,9 @@ void GPUModel::destroyGPUModel()
         texture.destroyAnvilTexture(pContext);
     }
     textures.clear();
+    defaultWhiteTexture.destroyAnvilTexture(pContext);
+    defaultNormalTexture.destroyAnvilTexture(pContext);
+    defaultTransparentTexture.destroyAnvilTexture(pContext);
 
     for (GPUMesh& mesh : gpuMeshes)
     {
@@ -117,18 +138,22 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
 
 void GPUModel::createTextures(const CPUModel& inModel)
 {
-    textures.reserve(inModel.textures.size());
+    defaultWhiteTexture = TextureLoader::CreateSolidColorTexture(WhiteColor, *pContext);
+    defaultNormalTexture = TextureLoader::CreateSolidColorTexture(NormalColor, *pContext);
+    defaultTransparentTexture = TextureLoader::CreateSolidColorTexture(TransparentColor, *pContext);
 
+    textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
     {
-        if (cpu_texture.imagePath.empty())
+        try
         {
-            textures.emplace_back();
-            continue;
+            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext, cpu_texture.isSRGB));
         }
-
-        std::cout << "Loading model texture: " << cpu_texture.name << std::endl;
-        textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext));
+        catch (...)
+        {
+            std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
+            textures.push_back(defaultWhiteTexture);
+        }
     }
 }
 
@@ -172,6 +197,74 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
             else
             {
                 std::cerr << "Unhandled Stuff" << std::endl;
+            }
+        }
+
+        gpu_material.instance.updateDescriptorSets();
+        gpuMaterials.push_back(std::move(gpu_material));
+    }
+}
+
+void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial)
+{
+    // Configure Set 1 - Model Data
+    if (inMaterial.hasSet(1))
+    {
+        modelSet = inMaterial.allocateSet(1);
+        if (inMaterial.hasBinding("jointMatrices"))
+        {
+            modelSet.bindStorageBuffer("jointMatrices", jointBuffer);
+        }
+        modelSet.updateDescriptorSets();
+    }
+
+    // Configure Set 2 - Material Data
+    gpuMaterials.clear();
+    gpuMaterials.reserve(inModel.materials.size());
+    for (size_t material_index = 0; material_index < inModel.materials.size(); material_index++)
+    {
+        const CPUMaterial& cpu_material = inModel.materials[material_index];
+        GPUModelMaterial gpu_material;
+        gpu_material.materialIndex = static_cast<int>(material_index);
+        gpu_material.baseColorFactor = cpu_material.baseColorFactor;
+        gpu_material.instance = inMaterial.allocateSet(2);
+
+        // Base Color
+        if (inMaterial.hasBinding("baseColorTexture"))
+        {
+            if (cpu_material.baseColorTextureIndex >= 0)
+            {
+                gpu_material.instance.bindTexture("baseColorTexture", textures[cpu_material.baseColorTextureIndex]);
+            }
+            else
+            {
+                gpu_material.instance.bindTexture("baseColorTexture", defaultWhiteTexture);
+            }
+        }
+
+        // Metallic Roughness Color
+        if (inMaterial.hasBinding("metallicRoughnessTexture"))
+        {
+            if (cpu_material.metallicRoughnessTextureIndex >= 0)
+            {
+                gpu_material.instance.bindTexture("metallicRoughnessTexture", textures[cpu_material.metallicRoughnessTextureIndex]);
+            }
+            else
+            {
+                gpu_material.instance.bindTexture("metallicRoughnessTexture", defaultTransparentTexture);
+            }
+        }
+
+        // Normal Map
+        if (inMaterial.hasBinding("normalTexture"))
+        {
+            if (cpu_material.normalTextureIndex >= 0)
+            {
+                gpu_material.instance.bindTexture("normalTexture", textures[cpu_material.normalTextureIndex]);
+            }
+            else
+            {
+                gpu_material.instance.bindTexture("normalTexture", defaultNormalTexture);
             }
         }
 

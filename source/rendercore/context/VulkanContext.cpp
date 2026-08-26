@@ -87,6 +87,9 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     // --------------------------------
     // Select Physical Device
+    VkPhysicalDeviceFeatures base_features{};
+    base_features.samplerAnisotropy = VK_TRUE;
+
     VkPhysicalDeviceVulkan13Features features13{};
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
     features13.dynamicRendering = VK_TRUE;
@@ -99,6 +102,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     vkb::PhysicalDeviceSelector vkb_physical_device_selector{vkb_instance};
     vkb_physical_device_selector.set_surface(surface);
     vkb_physical_device_selector.set_minimum_version(AnvilVulkan::API_VERSION_MAJOR, AnvilVulkan::API_VERSION_MINOR);
+    vkb_physical_device_selector.set_required_features(base_features);
     vkb_physical_device_selector.add_required_extension_features(features13);
     vkb_physical_device_selector.add_required_extension_features(features11);
     vkb::Result<vkb::PhysicalDevice> vkb_physical_device_result = vkb_physical_device_selector.select();
