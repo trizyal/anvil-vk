@@ -229,20 +229,18 @@ void HelloCube::loadPipeline()
 void HelloCube::createBuffers()
 {
     vertexBuffer.createBuffer(
-        ptrAContext->allocator,
-        ptrAContext->device,
+        *ptrAContext,
         cubeVertices.data(),
         cubeVertices.size() * sizeof(Vertex),
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        "CubeVertexBuffer"
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+        DNAME("CubeVertexBuffer")
     );
 
     indexBuffer.createBuffer(
-        ptrAContext->allocator,
-        ptrAContext->device,
+        *ptrAContext,
         cubeIndices.data(),
         cubeIndices.size() * sizeof(uint16_t),
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        "CubeIndexBuffer"
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+        DNAME("CubeIndexBuffer")
     );
 }

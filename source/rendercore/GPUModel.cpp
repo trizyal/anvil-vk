@@ -360,8 +360,7 @@ void GPUModel::createJointBuffer()
     if (jointBuffer.buffer == VK_NULL_HANDLE)
     {
         jointBuffer.createBuffer(
-            pContext->allocator,
-            pContext->device,
+            *pContext,
             initial_matrices.data(),
             sizeof(glm::mat4) * MAX_BONES,
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT

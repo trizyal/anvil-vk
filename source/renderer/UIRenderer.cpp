@@ -41,7 +41,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 
     VkDevice device = inContext->device;
 
-    createDescriptorPool(device, "ImGuiDescriptorPool");
+    createDescriptorPool(device DNAME("ImGuiDescriptorPool"));
 
     // Initialize ImGui Core
     IMGUI_CHECKVERSION();
@@ -159,7 +159,7 @@ void UIRenderer::RecordUICommands(VkCommandBuffer inCmdBuffer)
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), inCmdBuffer);
 }
 
-void UIRenderer::createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DEFN)
+void UIRenderer::createDescriptorPool(VkDevice inDevice D_DEFN)
 {
     VkDescriptorPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -170,5 +170,5 @@ void UIRenderer::createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DEFN)
 
     CHECK(vkCreateDescriptorPool(inDevice, &pool_info, nullptr, &imguiPool));
 
-    ANVIL_DEBUG_NAME(inDevice, imguiPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL);
+    SET_DNAME(inDevice, imguiPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL);
 }

@@ -16,6 +16,7 @@
 
 #include "DebugNames.h"
 
+class VulkanContext;
 /**
  * @brief Manages the lifecycle of a GPU Vulkan buffer and its backing VMA memory allocation.
  *
@@ -55,16 +56,15 @@ public:
     /**
      * @brief Allocates GPU memory and creates a Vulkan buffer.
      *
-     * @param inAllocator VMA allocator instance used to allocate GPU memory and cached for cleanup.
-     * @param inDevice Logical Vulkan device handle.
+     * @param inContext Reference to the context that provides us the VMA allocator and vulkan device.
      * @param inData Pointer to CPU source data to copy into the buffer (may be nullptr).
      * @param size Size of the buffer in bytes.
      * @param usage Bitmask of VkBufferUsageFlags specifying intended buffer operations.
      *
      * @throws std::runtime_error If buffer allocation or GPU transfer commands fail.
      */
-    void createBuffer(VmaAllocator inAllocator, [[maybe_unused]]VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
-                      ANVIL_DEBUG_DECL());
+    void createBuffer(const VulkanContext& inContext, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+                      D_DECL());
 
     /**
      * @brief Releases the underlying Vulkan buffer and frees the associated VMA allocation.

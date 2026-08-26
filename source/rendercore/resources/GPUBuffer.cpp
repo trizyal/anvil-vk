@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "DebugNames.h"
+#include "VulkanContext.h"
 
 GPUBuffer::GPUBuffer(GPUBuffer&& other) noexcept
 {
@@ -31,8 +32,8 @@ GPUBuffer& GPUBuffer::operator=(GPUBuffer&& other) noexcept
     return *this;
 }
 
-void GPUBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
-    ANVIL_DEBUG_DEFN)
+void GPUBuffer::createBuffer(const VulkanContext& inContext, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
+    D_DEFN)
 {
     // Clean up if this object wrapper is being reused
     if (buffer != VK_NULL_HANDLE)
@@ -40,7 +41,7 @@ void GPUBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const 
         destroyBuffer();
     }
 
-    allocator = inAllocator;
+    allocator = inContext.allocator;
 
     VkBufferCreateInfo buffer_info{};
     buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -50,18 +51,18 @@ void GPUBuffer::createBuffer(VmaAllocator inAllocator, VkDevice inDevice, const 
     VmaAllocationCreateInfo alloc_info{};
     alloc_info.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // CPU_TO_GPU for dynamic/staging data as it ensures host-visibility
 
-    if (vmaCreateBuffer(inAllocator, &buffer_info, &alloc_info, &buffer, &allocation, nullptr) != VK_SUCCESS)
+    if (vmaCreateBuffer(allocator, &buffer_info, &alloc_info, &buffer, &allocation, nullptr) != VK_SUCCESS)
     {
         throw std::runtime_error("Anvil Engine: Failed to allocate VMA buffer.");
     }
 
-    ANVIL_DEBUG_NAME(inDevice, buffer, VK_OBJECT_TYPE_BUFFER);
+    SET_DNAME(inContext.device, buffer, VK_OBJECT_TYPE_BUFFER);
 
     // Direct memory mapping and immediate transfer
     void* mapped_memory = nullptr;
-    vmaMapMemory(inAllocator, allocation, &mapped_memory);
+    vmaMapMemory(allocator, allocation, &mapped_memory);
     std::memcpy(mapped_memory, inData, size);
-    vmaUnmapMemory(inAllocator, allocation);
+    vmaUnmapMemory(allocator, allocation);
 }
 
 void GPUBuffer::destroyBuffer()

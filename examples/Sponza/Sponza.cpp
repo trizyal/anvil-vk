@@ -97,7 +97,7 @@ void Sponza::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE) // NO CULLING FOR CURTAINS
         .disableBlending()
-        .buildPipeline(pContext->device, sponzaMaterial.materialPipelineLayout, "SponzaPipeline");
+        .buildPipeline(pContext->device, sponzaMaterial.materialPipelineLayout DNAME("SponzaPipeline"));
 
     gpuModel.createGPUModel(*pContext, cpuModel, sponzaMaterial);
 

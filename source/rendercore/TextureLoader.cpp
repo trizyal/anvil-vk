@@ -32,12 +32,11 @@ namespace TextureLoader
         // CPU-visible staging buffer
         GPUBuffer staging_buffer;
         staging_buffer.createBuffer(
-            inContext.allocator,
-            inContext.device,
+            inContext,
             pixels,
             image_size,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            "TextureStagingBuffer");
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            DNAME("TextureStagingBuffer"));
 
         stbi_image_free(pixels);
 
@@ -70,7 +69,7 @@ namespace TextureLoader
         }
 
         std::string texture_debug_name = "TextureImage: " + image_name;
-        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
+        SET_DNAME_HERE(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -188,7 +187,7 @@ namespace TextureLoader
 
         std::string image_view_debug_name = "TextureImageView: " + image_name;
         CHECK(vkCreateImageView(inContext.device, &image_view_info, nullptr, &texture.imageView));
-        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, image_view_debug_name.c_str());
+        SET_DNAME_HERE(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, image_view_debug_name.c_str());
 
         // Create Sampler
         VkSamplerCreateInfo sampler_info{};
@@ -211,7 +210,7 @@ namespace TextureLoader
 
         std::string sampler_debug_name = "TextureSampler: " + image_name;
         CHECK(vkCreateSampler(inContext.device, &sampler_info, nullptr, &texture.sampler));
-        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, sampler_debug_name.c_str());
+        SET_DNAME_HERE(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, sampler_debug_name.c_str());
 
         return texture;
     }
@@ -220,8 +219,7 @@ namespace TextureLoader
     {
         GPUBuffer staging_buffer;
         staging_buffer.createBuffer(
-            inContext.allocator,
-            inContext.device,
+            inContext,
             color,
             sizeof(uint8_t) * 4,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
@@ -247,7 +245,7 @@ namespace TextureLoader
         }
 
         std::string texture_debug_name = "SolidTextureImage";
-        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
+        SET_DNAME_HERE(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -299,7 +297,7 @@ namespace TextureLoader
 
         std::string imageViewDebugName = "TextureImageView";
         CHECK(vkCreateImageView(inContext.device, &view_info, nullptr, &texture.imageView));
-        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
+        SET_DNAME_HERE(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
 
         // Create Sampler
         VkSamplerCreateInfo samplerInfo{};
@@ -316,7 +314,7 @@ namespace TextureLoader
 
         std::string samplerDebugName = "TextureSampler";
         CHECK(vkCreateSampler(inContext.device, &samplerInfo, nullptr, &texture.sampler));
-        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
+        SET_DNAME_HERE(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
 
         return texture;
     }

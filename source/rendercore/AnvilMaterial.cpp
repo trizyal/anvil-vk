@@ -150,10 +150,10 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
 
     // Build Vulkan Shader Modules
     std::string debug_name = "MaterialVertexShader: " + inVertReq.moduleName;
-    vertexShader.createShaderModule(*pContext, vertex_result, debug_name.c_str());
+    vertexShader.createShaderModule(*pContext, vertex_result DNAME(debug_name.c_str()));
 
     debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
-    fragmentShader.createShaderModule(*pContext, fragment_result, debug_name.c_str());
+    fragmentShader.createShaderModule(*pContext, fragment_result DNAME(debug_name.c_str()));
 
     uint32_t max_set = 0;
 
@@ -204,7 +204,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         CHECK(vkCreateDescriptorSetLayout(pContext->device, &descriptor_layout_info, nullptr, &descriptorSetLayouts[set_index]));
 
         debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
-        VulkanDebug::SetAutoName(pContext->device, descriptorSetLayouts[set_index], VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
+        SET_DNAME_HERE(pContext->device, descriptorSetLayouts[set_index], VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
     }
 
     if (!pool_sizes.empty())
@@ -217,7 +217,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         CHECK(vkCreateDescriptorPool(pContext->device, &pool_info, nullptr, &materialDescriptorPool));
 
         debug_name = "MaterialDescriptorPool: " + material_debug_name;
-        VulkanDebug::SetAutoName(pContext->device, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
+        SET_DNAME_HERE(pContext->device, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
     }
 
     // Push Constants and Pipeline Layout
@@ -246,7 +246,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     CHECK(vkCreatePipelineLayout(pContext->device, &pipeline_layout_info, nullptr, &materialPipelineLayout));
 
     debug_name = "MaterialPipelineLayout: " + material_debug_name;
-    VulkanDebug::SetAutoName(pContext->device, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
+    SET_DNAME_HERE(pContext->device, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
 }
 
 MaterialInstance AnvilMaterial::createInstance() const

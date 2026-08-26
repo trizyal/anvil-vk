@@ -144,7 +144,7 @@ public:
      *
      * @see AnvilPipeline
      */
-    AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DECL()) const;
+    AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout D_DECL()) const;
 };
 
 #endif //ANVIL_VK_PIPELINEBUILDER_H
