@@ -27,7 +27,7 @@ namespace TextureLoader
         VkFormat texture_format = bIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
 
         // Calculate how many mip levels we need
-        uint32_t mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        uint32_t mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
 
         // CPU-visible staging buffer
         GPUBuffer staging_buffer;
@@ -105,6 +105,65 @@ namespace TextureLoader
 
             vkCmdCopyBufferToImage(cmd, staging_buffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
+            // Generate MipMaps
+            int32_t mip_width = tex_width;
+            int32_t mip_height = tex_height;
+
+            for (uint32_t i = 1; i < mip_levels; i++)
+            {
+                barrier.subresourceRange.baseMipLevel = i - 1;
+                barrier.subresourceRange.levelCount = 1;
+
+                // Transition previous mip level to SRC so we can read from it
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+                // Blit the image down to the next level
+                VkImageBlit blit{};
+                blit.srcOffsets[0] = {0, 0, 0};
+                blit.srcOffsets[1] = {mip_width, mip_height, 1};
+                blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.srcSubresource.mipLevel = i - 1;
+                blit.srcSubresource.baseArrayLayer = 0;
+                blit.srcSubresource.layerCount = 1;
+
+                blit.dstOffsets[0] = {0, 0, 0};
+                blit.dstOffsets[1].x = mip_width > 1 ? mip_width / 2 : 1;
+                blit.dstOffsets[1].y = mip_height > 1 ? mip_height / 2 : 1;
+                blit.dstOffsets[1].z = 1;
+                blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.dstSubresource.mipLevel = i;
+                blit.dstSubresource.baseArrayLayer = 0;
+                blit.dstSubresource.layerCount = 1;
+
+                vkCmdBlitImage(cmd, texture.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    1, &blit, VK_FILTER_LINEAR);
+
+                // Transition the previous mip level to SHADER_READ since we are done reading it
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+                if (mip_width > 1)
+                {
+                    mip_width = mip_width / 2;
+                }
+                if (mip_height > 1)
+                {
+                    mip_height = mip_height / 2;
+                }
+            }
+
+            // Transition the very last mip level
+            barrier.subresourceRange.baseMipLevel = mip_levels - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -123,7 +182,7 @@ namespace TextureLoader
         image_view_info.format = texture_format;
         image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         image_view_info.subresourceRange.baseMipLevel = 0;
-        image_view_info.subresourceRange.levelCount = 1;
+        image_view_info.subresourceRange.levelCount = mip_levels;
         image_view_info.subresourceRange.baseArrayLayer = 0;
         image_view_info.subresourceRange.layerCount = 1;
 
@@ -146,6 +205,9 @@ namespace TextureLoader
         sampler_info.compareEnable = VK_FALSE;
         sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
         sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler_info.minLod = 0.0f; // Start at max resolution
+        sampler_info.maxLod = static_cast<float>(mip_levels); // Max mip level it can scale down to
+        sampler_info.mipLodBias = 0.0f;
 
         std::string sampler_debug_name = "TextureSampler: " + image_name;
         CHECK(vkCreateSampler(inContext.device, &sampler_info, nullptr, &texture.sampler));
