@@ -88,7 +88,6 @@ namespace TextureLoader
      *
      * @param color The rgba value in unsigned 8-bit format.
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
-     * @param bIsSRGB true means we create with sRGB, otherwise UNORM.
      * @return A fully populated AnvilTexture ready for descriptor set binding.
      *
      * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.

@@ -138,14 +138,20 @@ anvil-vk/
 - enums values - `MACRO_CASE` or WEIRD stuff
 
 - class functions - `camelCase`
-- individual functions - `snake_case`
+- free functions - `snake_case`
 - static function - `PascalCase`
 - namespace function - `PascalCase`
+- anon namespace function - `snake_case`
 
 - variables:
   - class member - `camelCase`
   - struct member - `camelCase`
   - local - `snake_case`
+
+- iterators should be named.
+  - e.g., if iterating to index into image, the iteration should be called: `image_index`.
+
+- avoid naming vulkan info structs just `info` and prefer `image_info`.
 
 ---
 

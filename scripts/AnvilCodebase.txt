@@ -1718,6 +1718,13 @@ namespace
 
                 cpu_material.baseColorTextureIndex = GetTextureIndex(gltf_data, pbr.base_color_texture.texture);
                 cpu_material.metallicRoughnessTextureIndex = GetTextureIndex(gltf_data, pbr.metallic_roughness_texture.texture);
+
+                // Flag metallic/roughness as Linear
+                if (cpu_material.metallicRoughnessTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.metallicRoughnessTextureIndex].isSRGB = false;
+                }
+
                 cpu_material.metallicFactor = static_cast<float>(pbr.metallic_factor);
                 cpu_material.roughnessFactor = static_cast<float>(pbr.roughness_factor);
             }
@@ -1725,6 +1732,12 @@ namespace
             if (gltf_material.normal_texture.texture)
             {
                 cpu_material.normalTextureIndex = GetTextureIndex(gltf_data, gltf_material.normal_texture.texture);
+
+                // Flag normals as Linear
+                if (cpu_material.normalTextureIndex >= 0)
+                {
+                    model.textures[cpu_material.normalTextureIndex].isSRGB = false;
+                }
             }
         }
     }
@@ -1753,6 +1766,7 @@ namespace
                 const cgltf_accessor* position_accessor = nullptr;
                 const cgltf_accessor* normal_accessor = nullptr;
                 const cgltf_accessor* uv_accessor = nullptr;
+                const cgltf_accessor* tangent_accessor = nullptr;
 
                 // Pointers for skinning accessors
                 const cgltf_accessor* joints_accessor = nullptr;
@@ -1773,6 +1787,10 @@ namespace
                     else if (attribute.type == cgltf_attribute_type_texcoord && attribute.index == 0)
                     {
                         uv_accessor = attribute.data;
+                    }
+                    else if (attribute.type == cgltf_attribute_type_tangent)
+                    {
+                        tangent_accessor = attribute.data;
                     }
                     else if (attribute.type == cgltf_attribute_type_joints)
                     {
@@ -1805,6 +1823,11 @@ namespace
                     if (normal_accessor)
                     {
                         cgltf_accessor_read_float(normal_accessor, vertex_index, &vertex.normal.x, 3);
+                    }
+
+                    if (tangent_accessor)
+                    {
+                        cgltf_accessor_read_float(tangent_accessor, vertex_index, &vertex.tangent.x, 4);
                     }
 
                     if (uv_accessor)
@@ -2205,6 +2228,7 @@ struct MeshVertex
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec2 uv= glm::vec2(0.0f);
+    glm::vec4 tangent = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 
     // Max 4 bones per vertex
     glm::uvec4 joints = glm::uvec4(0);
@@ -2228,6 +2252,7 @@ struct CPUTexture
 {
     std::string name;
     std::string imagePath;
+    bool isSRGB = true; // false = UNORM
 };
 
 /**
@@ -2608,6 +2633,51 @@ std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions
     return attribute_descriptions;
 }
 
+std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions(const std::vector<VertexAttribute>& attributes)
+{
+    std::vector<VkVertexInputAttributeDescription> descriptions;
+    descriptions.reserve(attributes.size());
+
+    for (uint32_t location = 0; location < static_cast<uint32_t>(attributes.size()); ++location)
+    {
+        VkVertexInputAttributeDescription attribute_description{};
+        attribute_description.binding = 0;
+        attribute_description.location = location;
+
+        switch (attributes[location])
+        {
+        case POSITION:
+            attribute_description.format = VK_FORMAT_R32G32B32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, position);
+            break;
+        case NORMAL:
+            attribute_description.format = VK_FORMAT_R32G32B32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, normal);
+            break;
+        case UV:
+            attribute_description.format = VK_FORMAT_R32G32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, uv);
+            break;
+        case TANGENT:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, tangent);
+            break;
+        case JOINTS:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_UINT;
+            attribute_description.offset = offsetof(MeshVertex, joints);
+            break;
+        case WEIGHTS:
+            attribute_description.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attribute_description.offset = offsetof(MeshVertex, weights);
+            break;
+        }
+
+        descriptions.push_back(attribute_description);
+    }
+
+    return descriptions;
+}
+
 
 // ==========================================
 // GPUMesh.h
@@ -2631,6 +2701,16 @@ std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions
 #include "GPUBuffer.h"
 #include "VulkanContext.h"
 #include "CPUModel.h"
+
+enum VertexAttribute
+{
+    POSITION,
+    UV,
+    NORMAL,
+    TANGENT,
+    JOINTS,
+    WEIGHTS
+};
 
 /**
  * @brief Encapsulates GPU vertex and index buffers for an indexed 3D mesh.
@@ -2706,26 +2786,53 @@ public:
      *
      * Configures three vertex shader input attributes:
      * * Location 0: 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
-     * * Location 1: RGB Color (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * Location 1: RGB Color/ 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
      * * Location 2: 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
      *
      * @return A 3-element array of VkVertexInputAttributeDescription structures.
      */
+    [[deprecated("Use GetAttributeDescriptions with the initializer list support.")]]
     static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptionsArray3();
 
     /**
      * @brief Returns attribute descriptions mapping MeshVertex fields to shader locations.
      *
-     * Configures three vertex shader input attributes:
+     * Configures 5 vertex shader input attributes:
      * * Location 0: 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
-     * * Location 1: RGB Color (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * Location 1: 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
      * * Location 2: 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
      * * Location 3: 4D Rotation Joints  (`glm::uvec4`, `VK_FORMAT_R32G32B32A32_UINT`)
      * * Location 4: 4D Weights (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
      *
      * @return A 5-element vector of VkVertexInputAttributeDescription structures.
+     *
+     * @see GetAttributeDescriptions();
      */
+    [[deprecated("Use GetAttributeDescriptions with the initializer list support.")]]
     static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions5();
+
+    /**
+     * @brief Returns attribute descriptions mapping Vertex Attributes provided to shader locations.
+     *
+     * Configures a maximum of 6 vertex shader input attributes:
+     * * 3D Position (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * 3D Normals (`glm::vec3`, `VK_FORMAT_R32G32B32_SFLOAT`)
+     * * 4D Tangents (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
+     * * 2D UV Coordinates (`glm::vec2`, `VK_FORMAT_R32G32_SFLOAT`)
+     * * 4D Rotation Joints  (`glm::uvec4`, `VK_FORMAT_R32G32B32A32_UINT`)
+     * * 4D Weights (`glm::vec4`, `VK_FORMAT_R32G32B32A32_SFLOAT`)
+     * in the order of attributes passed to the function.
+     *
+     * @param attributes Initializer list containing VertexAttribute enums.
+     *
+     * @return An n-element vector of VkVertexInputAttributeDescription structures.
+     *
+     * @note Binds to only the 0 position.
+     *
+     * @see VertexAttribute
+     */
+    static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions(
+        const std::vector<VertexAttribute>& attributes);
 };
 
 #endif //ANVIL_VK_GPUMESH_H
@@ -2812,6 +2919,7 @@ void GPUModel::destroyGPUModel()
     textures.clear();
     defaultWhiteTexture.destroyAnvilTexture(pContext);
     defaultNormalTexture.destroyAnvilTexture(pContext);
+    defaultTransparentTexture.destroyAnvilTexture(pContext);
 
     for (GPUMesh& mesh : gpuMeshes)
     {
@@ -2876,16 +2984,18 @@ void GPUModel::createTextures(const CPUModel& inModel)
 {
     defaultWhiteTexture = TextureLoader::CreateSolidColorTexture(WhiteColor, *pContext);
     defaultNormalTexture = TextureLoader::CreateSolidColorTexture(NormalColor, *pContext);
+    defaultTransparentTexture = TextureLoader::CreateSolidColorTexture(TransparentColor, *pContext);
 
     textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
     {
         try
         {
-            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext));
+            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext, cpu_texture.isSRGB));
         }
         catch (...)
         {
+            std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
             textures.push_back(defaultWhiteTexture);
         }
     }
@@ -2979,7 +3089,7 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Metallic Roughness Color
         if (inMaterial.hasBinding("metallicRoughnessTexture"))
         {
-            if (cpu_material.baseColorTextureIndex >= 0)
+            if (cpu_material.metallicRoughnessTextureIndex >= 0)
             {
                 gpu_material.instance.bindTexture("metallicRoughnessTexture", textures[cpu_material.metallicRoughnessTextureIndex]);
             }
@@ -3958,56 +4068,63 @@ private:
 
 namespace TextureLoader
 {
-    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext)
+    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext, bool bIsSRGB)
     {
-        std::string imageName = std::filesystem::path(filepath).filename().string();
-        int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, 4);
+        std::string image_name = std::filesystem::path(filepath).filename().string();
+        int tex_width, tex_height, tex_channels;
+        stbi_uc* pixels = stbi_load(filepath.c_str(), &tex_width, &tex_height, &tex_channels, 4);
         if (!pixels) {
             throw std::runtime_error("Failed to load texture image: " + filepath);
         }
 
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
+        VkDeviceSize image_size = tex_width * tex_height * 4;
+        VkFormat texture_format = bIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
+
+        // Calculate how many mip levels we need
+        uint32_t mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
 
         // CPU-visible staging buffer
-        GPUBuffer stagingBuffer;
-        stagingBuffer.createBuffer(
+        GPUBuffer staging_buffer;
+        staging_buffer.createBuffer(
             inContext.allocator,
             inContext.device,
             pixels,
-            imageSize,
+            image_size,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             "TextureStagingBuffer");
 
         stbi_image_free(pixels);
 
         // GPU-Only Image
-        VkImageCreateInfo imageInfo{};
-        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = static_cast<uint32_t>(texWidth);
-        imageInfo.extent.height = static_cast<uint32_t>(texHeight);
-        imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        VkImageCreateInfo image_info{};
+        image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_info.imageType = VK_IMAGE_TYPE_2D;
+        image_info.extent.width = static_cast<uint32_t>(tex_width);
+        image_info.extent.height = static_cast<uint32_t>(tex_height);
+        image_info.extent.depth = 1;
+        image_info.mipLevels = mip_levels;
+        image_info.arrayLayers = 1;
+        image_info.format = texture_format;
+        image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-        VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        // Add TRANSFER_SRC_BIT so we can read from the image to generate the next mip level
+        image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+        image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+
+        VmaAllocationCreateInfo alloc_info{};
+        alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
         AnvilTexture texture;
-        if (vmaCreateImage(inContext.allocator, &imageInfo, &allocInfo, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
+        if (vmaCreateImage(inContext.allocator, &image_info, &alloc_info, &texture.image, &texture.allocation, nullptr) != VK_SUCCESS)
         {
-            throw std::runtime_error("Failed to create texture image: " + imageName);
+            throw std::runtime_error("Failed to create texture image: " + image_name);
         }
 
-        std::string textureDebugName = "TextureImage: " + imageName;
-        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, textureDebugName.c_str());
+        std::string texture_debug_name = "TextureImage: " + image_name;
+        VulkanDebug::SetAutoName(inContext.device, texture.image, VK_OBJECT_TYPE_IMAGE, texture_debug_name.c_str());
 
         inContext.immediateSubmit([&](VkCommandBuffer cmd)
         {
@@ -4020,7 +4137,11 @@ namespace TextureLoader
             barrier.image = texture.image;
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             barrier.subresourceRange.baseMipLevel = 0;
-            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.levelCount = mip_levels; // Transition all mips
+
+            // Transition all mips to Transfer Destination
+            barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.subresourceRange.baseArrayLayer = 0;
             barrier.subresourceRange.layerCount = 1;
             barrier.srcAccessMask = 0;
@@ -4028,13 +4149,75 @@ namespace TextureLoader
 
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
+            // Copy pixel data from buffer into Mip Level 0
             VkBufferImageCopy region{};
             region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.imageSubresource.mipLevel = 0; // Only copy to level 0
+            region.imageSubresource.baseArrayLayer = 0;
             region.imageSubresource.layerCount = 1;
-            region.imageExtent = {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1};
+            region.imageExtent = {static_cast<uint32_t>(tex_width), static_cast<uint32_t>(tex_height), 1};
 
-            vkCmdCopyBufferToImage(cmd, stagingBuffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+            vkCmdCopyBufferToImage(cmd, staging_buffer.buffer, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
+            // Generate MipMaps
+            int32_t mip_width = tex_width;
+            int32_t mip_height = tex_height;
+
+            for (uint32_t i = 1; i < mip_levels; i++)
+            {
+                barrier.subresourceRange.baseMipLevel = i - 1;
+                barrier.subresourceRange.levelCount = 1;
+
+                // Transition previous mip level to SRC so we can read from it
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+                // Blit the image down to the next level
+                VkImageBlit blit{};
+                blit.srcOffsets[0] = {0, 0, 0};
+                blit.srcOffsets[1] = {mip_width, mip_height, 1};
+                blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.srcSubresource.mipLevel = i - 1;
+                blit.srcSubresource.baseArrayLayer = 0;
+                blit.srcSubresource.layerCount = 1;
+
+                blit.dstOffsets[0] = {0, 0, 0};
+                blit.dstOffsets[1].x = mip_width > 1 ? mip_width / 2 : 1;
+                blit.dstOffsets[1].y = mip_height > 1 ? mip_height / 2 : 1;
+                blit.dstOffsets[1].z = 1;
+                blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.dstSubresource.mipLevel = i;
+                blit.dstSubresource.baseArrayLayer = 0;
+                blit.dstSubresource.layerCount = 1;
+
+                vkCmdBlitImage(cmd, texture.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    1, &blit, VK_FILTER_LINEAR);
+
+                // Transition the previous mip level to SHADER_READ since we are done reading it
+                barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+                if (mip_width > 1)
+                {
+                    mip_width = mip_width / 2;
+                }
+                if (mip_height > 1)
+                {
+                    mip_height = mip_height / 2;
+                }
+            }
+
+            // Transition the very last mip level
+            barrier.subresourceRange.baseMipLevel = mip_levels - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -4043,42 +4226,46 @@ namespace TextureLoader
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
         });
 
-        stagingBuffer.destroyBuffer();
+        staging_buffer.destroyBuffer();
 
         // Create ImageView
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = texture.image;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
+        VkImageViewCreateInfo image_view_info{};
+        image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        image_view_info.image = texture.image;
+        image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        image_view_info.format = texture_format;
+        image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        image_view_info.subresourceRange.baseMipLevel = 0;
+        image_view_info.subresourceRange.levelCount = mip_levels;
+        image_view_info.subresourceRange.baseArrayLayer = 0;
+        image_view_info.subresourceRange.layerCount = 1;
 
-        std::string imageViewDebugName = "TextureImageView: " + imageName;
-        CHECK(vkCreateImageView(inContext.device, &viewInfo, nullptr, &texture.imageView));
-        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, imageViewDebugName.c_str());
+        std::string image_view_debug_name = "TextureImageView: " + image_name;
+        CHECK(vkCreateImageView(inContext.device, &image_view_info, nullptr, &texture.imageView));
+        VulkanDebug::SetAutoName(inContext.device, texture.imageView, VK_OBJECT_TYPE_IMAGE_VIEW, image_view_debug_name.c_str());
 
         // Create Sampler
-        VkSamplerCreateInfo samplerInfo{};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_FALSE; // Turn on later when you want crisper textures at an angle
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        VkSamplerCreateInfo sampler_info{};
+        sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_info.magFilter = VK_FILTER_LINEAR;
+        sampler_info.minFilter = VK_FILTER_LINEAR;
+        sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_info.anisotropyEnable = VK_TRUE;
+        sampler_info.maxAnisotropy = inContext.physicalDeviceProperties.limits.maxSamplerAnisotropy;
+        sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        sampler_info.unnormalizedCoordinates = VK_FALSE;
+        sampler_info.compareEnable = VK_FALSE;
+        sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+        sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler_info.minLod = 0.0f; // Start at max resolution
+        sampler_info.maxLod = static_cast<float>(mip_levels); // Max mip level it can scale down to
+        sampler_info.mipLodBias = 0.0f;
 
-        std::string samplerDebugName = "TextureSampler: " + imageName;
-        CHECK(vkCreateSampler(inContext.device, &samplerInfo, nullptr, &texture.sampler));
-        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, samplerDebugName.c_str());
+        std::string sampler_debug_name = "TextureSampler: " + image_name;
+        CHECK(vkCreateSampler(inContext.device, &sampler_info, nullptr, &texture.sampler));
+        VulkanDebug::SetAutoName(inContext.device, texture.sampler, VK_OBJECT_TYPE_SAMPLER, sampler_debug_name.c_str());
 
         return texture;
     }
@@ -4173,7 +4360,8 @@ namespace TextureLoader
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.anisotropyEnable = VK_FALSE; // Turn on later when you want crisper textures at an angle
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.maxAnisotropy = inContext.physicalDeviceProperties.limits.maxSamplerAnisotropy;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
@@ -4266,13 +4454,17 @@ namespace TextureLoader
      * submits a transfer command to upload it to a device-local Vulkan image, and creates an
      * associated image view and default sampler.
      *
+     * Base Color (Albedo) should be sRGB because it represents visual colors.
+     * Normal, Metallic, and Roughness Maps represent raw math data, not colors. They MUST be linear (UNORM).
+     *
      * @param filepath  Absolute or relative filesystem path to the source image file.
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @param bIsSRGB true means we load with sRGB, otherwise UNORM.
      * @return A fully populated AnvilTexture ready for descriptor set binding.
      *
      * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
-    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext);
+    AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext, bool bIsSRGB = true);
 
     /**
      * @brief Create a solid texture image, upload it to device-local GPU memory.
@@ -5064,6 +5256,9 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     // --------------------------------
     // Select Physical Device
+    VkPhysicalDeviceFeatures base_features{};
+    base_features.samplerAnisotropy = VK_TRUE;
+
     VkPhysicalDeviceVulkan13Features features13{};
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
     features13.dynamicRendering = VK_TRUE;
@@ -5076,6 +5271,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     vkb::PhysicalDeviceSelector vkb_physical_device_selector{vkb_instance};
     vkb_physical_device_selector.set_surface(surface);
     vkb_physical_device_selector.set_minimum_version(AnvilVulkan::API_VERSION_MAJOR, AnvilVulkan::API_VERSION_MINOR);
+    vkb_physical_device_selector.set_required_features(base_features);
     vkb_physical_device_selector.add_required_extension_features(features13);
     vkb_physical_device_selector.add_required_extension_features(features11);
     vkb::Result<vkb::PhysicalDevice> vkb_physical_device_result = vkb_physical_device_selector.select();
