@@ -34,7 +34,8 @@ struct MeshVertex
 /**
  * @brief Legacy CPU-side container for indexed 3D geometry and associated material data.
  */
-struct CPUMesh_Single
+struct [[deprecated("Use CPUMesh and CPUMeshPrimitive")]]
+CPUMesh_Single
 {
     std::vector<MeshVertex> vertices; /**< Contiguous list of unique vertex attributes. */
     std::vector<uint32_t> indices;    /**< Index list defining triangle faces (3 indices per triangle). */
@@ -239,7 +240,7 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    [[deprecated("CPUModel now provides loadGLTF() as a member function.")]]
+    [[deprecated("Use CPUModel::loadGLTF()")]]
     CPUModel LoadGLTF(const std::string& filePath);
 
     /**
@@ -253,7 +254,7 @@ namespace ModelLoader
      *
      * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
-    [[deprecated("CPUModel now provides loadGLTF() as a member function.")]]
+    [[deprecated("Use CPUModel::loadGLTF()")]]
     CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
 
     /**
@@ -264,7 +265,7 @@ namespace ModelLoader
      * @note Legacy code. No improvements will be made here.
      * @see CPUModel::updateAllMatrices().
      */
-    [[deprecated("CPUModel now provides updateAllMatrices() as a member function.")]]
+    [[deprecated("Use CPUModel::updateAllMatrices()")]]
     void UpdateAllMatrices(CPUModel& cpuModel);
 } //AnvilModelLoader
 

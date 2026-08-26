@@ -27,7 +27,8 @@
  *
  * @warning Each texture does not need a unique sampler, so need to remove sampler from this block.
  */
-struct AnvilTexture
+struct [[deprecated("Use GPUTexture")]]
+AnvilTexture
 {
     VkImage image = VK_NULL_HANDLE;
     VmaAllocation allocation = VK_NULL_HANDLE;
@@ -42,6 +43,7 @@ struct AnvilTexture
      *
      * @param inContext Pointer to the root Vulkan context providing the logical device and VMA allocator.
      */
+    [[deprecated]]
     void destroyAnvilTexture(const VulkanContext* inContext) const
     {
         if (sampler)
@@ -81,6 +83,7 @@ namespace TextureLoader
      *
      * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
+    [[deprecated("Use GPUTexture::loadTexture()")]]
     AnvilTexture LoadTexture(const std::string& filepath, VulkanContext& inContext, bool bIsSRGB = true);
 
     /**
@@ -92,6 +95,7 @@ namespace TextureLoader
      *
      * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.
      */
+    [[deprecated("Use GPUTexture::createSolidTexture()")]]
     AnvilTexture CreateSolidColorTexture(const uint8_t color[4], VulkanContext& inContext);
 }
 

@@ -9,10 +9,12 @@
  * @brief Move-only wrapper around Vulkan Image, ImageView and Vulkan Memory Allocator (VMA) allocations.
  */
 
+#include <string>
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
 #include "VulkanContext.h"
+#include "DebugNames.h"
 
 /**
  * @brief Manages the lifecycle of a Vulkan Image, ImageView, Sampler and its backing VMA memory allocation.
@@ -33,43 +35,51 @@ public:
     GPUTexture() = default;
     ~GPUTexture() = default;
 
-    // GPUTexture(const GPUTexture&) = delete;
-    // GPUTexture& operator=(const GPUTexture&) = delete;
-    //
-    // GPUTexture(GPUTexture&& other) noexcept;
-    // GPUTexture& operator=(GPUTexture&& other) noexcept;
+    GPUTexture(const GPUTexture&) = delete;
+    GPUTexture& operator=(const GPUTexture&) = delete;
+
+    GPUTexture(GPUTexture&& other) noexcept;
+    GPUTexture& operator=(GPUTexture&& other) noexcept;
 
     VkImage image = VK_NULL_HANDLE;
     VmaAllocation allocation = VK_NULL_HANDLE;
     VkImageView imageView = VK_NULL_HANDLE;
     VkSampler sampler = VK_NULL_HANDLE;
 
+private:
     /** Cached context used for self-contained destruction. */
     const VulkanContext* pContext = nullptr;
+
+public:
+    /**
+     * @brief Loads an image file from disk, uploads it to device-local GPU memory, and generates mipmaps.
+     *
+     * Reads standard image formats (PNG, JPEG, TGA, etc.) from disk, stages the pixel data,
+     * submits a transfer command to upload it to a device-local Vulkan image, and creates an
+     * associated image view and default sampler.
+     *
+     * Base Color (Albedo) should be sRGB because it represents visual colors.
+     * Normal, Metallic, and Roughness Maps represent raw math data, not colors. They MUST be linear (UNORM).
+     *
+     * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @param filepath  Absolute or relative filesystem path to the source image file.
+     * @param bIsSRGB true means we load with sRGB, otherwise UNORM.
+     *
+     * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
+     */
+    void createTexture(const VulkanContext& inContext, const std::string& filepath, bool bIsSRGB = true);
 
     /**
      * @brief Releases all GPU resources associated with this texture.
      *
      * Safely checks for non-null handles before destroying the sampler, image view,
      * and freeing the VMA image allocation.
-     *
-     * @param inContext Pointer to the root Vulkan context providing the logical device and VMA allocator.
      */
-    void destroyTexture(const VulkanContext* inContext) const
-    {
-        if (sampler)
-        {
-            vkDestroySampler(inContext->device, sampler, nullptr);
-        }
-        if (imageView)
-        {
-            vkDestroyImageView(inContext->device, imageView, nullptr);
-        }
-        if (image)
-        {
-            vmaDestroyImage(inContext->allocator, image, allocation);
-        }
-    }
+    void destroyTexture();
+
+    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format D_DECL());
+    void createImageView(uint32_t mipLevels, VkFormat format D_DECL());
+    void createSampler(uint32_t mipLevels D_DECL());
 };
 
 
