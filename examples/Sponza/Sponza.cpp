@@ -135,11 +135,16 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 
     UI::RenderWorldAxes(view);
 
+    gpuModel.updateTransforms(cpuModel);
+    const glm::mat4 view_projection = projection * view; // Calculate once!
+
+
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
     VkDeviceSize offset = 0;
-    for (const GPUModelDrawItem& draw_item : gpuModel.drawItems)
+    for (size_t i = 0; i < gpuModel.drawItems.size(); ++i)
     {
+        const GPUModelDrawItem& draw_item = gpuModel.drawItems[i];
         if (draw_item.gpuMeshIndex >= gpuModel.gpuMeshes.size())
         {
             continue;
@@ -177,9 +182,9 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         }
 
         PushConstants constants{};
-        constants.renderMatrix = projection * view * draw_item.worldMatrix;
-        constants.modelMatrix = draw_item.worldMatrix;
+        constants.viewProjection = view_projection;
         constants.camera = glm::vec4(camera.position, 1.0f);
+        constants.objectIndex = static_cast<uint32_t>(i); // Map to SSBO index
 
         vkCmdPushConstants(inCmd, sponzaMaterial.materialPipelineLayout, sponzaMaterial.pushConstantStages, 0,
             sizeof(PushConstants), &constants);

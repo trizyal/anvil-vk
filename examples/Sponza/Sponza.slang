@@ -20,9 +20,9 @@ struct VertexOutput
 
 struct PushConstants
 {
-    float4x4 renderMatrix;
-    float4x4 modelMatrix;
+    float4x4 viewProjection;
     float4 cameraPosition;
+    uint32_t objectIndex;
 };
 
 struct SceneData
@@ -38,7 +38,8 @@ struct SceneData
 [[vk::binding(0, 0)]] ConstantBuffer<SceneData> sceneBuffer;
 
 // SET 1: Model
-// [[vk::binding(0, 1)]] // Unused as no joints or skinning
+// [[vk::binding(0, 1)]] [[vk::binding(0, 1)]] StructuredBuffer<float4x4> jointMatrices;
+[[vk::binding(0, 1)]] StructuredBuffer<float4x4> modelMatrices;
 
 // SET 2: Material
 [[vk::binding(0, 2)]] Sampler2D baseColorTexture;
@@ -49,10 +50,16 @@ struct SceneData
 VertexOutput vertexMain(VertexInput input)
 {
     VertexOutput output;
-    output.position = mul(pushConstants.renderMatrix, float4(input.position, 1.0));
-    output.worldPosition = mul(pushConstants.modelMatrix, float4(input.position, 1.0)).xyz;
-    output.worldNormal = mul((float3x3)pushConstants.modelMatrix, input.normal);
-    output.worldTangent = float4(mul((float3x3)pushConstants.modelMatrix, input.tangent.xyz), input.tangent.w);
+
+    // Fetch matrix from SSBO
+    float4x4 modelMatrix = modelMatrices[pushConstants.objectIndex];
+
+    float4 worldPos = mul(modelMatrix, float4(input.position, 1.0));
+    output.worldPosition = worldPos.xyz;
+    output.position = mul(pushConstants.viewProjection, worldPos);
+
+    output.worldNormal = mul((float3x3)modelMatrix, input.normal);
+    output.worldTangent = float4(mul((float3x3)modelMatrix, input.tangent.xyz), input.tangent.w);
     output.uv = input.uv;
     return output;
 }

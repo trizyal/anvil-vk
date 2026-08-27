@@ -12,14 +12,10 @@
 #include <string>
 
 #include <volk.h>
-#include <slang.h>
-#include <slang-com-ptr.h>
 
-#include "GPUBuffer.h"
 #include "MaterialInstance.h"
 #include "ShaderCompiler.h"
 #include "ShaderModule.h"
-#include "TextureLoader.h"
 #include "VulkanContext.h"
 #include "ShaderProgram.h"
 
@@ -140,13 +136,13 @@ public:
     [[nodiscard]]
     VkShaderModule getVertexShader() const
     {
-        return pActiveProgram->vertexShader.get();
+        return pActiveProgram ? pActiveProgram->vertexShader.get() : VK_NULL_HANDLE;
     }
 
     [[nodiscard]]
     VkShaderModule getFragmentShader() const
     {
-        return pActiveProgram->fragmentShader.get();
+        return  pActiveProgram ? pActiveProgram->fragmentShader.get() : VK_NULL_HANDLE;
     }
 };
 

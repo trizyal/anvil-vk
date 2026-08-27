@@ -16,9 +16,9 @@
 
 struct PushConstants
 {
-    glm::mat4 renderMatrix;
-    glm::mat4 modelMatrix;
+    glm::mat4 viewProjection;
     glm::vec4 camera;
+    uint32_t objectIndex;
 };
 
 class Sponza

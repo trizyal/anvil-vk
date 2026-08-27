@@ -55,9 +55,11 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
     pContext = &inContext;
 
     createJointBuffer();
+    createMeshesAndDrawItems(inModel); // Must be called buffer creation to get drawItems.size()
+    createModelMatricesBuffer(); // Allocates the SSBO
     createTextures(inModel);
     createMaterialDescriptorSets(inModel, inMaterial);
-    createMeshesAndDrawItems(inModel);
+
 }
 
 void GPUModel::destroyGPUModel()
@@ -68,6 +70,7 @@ void GPUModel::destroyGPUModel()
     }
 
     jointBuffer.destroyBuffer();
+    modelMatricesBuffer.destroyBuffer();
 
     for (AnvilTexture& texture : textures)
     {
@@ -92,14 +95,29 @@ void GPUModel::destroyGPUModel()
 
 void GPUModel::updateTransforms(const CPUModel& inModel)
 {
-    // Fast path to sync animated matrices from CPU to GPU draw items
-    for (GPUModelDrawItem& item : drawItems)
+    if (drawItems.empty() || modelMatricesBuffer.buffer == VK_NULL_HANDLE)
     {
+        return;
+    }
+
+    std::vector<glm::mat4> model_matrices(drawItems.size());
+
+    // // Update draw item matrices from CPU model
+    for (size_t i = 0; i < drawItems.size(); ++i)
+    {
+        GPUModelDrawItem& item = drawItems[i];
         if (item.cpuNodeIndex >= 0 && item.cpuNodeIndex < static_cast<int>(inModel.nodes.size()))
         {
             item.worldMatrix = inModel.nodes[item.cpuNodeIndex].worldMatrix;
         }
+        model_matrices[i] = item.worldMatrix;
     }
+
+    // Map and upload to GPU SSBO
+    void* mapped_data = nullptr;
+    vmaMapMemory(pContext->allocator, modelMatricesBuffer.allocation, &mapped_data);
+    std::memcpy(mapped_data, model_matrices.data(), model_matrices.size() * sizeof(glm::mat4));
+    vmaUnmapMemory(pContext->allocator, modelMatricesBuffer.allocation);
 }
 
 void GPUModel::updateJoints(const CPUModel& inModel) const
@@ -216,6 +234,10 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         if (inMaterial.hasBinding("jointMatrices"))
         {
             modelSet.bindStorageBuffer("jointMatrices", jointBuffer);
+        }
+        if (inMaterial.hasBinding("modelMatrices"))
+        {
+            modelSet.bindStorageBuffer("modelMatrices", modelMatricesBuffer);
         }
         modelSet.updateDescriptorSets();
     }
@@ -366,6 +388,30 @@ void GPUModel::createJointBuffer()
             initial_matrices.data(),
             sizeof(glm::mat4) * MAX_BONES,
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            DNAME("JointsBuffer")
         );
     }
+}
+
+void GPUModel::createModelMatricesBuffer()
+{
+    if (drawItems.empty())
+    {
+        return;
+    }
+
+    const size_t buffer_size = drawItems.size() * sizeof(glm::mat4);
+
+    // We must provide initial data because GPUBuffer::createBuffer always calls std::memcpy.
+    // Initializing with Identity Matrices means vertices won't stretch to infinity on frame 0.
+    std::vector<glm::mat4> initial_matrices(drawItems.size(), glm::mat4(1.0f));
+
+    // Allocate host-visible memory for easy per-frame updating
+    modelMatricesBuffer.createBuffer(
+        *pContext,
+        initial_matrices.data(),
+        buffer_size,
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+        DNAME("ModelMatricesBuffer")
+    );
 }
