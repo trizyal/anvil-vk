@@ -72,14 +72,14 @@ void GPUModel::destroyGPUModel()
     jointBuffer.destroyBuffer();
     modelMatricesBuffer.destroyBuffer();
 
-    for (AnvilTexture& texture : textures)
+    for (GPUTexture& texture : textures)
     {
-        texture.destroyAnvilTexture(pContext);
+        texture.destroyTexture();
     }
     textures.clear();
-    defaultWhiteTexture.destroyAnvilTexture(pContext);
-    defaultNormalTexture.destroyAnvilTexture(pContext);
-    defaultTransparentTexture.destroyAnvilTexture(pContext);
+    defaultWhiteTexture.destroyTexture();
+    defaultNormalTexture.destroyTexture();
+    defaultTransparentTexture.destroyTexture();
 
     for (GPUMesh& mesh : gpuMeshes)
     {
@@ -157,21 +157,31 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
 
 void GPUModel::createTextures(const CPUModel& inModel)
 {
-    defaultWhiteTexture = TextureLoader::CreateSolidColorTexture(WhiteColor, *pContext);
-    defaultNormalTexture = TextureLoader::CreateSolidColorTexture(NormalColor, *pContext);
-    defaultTransparentTexture = TextureLoader::CreateSolidColorTexture(TransparentColor, *pContext);
+    defaultWhiteTexture.createSolidColorTexture(*pContext, WhiteColor);
+    defaultNormalTexture.createSolidColorTexture(*pContext, NormalColor);
+    defaultTransparentTexture.createSolidColorTexture(*pContext, TransparentColor);
 
     textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
     {
         try
         {
-            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext, cpu_texture.isSRGB));
+            GPUTexture tex;
+            tex.createTexture(*pContext, cpu_texture.imagePath, cpu_texture.isSRGB);
+            textures.push_back(std::move(tex));
         }
         catch (...)
         {
+            std::cout << "Texture load failed for " << cpu_texture.name << ". Falling back to default." << std::endl;
             std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
-            textures.push_back(defaultWhiteTexture);
+
+            // Push an empty shell texture to maintain index alignment
+            textures.emplace_back();
+#if 0 // Creates copies of default texture which we don't want
+            GPUTexture fallback;
+            fallback.createSolidColorTexture(*pContext, WhiteColor);
+            textures.push_back(std::move(fallback));
+#endif
         }
     }
 }
@@ -256,12 +266,14 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Base Color
         if (inMaterial.hasBinding("baseColorTexture"))
         {
-            if (cpu_material.baseColorTextureIndex >= 0)
+            if (cpu_material.baseColorTextureIndex >= 0 &&
+                textures[cpu_material.baseColorTextureIndex].imageView != VK_NULL_HANDLE)
             {
                 gpu_material.instance.bindTexture("baseColorTexture", textures[cpu_material.baseColorTextureIndex]);
             }
             else
             {
+                // Safely reuse the single, shared default texture
                 gpu_material.instance.bindTexture("baseColorTexture", defaultWhiteTexture);
             }
         }
@@ -269,7 +281,8 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Metallic Roughness Color
         if (inMaterial.hasBinding("metallicRoughnessTexture"))
         {
-            if (cpu_material.metallicRoughnessTextureIndex >= 0)
+            if (cpu_material.metallicRoughnessTextureIndex >= 0 &&
+                textures[cpu_material.metallicRoughnessTextureIndex].imageView != VK_NULL_HANDLE)
             {
                 gpu_material.instance.bindTexture("metallicRoughnessTexture", textures[cpu_material.metallicRoughnessTextureIndex]);
             }
@@ -282,7 +295,8 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Normal Map
         if (inMaterial.hasBinding("normalTexture"))
         {
-            if (cpu_material.normalTextureIndex >= 0)
+            if (cpu_material.normalTextureIndex >= 0 &&
+                textures[cpu_material.normalTextureIndex].imageView != VK_NULL_HANDLE)
             {
                 gpu_material.instance.bindTexture("normalTexture", textures[cpu_material.normalTextureIndex]);
             }

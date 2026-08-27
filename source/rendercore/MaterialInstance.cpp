@@ -32,7 +32,7 @@ MaterialInstance& MaterialInstance::operator=(MaterialInstance&& other) noexcept
     return *this;
 }
 
-void MaterialInstance::bindTexture(const std::string& name, const AnvilTexture& inTexture)
+void MaterialInstance::bindTexture(const std::string& name, const GPUTexture& inTexture)
 {
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
