@@ -169,8 +169,9 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
 
     if (!entry_point)
     {
-        std::cerr << "AnvilShaderCompiler: Failed to find entry point " << request.entryPoint.c_str() << std::endl;
-        return shader_result;
+        std::string err = "AnvilShaderCompiler: Failed to find entry point " + request.entryPoint;
+        std::cerr << err << std::endl;
+        throw std::runtime_error(err);
     }
 
     // Composite and Link

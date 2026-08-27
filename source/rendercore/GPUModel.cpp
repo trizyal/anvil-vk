@@ -32,6 +32,7 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
     return *this;
 }
 
+[[deprecated("Use the multi-set architecture instead.")]]
 void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial,
     const std::string& sceneBufferName, const GPUBuffer& sceneBuffer, const std::string& textureName)
 {
@@ -157,6 +158,7 @@ void GPUModel::createTextures(const CPUModel& inModel)
     }
 }
 
+[[deprecated("Use the multi-set architecture instead.")]]
 void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial,
     const std::string& sceneBufferName, const GPUBuffer& sceneBuffer, const std::string& textureName)
 {
