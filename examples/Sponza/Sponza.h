@@ -32,6 +32,7 @@ private:
     CPUModel cpuModel;
     GPUModel gpuModel;
 
+    ShaderProgram sponzaProgram;
     AnvilMaterial sponzaMaterial;
     MaterialInstance globalSet; // Manages Set 0
     Scene sponzaScene;

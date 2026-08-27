@@ -15,7 +15,7 @@ int main()
         anvil.initializeAnvil({
             .width = 1280,
             .height = 720,
-            .title = "Anvil Rigging Example"
+            .title = "Anvil Rigging + Animation Example"
         });
 
         CesiumMan project;

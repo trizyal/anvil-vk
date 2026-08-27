@@ -49,6 +49,7 @@ void Sponza::cleanupProject()
 
         gpuModel.destroyGPUModel();
         sponzaMaterial.destroyMaterial();
+        sponzaProgram.destroyProgram();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -69,12 +70,15 @@ void Sponza::loadPipeline()
         vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         sponzaMaterial.destroyMaterial();
+        sponzaProgram.destroyProgram();
     }
 
     AnvilShaders::ShaderCompileRequest vReq{"Sponza", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fReq{"Sponza", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    sponzaMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
+    // Build the program, then generate the material layout from it
+    sponzaProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);
+    sponzaMaterial.buildMaterialFromProgram(*pContext, sponzaProgram);
 
     // Setup Set 0
     globalSet = sponzaMaterial.allocateSet(0);
