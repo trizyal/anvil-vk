@@ -88,7 +88,7 @@ void Sponza::loadPipeline()
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
 
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(sponzaMaterial.vertexShader.get(), sponzaMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(sponzaMaterial.pActiveProgram->vertexShader.get(), sponzaMaterial.pActiveProgram->fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(pSwapchain->swapchainFormat)
         .setDepthAttachmentFormat(pSwapchain->depthFormat)

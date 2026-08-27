@@ -21,27 +21,7 @@
 #include "ShaderModule.h"
 #include "TextureLoader.h"
 #include "VulkanContext.h"
-
-/**
- * @brief Cached Vulkan descriptor binding metadata extracted via Slang shader reflection.
- */
-struct ShaderBinding
-{
-    /** Descriptor set index (e.g., set = 0) */
-    uint32_t setIndex;
-
-    /** Binding slot index within the descriptor set. */
-    uint32_t bindingIndex;
-
-    /** Vulkan resource type (e.g., VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER). */
-    VkDescriptorType descriptorType;
-};
-
-struct ReflectedBinding
-{
-    uint32_t setIndex;
-    VkDescriptorSetLayoutBinding bindingData;
-};
+#include "ShaderProgram.h"
 
 /**
  * @brief Encapsulates shaders and acts as a factory for Material Instances.
@@ -66,16 +46,6 @@ public:
     AnvilMaterial(AnvilMaterial&&) noexcept = default;
     AnvilMaterial& operator=(AnvilMaterial&&) noexcept = default;
 
-    /** Owned vertex shader module and associated SPIR-V bytecode. */
-    ShaderModule vertexShader;
-
-    /** Owned fragment shader module and associated SPIR-V bytecode. */
-    ShaderModule fragmentShader;
-
-    /** Reflected layout for the material's descriptor set. */
-    [[deprecated]]
-    VkDescriptorSetLayout materialDescriptorSetLayout = VK_NULL_HANDLE;
-
     /** Reflected layouts for the material's descriptor sets (Index 0 = Set 0, etc). */
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
@@ -88,17 +58,17 @@ public:
     /** Bitmask of pipeline stages utilizing push constants in this material. */
     VkShaderStageFlags pushConstantStages = 0;
 
+    const ShaderProgram* pActiveProgram = nullptr;
+
 private:
     VulkanContext* pContext = nullptr;
 
-    std::unordered_map<std::string, ShaderBinding> bindingMap;
-    // std::vector<VkWriteDescriptorSet> pendingWrites;
-    // std::vector<VkDescriptorImageInfo> pendingImageInfos;
-    // std::vector<VkDescriptorBufferInfo> pendingBufferInfos;
+    /** Fallback storage for legacy build Material. */
+    std::unique_ptr<ShaderProgram> legacyProgram;
 
 public:
     /**
-     * @brief Compiles shaders, reflects resource layouts, and allocates Vulkan descriptor objects.
+     * @brief LEGACY: Backwards compatible wrapper for older projects.
      *
      * Compiles the requested vertex and fragment via Slang, inspects the resulting reflection
      * metadata to build descriptor layouts and push constants, and allocates a descriptor set.
@@ -109,16 +79,29 @@ public:
      * @param inFragReq Compilation request parameters for the fragment shader stage.
      *
      * @throws std::runtime_error If shader compilation fails or Vulkan layouts cannot be created.
+     *
+     * @warning Internally spins up an owned ShaderProgram.
+     *
+     * @todo Need to change function name to include legacy.
      */
+    [[deprecated("Use AnvilMaterial::buildMaterialFromProgram")]]
     void buildMaterial(VulkanContext& inContext,
                        ShaderCompiler& inCompiler,
                        const AnvilShaders::ShaderCompileRequest& inVertReq,
                        const AnvilShaders::ShaderCompileRequest& inFragReq);
 
     /**
+     * @brief Builds layout using an already compiled ShaderProgram.
+     *
+     * @param inContext
+     * @param inProgram
+     */
+    void buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram);
+
+    /**
      * @brief Destroys all Vulkan layouts, descriptor pools, and shader modules owned by this material.
      */
-    void destroyMaterial() const;
+    void destroyMaterial();
 
     /**
      * @brief Allocates a new material instance with its own Vulkan descriptor set.
@@ -154,19 +137,17 @@ public:
     [[nodiscard]]
     bool hasSet(uint32_t setIndex) const;
 
-private:
-    /**
-     * @brief Inspects Slang reflection metadata to populate descriptor layouts and push constant ranges.
-     *
-     * @param[in] linkedProgram Slang component type containing layout reflection data.
-     * @param[in] stage Target Vulkan shader stage bitmask for these bindings.
-     * @param[in,out] outLayoutBindings Output vector appended with reflected descriptor set binding layouts.
-     * @param[in,out] outPushConstants Output vector appended with reflected push constant ranges.
-     */
-    void reflectShader(slang::IComponentType* linkedProgram,
-        VkShaderStageFlagBits stage,
-        std::vector<ReflectedBinding>& outLayoutBindings,
-        std::vector<VkPushConstantRange>& outPushConstants);
+    [[nodiscard]]
+    VkShaderModule getVertexShader() const
+    {
+        return pActiveProgram->vertexShader.get();
+    }
+
+    [[nodiscard]]
+    VkShaderModule getFragmentShader() const
+    {
+        return pActiveProgram->fragmentShader.get();
+    }
 };
 
 #endif //ANVIL_VK_MATERIAL_H

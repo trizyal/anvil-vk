@@ -12,148 +12,22 @@
 #include "DebugNames.h"
 #include "VulkanResult.h"
 
-void AnvilMaterial::reflectShader(slang::IComponentType* linkedProgram,
-                                  const VkShaderStageFlagBits stage,
-                                  std::vector<ReflectedBinding>& outLayoutBindings,
-                                  std::vector<VkPushConstantRange>& outPushConstants)
-{
-    slang::ShaderReflection* reflection = linkedProgram->getLayout();
-
-    if (!reflection)
-    {
-        std::cerr << "Failed to get Slang reflection layout!" << std::endl;
-        return;
-    }
-
-    uint32_t param_count = reflection->getParameterCount();
-
-    std::cout << "ParamCount received in AnvilMaterial: " << param_count << std::endl;
-
-    for (uint32_t i = 0; i < param_count; i++)
-    {
-        slang::VariableLayoutReflection* var_layout = reflection->getParameterByIndex(i);
-        slang::TypeLayoutReflection* type_layout = var_layout->getTypeLayout();
-
-        const char* name = var_layout->getName();
-        const slang::ParameterCategory category = var_layout->getCategory();
-
-        if (category == slang::ParameterCategory::PushConstantBuffer)
-        {
-            VkPushConstantRange range{};
-            range.stageFlags = stage;
-            range.offset = static_cast<uint32_t>(var_layout->getOffset());
-
-            // SLANG FIX: A ConstantBuffer<T> is a wrapper. We need the size of 'T' (the element).
-            slang::TypeLayoutReflection* element_type = type_layout->getElementTypeLayout();
-            if (element_type != nullptr) {
-                range.size = static_cast<uint32_t>(element_type->getSize());
-            } else {
-                range.size = static_cast<uint32_t>(type_layout->getSize());
-            }
-
-            outPushConstants.push_back(range);
-
-            std::cout << "Reflected Push Constant: " << name << " Size: " << range.size << "\n";
-            continue;
-        }
-
-        if (category == slang::ParameterCategory::DescriptorTableSlot ||
-            category == slang::ParameterCategory::Mixed)
-        {
-            VkDescriptorSetLayoutBinding layout_binding{};
-            layout_binding.binding = static_cast<uint32_t>(var_layout->getBindingIndex());
-            layout_binding.descriptorCount = 1;
-            layout_binding.stageFlags = stage;
-
-            slang::TypeReflection::Kind kind = type_layout->getKind();
-            if (kind == slang::TypeReflection::Kind::Resource)
-            {
-                SlangResourceShape shape = type_layout->getResourceShape();
-
-                // Had a bug here where all resources were being mapped as Images.
-                if (shape == SLANG_STRUCTURED_BUFFER)
-                {
-                    layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                }
-                else
-                {
-                    layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                }
-            }
-            else if (kind == slang::TypeReflection::Kind::ConstantBuffer)
-            {
-                layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            }
-            else
-            {
-                continue;
-            }
-
-            ReflectedBinding reflected_binding{};
-            reflected_binding.setIndex = var_layout->getBindingSpace();
-            reflected_binding.bindingData = layout_binding;
-
-            outLayoutBindings.push_back(reflected_binding);
-
-            ShaderBinding shader_binding{};
-            shader_binding.setIndex = var_layout->getBindingSpace();
-            shader_binding.bindingIndex = layout_binding.binding;
-            shader_binding.descriptorType = layout_binding.descriptorType;
-            bindingMap[name] = shader_binding;
-        }
-    }
-}
-
 void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     ShaderCompiler& inCompiler,
     const AnvilShaders::ShaderCompileRequest& inVertReq,
     const AnvilShaders::ShaderCompileRequest& inFragReq)
 {
+    // Backwards compatibility wrapper
+    legacyProgram = std::make_unique<ShaderProgram>();
+    legacyProgram->buildProgram(inContext, inCompiler, inVertReq, inFragReq);
+
+    buildMaterialFromProgram(inContext, *legacyProgram);
+}
+
+void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram)
+{
     pContext = &inContext;
-    std::string material_debug_name = inVertReq.moduleName;
-
-    // Compile Shaders internally
-    const auto vertex_result = inCompiler.compileToSPIRV(inVertReq);
-    const auto fragment_result = inCompiler.compileToSPIRV(inFragReq);
-
-    // -----------------------
-    // RAW REFLECTION DATA
-    // -----------------------
-    // raw_reflected_bindings: A flat list storing every individual descriptor binding discovered
-    // in the shaders. If a resource (like a Scene UBO) is used in BOTH the Vertex and
-    // Fragment shaders, it will be added to this list twice.
-    std::vector<ReflectedBinding> raw_reflected_bindings;
-
-    // raw_reflected_push_constants: A flat list of push constant ranges extracted from the shaders.
-    // Like bindings, if multiple shader stages use push constants, we will get multiple
-    // entries here that need to be combined later.
-    std::vector<VkPushConstantRange> raw_reflected_push_constants;
-
-    // We pass stage flags (e.g., VK_SHADER_STAGE_VERTEX_BIT) into the reflection parser.
-    // This tags the discovered bindings so Vulkan knows EXACTLY which programmable stage
-    // of the GPU pipeline (Vertex processing vs. Pixel processing) is allowed to read them.
-    if (vertex_result.reflection)
-    {
-        reflectShader(vertex_result.reflection.get(),
-            VK_SHADER_STAGE_VERTEX_BIT,
-            raw_reflected_bindings,
-            raw_reflected_push_constants);
-    }
-
-    if (fragment_result.reflection)
-    {
-        reflectShader(fragment_result.reflection.get(),
-            VK_SHADER_STAGE_FRAGMENT_BIT,
-            raw_reflected_bindings,
-            raw_reflected_push_constants);
-    }
-
-    // Build Vulkan Shader Modules
-    std::string debug_name = "MaterialVertexShader: " + inVertReq.moduleName;
-    vertexShader.createShaderModule(*pContext, vertex_result DNAME(debug_name.c_str()));
-
-    debug_name = "MaterialFragmentShader: " + inFragReq.moduleName;
-    fragmentShader.createShaderModule(*pContext, fragment_result DNAME(debug_name.c_str()));
+    pActiveProgram = &inProgram;
 
     uint32_t max_set = 0;
 
@@ -167,7 +41,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
     // into a single binding that has a combined stageFlag.
     std::unordered_map<uint32_t, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>> merged_set_bindings;
 
-    for (const auto& b : raw_reflected_bindings)
+    for (const auto& b : inProgram.rawReflectedBindings)
     {
         max_set = std::max(max_set, b.setIndex);
 
@@ -202,9 +76,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         descriptor_layout_info.bindingCount = static_cast<uint32_t>(set_bindings.size());
         descriptor_layout_info.pBindings = set_bindings.data();
         CHECK(vkCreateDescriptorSetLayout(pContext->device, &descriptor_layout_info, nullptr, &descriptorSetLayouts[set_index]));
-
-        debug_name = "MaterialDescriptorSetLayout: " + material_debug_name;
-        SET_DNAME_HERE(pContext->device, descriptorSetLayouts[set_index], VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debug_name.c_str());
+        SET_DNAME_HERE(pContext->device, descriptorSetLayouts[set_index], VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, inProgram.name.c_str());
     }
 
     if (!pool_sizes.empty())
@@ -215,20 +87,18 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         pool_info.pPoolSizes = pool_sizes.data();
         pool_info.maxSets = 1000; //_pool_sizes.size()?
         CHECK(vkCreateDescriptorPool(pContext->device, &pool_info, nullptr, &materialDescriptorPool));
-
-        debug_name = "MaterialDescriptorPool: " + material_debug_name;
-        SET_DNAME_HERE(pContext->device, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, debug_name.c_str());
+        SET_DNAME_HERE(pContext->device, materialDescriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, inProgram.name.c_str());
     }
 
     // Push Constants and Pipeline Layout
     VkPushConstantRange merged_push_constant{};
-    if (!raw_reflected_push_constants.empty())
+    if (!inProgram.rawReflectedPushConstants.empty())
     {
-        merged_push_constant = raw_reflected_push_constants[0];
-        for (size_t i = 1; i < raw_reflected_push_constants.size(); ++i)
+        merged_push_constant = inProgram.rawReflectedPushConstants[0];
+        for (size_t i = 1; i < inProgram.rawReflectedPushConstants.size(); ++i)
         {
-            merged_push_constant.size = std::max(merged_push_constant.size, raw_reflected_push_constants[i].size);
-            merged_push_constant.stageFlags |= raw_reflected_push_constants[i].stageFlags;
+            merged_push_constant.size = std::max(merged_push_constant.size, inProgram.rawReflectedPushConstants[i].size);
+            merged_push_constant.stageFlags |= inProgram.rawReflectedPushConstants[i].stageFlags;
         }
 
         pushConstantStages = merged_push_constant.stageFlags;
@@ -244,9 +114,7 @@ void AnvilMaterial::buildMaterial(VulkanContext& inContext,
         pipeline_layout_info.pPushConstantRanges = &merged_push_constant;
     }
     CHECK(vkCreatePipelineLayout(pContext->device, &pipeline_layout_info, nullptr, &materialPipelineLayout));
-
-    debug_name = "MaterialPipelineLayout: " + material_debug_name;
-    SET_DNAME_HERE(pContext->device, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, debug_name.c_str());
+    SET_DNAME_HERE(pContext->device, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, inProgram.name.c_str());
 }
 
 MaterialInstance AnvilMaterial::createInstance() const
@@ -278,17 +146,21 @@ MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
 
 bool AnvilMaterial::hasBinding(const std::string& name) const
 {
-    return bindingMap.contains(name);
+    return pActiveProgram && pActiveProgram->bindingMap.contains(name);
 }
 
 ShaderBinding AnvilMaterial::getBinding(const std::string& name) const
 {
-    const auto it = bindingMap.find(name);
-    if (it == bindingMap.end())
+    return pActiveProgram->bindingMap.at(name);
+
+#if 0 // not sure which way is better yet
+    const auto it = pActiveProgram->bindingMap.find(name);
+    if (it == pActiveProgram->bindingMap.end())
     {
         throw std::runtime_error("AnvilMaterial binding does not exist: " + name);
     }
     return it->second;
+#endif
 }
 
 bool AnvilMaterial::hasSet(uint32_t setIndex) const
@@ -296,17 +168,22 @@ bool AnvilMaterial::hasSet(uint32_t setIndex) const
     return setIndex < descriptorSetLayouts.size() && descriptorSetLayouts[setIndex] != VK_NULL_HANDLE;
 }
 
-void AnvilMaterial::destroyMaterial() const
+void AnvilMaterial::destroyMaterial()
 {
     if (pContext)
     {
-        vertexShader.destroyShaderModule();
-        fragmentShader.destroyShaderModule();
+        // Destroy legacy program if this material owns it (backwards compatibility)
+        if (legacyProgram)
+        {
+            legacyProgram->destroyProgram();
+            legacyProgram.reset();
+        }
 
         if (materialDescriptorPool)
         {
             vkDestroyDescriptorPool(pContext->device, materialDescriptorPool, nullptr);
         }
+
         for (VkDescriptorSetLayout layout : descriptorSetLayouts)
         {
             if (layout != VK_NULL_HANDLE)
@@ -314,9 +191,15 @@ void AnvilMaterial::destroyMaterial() const
                 vkDestroyDescriptorSetLayout(pContext->device, layout, nullptr);
             }
         }
+
+        descriptorSetLayouts.clear();
         if (materialPipelineLayout)
         {
             vkDestroyPipelineLayout(pContext->device, materialPipelineLayout, nullptr);
         }
+
+        // Clear active program pointer
+        pActiveProgram = nullptr;
+        pContext = nullptr;
     }
 }

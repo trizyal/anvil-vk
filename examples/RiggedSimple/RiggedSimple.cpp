@@ -81,7 +81,7 @@ void RiggedSimple::loadPipeline()
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(riggedMaterial.vertexShader.get(), riggedMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(riggedMaterial.getVertexShader(), riggedMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(pSwapchain->swapchainFormat)
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
@@ -90,7 +90,7 @@ void RiggedSimple::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->device, riggedMaterial.materialPipelineLayout, "RiggedSimplePipeline");
+        .buildPipeline(pContext->device, riggedMaterial.materialPipelineLayout DNAME("RiggedSimplePipeline"));
 
     gpuModel.createGPUModel( *pContext, cpuModel, riggedMaterial, "sceneBuffer", riggedScene.sceneUBO, "texture");
 }

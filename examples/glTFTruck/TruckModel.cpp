@@ -91,7 +91,7 @@ void TruckModel::loadPipeline()
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(myMaterial.vertexShader.get(), myMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(myMaterial.getVertexShader(), myMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(pSwapchain->swapchainFormat)
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
@@ -100,7 +100,7 @@ void TruckModel::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->device, myMaterial.materialPipelineLayout, "TruckModelPipeline");
+        .buildPipeline(pContext->device, myMaterial.materialPipelineLayout DNAME("TruckModelPipeline"));
 
     gpuModel.createGPUModel( *pContext, cpuModel, myMaterial, "sceneBuffer", myScene.sceneUBO, "texture");
 }
