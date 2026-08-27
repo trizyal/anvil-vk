@@ -70,6 +70,17 @@ public:
     void createTexture(const VulkanContext& inContext, const std::string& filepath, bool bIsSRGB = true);
 
     /**
+     * @brief Create a solid texture image, upload it to device-local GPU memory.
+     *
+     * @param color The rgba value in unsigned 8-bit format.
+     * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
+     * @return A fully populated AnvilTexture ready for descriptor set binding.
+     *
+     * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.
+     */
+    void createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4]);
+
+    /**
      * @brief Releases all GPU resources associated with this texture.
      *
      * Safely checks for non-null handles before destroying the sampler, image view,

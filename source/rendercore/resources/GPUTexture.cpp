@@ -206,6 +206,61 @@ void GPUTexture::createTexture(const VulkanContext& inContext, const std::string
     createSampler(mip_levels DNAME(image_name.c_str()));
 }
 
+void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4])
+{
+    destroyTexture();
+    pContext = &inContext;
+
+    // CPU-visible staging buffer
+    GPUBuffer staging_buffer;
+    staging_buffer.createBuffer(
+        inContext,
+        color,
+        sizeof(uint8_t) * 4,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+
+    createImage(1, 1, 1, VK_FORMAT_R8G8B8A8_UNORM);
+
+    inContext.immediateSubmit([&](VkCommandBuffer cmd)
+    {
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        VkBufferImageCopy region{};
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent = {1, 1, 1};
+
+        vkCmdCopyBufferToImage(cmd, staging_buffer.buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+    });
+
+    staging_buffer.destroyBuffer();
+
+    createImageView(1, VK_FORMAT_R8G8B8A8_UNORM);
+    createSampler(1);
+}
+
 void GPUTexture::createImage(const uint32_t width, const uint32_t height, const uint32_t mipLevels,
                              const VkFormat format D_DEFN)
 {
