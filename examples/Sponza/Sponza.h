@@ -43,7 +43,7 @@ private:
 public:
     void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain);
     void cleanupProject();
-    void loadPipeline();
+    bool loadPipeline(std::string* outErrorMessage = nullptr);
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);
 };
 

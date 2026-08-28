@@ -70,31 +70,22 @@ void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& ren
        }
 
         // Check for Shader Reload
-        const bool isCtrl = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
-        const bool isDot = Input::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
-        const bool isReloadPressed = isCtrl && isDot;
+        const bool is_ctrl = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
+        const bool is_dot = Input::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
 
-        if (isReloadPressed)
+        if (is_ctrl && is_dot)
         {
-            if (!shaderReloadQueue.empty())
-            {
-                std::cout << "[Anvil] Hot-reload triggered. Pausing GPU..." << std::endl;
-
-                // Safely wait for all GPU work to finish BEFORE the project destroys pipelines
-                vkDeviceWaitIdle(context.device);
-
-                for (auto& callback : shaderReloadQueue) {
-                    callback();
-                }
-
-                std::cout << "[Anvil] Hot-reload complete." << std::endl;
-
-                LOGUI("[Anvil] Shaders successfully reloaded!");
-            }
+            triggerShaderHotReload();
         }
 
         UIRenderer::BeginUIFrame();
         ScreenLogger::DrawOverlay();
+
+        // Render Error Dialog if hot reload failed
+        if (bShaderErrorModalOpen)
+        {
+            // Call UI::DrawShaderErrorModal
+        }
 
         renderer.drawFrame(*window, renderCallback);
 
@@ -108,6 +99,15 @@ void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& ren
 }
 
 void Anvil::addShaderReloadCallback(const std::function<void()>& shaderCallback)
+{
+    // Wrap the legacy void callback so it fits the new internal queue.
+    shaderReloadQueue.emplace_back([shaderCallback](std::string* /*outErr*/) -> bool {
+        shaderCallback();
+        return true;
+    });
+}
+
+void Anvil::addShaderReloadCallback(const std::function<bool(std::string*)>& shaderCallback)
 {
     shaderReloadQueue.push_back(shaderCallback);
 }
@@ -130,4 +130,39 @@ Swapchain& Anvil::getSwapchain()
 AnvilRenderer& Anvil::getRenderer()
 {
     return renderer;
+}
+
+void Anvil::triggerShaderHotReload()
+{
+    if (shaderReloadQueue.empty()) return;
+
+    std::cout << "[Anvil] Hot-reload triggered. Pausing GPU..." << std::endl;
+    vkDeviceWaitIdle(context.device);
+
+    bool all_succeeded = true;
+    std::string accumulated_errors;
+
+    for (auto& callback : shaderReloadQueue)
+    {
+        std::string err_log;
+        if (!callback(&err_log)) // Pass the address of the string
+        {
+            all_succeeded = false;
+            accumulated_errors += err_log + "\n";
+        }
+    }
+
+    if (all_succeeded)
+    {
+        bShaderErrorModalOpen = false;
+        activeShaderErrorLog.clear();
+        std::cout << "[Anvil] Hot-reload complete." << std::endl;
+        LOGUI("[Anvil] Shaders successfully reloaded!");
+    }
+    else
+    {
+        bShaderErrorModalOpen = true;
+        activeShaderErrorLog = accumulated_errors;
+        LOGUI("[Anvil] Shader hot-reload failed!", AnvilColor::Red);
+    }
 }

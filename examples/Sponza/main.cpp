@@ -21,8 +21,8 @@ int main()
         project.initializeProject(anvil.getContext(), anvil.getSwapchain());
 
         // Register hot-reload event
-        anvil.addShaderReloadCallback([&]() {
-            project.loadPipeline();
+        anvil.addShaderReloadCallback([&](std::string* outErrorLog) {
+            return project.loadPipeline(outErrorLog);
         });
 
         anvil.runAnvil([&](VkCommandBuffer cmd, Swapchain* swapchain)
