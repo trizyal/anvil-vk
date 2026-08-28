@@ -15,7 +15,7 @@ void CesiumMan::initializeProject(VulkanContext& inContext, Swapchain& inSwapcha
     cpuModel.loadGLTF(modelPath);
 
     // Setup directional light
-    DirectionalLighting sceneLighting{};
+    GlobalSceneData sceneLighting{};
     sceneLighting.lightDirection = glm::vec4(-0.5f, -1.0f, -0.3f, 0.0f);
     sceneLighting.lightColor = glm::vec4(1.2f, 1.2f, 1.2f, 1.0f);
     sceneLighting.ambientColor = glm::vec4(0.15f, 0.15f, 0.2f, 1.0f);

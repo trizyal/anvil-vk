@@ -1,6 +1,8 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
+import DebugViews;
+
 struct VertexInput
 {
     float3 position : POSITION;
@@ -30,6 +32,8 @@ struct SceneData
     float4 lightDirection;
     float4 lightColor;
     float4 ambientColor;
+    uint debugMode;
+    float3 _padding;
 };
 
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
@@ -67,25 +71,6 @@ VertexOutput vertexMain(VertexInput input)
 [shader("fragment")]
 float4 fragmentMain(VertexOutput input) : SV_Target
 {
-#if 0
-    float4 albedo = baseColorTexture.Sample(input.uv);
-
-    // Alpha test for Sponza's foliage/flags
-    if (albedo.a < 0.5)
-    {
-        discard;
-    }
-
-    float3 normal = normalize(input.worldNormal);
-    float3 lightDir = normalize(-sceneBuffer.lightDirection.xyz);
-
-    float nDotL = max(dot(normal, lightDir), 0.0);
-
-    float3 diffuse = albedo.rgb * sceneBuffer.lightColor.rgb * nDotL;
-    float3 ambient = albedo.rgb * sceneBuffer.ambientColor.rgb;
-
-    return float4(diffuse + ambient, albedo.a);
-#else
     float4 albedo = baseColorTexture.Sample(input.uv);
     if (albedo.a < 0.5) discard; // Alpha test
 
@@ -105,6 +90,12 @@ float4 fragmentMain(VertexOutput input) : SV_Target
     float3 sampledNormal = normalTexture.Sample(input.uv).xyz * 2.0 - 1.0;
     float3 normal = normalize(mul(sampledNormal, TBN));
 
+    // --- ENGINE DEBUG OVERRIDE ---
+    if (sceneBuffer.debugMode != 0)
+    {
+        return GetDebugColor(sceneBuffer.debugMode, albedo.rgb, N, normal, metallic, roughness);
+    }
+
     // Calculate basic lighting vectors
     float3 lightDir = normalize(-sceneBuffer.lightDirection.xyz);
     float3 viewDir = normalize(pushConstants.cameraPosition.xyz - input.worldPosition);
@@ -115,5 +106,4 @@ float4 fragmentMain(VertexOutput input) : SV_Target
     float3 ambient = albedo.rgb * sceneBuffer.ambientColor.rgb;
 
     return float4(diffuse + ambient, albedo.a);
-#endif
 }

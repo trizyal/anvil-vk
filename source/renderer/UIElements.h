@@ -22,13 +22,23 @@ namespace UI
     inline ImFont* debugUI = nullptr;
     inline ImFont* debugLog = nullptr;
 
+    enum class DebugMode : uint32_t
+    {
+        None        = 0,
+        BaseColor   = 1,
+        WorldNormal = 2,
+        NormalMap   = 3,
+        Metallic    = 4,
+        Roughness   = 5
+    };
+
     void LoadFonts();
 
     /**
      * @brief Render frame stats.
      *
      * @param stats Frame stats calculated in the Renderer.
-     * @param pOpen Whether the stat ui is being renderered.
+     * @param pOpen Whether the stat ui is being rendered.
      */
     void FrameStats(const FrameStats& stats, bool* pOpen = nullptr);
 
@@ -46,6 +56,14 @@ namespace UI
      * @param onAbort Callback function executed when the user chooses to cancel the reload and keep the existing pipeline.
      */
     void DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry, const std::function<void()>& onAbort);
+
+    /**
+     * @brief Renders a global debug view toggle menu.
+     *
+     * @param currentMode Reference to the active debug mode state.
+     * @return True if the mode was changed this frame.
+     */
+    bool RenderDebugMenu(uint32_t& currentMode);
 }
 
 

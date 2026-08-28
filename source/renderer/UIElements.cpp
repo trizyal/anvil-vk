@@ -225,4 +225,30 @@ namespace UI
 
         ImGui::EndPopup();
     }
+
+    bool RenderDebugMenu(uint32_t& currentMode)
+    {
+        bool bChanged = false;
+        if (ImGui::Begin("Anvil Debug Views"))
+        {
+            const char* modes[] = {
+                "None",
+                "Base Color",
+                "World Normal",
+                "Normal Map",
+                "Metallic",
+                "Roughness"
+            };
+
+            int current_item = static_cast<int>(currentMode);
+
+            if (ImGui::Combo("View Mode", &current_item, modes, IM_ARRAYSIZE(modes)))
+            {
+                currentMode = static_cast<uint32_t>(current_item);
+                bChanged = true;
+            }
+        }
+        ImGui::End();
+        return bChanged;
+    }
 }

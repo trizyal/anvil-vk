@@ -21,13 +21,14 @@ void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
     const char* modelPath = PROJECT_DIR "/Sponza/glTF/Sponza.gltf";
     cpuModel.loadGLTF(modelPath);
 
-    DirectionalLighting sceneLighting{};
-    sceneLighting.lightDirection = glm::vec4(-0.2f, -1.0f, -0.2f, 0.0f);
-    sceneLighting.lightColor = glm::vec4(1.5f, 1.4f, 1.2f, 1.0f);
-    sceneLighting.ambientColor = glm::vec4(0.2f, 0.25f, 0.3f, 1.0f);
+    GlobalSceneData scene_data{};
+    scene_data.lightDirection = glm::vec4(-0.2f, -1.0f, -0.2f, 0.0f);
+    scene_data.lightColor = glm::vec4(1.5f, 1.4f, 1.2f, 1.0f);
+    scene_data.ambientColor = glm::vec4(0.2f, 0.25f, 0.3f, 1.0f);
+    scene_data.debugViewMode = 0;
 
     sponzaScene.createScene(*pContext);
-    sponzaScene.setGPUSceneData(sceneLighting);
+    sponzaScene.setGPUSceneData(scene_data);
     sponzaScene.updateGPUBuffer();
 
     if (!shaderCompiler.initializeShaderCompiler())
@@ -150,9 +151,15 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 
     UI::RenderWorldAxes(view);
 
+    // Render the Debug Menu and update the GPU immediately if the user clicks a new mode
+    if (UI::RenderDebugMenu(sponzaScene.data.debugViewMode))
+    {
+        sponzaScene.setGPUSceneData(sponzaScene.data);
+        sponzaScene.updateGPUBuffer();
+    }
+
     gpuModel.updateTransforms(cpuModel);
     const glm::mat4 view_projection = projection * view; // Calculate once!
-
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
