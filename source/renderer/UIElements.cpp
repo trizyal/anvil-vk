@@ -193,6 +193,21 @@ namespace UI
 
         if (ImGui::BeginPopupModal("Shader Compilation Error", nullptr, ImGuiWindowFlags_NoMove))
         {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+            ImGui::TextUnformatted("Slang Shader Compilation Failed!");
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+
+            ImGui::TextWrapped("Fix the errors in your shader source file and click 'Retry' or press Ctrl + . to attempt re-compilation.");
+            ImGui::Spacing();
+
+            const float footer_height = 40.0f;
+            ImGui::BeginChild("ErrorLogRegion", ImVec2(0.0f, -footer_height), true, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+            ImGui::TextUnformatted(errorLog.c_str());
+            ImGui::PopStyleColor();
+            ImGui::EndChild();
+
             ImGui::Separator();
 
             if (ImGui::Button("Retry Re-compilation", ImVec2(180.0f, 0.0f)))
