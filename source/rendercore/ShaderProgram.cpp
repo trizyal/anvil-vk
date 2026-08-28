@@ -93,13 +93,36 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
     }
 }
 
-void ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCompiler, const AnvilShaders::ShaderCompileRequest& inVertReq, const AnvilShaders::ShaderCompileRequest& inFragReq)
+bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCompiler, const AnvilShaders::ShaderCompileRequest& inVertReq,
+    const AnvilShaders::ShaderCompileRequest& inFragReq, std::string* outErrorMessage)
 {
     pContext = &inContext;
     name = inVertReq.moduleName;
 
     const auto vertex_result = inCompiler.compileToSPIRV(inVertReq);
     const auto fragment_result = inCompiler.compileToSPIRV(inFragReq);
+
+    if (!vertex_result.isValid() || !fragment_result.isValid())
+    {
+        const std::string err = "=== Vertex Shader Errors ===\n" + vertex_result.errorMessage +
+                              "\n=== Fragment Shader Errors ===\n" + fragment_result.errorMessage;
+
+        // Only write the error message if the caller provided a string pointer
+        if (outErrorMessage)
+        {
+            *outErrorMessage = err;
+        }
+        else
+        {
+            throw std::runtime_error(err);
+        }
+        return false;
+    }
+
+    // Clear previous state
+    rawReflectedBindings.clear();
+    rawReflectedPushConstants.clear();
+    bindingMap.clear();
 
     if (vertex_result.reflection)
     {
@@ -112,6 +135,8 @@ void ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCom
 
     vertexShader.createShaderModule(inContext, vertex_result DNAME((inVertReq.moduleName + inVertReq.entryPoint).c_str()));
     fragmentShader.createShaderModule(inContext, fragment_result DNAME((inFragReq.moduleName + inFragReq.entryPoint).c_str()));
+
+    return true;
 }
 
 void ShaderProgram::destroyProgram()

@@ -26,12 +26,15 @@ namespace
         return empty;
     }
 
-    void DiagnoseIfNeeded(slang::IBlob* slangBlob)
+    void DiagnoseIfNeeded(slang::IBlob* slangBlob, std::string& outErrorMessage)
     {
         if (slangBlob && slangBlob->getBufferSize() > 0)
         {
+            const char* diagnostic_text = static_cast<const char*>(slangBlob->getBufferPointer());
             std::cerr << "Slang Compiler Error/Warning:" << std::endl;
-            std::cerr << static_cast<const char*>(slangBlob->getBufferPointer()) << std::endl;
+            std::cerr << diagnostic_text << std::endl;
+            outErrorMessage += diagnostic_text;
+            outErrorMessage += '\n';
         }
     }
 } //Anonymous
@@ -151,14 +154,19 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         globalSession->createSession(session_desc, session.writeRef());
     }
 
-    // Load the Shader Modules
+    // Load the Slang Shader Modules
     Slang::ComPtr<slang::IBlob> diagnostics_blob;
     slang::IModule* slang_module = session->loadModule(request.moduleName.c_str(), diagnostics_blob.writeRef());
-    DiagnoseIfNeeded(diagnostics_blob);
+    DiagnoseIfNeeded(diagnostics_blob.get(), shader_result.errorMessage);
 
     if (!slang_module)
     {
-        std::cerr << "AnvilShaderCompiler: Failed to load Slang module: " << request.moduleName.c_str() << std::endl;
+        std::string err = "AnvilShaderCompiler: Failed to load Slang module: " + request.moduleName;
+        std::cerr << err << std::endl;
+        if (shader_result.errorMessage.empty())
+        {
+            shader_result.errorMessage = err;
+        }
         return shader_result;
     }
 
@@ -171,7 +179,8 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
     {
         std::string err = "AnvilShaderCompiler: Failed to find entry point " + request.entryPoint;
         std::cerr << err << std::endl;
-        throw std::runtime_error(err);
+        shader_result.errorMessage = err;
+        return shader_result;
     }
 
     // Composite and Link
@@ -183,49 +192,32 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         composite_component.writeRef(),
         diagnostics_blob.writeRef()
     );
-    DiagnoseIfNeeded(diagnostics_blob);
+    DiagnoseIfNeeded(diagnostics_blob, shader_result.errorMessage);
+    if (!composite_component)
+    {
+        return shader_result;
+    }
 
     Slang::ComPtr<slang::IComponentType> linked_program;
     composite_component->link(linked_program.writeRef(), diagnostics_blob.writeRef());
-    DiagnoseIfNeeded(diagnostics_blob);
+    DiagnoseIfNeeded(diagnostics_blob, shader_result.errorMessage);
+    if (!linked_program)
+    {
+        return shader_result;
+    }
 
     // Extract SPIR-V
     Slang::ComPtr<slang::IBlob> spirv_blob;
     linked_program->getTargetCode(0, spirv_blob.writeRef(), diagnostics_blob.writeRef());
-    DiagnoseIfNeeded(diagnostics_blob);
+    DiagnoseIfNeeded(diagnostics_blob, shader_result.errorMessage);
 
     if (spirv_blob)
     {
-        const uint32_t* spirv_code = static_cast<const uint32_t*>(spirv_blob->getBufferPointer());
+        const auto* spirv_code = static_cast<const uint32_t*>(spirv_blob->getBufferPointer());
         const size_t spirv_word_count = spirv_blob->getBufferSize() / sizeof(uint32_t);
         shader_result.spirv.assign(spirv_code, spirv_code + spirv_word_count);
     }
 
     shader_result.reflection = linked_program;
-
-    auto param_count = linked_program->getLayout()->getParameterCount();
-
-    std::cout << "Parameter count in ShaderCompiler: " << param_count << std::endl;
-
-    // TODO: This dump should ideally be in readable code
-    // Dump SPIR-V if requested
-    if (bDumpSpirv && shader_result.isValid()) {
-        std::string file_name = request.entryPoint + ".spv";
-        std::string full_path = dumpDirectory.empty() ? file_name : (dumpDirectory + "/" + file_name);
-
-        std::ofstream file(full_path, std::ios::out | std::ios::binary);
-        if (file.is_open()) {
-            file.write(
-                reinterpret_cast<const char*>(shader_result.spirv.data()),
-                static_cast<std::streamsize>(shader_result.spirv.size() * sizeof(uint32_t))
-            );
-            file.close();
-        }
-        else
-        {
-            std::cerr << "AnvilShaderCompiler: Failed to open dump file: " << full_path << "\n";
-        }
-    }
-
     return shader_result;
 }

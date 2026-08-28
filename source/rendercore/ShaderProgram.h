@@ -92,11 +92,15 @@ public:
      * @param inCompiler Configured Slang compiler.
      * @param inVertReq Vertex shader request.
      * @param inFragReq Fragment shader request.
+     * @param outErrorMessage String to append errors to.
+     *
+     * @return `true` if compilation succeeded, `false` otherwise.
      */
-    void buildProgram(VulkanContext& inContext,
+    bool buildProgram(VulkanContext& inContext,
                       ShaderCompiler& inCompiler,
                       const AnvilShaders::ShaderCompileRequest& inVertReq,
-                      const AnvilShaders::ShaderCompileRequest& inFragReq);
+                      const AnvilShaders::ShaderCompileRequest& inFragReq,
+                      std::string* outErrorMessage = nullptr);
 
     void destroyProgram();
 
