@@ -8,6 +8,7 @@
 
 #include "Input.h"
 #include "ScreenLogger.h"
+#include "UIElements.h"
 
 void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
 {
@@ -84,7 +85,18 @@ void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& ren
         // Render Error Dialog if hot reload failed
         if (bShaderErrorModalOpen)
         {
-            // Call UI::DrawShaderErrorModal
+            UI::DrawShaderErrorModal(
+                activeShaderErrorLog,
+                [this]()
+                {
+                    triggerShaderHotReload();
+                },
+                [this]()
+                {
+                    bShaderErrorModalOpen = false;
+                    activeShaderErrorLog.clear();
+                }
+            );
         }
 
         renderer.drawFrame(*window, renderCallback);

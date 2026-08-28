@@ -182,4 +182,32 @@ namespace UI
         ImGui::End();
         ImGui::PopStyleVar();
     }
+
+    void DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry, const std::function<void()>& onAbort)
+    {
+        ImGui::OpenPopup("Shader Compilation Error");
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(750.0f, 450.0f), ImGuiCond_Appearing);
+
+        if (ImGui::BeginPopupModal("Shader Compilation Error", nullptr, ImGuiWindowFlags_NoMove))
+        {
+            ImGui::Separator();
+
+            if (ImGui::Button("Retry Re-compilation", ImVec2(180.0f, 0.0f)))
+            {
+                if (onRetry) onRetry();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Abort (Keep Old Pipeline)", ImVec2(200.0f, 0.0f)))
+            {
+                if (onAbort) onAbort();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::EndPopup();
+    }
 }
