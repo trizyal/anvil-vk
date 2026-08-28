@@ -197,18 +197,21 @@ void Swapchain::createDepthAttachment()
 
 Swapchain::~Swapchain()
 {
-    for (VkImageView image_view: swapchainImageViews)
+    if (pContext)
     {
-        vkDestroyImageView(pContext->device, image_view, nullptr);
-    }
+        for (VkImageView image_view: swapchainImageViews)
+        {
+            vkDestroyImageView(pContext->device, image_view, nullptr);
+        }
 
-    if (depthImageView != VK_NULL_HANDLE)
-    {
-        vkDestroyImageView(pContext->device, depthImageView, nullptr);
-        vmaDestroyImage(pContext->allocator, depthImage, depthImageAllocation);
-        depthImageView = VK_NULL_HANDLE;
-    }
+        if (depthImageView != VK_NULL_HANDLE)
+        {
+            vkDestroyImageView(pContext->device, depthImageView, nullptr);
+            vmaDestroyImage(pContext->allocator, depthImage, depthImageAllocation);
+            depthImageView = VK_NULL_HANDLE;
+        }
 
-    vkDestroySwapchainKHR(pContext->device, anvilSwapchain, nullptr);
-    anvilSwapchain = VK_NULL_HANDLE;
+        vkDestroySwapchainKHR(pContext->device, anvilSwapchain, nullptr);
+        anvilSwapchain = VK_NULL_HANDLE;
+    }
 }

@@ -3,6 +3,7 @@
 
 #include "GPUModel.h"
 
+#include <cstring>
 #include <iostream>
 
 GPUModel::GPUModel(GPUModel&& other) noexcept
