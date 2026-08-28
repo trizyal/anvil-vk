@@ -39,11 +39,11 @@ namespace UI
     void RenderWorldAxes(const glm::mat4& viewMatrix);
 
     /**
-     * @brief
+     * @brief Renders a modal overlay displaying shader compilation errors with options to retry or abort.
      *
-     * @param errorLog
-     * @param onRetry
-     * @param onAbort
+     * @param errorLog The formatted diagnostic message or error output from the shader compiler.
+     * @param onRetry Callback function executed when the user chooses to attempt re-compiling the shaders.
+     * @param onAbort Callback function executed when the user chooses to cancel the reload and keep the existing pipeline.
      */
     void DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry, const std::function<void()>& onAbort);
 }
