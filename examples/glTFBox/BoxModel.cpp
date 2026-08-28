@@ -131,8 +131,8 @@ void BoxModel::loadPipeline()
     auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
 
     // Create shader modules
-    vertexShader.createShaderModule(*ptrAContext, vSpirv, "MaterialVertexShader");
-    fragmentShader.createShaderModule(*ptrAContext, fSpirv, "MaterialFragmentShader");
+    vertexShader.createShaderModule(*ptrAContext, vSpirv DNAME("MaterialVertexShader"));
+    fragmentShader.createShaderModule(*ptrAContext, fSpirv DNAME("MaterialFragmentShader"));
 
     auto something = GPUMesh::GetAttributeDescriptionsArray3();
 

@@ -16,8 +16,7 @@ void Scene::createScene(VulkanContext& inContext)
 
     // Create the UBO
     sceneUBO.createBuffer(
-        pContext->allocator,
-        pContext->device,
+        *pContext,
         &data,
         sizeof(DirectionalLighting),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT

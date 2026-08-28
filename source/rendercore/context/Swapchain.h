@@ -107,7 +107,7 @@ public:
      *
      * @throws std::runtime_error If swapchain, image view, or depth buffer creation fails.
      */
-    void recreateSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent);
+    void recreateSwapchain(VkExtent2D inExtent);
 
 private:
     /**

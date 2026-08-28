@@ -64,7 +64,11 @@ private:
     UIRenderer uiRenderer;
     bool initialized = false;
 
-    std::vector<std::function<void()>> shaderReloadQueue;
+    // std::vector<std::function<void()>> shaderReloadQueue;
+    std::vector<std::function<bool(std::string*)>> shaderReloadQueue;
+
+    bool bShaderErrorModalOpen = false;
+    std::string activeShaderErrorLog;
 
 public:
     /**
@@ -97,12 +101,18 @@ public:
     void shutdownAnvil();
 
     /**
-     * @brief Queues a callback function to be executed when a shader reload event occurs.
+     * @brief LEGACY: Queues a basic void callback. Assumes compilation always succeeds.
      *
      * Useful for hot-reloading shaders at runtime without restarting the application.
      * @param shaderCallback The function to execute when a reload is triggered.
      */
     void addShaderReloadCallback(const std::function<void()>& shaderCallback);
+
+    /**
+     * @brief Queues a callback function to be executed when a shader reload event occurs.
+     * @param shaderCallback Callback returning bool (true = success) and filling error output string.
+     */
+    void addShaderReloadCallback(const std::function<bool(std::string*)>& shaderCallback);
 
     /**
      * @brief Retrieves a reference to the active application window.
@@ -131,6 +141,9 @@ public:
      * @note The reference cannot be discarded.
      */
     [[nodiscard]] AnvilRenderer& getRenderer();
+
+private:
+    void triggerShaderHotReload();
 };
 
 #endif //ANVIL_VK_ANVIL_H

@@ -140,7 +140,7 @@ void ShaderReflectionCube::loadPipeline()
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(myMaterial.vertexShader.get(), myMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(myMaterial.getVertexShader(), myMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
         .setDepthAttachmentFormat(ptrASwapchain->depthFormat)

@@ -14,15 +14,15 @@ int main()
         anvil.initializeAnvil({
             .width = 1280,
             .height = 720,
-            .title = "Anvil Rigging Example"
+            .title = "Anvil Sponza"
         });
 
         Sponza project;
         project.initializeProject(anvil.getContext(), anvil.getSwapchain());
 
         // Register hot-reload event
-        anvil.addShaderReloadCallback([&]() {
-            project.loadPipeline();
+        anvil.addShaderReloadCallback([&](std::string* outErrorLog) {
+            return project.loadPipeline(outErrorLog);
         });
 
         anvil.runAnvil([&](VkCommandBuffer cmd, Swapchain* swapchain)

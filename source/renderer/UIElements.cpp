@@ -182,4 +182,47 @@ namespace UI
         ImGui::End();
         ImGui::PopStyleVar();
     }
+
+    void DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry, const std::function<void()>& onAbort)
+    {
+        ImGui::OpenPopup("Shader Compilation Error");
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(750.0f, 450.0f), ImGuiCond_Appearing);
+
+        if (ImGui::BeginPopupModal("Shader Compilation Error", nullptr, ImGuiWindowFlags_NoMove))
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+            ImGui::TextUnformatted("Slang Shader Compilation Failed!");
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+
+            ImGui::TextWrapped("Fix the errors in your shader source file and click 'Retry' or press Ctrl + . to attempt re-compilation.");
+            ImGui::Spacing();
+
+            const float footer_height = 40.0f;
+            ImGui::BeginChild("ErrorLogRegion", ImVec2(0.0f, -footer_height), true, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+            ImGui::TextUnformatted(errorLog.c_str());
+            ImGui::PopStyleColor();
+            ImGui::EndChild();
+
+            ImGui::Separator();
+
+            if (ImGui::Button("Retry Re-compilation", ImVec2(180.0f, 0.0f)))
+            {
+                if (onRetry) onRetry();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Abort (Keep Old Pipeline)", ImVec2(200.0f, 0.0f)))
+            {
+                if (onAbort) onAbort();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::EndPopup();
+    }
 }

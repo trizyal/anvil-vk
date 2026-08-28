@@ -98,7 +98,7 @@ private:
      * @param aDebugName Optional debug name for Vulkan object.
      * @param aDbgSrcLoc Automatic.
      */
-    void createDescriptorPool(VkDevice inDevice ANVIL_DEBUG_DECL());
+    void createDescriptorPool(VkDevice inDevice D_DECL());
 };
 
 #endif //ANVIL_VK_UIRENDERER_H

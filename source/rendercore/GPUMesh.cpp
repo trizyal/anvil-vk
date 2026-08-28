@@ -35,16 +35,14 @@ void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMesh_Single
 
     // TODO: Need to get debug name somehow
     vertexBuffer.createBuffer(
-        inContext.allocator,
-        inContext.device,
+        inContext,
         inMesh.vertices.data(),
         inMesh.vertices.size() * sizeof(MeshVertex),
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
     );
 
     indexBuffer.createBuffer(
-        inContext.allocator,
-        inContext.device,
+        inContext,
         inMesh.indices.data(),
         inMesh.indices.size() * sizeof(uint32_t),
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT
@@ -58,16 +56,14 @@ void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMeshPrimiti
     indexCount = static_cast<uint32_t>(inMeshPrimitive.indices.size());
 
     vertexBuffer.createBuffer(
-        inContext.allocator,
-        inContext.device,
+        inContext,
         inMeshPrimitive.vertices.data(),
         inMeshPrimitive.vertices.size() * sizeof(MeshVertex),
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
     );
 
     indexBuffer.createBuffer(
-        inContext.allocator,
-        inContext.device,
+        inContext,
         inMeshPrimitive.indices.data(),
         inMeshPrimitive.indices.size() * sizeof(uint32_t),
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT

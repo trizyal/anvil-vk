@@ -13,6 +13,7 @@
 
 #include <glm/glm.hpp>
 #include <imgui.h>
+#include <string>
 
 namespace UI
 {
@@ -23,6 +24,12 @@ namespace UI
 
     void LoadFonts();
 
+    /**
+     * @brief Render frame stats.
+     *
+     * @param stats Frame stats calculated in the Renderer.
+     * @param pOpen Whether the stat ui is being renderered.
+     */
     void FrameStats(const FrameStats& stats, bool* pOpen = nullptr);
 
     /**
@@ -30,6 +37,15 @@ namespace UI
      * @param viewMatrix Current active camera view matrix used to orient the widget's axes.
      */
     void RenderWorldAxes(const glm::mat4& viewMatrix);
+
+    /**
+     * @brief Renders a modal overlay displaying shader compilation errors with options to retry or abort.
+     *
+     * @param errorLog The formatted diagnostic message or error output from the shader compiler.
+     * @param onRetry Callback function executed when the user chooses to attempt re-compiling the shaders.
+     * @param onAbort Callback function executed when the user chooses to cancel the reload and keep the existing pipeline.
+     */
+    void DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry, const std::function<void()>& onAbort);
 }
 
 

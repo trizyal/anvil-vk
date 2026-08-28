@@ -57,7 +57,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const std::function<void(VkComma
     if (recreateSwapchain)
     {
         vkDeviceWaitIdle(pContext->device);
-        pSwapchain->recreateSwapchain(*pContext, inWindow.getFramebufferExtent());
+        pSwapchain->recreateSwapchain(inWindow.getFramebufferExtent());
         recreateSwapchain = false;
     }
 
@@ -269,10 +269,10 @@ void AnvilRenderer::setupCommandBuffers()
         std::string cmd_name  = "AnvilFrame[" + std::to_string(i) + "]_CommandBuffer";
 
         // We can rely on the default std::source_location parameter here!
-        VulkanDebug::SetAutoName(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdPool),
+        SET_DNAME_HERE(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdPool),
                                 VK_OBJECT_TYPE_COMMAND_POOL, pool_name.c_str());
 
-        VulkanDebug::SetAutoName(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdBuffer),
+        SET_DNAME_HERE(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdBuffer),
                                 VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
 #endif
     }
@@ -296,14 +296,14 @@ void AnvilRenderer::setupSyncStructures()
             throw std::runtime_error("Failed to create imageAvailableSemaphore.");
         }
         std::string debug_name = "Frame[" + std::to_string(i) + "]_ImageAvailableSemaphore";
-        VulkanDebug::SetAutoName(pContext->device, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE, debug_name.c_str());
+        SET_DNAME_HERE(pContext->device, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE, debug_name.c_str());
 
         if (vkCreateFence(pContext->device, &fence_info, nullptr, &anvil_frame.frameDoneFence) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create frameDoneFence.");
         }
         debug_name = "Frame[" + std::to_string(i) + "]_FrameDoneFence";
-        VulkanDebug::SetAutoName(pContext->device, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE, debug_name.c_str());
+        SET_DNAME_HERE(pContext->device, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE, debug_name.c_str());
     }
 
     // Create semaphores based on swapchain images count
@@ -315,7 +315,7 @@ void AnvilRenderer::setupSyncStructures()
             throw std::runtime_error("Failed to create renderFinishedSemaphore.");
         }
         std::string render_finished_name = "SwapchainImage[" + std::to_string(i) + "]_RenderFinishedSemaphore";
-        VulkanDebug::SetAutoName(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, render_finished_name.c_str());
+        SET_DNAME_HERE(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, render_finished_name.c_str());
     }
 }
 

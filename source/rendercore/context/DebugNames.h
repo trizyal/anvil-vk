@@ -92,7 +92,7 @@ namespace VulkanDebug
             const char* inName = nullptr, std::source_location location = std::source_location::current())
     {
         // Double cast prevents warnings across different OS handle architectures
-        SetAutoName(inDevice, (uint64_t)(size_t)inObjectHandle, inObjectType, inName, location);
+        SetAutoName(inDevice, (uint64_t)(size_t)(inObjectHandle), inObjectType, inName, location);
     }
 
     /**
@@ -108,49 +108,53 @@ namespace VulkanDebug
  * @brief Comma-injection helper that appends a trailing parameter in Debug builds, or strips it in Release builds.
  */
 #if ANVIL_DEBUG
-#define ANVIL_DEBUG_ARG(x), x
+#define DNAME(x), x
 #else
-#define ANVIL_DEBUG_ARG(x)
+#define DNAME(x)
 #endif
 
 /**
  * @brief Injects optional trailing debug name and source location parameters into function declarations.
- * @note Use this inside header declarations: `bool createBuffer(VkDevice dev ANVIL_DEBUG_DECL());`
+ * @note Use this inside header declarations: `bool createBuffer(VkDevice dev D_DECL());`
  */
-#define ANVIL_DEBUG_DECL() \
-ANVIL_DEBUG_ARG(const char* aDebugName = nullptr) \
-ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc = std::source_location::current())
+#define D_DECL() \
+DNAME(const char* aDebugName = nullptr) \
+DNAME(std::source_location const aDbgSrcLoc = std::source_location::current())
 
 /**
  * @brief Injects trailing debug name and source location parameters into function definitions (without default values).
- * @note Use this inside .cpp implementations: `bool createBuffer(VkDevice dev ANVIL_DEBUG_DEFN) { ... }`
+ * @note Use this inside .cpp implementations: `bool createBuffer(VkDevice dev D_DEFN) { ... }`
  */
-#define ANVIL_DEBUG_DEFN \
-ANVIL_DEBUG_ARG(const char* aDebugName) \
-ANVIL_DEBUG_ARG(std::source_location const aDbgSrcLoc)
+#define D_DEFN \
+DNAME(const char* aDebugName) \
+DNAME(std::source_location const aDbgSrcLoc)
 
 /**
  * @brief Conditionally applies a debug label to a Vulkan handle using the injected debug arguments.
  *
  * Expands to a `SetAutoName` call in Debug builds, or a no-op `do {} while (0)` in Release builds.
- * Must be used inside functions that include `ANVIL_DEBUG_DEFN` in their signature.
+ * Must be used inside functions that include `D_DEFN` in their signature.
  *
  * @param dev    Logical Vulkan device handle.
  * @param handle Created Vulkan resource handle (e.g., VkBuffer, VkImage).
  * @param type   Vulkan object type enum (e.g., VK_OBJECT_TYPE_BUFFER).
  */
 #if ANVIL_DEBUG
-#   define ANVIL_DEBUG_NAME(dev, handle, type) \
+#   define SET_DNAME(dev, handle, type) \
     VulkanDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
+
+#   define SET_DNAME_HERE(dev, handle, type, aDebugName) \
+    VulkanDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, std::source_location::current())
 #else
-#   define ANVIL_DEBUG_NAME(dev, handle, type) do {} while (0)
+#   define SET_DNAME(dev, handle, type) do {} while (0)
+#   define SET_DNAME_HERE(dev, handle, type, aDebugName) do {} while (0)
 #endif
 
 /**
  * @brief Convenience macro that converts a C++ variable identifier into a string literal for debug naming.
  *
- * @note Example: `ANVIL_NAME_OF(vertexBuffer)`.
+ * @note Example: `DNAME_VAR(vertexBuffer)`.
  */
-#define ANVIL_NAME_OF(var) #var
+#define DNAME_VAR(var) #var
 
 #endif //ANVIL_VK_DEBUGNAMES_H

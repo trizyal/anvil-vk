@@ -52,6 +52,7 @@ namespace AnvilShaders
     {
         std::vector<uint32_t> spirv;
         Slang::ComPtr<slang::IComponentType> reflection;
+        std::string errorMessage; /**< Contains Slang warnings and error logs. */
 
         /**
          * @brief Checks whether compilation produced valid SPIR-V bytecode.

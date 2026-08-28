@@ -49,6 +49,7 @@ void Sponza::cleanupProject()
 
         gpuModel.destroyGPUModel();
         sponzaMaterial.destroyMaterial();
+        sponzaProgram.destroyProgram();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -60,21 +61,34 @@ void Sponza::cleanupProject()
     }
 }
 
-void Sponza::loadPipeline()
+bool Sponza::loadPipeline(std::string* outErrorMessage)
 {
     std::cout << "Loading Pipeline." << std::endl;
     shaderCompiler.resetSession();
+
+    AnvilShaders::ShaderCompileRequest v_req{"Sponza", "vertexMain", AnvilShaders::ST_Vertex};
+    AnvilShaders::ShaderCompileRequest f_req{"Sponza", "fragmentMain", AnvilShaders::ST_Fragment};
+
+    // Try building new program into a temporary instance
+    ShaderProgram new_program;
+    if (!new_program.buildProgram(*pContext, shaderCompiler, v_req, f_req, outErrorMessage))
+    {
+        std::cerr << "[Sponza] Shader reload failed. Retaining old pipeline." << std::endl;
+        return false;
+    }
+
+    // Compilation Succeeded! Destroy old resources safely
     if (pipeline.pipeline != VK_NULL_HANDLE)
     {
         vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         sponzaMaterial.destroyMaterial();
+        sponzaProgram.destroyProgram();
     }
 
-    AnvilShaders::ShaderCompileRequest vReq{"Sponza", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"Sponza", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    sponzaMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
+    sponzaProgram = std::move(new_program);
+    sponzaMaterial.buildMaterialFromProgram(*pContext, sponzaProgram);
 
     // Setup Set 0
     globalSet = sponzaMaterial.allocateSet(0);
@@ -88,7 +102,7 @@ void Sponza::loadPipeline()
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
 
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(sponzaMaterial.vertexShader.get(), sponzaMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(sponzaMaterial.pActiveProgram->vertexShader.get(), sponzaMaterial.pActiveProgram->fragmentShader.get())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(pSwapchain->swapchainFormat)
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
@@ -97,11 +111,12 @@ void Sponza::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE) // NO CULLING FOR CURTAINS
         .disableBlending()
-        .buildPipeline(pContext->device, sponzaMaterial.materialPipelineLayout, "SponzaPipeline");
+        .buildPipeline(pContext->device, sponzaMaterial.materialPipelineLayout DNAME("SponzaPipeline"));
 
     gpuModel.createGPUModel(*pContext, cpuModel, sponzaMaterial);
 
     std::cout << "Pipeline loading completed." << std::endl;
+    return true;
 }
 
 void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
@@ -135,11 +150,16 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 
     UI::RenderWorldAxes(view);
 
+    gpuModel.updateTransforms(cpuModel);
+    const glm::mat4 view_projection = projection * view; // Calculate once!
+
+
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
     VkDeviceSize offset = 0;
-    for (const GPUModelDrawItem& draw_item : gpuModel.drawItems)
+    for (size_t i = 0; i < gpuModel.drawItems.size(); ++i)
     {
+        const GPUModelDrawItem& draw_item = gpuModel.drawItems[i];
         if (draw_item.gpuMeshIndex >= gpuModel.gpuMeshes.size())
         {
             continue;
@@ -177,9 +197,9 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         }
 
         PushConstants constants{};
-        constants.renderMatrix = projection * view * draw_item.worldMatrix;
-        constants.modelMatrix = draw_item.worldMatrix;
+        constants.viewProjection = view_projection;
         constants.camera = glm::vec4(camera.position, 1.0f);
+        constants.objectIndex = static_cast<uint32_t>(i); // Map to SSBO index
 
         vkCmdPushConstants(inCmd, sponzaMaterial.materialPipelineLayout, sponzaMaterial.pushConstantStages, 0,
             sizeof(PushConstants), &constants);

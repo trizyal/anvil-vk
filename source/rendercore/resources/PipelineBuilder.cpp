@@ -125,7 +125,7 @@ PipelineBuilder& PipelineBuilder::disableBlending()
     return *this;
 }
 
-AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout ANVIL_DEBUG_DEFN) const
+AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout D_DEFN) const
 {
     // Viewport state setup
     // Using dynamic states so we can resize the window
@@ -168,7 +168,7 @@ AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkP
         throw std::runtime_error("Failed to create graphics pipeline!");
     }
 
-    ANVIL_DEBUG_NAME(inDevice, returnAnvilPipeline.pipeline, VK_OBJECT_TYPE_PIPELINE);
+    SET_DNAME(inDevice, returnAnvilPipeline.pipeline, VK_OBJECT_TYPE_PIPELINE);
 
     return returnAnvilPipeline;
 }

@@ -78,7 +78,6 @@ namespace VulkanDebug
     void SetAutoName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType,
         const char* inName, std::source_location location)
     {
-#if ANVIL_DEBUG
         std::string final_name;
 
         // Extract file name
@@ -98,7 +97,6 @@ namespace VulkanDebug
         }
 
         SetObjectName(inDevice, inObjectHandle, inObjectType, final_name.c_str());
-#endif
     }
 
     const char* ObjectTypeToString(VkObjectType inObjectType)

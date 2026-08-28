@@ -32,6 +32,7 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
     return *this;
 }
 
+[[deprecated("Use the multi-set architecture instead.")]]
 void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial,
     const std::string& sceneBufferName, const GPUBuffer& sceneBuffer, const std::string& textureName)
 {
@@ -54,9 +55,11 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
     pContext = &inContext;
 
     createJointBuffer();
+    createMeshesAndDrawItems(inModel); // Must be called buffer creation to get drawItems.size()
+    createModelMatricesBuffer(); // Allocates the SSBO
     createTextures(inModel);
     createMaterialDescriptorSets(inModel, inMaterial);
-    createMeshesAndDrawItems(inModel);
+
 }
 
 void GPUModel::destroyGPUModel()
@@ -67,15 +70,16 @@ void GPUModel::destroyGPUModel()
     }
 
     jointBuffer.destroyBuffer();
+    modelMatricesBuffer.destroyBuffer();
 
-    for (AnvilTexture& texture : textures)
+    for (GPUTexture& texture : textures)
     {
-        texture.destroyAnvilTexture(pContext);
+        texture.destroyTexture();
     }
     textures.clear();
-    defaultWhiteTexture.destroyAnvilTexture(pContext);
-    defaultNormalTexture.destroyAnvilTexture(pContext);
-    defaultTransparentTexture.destroyAnvilTexture(pContext);
+    defaultWhiteTexture.destroyTexture();
+    defaultNormalTexture.destroyTexture();
+    defaultTransparentTexture.destroyTexture();
 
     for (GPUMesh& mesh : gpuMeshes)
     {
@@ -91,14 +95,29 @@ void GPUModel::destroyGPUModel()
 
 void GPUModel::updateTransforms(const CPUModel& inModel)
 {
-    // Fast path to sync animated matrices from CPU to GPU draw items
-    for (GPUModelDrawItem& item : drawItems)
+    if (drawItems.empty() || modelMatricesBuffer.buffer == VK_NULL_HANDLE)
     {
+        return;
+    }
+
+    std::vector<glm::mat4> model_matrices(drawItems.size());
+
+    // // Update draw item matrices from CPU model
+    for (size_t i = 0; i < drawItems.size(); ++i)
+    {
+        GPUModelDrawItem& item = drawItems[i];
         if (item.cpuNodeIndex >= 0 && item.cpuNodeIndex < static_cast<int>(inModel.nodes.size()))
         {
             item.worldMatrix = inModel.nodes[item.cpuNodeIndex].worldMatrix;
         }
+        model_matrices[i] = item.worldMatrix;
     }
+
+    // Map and upload to GPU SSBO
+    void* mapped_data = nullptr;
+    vmaMapMemory(pContext->allocator, modelMatricesBuffer.allocation, &mapped_data);
+    std::memcpy(mapped_data, model_matrices.data(), model_matrices.size() * sizeof(glm::mat4));
+    vmaUnmapMemory(pContext->allocator, modelMatricesBuffer.allocation);
 }
 
 void GPUModel::updateJoints(const CPUModel& inModel) const
@@ -138,25 +157,36 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
 
 void GPUModel::createTextures(const CPUModel& inModel)
 {
-    defaultWhiteTexture = TextureLoader::CreateSolidColorTexture(WhiteColor, *pContext);
-    defaultNormalTexture = TextureLoader::CreateSolidColorTexture(NormalColor, *pContext);
-    defaultTransparentTexture = TextureLoader::CreateSolidColorTexture(TransparentColor, *pContext);
+    defaultWhiteTexture.createSolidColorTexture(*pContext, WhiteColor);
+    defaultNormalTexture.createSolidColorTexture(*pContext, NormalColor);
+    defaultTransparentTexture.createSolidColorTexture(*pContext, TransparentColor);
 
     textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
     {
         try
         {
-            textures.push_back(TextureLoader::LoadTexture(cpu_texture.imagePath, *pContext, cpu_texture.isSRGB));
+            GPUTexture tex;
+            tex.createTexture(*pContext, cpu_texture.imagePath, cpu_texture.isSRGB);
+            textures.push_back(std::move(tex));
         }
         catch (...)
         {
+            std::cout << "Texture load failed for " << cpu_texture.name << ". Falling back to default." << std::endl;
             std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
-            textures.push_back(defaultWhiteTexture);
+
+            // Push an empty shell texture to maintain index alignment
+            textures.emplace_back();
+#if 0 // Creates copies of default texture which we don't want
+            GPUTexture fallback;
+            fallback.createSolidColorTexture(*pContext, WhiteColor);
+            textures.push_back(std::move(fallback));
+#endif
         }
     }
 }
 
+[[deprecated("Use the multi-set architecture instead.")]]
 void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial,
     const std::string& sceneBufferName, const GPUBuffer& sceneBuffer, const std::string& textureName)
 {
@@ -215,6 +245,10 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         {
             modelSet.bindStorageBuffer("jointMatrices", jointBuffer);
         }
+        if (inMaterial.hasBinding("modelMatrices"))
+        {
+            modelSet.bindStorageBuffer("modelMatrices", modelMatricesBuffer);
+        }
         modelSet.updateDescriptorSets();
     }
 
@@ -232,12 +266,14 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Base Color
         if (inMaterial.hasBinding("baseColorTexture"))
         {
-            if (cpu_material.baseColorTextureIndex >= 0)
+            if (cpu_material.baseColorTextureIndex >= 0 &&
+                textures[cpu_material.baseColorTextureIndex].imageView != VK_NULL_HANDLE)
             {
                 gpu_material.instance.bindTexture("baseColorTexture", textures[cpu_material.baseColorTextureIndex]);
             }
             else
             {
+                // Safely reuse the single, shared default texture
                 gpu_material.instance.bindTexture("baseColorTexture", defaultWhiteTexture);
             }
         }
@@ -245,7 +281,8 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Metallic Roughness Color
         if (inMaterial.hasBinding("metallicRoughnessTexture"))
         {
-            if (cpu_material.metallicRoughnessTextureIndex >= 0)
+            if (cpu_material.metallicRoughnessTextureIndex >= 0 &&
+                textures[cpu_material.metallicRoughnessTextureIndex].imageView != VK_NULL_HANDLE)
             {
                 gpu_material.instance.bindTexture("metallicRoughnessTexture", textures[cpu_material.metallicRoughnessTextureIndex]);
             }
@@ -258,7 +295,8 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
         // Normal Map
         if (inMaterial.hasBinding("normalTexture"))
         {
-            if (cpu_material.normalTextureIndex >= 0)
+            if (cpu_material.normalTextureIndex >= 0 &&
+                textures[cpu_material.normalTextureIndex].imageView != VK_NULL_HANDLE)
             {
                 gpu_material.instance.bindTexture("normalTexture", textures[cpu_material.normalTextureIndex]);
             }
@@ -360,11 +398,34 @@ void GPUModel::createJointBuffer()
     if (jointBuffer.buffer == VK_NULL_HANDLE)
     {
         jointBuffer.createBuffer(
-            pContext->allocator,
-            pContext->device,
+            *pContext,
             initial_matrices.data(),
             sizeof(glm::mat4) * MAX_BONES,
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            DNAME("JointsBuffer")
         );
     }
+}
+
+void GPUModel::createModelMatricesBuffer()
+{
+    if (drawItems.empty())
+    {
+        return;
+    }
+
+    const size_t buffer_size = drawItems.size() * sizeof(glm::mat4);
+
+    // We must provide initial data because GPUBuffer::createBuffer always calls std::memcpy.
+    // Initializing with Identity Matrices means vertices won't stretch to infinity on frame 0.
+    std::vector<glm::mat4> initial_matrices(drawItems.size(), glm::mat4(1.0f));
+
+    // Allocate host-visible memory for easy per-frame updating
+    modelMatricesBuffer.createBuffer(
+        *pContext,
+        initial_matrices.data(),
+        buffer_size,
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+        DNAME("ModelMatricesBuffer")
+    );
 }

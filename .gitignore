@@ -40,6 +40,10 @@
 intermediate
 binaries/shaderc
 docs
+tests
 
 # Slang
 external/slang
+
+# RenderDoc
+*.rdc

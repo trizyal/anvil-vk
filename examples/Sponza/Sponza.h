@@ -16,9 +16,9 @@
 
 struct PushConstants
 {
-    glm::mat4 renderMatrix;
-    glm::mat4 modelMatrix;
+    glm::mat4 viewProjection;
     glm::vec4 camera;
+    uint32_t objectIndex;
 };
 
 class Sponza
@@ -32,6 +32,7 @@ private:
     CPUModel cpuModel;
     GPUModel gpuModel;
 
+    ShaderProgram sponzaProgram;
     AnvilMaterial sponzaMaterial;
     MaterialInstance globalSet; // Manages Set 0
     Scene sponzaScene;
@@ -42,7 +43,7 @@ private:
 public:
     void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain);
     void cleanupProject();
-    void loadPipeline();
+    bool loadPipeline(std::string* outErrorMessage = nullptr);
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);
 };
 

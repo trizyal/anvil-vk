@@ -14,7 +14,7 @@
 #include <volk.h>
 
 #include "GPUBuffer.h"
-#include "TextureLoader.h"
+#include "GPUTexture.h"
 
 class AnvilMaterial;
 class VulkanContext;
@@ -25,7 +25,7 @@ class VulkanContext;
 struct PendingTextureBind
 {
     std::string name;
-    const AnvilTexture* texture;
+    const GPUTexture* texture;
 };
 
 /**
@@ -86,7 +86,7 @@ public:
      *
      * @note Changes do not take effect on the GPU until updateDescriptorSets() is called.
      */
-    void bindTexture(const std::string& name, const AnvilTexture& inTexture);
+    void bindTexture(const std::string& name, const GPUTexture& inTexture);
 
     /**
      * @brief Queues a uniform buffer to be bound to a shader uniform variable by name.

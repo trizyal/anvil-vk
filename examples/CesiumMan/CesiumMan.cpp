@@ -79,7 +79,7 @@ void CesiumMan::loadPipeline()
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
 
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(cesiumMaterial.vertexShader.get(), cesiumMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(cesiumMaterial.getVertexShader(), cesiumMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(pSwapchain->swapchainFormat)
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
@@ -88,7 +88,7 @@ void CesiumMan::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->device, cesiumMaterial.materialPipelineLayout, "CesiumManPipeline");
+        .buildPipeline(pContext->device, cesiumMaterial.materialPipelineLayout DNAME("CesiumManPipeline"));
 
     gpuModel.createGPUModel(*pContext, cpuModel, cesiumMaterial);
 }

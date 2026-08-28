@@ -26,7 +26,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& other) noexcept
 }
 
 void ShaderModule::createShaderModule(const VulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV
-        ANVIL_DEBUG_DEFN)
+        D_DEFN)
 {
     device = inContext.device;
     if (!inSPIRV.isValid())
@@ -42,7 +42,7 @@ void ShaderModule::createShaderModule(const VulkanContext& inContext, const Anvi
 
     CHECK(vkCreateShaderModule(device, &create_info, nullptr, &shaderModule));
 
-    ANVIL_DEBUG_NAME(device, shaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
+    SET_DNAME(device, shaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
 }
 
 void ShaderModule::destroyShaderModule() const

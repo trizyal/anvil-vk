@@ -19,7 +19,7 @@
 #include "GPUMesh.h"
 #include "MaterialInstance.h"
 #include "CPUModel.h"
-#include "TextureLoader.h"
+#include "GPUTexture.h"
 
 class VulkanContext;
 
@@ -85,18 +85,21 @@ private:
     VulkanContext* pContext = nullptr;
 
 public:
-    AnvilTexture defaultWhiteTexture;
-    AnvilTexture defaultNormalTexture;
-    AnvilTexture defaultTransparentTexture;
+    GPUTexture defaultWhiteTexture;
+    GPUTexture defaultNormalTexture;
+    GPUTexture defaultTransparentTexture;
 
     MaterialInstance modelSet; // Set 1
 
-    std::vector<AnvilTexture> textures;
+    std::vector<GPUTexture> textures;
     std::vector<GPUMesh> gpuMeshes;
     std::vector<GPUModelMaterial> gpuMaterials;
     std::vector<GPUModelDrawItem> drawItems;
 
     GPUBuffer jointBuffer;
+
+    /** SSBO for model matrices. */
+    GPUBuffer modelMatricesBuffer;
 
     /**
      * @brief Legacy function to upload a CPUModel to GPU-side resources and generates a draw list.
@@ -153,6 +156,7 @@ private:
     void createMeshesAndDrawItems(const CPUModel& inCPUModel);
 
     void createJointBuffer();
+    void createModelMatricesBuffer();
 };
 
 #endif //ANVIL_VK_GPUMODEL_H

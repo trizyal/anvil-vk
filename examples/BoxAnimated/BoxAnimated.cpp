@@ -90,7 +90,7 @@ void BoxAnimated::loadPipeline()
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(boxMaterial.vertexShader.get(), boxMaterial.fragmentShader.get())
+    pipeline = pipelineBuilder.setShaders(boxMaterial.getVertexShader(), boxMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
         .setColorAttachmentFormat(pSwapchain->swapchainFormat)
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
@@ -99,7 +99,7 @@ void BoxAnimated::loadPipeline()
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->device, boxMaterial.materialPipelineLayout, "BoxAnimatedPipeline");
+        .buildPipeline(pContext->device, boxMaterial.materialPipelineLayout DNAME("BoxAnimatedPipeline"));
 
     gpuModel.createGPUModel( *pContext, cpuModel, boxMaterial, "sceneBuffer", boxScene.sceneUBO, "texture");
 }
