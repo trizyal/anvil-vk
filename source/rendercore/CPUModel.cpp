@@ -459,6 +459,10 @@ namespace
                     MeshVertex vertex{};
                     cgltf_accessor_read_float(position_accessor, vertex_index, &vertex.position.x, 3);
 
+                    // Expand AABB
+                    cpu_mesh_primitive.localBounds.min = glm::min(cpu_mesh_primitive.localBounds.min, vertex.position);
+                    cpu_mesh_primitive.localBounds.max = glm::max(cpu_mesh_primitive.localBounds.max, vertex.position);
+
                     if (normal_accessor)
                     {
                         cgltf_accessor_read_float(normal_accessor, vertex_index, &vertex.normal.x, 3);

@@ -190,6 +190,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
         VK_ENABLE_BETA_EXTENSIONS
         UNIMPLEMENTED=0
         IMPLEMENTED=1
+        DEPRECATED=0
 )
 
 if (WIN32)

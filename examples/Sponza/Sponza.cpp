@@ -161,6 +161,9 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
     gpuModel.updateTransforms(cpuModel);
     const glm::mat4 view_projection = projection * view; // Calculate once!
 
+    Frustum cameraFrustum{};
+    cameraFrustum.extractPlanes(view_projection);
+
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
     VkDeviceSize offset = 0;
@@ -170,6 +173,25 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         if (draw_item.gpuMeshIndex >= gpuModel.gpuMeshes.size())
         {
             continue;
+        }
+
+        // Fast AABB World Transform & Frustum Check
+        glm::vec3 center = draw_item.localBounds.getCenter();
+        glm::vec3 extents = draw_item.localBounds.getExtents();
+        glm::vec3 worldCenter = glm::vec3(draw_item.worldMatrix * glm::vec4(center, 1.0f));
+        glm::mat3 absModel = glm::mat3(
+            glm::abs(draw_item.worldMatrix[0]),
+            glm::abs(draw_item.worldMatrix[1]),
+            glm::abs(draw_item.worldMatrix[2])
+        );
+        glm::vec3 worldExtents = absModel * extents;
+
+        AABB worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
+
+        static bool culling = true; // TODO: this culling should be toggleable
+        if (!cameraFrustum.contains(worldAABB) && culling)
+        {
+            continue; // culled
         }
 
         const GPUMesh& gpu_mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];

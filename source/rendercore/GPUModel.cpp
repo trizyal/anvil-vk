@@ -362,6 +362,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
                 draw_item.gpuMaterialIndex = primitive.materialIndex;
                 draw_item.worldMatrix = node.worldMatrix;
                 draw_item.cpuNodeIndex = node_index;
+                draw_item.localBounds = primitive.localBounds;
 
                 drawItems.push_back(draw_item);
             }
