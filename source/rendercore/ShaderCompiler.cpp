@@ -46,6 +46,7 @@ bool ShaderCompiler::initializeShaderCompiler()
         std::cerr << "Failed to create Slang Global Session." << std::endl;
         return false;
     }
+    searchPaths.emplace_back(ANVIL_SHADER_DIR);
     return true;
 }
 

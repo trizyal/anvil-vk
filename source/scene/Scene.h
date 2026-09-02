@@ -20,11 +20,14 @@ class VulkanContext;
  *
  * @note Strictly 16-byte aligned for Vulkan UBO rules
  */
-struct DirectionalLighting
+struct GlobalSceneData
 {
     glm::vec4 lightDirection;   /**< w = unused/padding */
     glm::vec4 lightColor;       /**< w = intensity */
     glm::vec4 ambientColor;     /**< w = unused/padding */
+
+    uint32_t debugViewMode;     /**< Maps to the engine's DebugMode enum */
+    glm::vec3 _padding;         /**< Strictly maintain 16-byte Vulkan UBO alignment */
 };
 
 /**
@@ -48,7 +51,7 @@ private:
     bool isDirty = true;
 
 public:
-    DirectionalLighting data{};
+    GlobalSceneData data{};
     GPUBuffer sceneUBO;
 
     /**
@@ -62,7 +65,7 @@ public:
      * @param inData Object containing scene data.
      * @note Need to call updateGPUBuffer for changes to take effect.
      */
-    void setGPUSceneData(const DirectionalLighting& inData);
+    void setGPUSceneData(const GlobalSceneData& inData);
 
     /**
      * @brief Updates the GPUBuffer with new SceneData.
