@@ -81,6 +81,17 @@ public:
     void createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4]);
 
     /**
+     * @brief Creates a blank texture for use as a render target/attachment.
+     * @param inContext Core Vulkan context.
+     * @param width Width in pixels.
+     * @param height Height in pixels.
+     * @param format Pixel format.
+     * @param usage Usage flags (e.g., VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT).
+     */
+    void createAttachment(const VulkanContext& inContext, uint32_t width, uint32_t height, VkFormat format,
+        VkImageUsageFlags usage D_DECL());
+
+    /**
      * @brief Releases all GPU resources associated with this texture.
      *
      * Safely checks for non-null handles before destroying the sampler, image view,

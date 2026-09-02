@@ -261,6 +261,64 @@ void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const u
     createSampler(1);
 }
 
+void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage D_DEFN)
+{
+    destroyTexture();
+    pContext = &inContext;
+
+    VkImageCreateInfo image_info{};
+    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image_info.imageType = VK_IMAGE_TYPE_2D;
+    image_info.extent.width = width;
+    image_info.extent.height = height;
+    image_info.extent.depth = 1;
+    image_info.mipLevels = 1;
+    image_info.arrayLayers = 1;
+    image_info.format = format;
+    image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.usage = usage;
+    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+
+    VmaAllocationCreateInfo alloc_info{};
+    alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    alloc_info.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    CHECK(vmaCreateImage(pContext->allocator, &image_info, &alloc_info, &image, &allocation, nullptr));
+    SET_DNAME(pContext->device, image, VK_OBJECT_TYPE_IMAGE);
+
+    VkImageViewCreateInfo image_view_info{};
+    image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    image_view_info.image = image;
+    image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    image_view_info.format = format;
+    image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    image_view_info.subresourceRange.baseMipLevel = 0;
+    image_view_info.subresourceRange.levelCount = 1;
+    image_view_info.subresourceRange.baseArrayLayer = 0;
+    image_view_info.subresourceRange.layerCount = 1;
+
+    CHECK(vkCreateImageView(pContext->device, &image_view_info, nullptr, &imageView));
+    SET_DNAME(pContext->device, imageView, VK_OBJECT_TYPE_IMAGE_VIEW);
+
+    // Create Sampler (Linear filtering, Clamp to Edge to prevent wrap artifacts)
+    VkSamplerCreateInfo sampler_info{};
+    sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    sampler_info.magFilter = VK_FILTER_LINEAR;
+    sampler_info.minFilter = VK_FILTER_LINEAR;
+    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    sampler_info.anisotropyEnable = VK_FALSE;
+    sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    sampler_info.minLod = 0.0f;
+    sampler_info.maxLod = 1.0f;
+
+    CHECK(vkCreateSampler(pContext->device, &sampler_info, nullptr, &sampler));
+    SET_DNAME(pContext->device, sampler, VK_OBJECT_TYPE_SAMPLER);
+}
+
 void GPUTexture::createImage(const uint32_t width, const uint32_t height, const uint32_t mipLevels,
                              const VkFormat format D_DEFN)
 {
