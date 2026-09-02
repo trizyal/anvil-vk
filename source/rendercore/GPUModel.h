@@ -59,6 +59,9 @@ struct GPUModelDrawItem
     int gpuMaterialIndex = -1; /**< Index into GPUModel::gpuMaterials. */
     glm::mat4 worldMatrix = glm::mat4(1.0f);
     int cpuNodeIndex = -1; /**< Map back to CPU node for animation matrix updates. */
+
+    /** Local-space bounding box used for fast CPU-side frustum culling tests. */
+    AABB localBounds;
 };
 
 /**

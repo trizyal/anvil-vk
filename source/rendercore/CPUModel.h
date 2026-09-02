@@ -15,6 +15,94 @@
 #include <glm/gtc/quaternion.hpp>
 
 /**
+ * @brief Axis-Aligned Bounding Box used for spatial partitioning and frustum culling.
+ * @note A struct with functions. May need refactoring later.
+ */
+struct AABB
+{
+    /** Minimum bounds of the box. Initialized to float max to allow expansion. */
+    glm::vec3 min = glm::vec3(FLT_MAX);
+
+    /** Maximum bounds of the box. Initialized to float min to allow expansion. */
+    glm::vec3 max = glm::vec3(-FLT_MAX);
+
+    /**
+     * @brief Calculates the exact center point of the bounding box.
+     * @return The 3D center coordinate.
+     */
+    [[nodiscard]] glm::vec3 getCenter() const
+    {
+        return (min + max) * 0.5f;
+    }
+
+    /**
+     * @brief Calculates the half-extents (distance from center to edge) along all three axes.
+     * @return The 3D extents vector.
+     */
+    [[nodiscard]] glm::vec3 getExtents() const
+    {
+        return (max - min) * 0.5f;
+    }
+};
+
+/**
+ * @brief Represents a 3D camera viewing frustum defined by six bounding planes.
+ * @note A struct with functions. May need refactoring later.
+ */
+struct Frustum
+{
+    /** The 6 planes of the frustum: Left, Right, Top, Bottom, Near, Far. */
+    glm::vec4 planes[6];
+
+    /**
+     * @brief Extracts normalized frustum planes from a view-projection matrix using the Gribb/Hart method.
+     * @param vp The combined View-Projection matrix of the active camera.
+     * @note Specifically accounts for Vulkan's inverted Y-axis coordinate system.
+     */
+    void extractPlanes(const glm::mat4& vp)
+    {
+        for (int i = 0; i < 4; ++i) planes[0][i] = vp[i][3] + vp[i][0]; // Left
+        for (int i = 0; i < 4; ++i) planes[1][i] = vp[i][3] - vp[i][0]; // Right
+        for (int i = 0; i < 4; ++i) planes[2][i] = vp[i][3] - vp[i][1]; // Top (Vulkan inverted Y)
+        for (int i = 0; i < 4; ++i) planes[3][i] = vp[i][3] + vp[i][1]; // Bottom
+        for (int i = 0; i < 4; ++i) planes[4][i] = /*vp[i][3] +*/ vp[i][2]; // Near
+        for (int i = 0; i < 4; ++i) planes[5][i] = vp[i][3] - vp[i][2]; // Far
+
+        for (glm::vec4& plane : planes)
+        {
+            const float length = glm::length(glm::vec3(plane));
+            plane /= length;
+        }
+    }
+
+    /**
+     * @brief Tests if an Axis-Aligned Bounding Box intersects or sits fully inside the frustum.
+     *
+     * @param aabb The bounding box to test against the frustum planes.
+     * @return True if the AABB is visible, false if it is completely outside (culled).
+     */
+    bool contains(const AABB& aabb)
+    {
+        const glm::vec3 center = aabb.getCenter();
+        const glm::vec3 extents = aabb.getExtents();
+
+        for (const glm::vec4& plane : planes)
+        {
+            const float effective_radius = extents.x * std::abs(plane.x)
+                + extents.y * std::abs(plane.y)
+                + extents.z * std::abs(plane.z);
+
+            const float signed_distance = glm::dot(glm::vec3(plane), center) + plane.w;
+            if (signed_distance < -effective_radius)
+            {
+                return false; // outside the frustum
+            }
+        }
+        return true;
+    }
+};
+
+/**
  * @brief CPU-side representation of a single mesh vertex.
  *
  * Interleaved format designed to be directly copied into Vulkan GPU vertex buffers.
@@ -23,7 +111,7 @@ struct MeshVertex
 {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec2 uv= glm::vec2(0.0f);
+    glm::vec2 uv = glm::vec2(0.0f);
     glm::vec4 tangent = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 
     // Max 4 bones per vertex
@@ -35,11 +123,11 @@ struct MeshVertex
  * @brief Legacy CPU-side container for indexed 3D geometry and associated material data.
  */
 struct [[deprecated("Use CPUMesh and CPUMeshPrimitive")]]
-CPUMesh_Single
+    CPUMesh_Single
 {
     std::vector<MeshVertex> vertices; /**< Contiguous list of unique vertex attributes. */
-    std::vector<uint32_t> indices;    /**< Index list defining triangle faces (3 indices per triangle). */
-    std::string texturePath;          /**< Absolute or relative file path to the associated diffuse/albedo texture. */
+    std::vector<uint32_t> indices; /**< Index list defining triangle faces (3 indices per triangle). */
+    std::string texturePath; /**< Absolute or relative file path to the associated diffuse/albedo texture. */
 };
 
 /**
@@ -81,6 +169,9 @@ struct CPUMeshPrimitive
     std::vector<MeshVertex> vertices;
     std::vector<uint32_t> indices;
     int materialIndex = -1;
+
+    /** Local-space bounding box calculated from this primitive's vertex positions. */
+    AABB localBounds;
 };
 
 /**

@@ -54,13 +54,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     // Setup Style
-    ImGui::StyleColorsDark();
-    ImGuiStyle& style = ImGui::GetStyle();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        style.WindowRounding = 0.0f;
-        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    }
+    UI::ApplyAnvilTheme();
 
     // 3. Initialize GLFW and Vulkan Backends
     ImGui_ImplGlfw_InitForVulkan(inWindow, true);

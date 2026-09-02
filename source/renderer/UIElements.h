@@ -32,7 +32,15 @@ namespace UI
         Roughness   = 5
     };
 
+    /**
+     * @brief Loads default fonts for Anvil.
+     */
     void LoadFonts();
+
+    /**
+     * @brief Applies the engine-wide custom Anvil Dark UI theme and metrics.
+     */
+    void ApplyAnvilTheme();
 
     /**
      * @brief Render frame stats.

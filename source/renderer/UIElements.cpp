@@ -45,6 +45,16 @@ namespace UI
         }
     }
 
+    void ApplyAnvilTheme()
+    {
+        ImGui::StyleColorsDark();
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        style.WindowRounding = 6.0f;
+        colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
+
     void FrameStats(const ::FrameStats& stats, bool* pOpen)
     {
         const float PAD = 10.0f;
