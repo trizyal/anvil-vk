@@ -51,7 +51,7 @@ AnvilRenderer::~AnvilRenderer()
     }
 }
 
-void AnvilRenderer::drawFrame(Window& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback)
+void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 {
     // Recreate swapchain maybe
     if (recreateSwapchain)
@@ -122,7 +122,14 @@ void AnvilRenderer::drawFrame(Window& inWindow, const std::function<void(VkComma
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin_info);
+
     gpuProfiler.beginGPUProfilerFrame(cmd, anvilFrameIndex);
+
+    if (renderHooks.onPreSwapchain)
+    {
+        // G-Buffer Geometry Pass
+        renderHooks.onPreSwapchain(cmd, pSwapchain);
+    }
 
     // Transition image here
     transitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
@@ -160,9 +167,9 @@ void AnvilRenderer::drawFrame(Window& inWindow, const std::function<void(VkComma
 
     // --- EXECUTE PROJECT POLICY ---
     // Anvil has no idea what is being drawn here, it just executes the user's code.
-    if (drawCallback)
+    if (renderHooks.onSwapchain)
     {
-        drawCallback(cmd, pSwapchain);
+        renderHooks.onSwapchain(cmd, pSwapchain);
     }
 
     engineStats.fps = 1000.f/engineStats.frameTime;

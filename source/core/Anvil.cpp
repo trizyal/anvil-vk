@@ -50,6 +50,15 @@ void Anvil::shutdownAnvil()
 
 void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback)
 {
+    RenderHooks legacyHooks;
+    legacyHooks.onSwapchain = renderCallback;
+
+    // Forward to the master loop
+    runAnvil(legacyHooks);
+}
+
+void Anvil::runAnvil(const RenderHooks& renderHooks)
+{
     if (!initialized)
     {
         throw std::runtime_error("AnvilApplication::runAnvil() called before initialization");
@@ -99,7 +108,7 @@ void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& ren
             );
         }
 
-        renderer.drawFrame(*window, renderCallback);
+        renderer.drawFrame(*window, renderHooks);
 
         UIRenderer::EndUIFrame();
 

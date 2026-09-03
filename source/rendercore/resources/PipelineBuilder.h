@@ -41,13 +41,17 @@ public:
     PipelineBuilder();
 
 private:
-    VkFormat colorAttachmentFormat = VK_FORMAT_UNDEFINED;
+    // VkFormat colorAttachmentFormat = VK_FORMAT_UNDEFINED;
     VkFormat depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+
+    std::vector<VkFormat> colorAttachmentFormats;
+
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     VkPipelineRasterizationStateCreateInfo rasterizer{};
-    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    // VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     VkPipelineMultisampleStateCreateInfo multisampling{};
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     VkPipelineRenderingCreateInfo dynamicRendering{};
@@ -85,8 +89,17 @@ public:
      * @brief Sets the format of the color attachment used by dynamic rendering.
      * @param inColorFormat Vulkan format of the color attachment.
      * @return Reference to this builder for method chaining.
+     *
+     * @note Only use-case is forward shading.
      */
     PipelineBuilder& setColorAttachmentFormat(VkFormat inColorFormat);
+
+    /**
+     * @brief Sets the format of the color attachments used by dynamic rendering.
+     * @param inColorFormats Vector of Vulkan format of the color attachments.
+     * @return Reference to this builder for method chaining.
+     */
+    PipelineBuilder& setColorAttachmentFormats(const std::vector<VkFormat>& inColorFormats);
 
     /**
      * @brief Sets the format of the depth attachment used by dynamic rendering.

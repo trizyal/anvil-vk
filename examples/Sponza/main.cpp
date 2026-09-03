@@ -25,10 +25,13 @@ int main()
             return project.loadPipeline(outErrorLog);
         });
 
-        anvil.runAnvil([&](VkCommandBuffer cmd, Swapchain* swapchain)
+        RenderHooks hooks;
+        hooks.onSwapchain = [&](VkCommandBuffer cmd, Swapchain* swapchain)
         {
             project.recordCommands(cmd, *swapchain);
-        });
+        };
+
+        anvil.runAnvil(hooks);
 
         project.cleanupProject();
         anvil.shutdownAnvil();

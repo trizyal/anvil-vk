@@ -16,6 +16,25 @@
 #include "Swapchain.h"
 
 class Window;
+
+/**
+ * @brief Injection points for project-specific rendering logic during the frame lifecycle.
+ */
+struct RenderHooks
+{
+    /**
+     * Executed BEFORE the swapchain rendering block begins.
+     * Perfect for off-screen passes: Shadow mapping, G-Buffer generation, Compute shaders.
+     */
+    std::function<void(VkCommandBuffer, Swapchain*)> onPreSwapchain = nullptr;
+
+    /**
+     * Executed INSIDE the swapchain rendering block.
+     * Used for drawing final geometry (Forward) or compositing lighting (Deferred), right before the UI renders.
+     */
+    std::function<void(VkCommandBuffer, Swapchain*)> onSwapchain = nullptr;
+};
+
 /**
  * @brief Per-frame GPU resources required for flight synchronized rendering.
  */
@@ -113,7 +132,7 @@ public:
      *
      * @note drawCallback is triggered after BeginRendering is called and before the UI renders.
      */
-    void drawFrame(Window& inWindow, const std::function<void(VkCommandBuffer, Swapchain*)>& drawCallback);
+    void drawFrame(Window& inWindow, const RenderHooks& renderHooks);
 
 private:
     AnvilFrame& getCurrentFrame();
