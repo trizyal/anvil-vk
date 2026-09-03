@@ -371,6 +371,20 @@ void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage
         dst_stage_mask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         image_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     }
+    else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+    {
+        image_barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        image_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        src_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dst_stage_mask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    }
+    else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+    {
+        image_barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        image_barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        src_stage_flags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dst_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    }
     else
     {
         throw std::invalid_argument("Unsupported layout transition!");
