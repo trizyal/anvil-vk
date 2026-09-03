@@ -134,12 +134,13 @@ public:
      */
     void drawFrame(Window& inWindow, const RenderHooks& renderHooks);
 
+    static void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
+                                      VkImageLayout oldLayout, VkImageLayout newLayout);
+
 private:
     AnvilFrame& getCurrentFrame();
     void setupCommandBuffers();
     void setupSyncStructures();
-    static void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
-                                      VkImageLayout oldLayout, VkImageLayout newLayout);
 };
 
 #endif //ANVIL_VK_RENDERER_H
