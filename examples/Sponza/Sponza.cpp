@@ -18,7 +18,7 @@ void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
     camera.position = glm::vec3(0.0f, 2.0f, 0.0f);
     camera.cameraSpeed = 15.0f;
 
-    const char* modelPath = PROJECT_DIR "/Sponza/glTF/Sponza.gltf";
+    const char* modelPath = ASSETS_DIR "/models/Sponza/glTF/Sponza.gltf";
     cpuModel.loadGLTF(modelPath);
 
     GlobalSceneData scene_data{};
