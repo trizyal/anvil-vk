@@ -25,8 +25,8 @@ void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSw
 
     GlobalSceneData scene_data{};
     scene_data.lightDirection = glm::vec4(-0.2f, -1.0f, -0.2f, 0.0f);
-    scene_data.lightColor = glm::vec4(1.5f, 1.4f, 1.2f, 1.0f);
-    scene_data.ambientColor = glm::vec4(0.2f, 0.25f, 0.3f, 1.0f);
+    scene_data.lightColor = glm::vec4(0.5f, 0.4f, 0.2f, 1.0f);
+    scene_data.ambientColor = glm::vec4(0.1f, 0.1f, 0.07f, 1.0f);
     scene_data.debugViewMode = 0;
 
     sponzaScene.createScene(*pContext);
