@@ -62,6 +62,11 @@ public:
      * @brief Releases GPU memory and destroys handles for all underlying attachment textures.
      */
     void destroy();
+
+    std::vector<VkRenderingAttachmentInfo> getRenderingAttachments();
+
+    VkRenderingAttachmentInfo getAttachmentInfo(const GPUTexture& texture);
+    VkRenderingAttachmentInfo getDepthAttachmentInfo();
 };
 
 

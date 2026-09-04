@@ -14,6 +14,7 @@
 #include <volk.h>
 
 #include "DebugNames.h"
+#include "VulkanContext.h"
 
 /**
  * @brief Simple container wrapping a compiled Vulkan graphics pipeline handle.
@@ -23,6 +24,15 @@ struct AnvilPipeline
 {
     /** Underlying Vulkan pipeline object handle. */
     VkPipeline pipeline = VK_NULL_HANDLE;
+
+    void destroy(const VulkanContext* inContext)
+    {
+        if (pipeline != VK_NULL_HANDLE)
+        {
+            vkDestroyPipeline(inContext->device, pipeline, nullptr);
+            pipeline = VK_NULL_HANDLE;
+        }
+    }
 };
 
 /**

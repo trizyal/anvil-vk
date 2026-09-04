@@ -26,3 +26,41 @@ void GBuffer::destroy()
     worldPosition.destroyTexture();
     depth.destroyTexture();
 }
+
+std::vector<VkRenderingAttachmentInfo> GBuffer::getRenderingAttachments()
+{
+    std::vector<VkRenderingAttachmentInfo> colors;
+        colors.push_back(getAttachmentInfo(albedo));
+        colors.push_back(getAttachmentInfo(normal));
+        colors.push_back(getAttachmentInfo(pbr));
+        colors.push_back(getAttachmentInfo(worldPosition));
+
+    return colors;
+}
+
+VkRenderingAttachmentInfo GBuffer::getAttachmentInfo(const GPUTexture& texture)
+{
+    VkRenderingAttachmentInfo attachment_info{};
+    attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    attachment_info.imageView = texture.imageView;
+    attachment_info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachment_info.clearValue.color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+
+    return attachment_info;
+}
+
+VkRenderingAttachmentInfo GBuffer::getDepthAttachmentInfo()
+{
+    VkRenderingAttachmentInfo attachment_info{};
+    attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    attachment_info.imageView = depth.imageView;
+    attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+    attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachment_info.clearValue = {1.0f, 0};
+
+    return attachment_info;
+}
+
