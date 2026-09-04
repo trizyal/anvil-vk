@@ -5,6 +5,7 @@ import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
 source_dir = os.path.abspath(os.path.join(script_dir, '..', 'source'))
 examples_dir = os.path.abspath(os.path.join(script_dir, '..', 'examples'))
+output_dir = os.path.abspath(os.path.join(script_dir, 'output'))
 
 # Default configuration
 directories_to_walk = [source_dir]
@@ -32,8 +33,11 @@ if len(sys.argv) > 1:
         else:
             print(f"Warning: Project directory '{project_dir}' not found. Skipping.")
 
+# Ensure the output directory exists before creating the file
+os.makedirs(output_dir, exist_ok=True)
+
 # Save the output file directly in the scripts directory
-output_file = os.path.abspath(os.path.join(script_dir, output_filename))
+output_file = os.path.abspath(os.path.join(output_dir, output_filename))
 
 allowed_extensions = ('.cpp', '.h', '.slang')
 # Folders to ignore so we don't grab third-party code
