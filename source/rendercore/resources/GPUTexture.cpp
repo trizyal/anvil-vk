@@ -288,12 +288,15 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width
     CHECK(vmaCreateImage(pContext->allocator, &image_info, &alloc_info, &image, &allocation, nullptr));
     SET_DNAME(pContext->device, image, VK_OBJECT_TYPE_IMAGE);
 
+    VkImageAspectFlags aspect_mask = (format == VK_FORMAT_D32_SFLOAT) ?
+                                     VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+
     VkImageViewCreateInfo image_view_info{};
     image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     image_view_info.image = image;
     image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     image_view_info.format = format;
-    image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    image_view_info.subresourceRange.aspectMask = aspect_mask;
     image_view_info.subresourceRange.baseMipLevel = 0;
     image_view_info.subresourceRange.levelCount = 1;
     image_view_info.subresourceRange.baseArrayLayer = 0;

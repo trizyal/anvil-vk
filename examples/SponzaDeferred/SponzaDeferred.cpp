@@ -135,7 +135,7 @@ bool SponzaDeferred::loadGeometryPipeline(std::string* outErrorMessage)
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(pContext->device, material_Light.materialPipelineLayout DNAME("Geometry Pipeline"));
+        .buildPipeline(pContext->device, material_Geo.materialPipelineLayout DNAME("Geometry Pipeline"));
 
     std::cout << "Finished Loading Geometry Pipeline." << std::endl;
     return true;
@@ -166,7 +166,7 @@ bool SponzaDeferred::loadLightingPipeline(std::string* outErrorMessage)
     PipelineBuilder builder;
     pipeline_Light = builder.setShaders(material_Light.getVertexShader(), material_Light.getFragmentShader())
         .setVertexInput({}, {}) // Empty vertex inputs
-        .setColorAttachmentFormat(pSwapchain->swapchainFormat)
+        .setColorAttachmentFormats({pSwapchain->swapchainFormat})
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
         .enableDepthTest(false, VK_COMPARE_OP_ALWAYS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
@@ -242,7 +242,7 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
     const glm::mat4 view = camera.getViewMatrix();
     const glm::mat4 view_projection = projection * view;
 
-    Frustum cameraFrustum;
+    Frustum cameraFrustum{};
     cameraFrustum.extractPlanes(view_projection);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Geo.pipeline);
@@ -292,6 +292,9 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
         vkCmdBindVertexBuffers(inCmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
         vkCmdBindIndexBuffer(inCmd, mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
         vkCmdDrawIndexed(inCmd, mesh.indexCount, 1, 0, 0, 0);
+
+        AnvilRenderer::engineStats.drawCalls++;
+        AnvilRenderer::engineStats.primitiveCount += (mesh.indexCount / 3);
     }
 
     vkCmdEndRendering(inCmd);

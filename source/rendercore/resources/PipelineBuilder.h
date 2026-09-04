@@ -102,6 +102,7 @@ public:
      *
      * @note Only use-case is forward shading.
      */
+    [[deprecated]]
     PipelineBuilder& setColorAttachmentFormat(VkFormat inColorFormat);
 
     /**
