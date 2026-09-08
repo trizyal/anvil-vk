@@ -51,8 +51,8 @@ private:
     bool isDirty = true;
 
 public:
-    GlobalSceneData data{};
-    GPUBuffer sceneUBO;
+    GlobalSceneData data{}; // CPU data
+    GPUBuffer sceneUBO; // GPU data
 
     /**
      * @brief Creates an empty scene with GPUBuffer that can be set and updated.

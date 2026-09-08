@@ -11,7 +11,7 @@ PipelineBuilder::PipelineBuilder()
     vertexInputInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
     inputAssembly = {.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
     rasterizer = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
-    colorBlendAttachment = {};
+    colorBlendAttachments.clear();
     multisampling = {.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
     depthStencil = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
     // dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
@@ -58,12 +58,20 @@ PipelineBuilder& PipelineBuilder::setShaders(VkShaderModule inVertexShader, VkSh
     return *this;
 }
 
-PipelineBuilder& PipelineBuilder::setColorAttachmentFormat(VkFormat inColorFormat)
+PipelineBuilder& PipelineBuilder::setColorAttachmentFormat(const VkFormat inColorFormat)
 {
-    colorAttachmentFormat = inColorFormat;
+    colorAttachmentFormats.push_back(inColorFormat);
     dynamicRendering.colorAttachmentCount = 1;
-    dynamicRendering.pColorAttachmentFormats = &colorAttachmentFormat;
+    dynamicRendering.pColorAttachmentFormats = &colorAttachmentFormats[0];
 
+    return *this;
+}
+
+PipelineBuilder& PipelineBuilder::setColorAttachmentFormats(const std::vector<VkFormat>& inColorFormats)
+{
+    colorAttachmentFormats = inColorFormats;
+    dynamicRendering.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentFormats.size());
+    dynamicRendering.pColorAttachmentFormats = colorAttachmentFormats.data();
     return *this;
 }
 
@@ -115,12 +123,20 @@ PipelineBuilder& PipelineBuilder::setCullMode(VkCullModeFlags inCullMode, VkFron
 
 PipelineBuilder& PipelineBuilder::disableBlending()
 {
-    colorBlendAttachment.blendEnable = VK_FALSE;
-    colorBlendAttachment.colorWriteMask =
-        VK_COLOR_COMPONENT_R_BIT |
-        VK_COLOR_COMPONENT_G_BIT |
-        VK_COLOR_COMPONENT_B_BIT |
-        VK_COLOR_COMPONENT_A_BIT;
+    // Apply blending disable to ALL bound color attachments
+    colorBlendAttachments.clear();
+    for (size_t i = 0; i < colorAttachmentFormats.size(); i++)
+    {
+        VkPipelineColorBlendAttachmentState blend{};
+        blend.blendEnable = VK_FALSE;
+        blend.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT |
+            VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT |
+            VK_COLOR_COMPONENT_A_BIT;
+
+        colorBlendAttachments.push_back(blend);
+    }
 
     return *this;
 }
@@ -137,8 +153,8 @@ AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkP
     VkPipelineColorBlendStateCreateInfo color_blending_info{};
     color_blending_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     color_blending_info.logicOpEnable = VK_FALSE;
-    color_blending_info.attachmentCount = 1;
-    color_blending_info.pAttachments = &colorBlendAttachment;
+    color_blending_info.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+    color_blending_info.pAttachments = colorBlendAttachments.data();
 
     std::vector<VkDynamicState> dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamic_state_info{};

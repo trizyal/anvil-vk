@@ -41,6 +41,8 @@ intermediate
 binaries/shaderc
 docs
 tests
+scripts/output
+build
 
 # Slang
 external/slang

@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "Anvil.h"
-#include "Sponza.h"
+#include "SponzaDeferred.h"
 
 int main()
 {
@@ -17,18 +17,22 @@ int main()
             .title = "Anvil Sponza"
         });
 
-        Sponza project;
+        SponzaDeferred project;
         project.initializeProject(anvil.getContext(), anvil.getSwapchain());
 
         // Register hot-reload event
         anvil.addShaderReloadCallback([&](std::string* outErrorLog) {
-            return project.loadPipeline(outErrorLog);
+            return project.loadPipelines(outErrorLog);
         });
 
         RenderHooks hooks;
+        hooks.onPreSwapchain = [&](VkCommandBuffer cmd, Swapchain* swapchain)
+        {
+            project.recordGeometryPass(cmd, *swapchain);
+        };
         hooks.onSwapchain = [&](VkCommandBuffer cmd, Swapchain* swapchain)
         {
-            project.recordCommands(cmd, *swapchain);
+            project.recordLightingPass(cmd, *swapchain);
         };
 
         anvil.runAnvil(hooks);

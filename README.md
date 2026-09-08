@@ -26,7 +26,7 @@ Anvil is intended to be a starting point rather than a rigid, all-in-one rendere
 
 1. Clone the repository
     ```bash
-    git clone git@github.com:trizyal/anvil-vk.git
+    git clone --recursive git@github.com:trizyal/anvil-vk.git
     cd anvil-vk
     ```
 
@@ -37,8 +37,11 @@ Anvil is intended to be a starting point rather than a rigid, all-in-one rendere
 
 3. Configure and build using CMake: (NEED TO UPDATE DUE TO EXAMPLES CMAKE)
     ```bash
-    cmake -B build
-    cmake --build build --config Release
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=<build-type>
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+   
+    cmake --build build --config <build-type> --target <example-name>
+    cmake --build build --config Release --target Sponza
     ```
 
 ## Examples
