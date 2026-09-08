@@ -52,8 +52,6 @@ public:
      * @brief Boots the console and registers core inbuilt commands.
      */
     static void Initialize();
-
-    static std::u
 };
 
 #endif //ANVIL_VK_CONSOLE_H
