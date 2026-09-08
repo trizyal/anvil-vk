@@ -40,8 +40,8 @@ Anvil is intended to be a starting point rather than a rigid, all-in-one rendere
     cmake -S . -B build -DCMAKE_BUILD_TYPE=<build-type>
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
    
-   cmake --build build --target <example-name>
-    cmake --build build --target Sponza
+    cmake --build build --config <build-type> --target <example-name>
+    cmake --build build --config Release --target Sponza
     ```
 
 ## Examples
