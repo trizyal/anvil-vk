@@ -175,6 +175,8 @@ bool SponzaDeferred::loadLightingPipeline(std::string* outErrorMessage)
         .disableBlending()
         .buildPipeline(pContext->device, material_Light.materialPipelineLayout DNAME("Lighting Pipeline"));
 
+    std::cout << "Finished Loading Lighting Pipeline." << std::endl;
+
     return true;
 }
 
@@ -183,6 +185,7 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
     // Handle Window Resize
     if (gBuffer.currentExtent.width != inSwapchain.swapchainExtent.width || gBuffer.currentExtent.height != inSwapchain.swapchainExtent.height)
     {
+        vkDeviceWaitIdle(pContext->device);
         gBuffer.create(*pContext, inSwapchain.swapchainExtent);
         sceneLightingSet.bindTexture("gAlbedo", gBuffer.albedo);
         sceneLightingSet.bindTexture("gNormal", gBuffer.normal);

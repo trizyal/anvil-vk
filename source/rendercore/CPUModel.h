@@ -1,8 +1,8 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_MODELLOADER_H
-#define ANVIL_VK_MODELLOADER_H
+#ifndef ANVIL_VK_CPUMODEL_H
+#define ANVIL_VK_CPUMODEL_H
 
 /**
  * @file CPUModel.h
@@ -360,4 +360,4 @@ namespace ModelLoader
     void UpdateAllMatrices(CPUModel& cpuModel);
 } //AnvilModelLoader
 
-#endif //ANVIL_VK_MODELLOADER_H
+#endif //ANVIL_VK_CPUMODEL_H

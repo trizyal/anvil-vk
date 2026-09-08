@@ -91,6 +91,7 @@ public:
      * @throws std::runtime_error If the AnvilApplication is uninitialized or `drawFrame` throws.
      * @attention Shader reloading happening here is not ideal.
      */
+    [[deprecated("Pass RenderHooks instead of a single callback.")]]
     void runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback);
 
     /**

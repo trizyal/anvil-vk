@@ -26,7 +26,7 @@ constexpr uint32_t KEY_COUNT = GLFW_KEY_LAST + 1;
  * GLFW_MOUSE_BUTTON_1 = 0 is the first input listed for the mouse.
  * GLFW_MOUSE_BUTTON_LAST = 7.
  */
-constexpr uint32_t BUTTON_COUNT = GLFW_KEY_LAST + 1;
+constexpr uint32_t BUTTON_COUNT = GLFW_MOUSE_BUTTON_LAST + 1;
 
 /**
  * @brief Orchestrates keyboard and mouse input processing.
