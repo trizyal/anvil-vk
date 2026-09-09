@@ -20,10 +20,10 @@
  */
 enum class CVarType
 {
-    I, /**< Integer */
-    F, /**< Float */
-    B, /**< Boolean */
-    S /**< String */
+    Int, /**< Integer */
+    Float, /**< Float */
+    Bool, /**< Boolean */
+    String /**< String */
 };
 
 /**
@@ -44,14 +44,113 @@ struct CVar
  */
 class Console
 {
-public:
-    /** Signature for console command callbacks, accepting a list of string arguments. */
+    public:
+    /** @brief Signature for console command callbacks, accepting a list of string arguments. */
     using CommandCallback = std::function<void(const std::vector<std::string>&)>;
 
     /**
-     * @brief Boots the console and registers core inbuilt commands.
+     * @brief Boots the console and registers core inbuilt commands (e.g., help, clear).
      */
     static void Initialize();
+
+    /**
+     * @brief Safely retrieves the global CVar registry.
+     * @return Reference to the internal unordered_map of CVars.
+     */
+    static std::unordered_map<std::string, CVar>& GetCVars();
+
+    /**
+     * @brief Safely retrieves the global command registry.
+     * @return Reference to the internal unordered_map of commands.
+     */
+    static std::unordered_map<std::string, std::pair<std::string, CommandCallback>>& GetCommands();
+
+    /**
+     * @brief Safely retrieves the console log history.
+     * @return Reference to the vector of string logs.
+     */
+    static std::vector<std::string>& GetLogHistory();
+
+    /**
+     * @brief Registers a new integer Console Variable.
+     * @param name The unique identifier used to call this CVar from the console.
+     * @param description Helpful text explaining what this variable controls.
+     * @param defaultValue The initial value of the variable.
+     */
+    static void RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue);
+
+    /**
+     * @brief Registers a new float Console Variable.
+     * @param name The unique identifier used to call this CVar from the console.
+     * @param description Helpful text explaining what this variable controls.
+     * @param defaultValue The initial value of the variable.
+     */
+    static void RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue);
+
+    /**
+     * @brief Registers a new boolean Console Variable.
+     * @param name The unique identifier used to call this CVar from the console.
+     * @param description Helpful text explaining what this variable controls.
+     * @param defaultValue The initial value of the variable.
+     */
+    static void RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue);
+
+    /**
+     * @brief Retrieves the current value of an integer CVar.
+     * @param name The unique identifier of the CVar.
+     * @return The current integer value, or 0 if not found.
+     */
+    static int GetCVarInt(const std::string& name);
+
+    /**
+     * @brief Retrieves the current value of a float CVar.
+     * @param name The unique identifier of the CVar.
+     * @return The current float value, or 0.0f if not found.
+     */
+    static float GetCVarFloat(const std::string& name);
+
+    /**
+     * @brief Retrieves the current value of a boolean CVar.
+     * @param name The unique identifier of the CVar.
+     * @return The current boolean value, or false if not found.
+     */
+    static bool GetCVarBool(const std::string& name);
+
+    /**
+     * @brief Registers a new executable command.
+     * @param name The string typed into the console to trigger this command.
+     * @param description Helpful text shown in the help menu.
+     * @param callback The function executed when the command is invoked.
+     */
+    static void RegisterCommand(const std::string& name, const std::string& description, CommandCallback callback);
+
+    /**
+     * @brief Parses and executes a raw string inputted from the console UI.
+     * @param commandLine The raw string to parse into command/CVar lookups and arguments.
+     */
+    static void Execute(const std::string& commandLine);
+
+    /**
+     * @brief Pushes a new text line to the console's visual log.
+     * @param message The text to display.
+     */
+    static void Print(const std::string& message);
+
+    /**
+     * @brief Clears all text currently stored in the console log.
+     */
+    static void ClearLog();
+
+    /**
+     * @brief Checks if the UI needs to automatically scroll to the bottom.
+     * @return True if a new message was recently added.
+     */
+    static bool ShouldScroll();
+
+    /**
+     * @brief Resets the scroll flag after the UI has processed it.
+     */
+    static void ClearScroll();
 };
 
 #endif //ANVIL_VK_CONSOLE_H
