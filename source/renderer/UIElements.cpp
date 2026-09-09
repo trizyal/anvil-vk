@@ -270,8 +270,10 @@ namespace UI
     // Static UI state stored securely in the CPP file
     static char s_ConsoleInputBuffer[256] = "";
 
-    void DrawConsoleWindow(bool* pOpen)
+    void DrawConsoleWindow(int* pState)
     {
+        bool open = *pState != 0;
+        bool* pOpen = &open;
         if (!*pOpen)
         {
             return;

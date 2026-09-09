@@ -71,7 +71,7 @@ private:
     std::string activeShaderErrorLog;
 
     /** Tracks whether the developer console is currently rendering. */
-    bool bConsoleOpen = false;
+    int bConsoleState = 0;
 
 public:
     /**

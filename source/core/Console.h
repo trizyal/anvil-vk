@@ -73,6 +73,12 @@ class Console
     static std::vector<std::string>& GetLogHistory();
 
     /**
+     * @brief Safely retrieves the history of entered commands.
+     * @return Reference to the vector of previously executed command strings.
+     */
+    static std::vector<std::string>& GetCommandHistory();
+
+    /**
      * @brief Registers a new integer Console Variable.
      * @param name The unique identifier used to call this CVar from the console.
      * @param description Helpful text explaining what this variable controls.
@@ -230,6 +236,9 @@ struct AutoRegisterCommand
 #define CVAR_BOOL(name, description, defaultValue) \
     static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, (bool)defaultValue)
 
+/**
+ * @brief Macro to define a global Console Command anywhere in the codebase.
+ */
 #define COMMAND(name, description, callback) \
     static AutoRegisterCommand CONCAT(auto_cmd_, __LINE__)(name, description, callback)
 

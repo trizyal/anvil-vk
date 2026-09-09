@@ -79,9 +79,9 @@ namespace UI
      * Reads directly from the static Console backend to display logs and handle
      * command execution parsing via ImGui input text buffers.
      *
-     * @param pOpen Pointer to a boolean tracking the open/closed state of the window.
+     * @param pState Pointer to the state integer (0 = Closed, 1 = Mini, 2 = Full).
      */
-    void DrawConsoleWindow(bool* pOpen);
+    void DrawConsoleWindow(int* pState);
 }
 
 

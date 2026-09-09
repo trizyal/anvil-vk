@@ -24,6 +24,12 @@ std::vector<std::string>& Console::GetLogHistory()
     return s_LogHistory;
 }
 
+std::vector<std::string>& Console::GetCommandHistory()
+{
+    static std::vector<std::string> s_CommandHistory;
+    return s_CommandHistory;
+}
+
 void Console::Initialize()
 {
     RegisterCommand("clear", "Clears the console log history.", [](const std::vector<std::string>&)
@@ -66,17 +72,29 @@ void Console::RegisterCVarBool(const std::string& name, const std::string& descr
 
 int Console::GetCVarInt(const std::string& name)
 {
-    return std::get<int>(GetCVars()[name].value);
+    if (GetCVars().contains(name))
+    {
+        return std::get<int>(GetCVars()[name].value);
+    }
+    return 0;
 }
 
 float Console::GetCVarFloat(const std::string& name)
 {
-    return std::get<float>(GetCVars()[name].value);
+    if (GetCVars().contains(name))
+    {
+        return std::get<float>(GetCVars()[name].value);
+    }
+    return 0.0f;
 }
 
 bool Console::GetCVarBool(const std::string& name)
 {
-    return std::get<bool>(GetCVars()[name].value);
+    if (GetCVars().contains(name))
+    {
+        return std::get<bool>(GetCVars()[name].value);
+    }
+    return false;
 }
 
 void Console::SetCVarInt(const std::string& name, int value)
@@ -133,6 +151,16 @@ void Console::Execute(const std::string& commandLine)
 {
     Print("] " + commandLine);
 
+    // Save to command history, preventing consecutive duplicates
+    if (!commandLine.empty())
+    {
+        auto& history = GetCommandHistory();
+        if (history.empty() || history.back() != commandLine)
+        {
+            history.push_back(commandLine);
+        }
+    }
+
     std::istringstream stream(commandLine);
     std::string token;
     std::vector<std::string> args;
@@ -143,7 +171,8 @@ void Console::Execute(const std::string& commandLine)
     std::string cmdName = args[0];
     args.erase(args.begin());
 
-    if (GetCommands().contains(cmdName)) {
+    if (GetCommands().contains(cmdName))
+    {
         GetCommands()[cmdName].second(args);
         return;
     }
