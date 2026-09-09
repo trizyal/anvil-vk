@@ -327,7 +327,7 @@ void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwap
 
     sponzaScene.updateGPUBuffer();
 
-    if (UI::RenderDebugMenu(sponzaScene.data.debugViewMode))
+    if (UI::DrawDebugMenu(sponzaScene.data.debugViewMode))
     {
         sponzaScene.setGPUSceneData(sponzaScene.data);
         sponzaScene.updateGPUBuffer();

@@ -70,6 +70,9 @@ private:
     bool bShaderErrorModalOpen = false;
     std::string activeShaderErrorLog;
 
+    /** Tracks whether the developer console is currently rendering. */
+    bool bConsoleOpen = false;
+
 public:
     /**
      * @brief Bootstraps the application window, input capturing, and all core Vulkan subsystems.

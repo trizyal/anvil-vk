@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <iostream>
 
-#include "imgui.h"
+#include <imgui.h>
+
+#include "Console.h"
 
 namespace
 {
@@ -20,6 +22,9 @@ namespace
 
         /** Light blue for z axis. Lighter to contrast with dark backgrounds */
         inline constexpr ImU32 Z_AXIS   = IM_COL32(50, 150, 255, 255);
+
+        ImVec4 TextGrey = ImVec4(0.7f, 0.7f, 0.7f, 1.0f);
+        ImVec4 TextWhite = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
     } //Color
 
     namespace Axis
@@ -236,7 +241,7 @@ namespace UI
         ImGui::EndPopup();
     }
 
-    bool RenderDebugMenu(uint32_t& currentMode)
+    bool DrawDebugMenu(uint32_t& currentMode)
     {
         bool bChanged = false;
         if (ImGui::Begin("Anvil Debug Views"))
@@ -260,5 +265,71 @@ namespace UI
         }
         ImGui::End();
         return bChanged;
+    }
+
+    // Static UI state stored securely in the CPP file
+    static char s_ConsoleInputBuffer[256] = "";
+
+    void DrawConsoleWindow(bool* pOpen)
+    {
+        if (*pOpen)
+        {
+            return;
+        }
+
+        ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_FirstUseEver);
+        if (!ImGui::Begin("Developer Console", pOpen))
+        {
+            ImGui::End();
+            return;
+        }
+
+        const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), false, ImGuiWindowFlags_HorizontalScrollbar))
+        {
+            for (const std::string& item : Console::GetLogHistory())
+            {
+                if (!item.empty() && item[0] == ']')
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, Color::TextGrey);
+                }
+                else
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, Color::TextWhite);
+                }
+
+                ImGui::TextUnformatted(item.c_str());
+                ImGui::PopStyleColor();
+            }
+
+            if (Console::ShouldScroll() || ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+            {
+                ImGui::SetScrollHereY(1.0f);
+                Console::ClearScroll();
+            }
+        }
+        ImGui::EndChild();
+        ImGui::Separator();
+
+        bool reclaimFocus = false;
+        ImGui::PushItemWidth(-1.0f);
+        if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, IM_ARRAYSIZE(s_ConsoleInputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            std::string s = s_ConsoleInputBuffer;
+            if (!s.empty())
+            {
+                Console::Execute(s);
+            }
+            s_ConsoleInputBuffer[0] = '\0';
+            reclaimFocus = true;
+        }
+
+        ImGui::SetItemDefaultFocus();
+        if (reclaimFocus)
+        {
+            ImGui::SetKeyboardFocusHere(-1);
+        }
+
+        ImGui::End();
     }
 }

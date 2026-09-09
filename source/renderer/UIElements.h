@@ -71,7 +71,17 @@ namespace UI
      * @param currentMode Reference to the active debug mode state.
      * @return True if the mode was changed this frame.
      */
-    bool RenderDebugMenu(uint32_t& currentMode);
+    bool DrawDebugMenu(uint32_t& currentMode);
+
+    /**
+     * @brief Renders the developer console overlay window.
+     *
+     * Reads directly from the static Console backend to display logs and handle
+     * command execution parsing via ImGui input text buffers.
+     *
+     * @param pOpen Pointer to a boolean tracking the open/closed state of the window.
+     */
+    void DrawConsoleWindow(bool* pOpen);
 }
 
 
