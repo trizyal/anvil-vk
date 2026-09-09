@@ -10,6 +10,7 @@
  */
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <unordered_map>
 #include <functional>
@@ -117,6 +118,27 @@ class Console
     static bool GetCVarBool(const std::string& name);
 
     /**
+     * @brief Updates the value of an existing integer CVar.
+     * @param name The unique identifier of the CVar.
+     * @param value The new integer value to set.
+     */
+    static void SetCVarInt(const std::string& name, int value);
+
+    /**
+     * @brief Updates the value of an existing float CVar.
+     * @param name The unique identifier of the CVar.
+     * @param value The new float value to set.
+     */
+    static void SetCVarFloat(const std::string& name, float value);
+
+    /**
+     * @brief Updates the value of an existing boolean CVar.
+     * @param name The unique identifier of the CVar.
+     * @param value The new boolean value to set.
+     */
+    static void SetCVarBool(const std::string& name, bool value);
+
+    /**
      * @brief Registers a new executable command.
      * @param name The string typed into the console to trigger this command.
      * @param description Helpful text shown in the help menu.
@@ -152,5 +174,63 @@ class Console
      */
     static void ClearScroll();
 };
+
+// Auto-Registration Macros
+
+/**
+ * @brief Helper struct that automatically registers a CVar upon instantiation.
+ */
+struct AutoRegisterCVar
+{
+    AutoRegisterCVar(const std::string& name, const std::string& description, int defaultValue)
+    {
+        Console::RegisterCVarInt(name, description, defaultValue);
+    }
+
+    AutoRegisterCVar(const std::string& name, const std::string& description, float defaultValue)
+    {
+        Console::RegisterCVarFloat(name, description, defaultValue);
+    }
+
+    AutoRegisterCVar(const std::string& name, const std::string& description, bool defaultValue)
+    {
+        Console::RegisterCVarBool(name, description, defaultValue);
+    }
+};
+
+/**
+ * @brief Helper struct that automatically registers a Command upon instantiation.
+ */
+struct AutoRegisterCommand
+{
+    AutoRegisterCommand(const std::string& name, const std::string& description, Console::CommandCallback callback)
+    {
+        Console::RegisterCommand(name, description, std::move(callback));
+    }
+};
+
+#define CONCAT_IMPL(x, y) x##Y
+#define CONCAT(x, y) CONCAT_IMPL(x, y)
+
+/**
+ * @brief Macro to define a global integer CVar anywhere in the codebase.
+ */
+#define CVAR_INT(name, description, defaultValue) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, (int)defaultValue)
+
+/**
+ * @brief Macro to define a global float CVar anywhere in the codebase.
+ */
+#define CVAR_FLOAT(name, description, defaultValue) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, (float)defaultValue)
+
+/**
+ * @brief Macro to define a global boolean CVar anywhere in the codebase.
+ */
+#define CVAR_BOOL(name, description, defaultValue) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, (bool)defaultValue)
+
+#define COMMAND(name, description, callback) \
+    static AutoRegisterCommand CONCAT(auto_cmd_, __LINE__)(name, description, callback)
 
 #endif //ANVIL_VK_CONSOLE_H

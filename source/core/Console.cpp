@@ -79,6 +79,30 @@ bool Console::GetCVarBool(const std::string& name)
     return std::get<bool>(GetCVars()[name].value);
 }
 
+void Console::SetCVarInt(const std::string& name, int value)
+{
+    if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Int)
+    {
+        GetCVars()[name].value = value;
+    }
+}
+
+void Console::SetCVarFloat(const std::string& name, float value)
+{
+    if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Float)
+    {
+        GetCVars()[name].value = value;
+    }
+}
+
+void Console::SetCVarBool(const std::string& name, bool value)
+{
+    if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Bool)
+    {
+        GetCVars()[name].value = value;
+    }
+}
+
 void Console::RegisterCommand(const std::string& name, const std::string& description, CommandCallback callback)
 {
     GetCommands()[name] = {description, callback};

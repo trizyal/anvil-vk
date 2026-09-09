@@ -272,7 +272,7 @@ namespace UI
 
     void DrawConsoleWindow(bool* pOpen)
     {
-        if (*pOpen)
+        if (!*pOpen)
         {
             return;
         }
