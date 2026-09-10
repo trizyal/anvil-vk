@@ -9,6 +9,7 @@
 #include <imgui.h>
 
 #include "Console.h"
+#include "imgui_internal.h"
 
 namespace
 {
@@ -23,7 +24,8 @@ namespace
         /** Light blue for z axis. Lighter to contrast with dark backgrounds */
         inline constexpr ImU32 Z_AXIS = IM_COL32(50, 150, 255, 255);
 
-        ImVec4 TextGrey = ImVec4(0.7f, 0.7f, 0.7f, 1.0f);
+        ImVec4 BgGrey = ImVec4(0.7f, 0.7f, 0.7f, 0.4f);
+        ImVec4 BgDarkGrey = ImVec4(0.1f, 0.1f, 0.1f, 0.5f);
         ImVec4 TextWhite = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
     } //Color
 
@@ -282,70 +284,115 @@ static int s_HistoryPosition = -1;
 
 void UI::DrawConsoleWindow(int* pState)
 {
-    bool open = *pState != 0;
-    bool* pOpen = &open;
-    if (!*pOpen)
+    if (*pState == 0)
     {
         return;
     }
 
-    ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Developer Console", pOpen))
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const bool is_mini = (*pState == 1);
+    if (is_mini)
     {
+        // Snap to bottom as a single line
+        const float input_height = 35.0f;
+        ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y + viewport->WorkSize.y - input_height));
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, input_height));
+        ImGui::SetNextWindowBgAlpha(0.6f);
+    }
+    else
+    {
+        // Half screen at the top
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, viewport->WorkSize.y * 0.5f));
+        ImGui::SetNextWindowBgAlpha(0.8f);
+    }
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove;
+    if (!ImGui::Begin("Developer Console", nullptr, window_flags))
+    {
+        ImGui::PopStyleVar(2);
         ImGui::End();
         return;
     }
 
-    const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-    if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), false,
-                          ImGuiWindowFlags_HorizontalScrollbar))
+    if (!is_mini)
     {
-        for (const std::string& item : Console::GetLogHistory())
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Color::BgDarkGrey);
+        const float footer_height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height), false, ImGuiWindowFlags_HorizontalScrollbar))
         {
-            if (!item.empty() && item[0] == ']')
+            for (const std::string& item : Console::GetLogHistory())
             {
-                ImGui::PushStyleColor(ImGuiCol_Text, Color::TextGrey);
-            }
-            else
-            {
-                ImGui::PushStyleColor(ImGuiCol_Text, Color::TextWhite);
+                if (!item.empty() && item[0] == ']')
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, Color::BgGrey);
+                }
+                else
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, Color::TextWhite);
+                }
+
+                ImGui::TextUnformatted(item.c_str());
+                ImGui::PopStyleColor();
             }
 
-            ImGui::TextUnformatted(item.c_str());
-            ImGui::PopStyleColor();
+            if (Console::ShouldScroll() || ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+            {
+                ImGui::SetScrollHereY(1.0f);
+                Console::ClearScroll();
+            }
         }
 
-        if (Console::ShouldScroll() || ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-        {
-            ImGui::SetScrollHereY(1.0f);
-            Console::ClearScroll();
-        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        ImGui::Separator();
     }
-    ImGui::EndChild();
-    ImGui::Separator();
 
-    bool reclaimFocus = false;
+    bool reclaim_focus = false;
     ImGui::PushItemWidth(-1.0f);
 
-    ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory;
-    if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, IM_ARRAYSIZE(s_ConsoleInputBuffer), inputFlags,
-                         ConsoleInputCallback))
+    ImGui::Text(">");
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_NavHighlight, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_Border, Color::BgDarkGrey);
+    ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory;
+    if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, IM_ARRAYSIZE(s_ConsoleInputBuffer), input_flags, ConsoleInputCallback))
     {
         std::string s = s_ConsoleInputBuffer;
+
+        // Clear grave (`) accent if it leaked into the buffer during toggle
+        if (!s.empty() && s[0] == '`')
+        {
+            s.erase(0, 1);
+        }
+
         if (!s.empty())
         {
             Console::Execute(s);
+            s_HistoryPosition = -1; // Reset history index on submit
         }
+
         s_ConsoleInputBuffer[0] = '\0';
-        reclaimFocus = true;
+        reclaim_focus = true;
     }
 
+    ImGui::PopStyleColor(5);
+    ImGui::PopItemWidth();
+
     ImGui::SetItemDefaultFocus();
-    if (reclaimFocus)
+    if (reclaim_focus || ImGui::IsWindowAppearing())
     {
         ImGui::SetKeyboardFocusHere(-1);
     }
 
+    ImGui::PopStyleVar(2);
     ImGui::End();
 }
 

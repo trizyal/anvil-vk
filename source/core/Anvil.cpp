@@ -89,8 +89,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
         // Toggle Developer Console with the tilde key (~)
         if (Input::IsKeyPressed_Frame(GLFW_KEY_GRAVE_ACCENT))
         {
-            bConsoleState++;
-            bConsoleState%=3;
+            bConsoleState = (bConsoleState + 1) % 3;
         }
 
         // Check for Shader Reload
