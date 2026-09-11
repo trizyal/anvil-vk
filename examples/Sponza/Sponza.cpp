@@ -152,7 +152,7 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
     UI::RenderWorldAxes(view);
 
     // Render the Debug Menu and update the GPU immediately if the user clicks a new mode
-    if (UI::RenderDebugMenu(sponzaScene.data.debugViewMode))
+    if (UI::DrawDebugMenu(sponzaScene.data.debugViewMode))
     {
         sponzaScene.setGPUSceneData(sponzaScene.data);
         sponzaScene.updateGPUBuffer();

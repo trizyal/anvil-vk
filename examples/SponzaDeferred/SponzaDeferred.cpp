@@ -6,7 +6,10 @@
 #include <iostream>
 
 #include "AnvilRenderer.h"
+#include "Console.h"
 #include "UIElements.h"
+
+CVAR_INT("r_debug_mode", "0: None, 1: Albedo, 2: Normal", 0);
 
 void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
 {
@@ -327,7 +330,24 @@ void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwap
 
     sponzaScene.updateGPUBuffer();
 
-    if (UI::RenderDebugMenu(sponzaScene.data.debugViewMode))
+    uint32_t cvarDebugMode = static_cast<uint32_t>(Console::GetCVarInt("r_debug_mode"));
+    bool bSceneDirty = false;
+
+    if (sponzaScene.data.debugViewMode != cvarDebugMode)
+    {
+        sponzaScene.data.debugViewMode = cvarDebugMode;
+        bSceneDirty = true;
+    }
+
+    // 2. Sync from UI back to Scene and Console
+    if (UI::DrawDebugMenu(sponzaScene.data.debugViewMode))
+    {
+        Console::SetCVarInt("r_debug_mode", static_cast<int>(sponzaScene.data.debugViewMode));
+        bSceneDirty = true;
+    }
+
+    // 3. Dispatch to GPU only if state changed
+    if (bSceneDirty)
     {
         sponzaScene.setGPUSceneData(sponzaScene.data);
         sponzaScene.updateGPUBuffer();

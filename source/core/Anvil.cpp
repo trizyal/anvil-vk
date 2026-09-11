@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iostream>
 
+#include "Console.h"
 #include "Input.h"
 #include "ScreenLogger.h"
 #include "UIElements.h"
@@ -26,6 +27,12 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     uiRenderer.initializeUIRenderer(&context, window->getGLFWWindow(), &swapchain);
 
     Input::InitializeInputSystem(window->getGLFWWindow());
+    Console::Initialize();
+
+    // Register inbuilt exit command globally
+    Console::RegisterCommand("quit", "Exits the engine safely.", [this](const std::vector<std::string>&) {
+        glfwSetWindowShouldClose(window->getGLFWWindow(), GLFW_TRUE);
+    });
 
     initialized = true;
     const auto cpuEnd = std::chrono::high_resolution_clock::now();
@@ -79,6 +86,12 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
            continue;
        }
 
+        // Toggle Developer Console with the tilde key (~)
+        if (Input::IsKeyPressed_Frame(GLFW_KEY_GRAVE_ACCENT))
+        {
+            bConsoleState = (bConsoleState + 1) % 3;
+        }
+
         // Check for Shader Reload
         const bool is_ctrl = Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL);
         const bool is_dot = Input::IsKeyPressed_Frame(GLFW_KEY_PERIOD);
@@ -90,6 +103,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
 
         UIRenderer::BeginUIFrame();
         ScreenLogger::DrawOverlay();
+        UI::DrawConsoleWindow(&bConsoleState);
 
         // Render Error Dialog if hot reload failed
         if (bShaderErrorModalOpen)

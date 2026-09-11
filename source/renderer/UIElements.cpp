@@ -6,20 +6,27 @@
 #include <algorithm>
 #include <iostream>
 
-#include "imgui.h"
+#include <imgui.h>
+
+#include "Console.h"
+#include "imgui_internal.h"
 
 namespace
 {
     namespace Color
     {
         /** Bright red for x axis. */
-        inline constexpr ImU32 X_AXIS    = IM_COL32(255, 50, 50, 255);
+        inline constexpr ImU32 X_AXIS = IM_COL32(255, 50, 50, 255);
 
         /** Bright green for y axis. */
-        inline constexpr ImU32 Y_AXIS  = IM_COL32(50, 255, 50, 255);
+        inline constexpr ImU32 Y_AXIS = IM_COL32(50, 255, 50, 255);
 
         /** Light blue for z axis. Lighter to contrast with dark backgrounds */
-        inline constexpr ImU32 Z_AXIS   = IM_COL32(50, 150, 255, 255);
+        inline constexpr ImU32 Z_AXIS = IM_COL32(50, 150, 255, 255);
+
+        ImVec4 BgGrey = ImVec4(0.7f, 0.7f, 0.7f, 0.4f);
+        ImVec4 BgDarkGrey = ImVec4(0.1f, 0.1f, 0.1f, 0.5f);
+        ImVec4 TextWhite = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
     } //Color
 
     namespace Axis
@@ -28,237 +35,412 @@ namespace
         inline constexpr glm::vec3 Y = glm::vec3(0.0f, 1.0f, 0.0f);
         inline constexpr glm::vec3 Z = glm::vec3(0.0f, 0.0f, 1.0f);
     } //Axis
+
+    int ConsoleInputCallback(ImGuiInputTextCallbackData* data);
 }
 
-namespace UI
+void UI::LoadFonts()
 {
-    void LoadFonts()
+    ImGuiIO& io = ImGui::GetIO();
+
+    base = io.Fonts->AddFontFromFileTTF(FontPath, 22.0f);
+    debugUI = io.Fonts->AddFontFromFileTTF(FontPath, 18.0f);
+
+    if (base == nullptr)
     {
-        ImGuiIO& io = ImGui::GetIO();
+        std::cerr << "Warning: Failed to load font at " << FontPath << ". Falling back to default." << std::endl;
+    }
+}
 
-        base = io.Fonts->AddFontFromFileTTF(FontPath, 22.0f);
-        debugUI = io.Fonts->AddFontFromFileTTF(FontPath, 18.0f);
+void UI::ApplyAnvilTheme()
+{
+    ImGui::StyleColorsDark();
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
 
-        if (base == nullptr)
+    style.WindowRounding = 6.0f;
+    colors[ImGuiCol_WindowBg].w = 1.0f;
+}
+
+void UI::FrameStats(const ::FrameStats& stats, bool* pOpen)
+{
+    const float PAD = 10.0f;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 workPos = viewport->WorkPos;
+    ImVec2 workSize = viewport->WorkSize;
+    ImVec2 windowPos(workPos.x + workSize.x - PAD, workPos.y + PAD);
+
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.6f); // UE5 transparent black
+
+    ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoFocusOnAppearing |
+        ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoMove;
+
+    if (ImGui::Begin("AnvilStatUnitOverlay", pOpen, flags))
+    {
+        auto getMetricColor = [](float ms) -> ImVec4
         {
-            std::cerr << "Warning: Failed to load font at " << FontPath << ". Falling back to default." << std::endl;
+            if (ms < 16.67f) return ImVec4(0.4f, 1.0f, 0.4f, 1.0f); // Green
+            if (ms < 33.33f) return ImVec4(1.0f, 0.8f, 0.2f, 1.0f); // Yellow
+            return ImVec4(1.0f, 0.3f, 0.3f, 1.0f); // Red
+        };
+
+        ImGui::PushFont(base);
+        ImGui::TextDisabled("STAT UNIT");
+        ImGui::Separator();
+        ImGui::PopFont();
+
+        ImGui::PushFont(debugUI);
+        ImGui::Text("FPS:");
+        ImGui::SameLine(80.0f);
+        ImGui::TextColored(getMetricColor(1000.0f / (stats.fps + 0.001f)), "%.1f", stats.fps);
+
+        ImGui::Text("Frame:");
+        ImGui::SameLine(80.0f);
+        ImGui::TextColored(getMetricColor(stats.frameTime), "%.2f ms", stats.frameTime);
+
+        ImGui::Text("CPU:");
+        ImGui::SameLine(80.0f);
+        ImGui::TextColored(getMetricColor(stats.cpuTime), "%.2f ms", stats.cpuTime);
+
+        ImGui::Text("GPU:");
+        ImGui::SameLine(80.0f);
+        ImGui::TextColored(getMetricColor(stats.gpuTime), "%.2f ms", stats.gpuTime);
+
+        ImGui::Separator();
+
+        ImGui::Text("Draws:");
+        ImGui::SameLine(80.0f);
+        ImGui::Text("%u", stats.drawCalls);
+
+        ImGui::Text("Prims:");
+        ImGui::SameLine(80.0f);
+        ImGui::Text("%u", stats.primitiveCount);
+        ImGui::PopFont();
+    }
+    ImGui::End();
+}
+
+void UI::RenderWorldAxes(const glm::mat4& viewMatrix)
+{
+    // TODO: Clean up the DrawDebugAxis function
+
+    // Position a small transparent window in the bottom right
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const float size = 100.0f;
+    const ImVec2 window_position = ImVec2(
+        viewport->WorkPos.x + viewport->WorkSize.x - size - 20.0f,
+        viewport->WorkPos.y + viewport->WorkSize.y - size - 20.0f
+    );
+
+    ImGui::SetNextWindowPos(window_position, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(size, size));
+    ImGui::SetNextWindowBgAlpha(0.0f); // Fully transparent
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f); // No border
+
+    const ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+        ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+    if (ImGui::Begin("DebugAxis", nullptr, flags))
+    {
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+        // Center of our 100x100 window
+        const ImVec2 origin = ImVec2(window_position.x + size * 0.5f, window_position.y + size * 0.5f);
+        const float line_length = 35.0f;
+
+        // Transform World axes into View Space
+        // By multiplying by the mat3 of the view matrix, we discard translation and keep only rotation
+        const glm::mat3 view_rotation = glm::mat3(viewMatrix);
+        const glm::vec3 x_axis = view_rotation * Axis::X;
+        const glm::vec3 y_axis = view_rotation * Axis::Y;
+        const glm::vec3 z_axis = view_rotation * Axis::Z;
+
+        // Structure to help us sort by Z-depth
+        struct AxisData
+        {
+            glm::vec3 dir;
+            ImU32 color;
+            const char* label;
+        };
+        AxisData axes[3] = {
+            {x_axis, Color::X_AXIS, "X"},
+            {y_axis, Color::Y_AXIS, "Y"},
+            {z_axis, Color::Z_AXIS, "Z"}
+        };
+
+        // Sort by Z depth so the axis facing the camera draws ON TOP of the others
+        // In standard OpenGL/GLM LookAt, -Z is forward. So bigger Z means closer to camera.
+        std::sort(axes, axes + 3, [](const AxisData& a, const AxisData& b)
+        {
+            return a.dir.z > b.dir.z;
+        });
+
+        // 4. Draw the lines and text
+        for (int i = 0; i < 3; ++i)
+        {
+            // ImGui +Y is down, but GLM view space +Y is up. So we subtract the Y component.
+            ImVec2 endPos = ImVec2(
+                origin.x + axes[i].dir.x * line_length,
+                origin.y - axes[i].dir.y * line_length
+            );
+
+            // Draw line (thickness 2.0f)
+            draw_list->AddLine(origin, endPos, axes[i].color, 2.0f);
+
+            // Draw label slightly past the end of the line
+            ImVec2 text_position = ImVec2(
+                origin.x + axes[i].dir.x * (line_length + 10.0f) - 4.0f,
+                origin.y - axes[i].dir.y * (line_length + 10.0f) - 6.0f
+            );
+            draw_list->AddText(text_position, axes[i].color, axes[i].label);
+        }
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
+}
+
+void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry,
+                          const std::function<void()>& onAbort)
+{
+    ImGui::OpenPopup("Shader Compilation Error");
+
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(750.0f, 450.0f), ImGuiCond_Appearing);
+
+    if (ImGui::BeginPopupModal("Shader Compilation Error", nullptr, ImGuiWindowFlags_NoMove))
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+        ImGui::TextUnformatted("Slang Shader Compilation Failed!");
+        ImGui::PopStyleColor();
+        ImGui::Separator();
+
+        ImGui::TextWrapped(
+            "Fix the errors in your shader source file and click 'Retry' or press Ctrl + . to attempt re-compilation.");
+        ImGui::Spacing();
+
+        const float footer_height = 40.0f;
+        ImGui::BeginChild("ErrorLogRegion", ImVec2(0.0f, -footer_height), true, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+        ImGui::TextUnformatted(errorLog.c_str());
+        ImGui::PopStyleColor();
+        ImGui::EndChild();
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Retry Re-compilation", ImVec2(180.0f, 0.0f)))
+        {
+            if (onRetry) onRetry();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Abort (Keep Old Pipeline)", ImVec2(200.0f, 0.0f)))
+        {
+            if (onAbort) onAbort();
+            ImGui::CloseCurrentPopup();
         }
     }
 
-    void ApplyAnvilTheme()
-    {
-        ImGui::StyleColorsDark();
-        ImGuiStyle& style = ImGui::GetStyle();
-        ImVec4* colors = style.Colors;
+    ImGui::EndPopup();
+}
 
-        style.WindowRounding = 6.0f;
-        colors[ImGuiCol_WindowBg].w = 1.0f;
+bool UI::DrawDebugMenu(uint32_t& currentMode)
+{
+    bool bChanged = false;
+    if (ImGui::Begin("Anvil Debug Views"))
+    {
+        const char* modes[] = {
+            "None",
+            "Base Color",
+            "World Normal",
+            "Normal Map",
+            "Metallic",
+            "Roughness"
+        };
+
+        int current_item = static_cast<int>(currentMode);
+
+        if (ImGui::Combo("View Mode", &current_item, modes, IM_ARRAYSIZE(modes)))
+        {
+            currentMode = static_cast<uint32_t>(current_item);
+            bChanged = true;
+        }
+    }
+    ImGui::End();
+    return bChanged;
+}
+
+// Static UI state stored securely in the CPP file
+static char s_ConsoleInputBuffer[256] = "";
+static int s_HistoryPosition = -1;
+
+void UI::DrawConsoleWindow(const int* pState)
+{
+    if (*pState == 0)
+    {
+        return;
     }
 
-    void FrameStats(const ::FrameStats& stats, bool* pOpen)
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const bool is_mini = (*pState == 1);
+    if (is_mini)
     {
-        const float PAD = 10.0f;
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImVec2 workPos = viewport->WorkPos;
-        ImVec2 workSize = viewport->WorkSize;
-        ImVec2 windowPos(workPos.x + workSize.x - PAD, workPos.y + PAD);
+        // Snap to bottom as a single line
+        const float input_height = 35.0f;
+        ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y + viewport->WorkSize.y - input_height));
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, input_height));
+        ImGui::SetNextWindowBgAlpha(0.6f);
+    }
+    else
+    {
+        // Half screen at the top
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, viewport->WorkSize.y * 0.5f));
+        ImGui::SetNextWindowBgAlpha(0.8f);
+    }
 
-        ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always, ImVec2(1.0f, 0.0f));
-        ImGui::SetNextWindowBgAlpha(0.6f); // UE5 transparent black
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
-        ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoDecoration |
-            ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_NoSavedSettings |
-            ImGuiWindowFlags_NoFocusOnAppearing |
-            ImGuiWindowFlags_NoNav |
-            ImGuiWindowFlags_NoMove;
-
-        if (ImGui::Begin("AnvilStatUnitOverlay", pOpen, flags))
-        {
-            auto getMetricColor = [](float ms) -> ImVec4 {
-                if (ms < 16.67f) return ImVec4(0.4f, 1.0f, 0.4f, 1.0f); // Green
-                if (ms < 33.33f) return ImVec4(1.0f, 0.8f, 0.2f, 1.0f); // Yellow
-                return ImVec4(1.0f, 0.3f, 0.3f, 1.0f);                  // Red
-            };
-
-            ImGui::PushFont(base);
-            ImGui::TextDisabled("STAT UNIT");
-            ImGui::Separator();
-            ImGui::PopFont();
-
-            ImGui::PushFont(debugUI);
-            ImGui::Text("FPS:");
-            ImGui::SameLine(80.0f);
-            ImGui::TextColored(getMetricColor(1000.0f / (stats.fps + 0.001f)), "%.1f", stats.fps);
-
-            ImGui::Text("Frame:");
-            ImGui::SameLine(80.0f);
-            ImGui::TextColored(getMetricColor(stats.frameTime), "%.2f ms", stats.frameTime);
-
-            ImGui::Text("CPU:");
-            ImGui::SameLine(80.0f);
-            ImGui::TextColored(getMetricColor(stats.cpuTime), "%.2f ms", stats.cpuTime);
-
-            ImGui::Text("GPU:");
-            ImGui::SameLine(80.0f);
-            ImGui::TextColored(getMetricColor(stats.gpuTime), "%.2f ms", stats.gpuTime);
-
-            ImGui::Separator();
-
-            ImGui::Text("Draws:");
-            ImGui::SameLine(80.0f);
-            ImGui::Text("%u", stats.drawCalls);
-
-            ImGui::Text("Prims:");
-            ImGui::SameLine(80.0f);
-            ImGui::Text("%u", stats.primitiveCount);
-            ImGui::PopFont();
-        }
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove;
+    if (!ImGui::Begin("Developer Console", nullptr, window_flags))
+    {
+        ImGui::PopStyleVar(2);
         ImGui::End();
+        return;
     }
 
-    void RenderWorldAxes(const glm::mat4& viewMatrix)
+    if (!is_mini)
     {
-        // TODO: Clean up the DrawDebugAxis function
-
-        // Position a small transparent window in the bottom right
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        const float size = 100.0f;
-        const ImVec2 window_position = ImVec2(
-            viewport->WorkPos.x + viewport->WorkSize.x - size - 20.0f,
-            viewport->WorkPos.y + viewport->WorkSize.y - size - 20.0f
-        );
-
-        ImGui::SetNextWindowPos(window_position, ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(size, size));
-        ImGui::SetNextWindowBgAlpha(0.0f); // Fully transparent
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f); // No border
-
-        const ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
-            ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
-
-        if (ImGui::Begin("DebugAxis", nullptr, flags))
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Color::BgDarkGrey);
+        const float footer_height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height), false, ImGuiWindowFlags_HorizontalScrollbar))
         {
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
-            // Center of our 100x100 window
-            const ImVec2 origin = ImVec2(window_position.x + size * 0.5f, window_position.y + size * 0.5f);
-            const float line_length = 35.0f;
-
-            // Transform World axes into View Space
-            // By multiplying by the mat3 of the view matrix, we discard translation and keep only rotation
-            const glm::mat3 view_rotation = glm::mat3(viewMatrix);
-            const glm::vec3 x_axis = view_rotation * Axis::X;
-            const glm::vec3 y_axis = view_rotation * Axis::Y;
-            const glm::vec3 z_axis = view_rotation * Axis::Z;
-
-            // Structure to help us sort by Z-depth
-            struct AxisData { glm::vec3 dir; ImU32 color; const char* label; };
-            AxisData axes[3] = {
-                { x_axis, Color::X_AXIS,  "X" },
-                { y_axis, Color::Y_AXIS,  "Y" },
-                { z_axis, Color::Z_AXIS, "Z" }
-            };
-
-            // Sort by Z depth so the axis facing the camera draws ON TOP of the others
-            // In standard OpenGL/GLM LookAt, -Z is forward. So bigger Z means closer to camera.
-            std::sort(axes, axes + 3, [](const AxisData& a, const AxisData& b) {
-                return a.dir.z > b.dir.z;
-            });
-
-            // 4. Draw the lines and text
-            for(int i = 0; i < 3; ++i)
+            for (const std::string& item : Console::GetLogHistory())
             {
-                // ImGui +Y is down, but GLM view space +Y is up. So we subtract the Y component.
-                ImVec2 endPos = ImVec2(
-                    origin.x + axes[i].dir.x * line_length,
-                    origin.y - axes[i].dir.y * line_length
-                );
+                if (!item.empty() && item[0] == ']')
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, Color::BgGrey);
+                }
+                else
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, Color::TextWhite);
+                }
 
-                // Draw line (thickness 2.0f)
-                draw_list->AddLine(origin, endPos, axes[i].color, 2.0f);
-
-                // Draw label slightly past the end of the line
-                ImVec2 text_position = ImVec2(
-                    origin.x + axes[i].dir.x * (line_length + 10.0f) - 4.0f,
-                    origin.y - axes[i].dir.y * (line_length + 10.0f) - 6.0f
-                );
-                draw_list->AddText(text_position, axes[i].color, axes[i].label);
+                ImGui::TextUnformatted(item.c_str());
+                ImGui::PopStyleColor();
             }
-        }
-        ImGui::End();
-        ImGui::PopStyleVar();
-    }
 
-    void DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry, const std::function<void()>& onAbort)
-    {
-        ImGui::OpenPopup("Shader Compilation Error");
-
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(750.0f, 450.0f), ImGuiCond_Appearing);
-
-        if (ImGui::BeginPopupModal("Shader Compilation Error", nullptr, ImGuiWindowFlags_NoMove))
-        {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-            ImGui::TextUnformatted("Slang Shader Compilation Failed!");
-            ImGui::PopStyleColor();
-            ImGui::Separator();
-
-            ImGui::TextWrapped("Fix the errors in your shader source file and click 'Retry' or press Ctrl + . to attempt re-compilation.");
-            ImGui::Spacing();
-
-            const float footer_height = 40.0f;
-            ImGui::BeginChild("ErrorLogRegion", ImVec2(0.0f, -footer_height), true, ImGuiWindowFlags_HorizontalScrollbar);
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
-            ImGui::TextUnformatted(errorLog.c_str());
-            ImGui::PopStyleColor();
-            ImGui::EndChild();
-
-            ImGui::Separator();
-
-            if (ImGui::Button("Retry Re-compilation", ImVec2(180.0f, 0.0f)))
+            if (Console::ShouldScroll() || ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
             {
-                if (onRetry) onRetry();
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Abort (Keep Old Pipeline)", ImVec2(200.0f, 0.0f)))
-            {
-                if (onAbort) onAbort();
-                ImGui::CloseCurrentPopup();
+                ImGui::SetScrollHereY(1.0f);
+                Console::ClearScroll();
             }
         }
 
-        ImGui::EndPopup();
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        ImGui::Separator();
     }
 
-    bool RenderDebugMenu(uint32_t& currentMode)
+    bool reclaim_focus = false;
+    ImGui::PushItemWidth(-1.0f);
+
+    ImGui::Text(">");
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_NavHighlight, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_Border, Color::BgDarkGrey);
+    ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackCharFilter;
+    if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, IM_ARRAYSIZE(s_ConsoleInputBuffer), input_flags, ConsoleInputCallback))
     {
-        bool bChanged = false;
-        if (ImGui::Begin("Anvil Debug Views"))
+        std::string s = s_ConsoleInputBuffer;
+
+        if (!s.empty())
         {
-            const char* modes[] = {
-                "None",
-                "Base Color",
-                "World Normal",
-                "Normal Map",
-                "Metallic",
-                "Roughness"
-            };
+            Console::Execute(s);
+            s_HistoryPosition = -1; // Reset history index on submit
+        }
 
-            int current_item = static_cast<int>(currentMode);
+        s_ConsoleInputBuffer[0] = '\0';
+        reclaim_focus = true;
+    }
 
-            if (ImGui::Combo("View Mode", &current_item, modes, IM_ARRAYSIZE(modes)))
+    ImGui::PopStyleColor(5);
+    ImGui::PopItemWidth();
+
+    ImGui::SetItemDefaultFocus();
+    if (reclaim_focus || ImGui::IsWindowAppearing())
+    {
+        ImGui::SetKeyboardFocusHere(-1);
+    }
+
+    ImGui::PopStyleVar(2);
+    ImGui::End();
+}
+
+namespace
+{
+    int ConsoleInputCallback(ImGuiInputTextCallbackData* data)
+    {
+        // Block the grave accent (`) and tilde (~) from being typed
+        if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
+        {
+            if (data->EventChar == '`' || data->EventChar == '~')
             {
-                currentMode = static_cast<uint32_t>(current_item);
-                bChanged = true;
+                return 1; // Return 1 to discard the character
             }
         }
-        ImGui::End();
-        return bChanged;
+        else if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory)
+        {
+            const std::vector<std::string>& history = Console::GetCommandHistory();
+            if (history.empty())
+            {
+                return 0;
+            }
+
+            const int previousHistoryPosition = s_HistoryPosition;
+            if (data->EventKey == ImGuiKey_UpArrow)
+            {
+                if (s_HistoryPosition == -1)
+                {
+                    s_HistoryPosition = static_cast<int>(history.size()) - 1;
+                }
+                else if (s_HistoryPosition > 0)
+                {
+                    s_HistoryPosition--;
+                }
+            }
+            else if (data->EventKey == ImGuiKey_DownArrow)
+            {
+                if (s_HistoryPosition != -1)
+                {
+                    if (++s_HistoryPosition >= static_cast<int>(history.size()))
+                    {
+                        s_HistoryPosition = -1;
+                    }
+                }
+            }
+
+            // Only update text buffer if the position changed
+            if (previousHistoryPosition != s_HistoryPosition)
+            {
+                const std::string history_string = (s_HistoryPosition >= 0) ? history[s_HistoryPosition] : "";
+                data->DeleteChars(0, data->BufTextLen);
+                data->InsertChars(0, history_string.c_str());
+            }
+        }
+        return 0;
     }
 }
