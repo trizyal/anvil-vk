@@ -282,7 +282,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
 static char s_ConsoleInputBuffer[256] = "";
 static int s_HistoryPosition = -1;
 
-void UI::DrawConsoleWindow(int* pState)
+void UI::DrawConsoleWindow(const int* pState)
 {
     if (*pState == 0)
     {
@@ -362,16 +362,10 @@ void UI::DrawConsoleWindow(int* pState)
     ImGui::PushStyleColor(ImGuiCol_FrameBgActive, Color::BgDarkGrey);
     ImGui::PushStyleColor(ImGuiCol_NavHighlight, Color::BgDarkGrey);
     ImGui::PushStyleColor(ImGuiCol_Border, Color::BgDarkGrey);
-    ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory;
+    ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackCharFilter;
     if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, IM_ARRAYSIZE(s_ConsoleInputBuffer), input_flags, ConsoleInputCallback))
     {
         std::string s = s_ConsoleInputBuffer;
-
-        // Clear grave (`) accent if it leaked into the buffer during toggle
-        if (!s.empty() && s[0] == '`')
-        {
-            s.erase(0, 1);
-        }
 
         if (!s.empty())
         {
@@ -400,7 +394,15 @@ namespace
 {
     int ConsoleInputCallback(ImGuiInputTextCallbackData* data)
     {
-        if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory)
+        // Block the grave accent (`) and tilde (~) from being typed
+        if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
+        {
+            if (data->EventChar == '`' || data->EventChar == '~')
+            {
+                return 1; // Return 1 to discard the character
+            }
+        }
+        else if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory)
         {
             const std::vector<std::string>& history = Console::GetCommandHistory();
             if (history.empty())

@@ -81,7 +81,7 @@ namespace UI
      *
      * @param pState Pointer to the state integer (0 = Closed, 1 = Mini, 2 = Full).
      */
-    void DrawConsoleWindow(int* pState);
+    void DrawConsoleWindow(const int* pState);
 }
 
 
