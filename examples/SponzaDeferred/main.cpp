@@ -14,7 +14,7 @@ int main()
         anvil.initializeAnvil({
             .width = 1280,
             .height = 720,
-            .title = "Anvil Sponza"
+            .title = "Anvil Sponza Deferred"
         });
 
         SponzaDeferred project;

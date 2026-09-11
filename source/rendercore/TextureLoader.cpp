@@ -3,6 +3,7 @@
 
 #include "TextureLoader.h"
 
+#include <cmath>
 #include <stdexcept>
 #include <filesystem>
 
