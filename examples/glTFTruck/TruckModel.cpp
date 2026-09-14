@@ -188,14 +188,14 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapcha
         }
 
         // Update push constants (Transform matrices + base color)
-        PushConstants constants{};
+        ProjectPushConstants constants{};
         constants.renderMatrix = projection * view * draw_item.worldMatrix;
         constants.modelMatrix = draw_item.worldMatrix;
         constants.camera = glm::vec4(camera.position, 1.0f);
         constants.baseColorFactor = base_color_factor;
 
         vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0,
-            sizeof(PushConstants), &constants);
+            sizeof(ProjectPushConstants), &constants);
 
         // Bind buffers and draw
         vkCmdBindVertexBuffers(inCmd, 0, 1, &gpu_mesh.vertexBuffer.buffer, &offset);

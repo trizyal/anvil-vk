@@ -150,9 +150,9 @@ void HelloCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchai
     glm::mat4 view = glm::lookAt(glm::vec3(0, 2, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     glm::mat4 model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.5f, 1.0f, 0.0f));
 
-    PushConstants constants{};
+    ProjectPushConstants constants{};
     constants.renderMatrix = projection * view * model;
-    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ProjectPushConstants), &constants);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(inCmd, 0, 1, &vertexBuffer.buffer, &offset);
@@ -179,7 +179,7 @@ void HelloCube::loadPipeline()
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(PushConstants);
+    pushConstantRange.size = sizeof(ProjectPushConstants);
 
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

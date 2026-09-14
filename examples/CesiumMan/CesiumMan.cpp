@@ -183,14 +183,14 @@ void CesiumMan::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
                 0, static_cast<uint32_t>(sets_to_bind.size()), sets_to_bind.data(), 0, nullptr);
         }
 
-        PushConstants constants{};
+        ProjectPushConstants constants{};
         constants.renderMatrix = projection * view * draw_item.worldMatrix;
         constants.modelMatrix = draw_item.worldMatrix;
         constants.camera = glm::vec4(camera.position, 1.0f);
         constants.baseColorFactor = base_color_factor;
 
         vkCmdPushConstants(inCmd, cesiumMaterial.materialPipelineLayout, cesiumMaterial.pushConstantStages, 0,
-            sizeof(PushConstants), &constants);
+            sizeof(ProjectPushConstants), &constants);
 
         vkCmdBindVertexBuffers(inCmd, 0, 1, &gpu_mesh.vertexBuffer.buffer, &offset);
         vkCmdBindIndexBuffer(inCmd, gpu_mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);

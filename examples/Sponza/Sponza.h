@@ -14,7 +14,7 @@
 #include "VulkanContext.h"
 #include "Camera.h"
 
-struct PushConstants
+struct ProjectPushConstants
 {
     glm::mat4 viewProjection;
     glm::vec4 camera;

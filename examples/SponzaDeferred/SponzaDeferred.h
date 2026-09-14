@@ -15,7 +15,7 @@
 #include "Camera.h"
 #include "GBuffer.h"
 
-struct PushConstants
+struct ProjectPushConstants
 {
     glm::mat4 viewProjection;
     glm::vec4 camera;

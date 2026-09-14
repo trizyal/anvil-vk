@@ -65,6 +65,20 @@ struct GPUModelDrawItem
 };
 
 /**
+ * @brief Standardized push constants used globally by the Engine and Projects.
+ *
+ * Ensures Vulkan validation layers do not throw errors when the engine intercepts
+ * project pipelines to inject debug rendering.
+ */
+struct PushConstants
+{
+    glm::mat4 viewProjection;
+    glm::vec4 cameraPosition;
+    uint32_t objectIndex;
+    uint32_t debugMode; /**< Ignored by project shaders; read by engine debug shaders. */
+};
+
+/**
  * @brief GPU-side representation of a CPUModel.
  *
  * Owns uploaded textures, uploaded primitive mesh buffers, per-material

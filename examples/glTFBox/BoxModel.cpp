@@ -78,9 +78,9 @@ void BoxModel::recordCommands(VkCommandBuffer inCmd, const Swapchain &inAnvilSwa
 
     UI::RenderWorldAxes(view);
 
-    PushConstants constants;
+    ProjectPushConstants constants;
     constants.renderMatrix = projection * view;
-    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ProjectPushConstants), &constants);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
@@ -110,7 +110,7 @@ void BoxModel::loadPipeline()
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(PushConstants);
+    pushConstantRange.size = sizeof(ProjectPushConstants);
 
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

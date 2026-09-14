@@ -99,9 +99,9 @@ void TextureCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapch
 
     UI::RenderWorldAxes(view);
 
-    PushConstants constants;
+    ProjectPushConstants constants;
     constants.renderMatrix = projection * view;
-    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+    vkCmdPushConstants(inCmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ProjectPushConstants), &constants);
 
     vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
@@ -133,7 +133,7 @@ void TextureCube::loadPipeline()
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(PushConstants);
+    pushConstantRange.size = sizeof(ProjectPushConstants);
 
     VkPipelineLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

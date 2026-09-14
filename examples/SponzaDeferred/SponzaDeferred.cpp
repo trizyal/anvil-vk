@@ -288,11 +288,11 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
 
         vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Geo.materialPipelineLayout, 1, 2, sets.data(), 0, nullptr);
 
-        PushConstants constants{};
+        ProjectPushConstants constants{};
         constants.viewProjection = view_projection;
         constants.camera = glm::vec4(camera.position, 1.0f);
         constants.objectIndex = static_cast<uint32_t>(i); // Map to SSBO index
-        vkCmdPushConstants(inCmd, material_Geo.materialPipelineLayout, material_Geo.pushConstantStages, 0, sizeof(PushConstants), &constants);
+        vkCmdPushConstants(inCmd, material_Geo.materialPipelineLayout, material_Geo.pushConstantStages, 0, sizeof(ProjectPushConstants), &constants);
 
         const GPUMesh& mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];
         vkCmdBindVertexBuffers(inCmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
@@ -364,9 +364,9 @@ void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwap
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Light.pipeline);
     vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Light.materialPipelineLayout, 0, 1, &sceneLightingSet.descriptorSet, 0, nullptr);
 
-    PushConstants pc{};
+    ProjectPushConstants pc{};
     pc.camera = glm::vec4(camera.position, 1.0f);
-    vkCmdPushConstants(inCmd, material_Light.materialPipelineLayout, material_Light.pushConstantStages, 0, sizeof(PushConstants), &pc);
+    vkCmdPushConstants(inCmd, material_Light.materialPipelineLayout, material_Light.pushConstantStages, 0, sizeof(ProjectPushConstants), &pc);
 
     // Draw 3 vertices to generate the fullscreen triangle
     vkCmdDraw(inCmd, 3, 1, 0, 0);
