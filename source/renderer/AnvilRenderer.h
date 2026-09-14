@@ -15,6 +15,8 @@
 #include "GPUProfiler.h"
 #include "Swapchain.h"
 
+class Camera;
+class GPUModel;
 class Window;
 
 /**
@@ -134,8 +136,12 @@ public:
      */
     void drawFrame(Window& inWindow, const RenderHooks& renderHooks);
 
-    static void transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
+    void drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout);
+
+    static void TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
                                       VkImageLayout oldLayout, VkImageLayout newLayout);
+
+    static void SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain);
 
 private:
     AnvilFrame& getCurrentFrame();

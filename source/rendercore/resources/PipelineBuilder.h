@@ -159,6 +159,16 @@ public:
     PipelineBuilder& disableBlending();
 
     /**
+     * @brief Enables additive blending for complexity visualizations.
+     *
+     * Forces the color blend operation to VK_BLEND_OP_ADD with VK_BLEND_FACTOR_ONE
+     * for both source and destination, accumulating fragment colors.
+     *
+     * @return Reference to this builder for method chaining.
+     */
+    PipelineBuilder& enableAdditiveBlending();
+
+    /**
      * @brief Builds a Vulkan graphics pipeline using the configured state.
      * @param inDevice Vulkan logical device used to create the pipeline.
      * @param inPipelineLayout Pipeline layout describing the resources accessible to the pipeline's shaders.

@@ -141,6 +141,24 @@ PipelineBuilder& PipelineBuilder::disableBlending()
     return *this;
 }
 
+PipelineBuilder& PipelineBuilder::enableAdditiveBlending()
+{
+    colorBlendAttachments.clear();
+    for (size_t i = 0; i < colorAttachmentFormats.size(); i++) {
+        VkPipelineColorBlendAttachmentState blend{};
+        blend.blendEnable = VK_TRUE;
+        blend.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        blend.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        blend.colorBlendOp = VK_BLEND_OP_ADD;
+        blend.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        blend.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        blend.alphaBlendOp = VK_BLEND_OP_ADD;
+        blend.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachments.push_back(blend);
+    }
+    return *this;
+}
+
 AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout D_DEFN) const
 {
     // Viewport state setup

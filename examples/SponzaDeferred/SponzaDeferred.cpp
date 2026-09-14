@@ -9,7 +9,7 @@
 #include "Console.h"
 #include "UIElements.h"
 
-CVAR_INT("r_debug_mode", "0: None, 1: Albedo, 2: Normal", 0);
+CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
 
 void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
 {
@@ -207,11 +207,11 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
     gpuModel.updateTransforms(cpuModel);
 
     // Transition G-Buffer to Attachment Optimal
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     // Begin Geometry Rendering Pass
     const auto color_attachments = gBuffer.getRenderingAttachments();
@@ -250,6 +250,7 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
 
     Frustum cameraFrustum{};
     cameraFrustum.extractPlanes(view_projection);
+    bool enable_frustum_culling = Console::GetCVarBool("r.frustumculling");
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Geo.pipeline);
 
@@ -275,8 +276,7 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
 
         AABB worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
 
-        static bool culling = true; // TODO: this culling should be toggleable
-        if (!cameraFrustum.contains(worldAABB) && culling)
+        if (!cameraFrustum.contains(worldAABB) && enable_frustum_culling)
         {
             continue; // culled
         }
@@ -306,10 +306,10 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
     vkCmdEndRendering(inCmd);
 
     // Transition G-Buffer to Shader Read
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::transitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
@@ -330,7 +330,7 @@ void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwap
 
     sponzaScene.updateGPUBuffer();
 
-    uint32_t cvarDebugMode = static_cast<uint32_t>(Console::GetCVarInt("r_debug_mode"));
+    uint32_t cvarDebugMode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
     bool bSceneDirty = false;
 
     if (sponzaScene.data.debugViewMode != cvarDebugMode)
@@ -342,7 +342,7 @@ void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwap
     // 2. Sync from UI back to Scene and Console
     if (UI::DrawDebugMenu(sponzaScene.data.debugViewMode))
     {
-        Console::SetCVarInt("r_debug_mode", static_cast<int>(sponzaScene.data.debugViewMode));
+        Console::SetCVarInt("r.debugmode", static_cast<int>(sponzaScene.data.debugViewMode));
         bSceneDirty = true;
     }
 

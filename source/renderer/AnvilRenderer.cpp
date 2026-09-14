@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "Console.h"
 #include "ShaderCompiler.h"
 #include "UIRenderer.h"
 #include "VulkanContext.h"
@@ -13,6 +14,15 @@
 #include "DebugNames.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
+
+CVAR_INT("r.debugmode",
+    "0: None,"
+    "1: Base Color"
+    "2: Geometry Normal",
+    0
+);
+
+CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
@@ -132,11 +142,11 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     }
 
     // Transition image here
-    transitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     // Transition Depth Image
-    transitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    TransitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     // Begin Dynamic Rendering
     VkRenderingAttachmentInfo color_attachment_info{};
@@ -179,7 +189,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     vkCmdEndRendering(cmd);
 
     // Transition image to present layout
-    transitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
@@ -245,6 +255,13 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     anvilFrameIndex %= FRAMES_IN_FLIGHT;
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
 }
+
+void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout)
+{
+    uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    bool is_frozen = Console::GetCVarBool("r.freezerendering");
+}
+
 
 void AnvilRenderer::setupCommandBuffers()
 {
@@ -331,7 +348,7 @@ AnvilFrame& AnvilRenderer::getCurrentFrame()
     return anvilFrames[anvilFrameIndex % FRAMES_IN_FLIGHT];
 }
 
-void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
+void AnvilRenderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkImageMemoryBarrier image_barrier{};
     image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -391,4 +408,21 @@ void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage
     }
     
     vkCmdPipelineBarrier(inCmd, src_stage_flags, dst_stage_mask, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);
+}
+
+void AnvilRenderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
+{
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(inSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inSwapchain.swapchainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(inCmd, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = inSwapchain.swapchainExtent;
+    vkCmdSetScissor(inCmd, 0, 1, &scissor);
 }
