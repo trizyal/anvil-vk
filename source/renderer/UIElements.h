@@ -22,16 +22,6 @@ namespace UI
     inline ImFont* debugUI = nullptr;
     inline ImFont* debugLog = nullptr;
 
-    enum class DebugMode : uint32_t
-    {
-        None        = 0,
-        BaseColor   = 1,
-        WorldNormal = 2,
-        NormalMap   = 3,
-        Metallic    = 4,
-        Roughness   = 5
-    };
-
     /**
      * @brief Loads default fonts for Anvil.
      */

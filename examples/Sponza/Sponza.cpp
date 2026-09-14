@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "AnvilRenderer.h"
+#include "Console.h"
 #include "UIElements.h"
 
 void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
@@ -141,6 +142,29 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
     float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastFrameTime).count();
     lastFrameTime = currentTime;
 
+    uint32_t cvarDebugMode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    bool bSceneDirty = false;
+
+    if (sponzaScene.data.debugViewMode != cvarDebugMode)
+    {
+        sponzaScene.data.debugViewMode = cvarDebugMode;
+        bSceneDirty = true;
+    }
+
+    // 2. Sync from UI back to Scene and Console
+    if (UI::DrawDebugMenu(sponzaScene.data.debugViewMode))
+    {
+        Console::SetCVarInt("r.debugmode", static_cast<int>(sponzaScene.data.debugViewMode));
+        bSceneDirty = true;
+    }
+
+    // 3. Dispatch to GPU only if state changed
+    if (bSceneDirty)
+    {
+        sponzaScene.setGPUSceneData(sponzaScene.data);
+        sponzaScene.updateGPUBuffer();
+    }
+
     camera.updateCamera(deltaTime);
 
     const float aspect = static_cast<float>(inSwapchain.swapchainExtent.width) /
@@ -151,12 +175,7 @@ void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 
     UI::RenderWorldAxes(view);
 
-    // Render the Debug Menu and update the GPU immediately if the user clicks a new mode
-    if (UI::DrawDebugMenu(sponzaScene.data.debugViewMode))
-    {
-        sponzaScene.setGPUSceneData(sponzaScene.data);
-        sponzaScene.updateGPUBuffer();
-    }
+    sponzaScene.updateGPUBuffer();
 
     gpuModel.updateTransforms(cpuModel);
     const glm::mat4 view_projection = projection * view; // Calculate once!

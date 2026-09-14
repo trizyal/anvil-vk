@@ -9,6 +9,7 @@
 #include <imgui.h>
 
 #include "Console.h"
+#include "DebugPass.h"
 #include "imgui_internal.h"
 
 namespace
@@ -257,13 +258,17 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
     bool bChanged = false;
     if (ImGui::Begin("Anvil Debug Views"))
     {
-        const char* modes[] = {
+        static const char* modes[static_cast<int>(DebugMode::Count)] = {
             "None",
             "Base Color",
+            "Geometry Normal",
+            "Raw Normal Map",
             "World Normal",
-            "Normal Map",
             "Metallic",
-            "Roughness"
+            "Roughness",
+            "Depth",
+            "Overdraw Complexity",
+            "Overshading Complexity"
         };
 
         int current_item = static_cast<int>(currentMode);
