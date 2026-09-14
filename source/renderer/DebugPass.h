@@ -18,18 +18,21 @@ class VulkanContext;
 class ShaderCompiler;
 class GBuffer;
 
+/**
+ * @brief Render view modes supported by the debug pass.
+ */
 enum class DebugMode : uint32_t
 {
-    None                  = 0,
-    BaseColor             = 1,
-    GeometryNormal        = 2,
-    RawNormalMap          = 3,
-    WorldNormal           = 4,
-    Metallic              = 5,
-    Roughness             = 6,
-    Depth                 = 7,
-    OverdrawComplexity    = 8,
-    OvershadingComplexity = 9,
+    None = 0,
+    BaseColor,
+    GeometryNormal,
+    RawNormalMap,
+    WorldNormal,
+    Metallic,
+    Roughness,
+    Depth,
+    OverdrawComplexity,
+    OvershadingComplexity,
     Count
 };
 
@@ -56,7 +59,8 @@ public:
     /**
      * @brief Compiles and initializes all engine debug pipelines.
      */
-    void initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat, VkFormat depthFormat);
+    void initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
+                             VkFormat depthFormat);
 
     /**
      * @brief Destroys all debug pipelines and layouts.
@@ -66,17 +70,17 @@ public:
     /**
      * @brief Returns true if the requested debug mode requires Forward rendering geometry intercepts.
      */
-    bool isForwardMode(uint32_t mode) const;
+    static bool isForwardMode(uint32_t mode);
 
     /**
      * @brief Returns true if the requested debug mode requires Deferred fullscreen reading.
      */
-    bool isDeferredMode(uint32_t mode) const;
+    static bool isDeferredMode(uint32_t mode);
 
     /**
      * @brief Retrieves the correct Forward pipeline based on the requested debug mode.
      */
-    VkPipeline getForwardPipeline(uint32_t mode) const;
+    [[nodiscard]] AnvilPipeline getForwardPipeline(uint32_t mode) const;
 
     /**
      * @brief Retrieves the unified Forward debug pipeline layout.

@@ -11,7 +11,7 @@ PipelineBuilder::PipelineBuilder()
     vertexInputInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
     inputAssembly = {.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
     rasterizer = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
-    colorBlendAttachments.clear();
+    colorBlend = {.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
     multisampling = {.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
     depthStencil = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
     // dynamicRendering = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
@@ -123,8 +123,7 @@ PipelineBuilder& PipelineBuilder::setCullMode(VkCullModeFlags inCullMode, VkFron
 
 PipelineBuilder& PipelineBuilder::disableBlending()
 {
-    // Apply blending disable to ALL bound color attachments
-    colorBlendAttachments.clear();
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
     for (size_t i = 0; i < colorAttachmentFormats.size(); i++)
     {
         VkPipelineColorBlendAttachmentState blend{};
@@ -138,12 +137,17 @@ PipelineBuilder& PipelineBuilder::disableBlending()
         colorBlendAttachments.push_back(blend);
     }
 
+    colorBlend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlend.logicOpEnable = VK_FALSE;
+    colorBlend.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+    colorBlend.pAttachments = colorBlendAttachments.data();
+
     return *this;
 }
 
 PipelineBuilder& PipelineBuilder::enableAdditiveBlending()
 {
-    colorBlendAttachments.clear();
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
     for (size_t i = 0; i < colorAttachmentFormats.size(); i++) {
         VkPipelineColorBlendAttachmentState blend{};
         blend.blendEnable = VK_TRUE;
@@ -153,9 +157,20 @@ PipelineBuilder& PipelineBuilder::enableAdditiveBlending()
         blend.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         blend.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         blend.alphaBlendOp = VK_BLEND_OP_ADD;
-        blend.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        blend.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT |
+            VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT |
+            VK_COLOR_COMPONENT_A_BIT;
+
         colorBlendAttachments.push_back(blend);
     }
+
+    colorBlend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlend.logicOpEnable = VK_FALSE;
+    colorBlend.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+    colorBlend.pAttachments = colorBlendAttachments.data();
+
     return *this;
 }
 
@@ -167,12 +182,6 @@ AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkP
     viewport_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewport_state_info.viewportCount = 1;
     viewport_state_info.scissorCount = 1;
-
-    VkPipelineColorBlendStateCreateInfo color_blending_info{};
-    color_blending_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    color_blending_info.logicOpEnable = VK_FALSE;
-    color_blending_info.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
-    color_blending_info.pAttachments = colorBlendAttachments.data();
 
     std::vector<VkDynamicState> dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamic_state_info{};
@@ -191,7 +200,7 @@ AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkP
     pipeline_create_info.pRasterizationState = &rasterizer;
     pipeline_create_info.pMultisampleState = &multisampling;
     pipeline_create_info.pDepthStencilState = &depthStencil;
-    pipeline_create_info.pColorBlendState = &color_blending_info; // Hard coded
+    pipeline_create_info.pColorBlendState = &colorBlend;
     pipeline_create_info.pDynamicState = &dynamic_state_info; // Hard coded
     pipeline_create_info.layout = inPipelineLayout;
 

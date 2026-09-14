@@ -38,6 +38,8 @@ namespace
     } //Axis
 
     int ConsoleInputCallback(ImGuiInputTextCallbackData* data);
+
+    const char* GetDebugModeName(DebugMode mode);
 }
 
 void UI::LoadFonts()
@@ -447,5 +449,27 @@ namespace
             }
         }
         return 0;
+    }
+
+    const char* GetDebugModeName(DebugMode mode)
+    {
+        switch (mode)
+        {
+        case DebugMode::None:                  return "None";
+        case DebugMode::BaseColor:             return "Base Color";
+        case DebugMode::GeometryNormal:        return "Geometry Normal";
+        case DebugMode::RawNormalMap:          return "Raw Normal Map";
+        case DebugMode::WorldNormal:           return "World Normal";
+        case DebugMode::Metallic:              return "Metallic";
+        case DebugMode::Roughness:             return "Roughness";
+        case DebugMode::Depth:                 return "Depth";
+        case DebugMode::OverdrawComplexity:    return "Overdraw Complexity";
+        case DebugMode::OvershadingComplexity: return "Overshading Complexity";
+        case DebugMode::Count:                 return "Unknown";
+            // NO default case!
+        }
+
+        // Satisfies the compiler in case an invalid integer is cast to the enum
+        return "Unknown";
     }
 }

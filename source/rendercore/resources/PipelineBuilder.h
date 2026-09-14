@@ -56,12 +56,10 @@ private:
 
     std::vector<VkFormat> colorAttachmentFormats;
 
-    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
-
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     VkPipelineRasterizationStateCreateInfo rasterizer{};
-    // VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    VkPipelineColorBlendStateCreateInfo colorBlend{};
     VkPipelineMultisampleStateCreateInfo multisampling{};
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     VkPipelineRenderingCreateInfo dynamicRendering{};
