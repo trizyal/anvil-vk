@@ -1,0 +1,69 @@
+// Copyright (C) 2026 trizyal
+// SPDX-License-Identifier: GPL-3.0-only
+
+struct VertexInput
+{
+    float3 position : POSITION;
+    float3 normal   : NORMAL;
+    float4 tangent  : TANGENT;
+    float2 uv       : TEXCOORD;
+};
+
+struct VertexOutput
+{
+    float4 position         : SV_Position;
+    float3 worldPosition    : POSITION;
+    float3 worldNormal      : NORMAL;
+    float4 worldTangent     : TANGENT;
+    float2 uv               : TEXCOORD;
+};
+
+struct PushConstants
+{
+    float4x4 viewProjection;
+    float4 cameraPosition;
+    uint32_t objectIndex;
+    uint32_t debugMode;
+};
+
+[[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
+[[vk::binding(0, 1)]] StructuredBuffer<float4x4> modelMatrices;
+[[vk::binding(0, 2)]] Sampler2D baseColorTexture;
+[[vk::binding(1, 2)]] Sampler2D normalTexture;
+[[vk::binding(2, 2)]] Sampler2D metallicRoughnessTexture;
+
+[shader("vertex")]
+VertexOutput vertexMain(VertexInput input) {
+    VertexOutput output;
+    float4x4 modelMatrix = modelMatrices[pushConstants.objectIndex];
+    float4 worldPos = mul(modelMatrix, float4(input.position, 1.0));
+
+    output.worldPosition = worldPos.xyz;
+    output.position = mul(pushConstants.viewProjection, worldPos);
+    output.worldNormal = mul((float3x3)modelMatrix, input.normal);
+    output.worldTangent = float4(mul((float3x3)modelMatrix, input.tangent.xyz), input.tangent.w);
+    output.uv = input.uv;
+    return output;
+}
+
+[shader("fragment")]
+float4 fragmentMain(VertexOutput input) : SV_Target {
+    float4 albedo = baseColorTexture.Sample(input.uv);
+    if (albedo.a < 0.5) discard;
+
+    float3 geoNormal = normalize(input.worldNormal);
+    float3 T = normalize(input.worldTangent.xyz);
+    T = normalize(T - dot(T, geoNormal) * geoNormal);
+    float3 B = cross(geoNormal, T) * input.worldTangent.w;
+    float3x3 TBN = float3x3(T, B, geoNormal);
+
+    float3 rawNormalMap = normalTexture.Sample(input.uv).xyz;
+
+    switch (pushConstants.debugMode) {
+        case 2: return float4(geoNormal * 0.5 + 0.5, 1.0);
+        case 3: return float4(rawNormalMap, 1.0);
+        case 8: return float4(0.05, 0.20, 0.05, 1.0); // Overdraw
+        case 9: return float4(0.05, 0.20, 0.05, 1.0); // Overshading
+        default: return float4(0.0);
+    }
+}

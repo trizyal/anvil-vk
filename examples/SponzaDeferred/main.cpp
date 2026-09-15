@@ -18,7 +18,7 @@ int main()
         });
 
         SponzaDeferred project;
-        project.initializeProject(anvil.getContext(), anvil.getSwapchain());
+        project.initializeProject(anvil.getContext(), anvil.getSwapchain(), anvil.getRenderer());
 
         // Register hot-reload event
         anvil.addShaderReloadCallback([&](std::string* outErrorLog) {

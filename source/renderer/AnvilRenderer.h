@@ -145,12 +145,12 @@ public:
      * Overrides rendering with forward debug shaders if necessary.
      */
     void drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline,
-        VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool hasGBuffer = false);
+        VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass = false) const;
 
     /**
      * @brief Resolves the G-Buffer lighting or injects deferred debug views.
      */
-    void DrawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline,
+    void drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline,
         VkPipelineLayout userLayout, VkDescriptorSet userSet0);
 
     static void TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,

@@ -37,6 +37,12 @@ enum class DebugMode : uint32_t
     Count
 };
 
+struct DebugDeferredPushConstants
+{
+    glm::vec4 cameraPosition;
+    uint32_t debugMode;
+};
+
 /**
  * @brief Manages engine-injected debug pipelines for both Forward and Deferred rendering.
  */
@@ -56,6 +62,9 @@ public:
     AnvilPipeline pipeline_Forward_Opaque;
     AnvilPipeline pipeline_Forward_Overdraw;
     AnvilPipeline pipeline_Forward_Overshading;
+
+    // Tracks if the G-Buffer has been recreated
+    VkImageView cachedGBufferView = VK_NULL_HANDLE;
 
     /**
      * @brief Compiles and initializes all engine debug pipelines.
@@ -91,7 +100,7 @@ public:
     /**
      * @brief Binds the deferred debug shader and reads the G-Buffer to output the debug view.
      */
-    void drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t mode, const glm::vec4& camPos);
+    void drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t debugMode, const glm::vec4& camPos);
 };
 
 

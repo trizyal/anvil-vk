@@ -178,19 +178,31 @@ VkPipelineLayout DebugPass::getForwardLayout() const
     return material_Forward.materialPipelineLayout;
 }
 
-void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t mode, const glm::vec4& camPos)
+void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t debugMode, const glm::vec4& camPos)
 {
-    set_Deferred = material_Deferred.allocateSet(0);
-    set_Deferred.bindTexture("gAlbedo", gBuffer.albedo);
-    set_Deferred.bindTexture("gNormal", gBuffer.normal);
-    set_Deferred.bindTexture("gPBR", gBuffer.pbr);
-    set_Deferred.bindTexture("gWorldPosition", gBuffer.worldPosition);
-    set_Deferred.updateDescriptorSets();
+    // CRITICAL FIX: Only allocate from the pool if we haven't done it yet!
+    if (set_Deferred.descriptorSet == VK_NULL_HANDLE)
+    {
+        set_Deferred = material_Deferred.allocateSet(0);
+    }
+
+    // CRITICAL FIX: Only update the descriptor set if the G-Buffer textures have changed!
+    // Since window resizing calls vkDeviceWaitIdle, the GPU is guaranteed to be safe here.
+    if (cachedGBufferView != gBuffer.albedo.imageView)
+    {
+        set_Deferred.bindTexture("gAlbedo", gBuffer.albedo);
+        set_Deferred.bindTexture("gNormal", gBuffer.normal);
+        set_Deferred.bindTexture("gPBR", gBuffer.pbr);
+        set_Deferred.bindTexture("gWorldPosition", gBuffer.worldPosition);
+        set_Deferred.updateDescriptorSets();
+
+        cachedGBufferView = gBuffer.albedo.imageView;
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Deferred.pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Deferred.materialPipelineLayout, 0, 1, &set_Deferred.descriptorSet, 0, nullptr);
 
-    struct DefPush { uint32_t mode; glm::vec3 pad; glm::vec4 cameraPosition; } pc = { mode, glm::vec3(0), camPos };
-    vkCmdPushConstants(cmd, material_Deferred.materialPipelineLayout, material_Deferred.pushConstantStages, 0, sizeof(DefPush), &pc);
+    DebugDeferredPushConstants pc = {camPos, debugMode };
+    vkCmdPushConstants(cmd, material_Deferred.materialPipelineLayout, material_Deferred.pushConstantStages, 0, sizeof(DebugDeferredPushConstants), &pc);
     vkCmdDraw(cmd, 3, 1, 0, 0);
 }

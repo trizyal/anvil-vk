@@ -8,6 +8,7 @@ struct PushConstants
     float4x4 viewProjection;
     float4 cameraPosition;
     uint32_t objectIndex;
+    uint32_t debugMode; // Ignored
 };
 
 struct SceneData

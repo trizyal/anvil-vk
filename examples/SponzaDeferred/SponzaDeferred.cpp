@@ -9,13 +9,12 @@
 #include "Console.h"
 #include "UIElements.h"
 
-CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
-
-void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
+void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer)
 {
     std::cout << "Initialize project" << std::endl;
     pContext = &inContext;
     pSwapchain = &inSwapchain;
+    pRenderer = &inRenderer;
 
     // Adjust camera to look down the main hall of Sponza
     camera.position = glm::vec3(0.0f, 2.0f, 0.0f);
@@ -225,82 +224,9 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
     render_info.pDepthAttachment = &depth_attachment;
 
     vkCmdBeginRendering(inCmd, &render_info);
+    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
 
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(inSwapchain.swapchainExtent.width);
-    viewport.height = static_cast<float>(inSwapchain.swapchainExtent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(inCmd, 0, 1, &viewport);
-
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = inSwapchain.swapchainExtent;
-    vkCmdSetScissor(inCmd, 0, 1, &scissor);
-
-    const float aspect = static_cast<float>(inSwapchain.swapchainExtent.width) /
-                         static_cast<float>(inSwapchain.swapchainExtent.height);
-
-    const glm::mat4 projection = camera.getProjectionMatrix(aspect);
-    const glm::mat4 view = camera.getViewMatrix();
-    const glm::mat4 view_projection = projection * view;
-
-    Frustum cameraFrustum{};
-    cameraFrustum.extractPlanes(view_projection);
-    bool enable_frustum_culling = Console::GetCVarBool("r.frustumculling");
-
-    vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Geo.pipeline);
-
-    VkDeviceSize offset = 0;
-    for (size_t i = 0; i < gpuModel.drawItems.size(); ++i)
-    {
-        const GPUModelDrawItem& draw_item = gpuModel.drawItems[i];
-        if (draw_item.gpuMeshIndex >= gpuModel.gpuMeshes.size())
-        {
-            continue;
-        }
-
-        // Fast AABB World Transform & Frustum Check
-        glm::vec3 center = draw_item.localBounds.getCenter();
-        glm::vec3 extents = draw_item.localBounds.getExtents();
-        glm::vec3 worldCenter = glm::vec3(draw_item.worldMatrix * glm::vec4(center, 1.0f));
-        glm::mat3 absModel = glm::mat3(
-            glm::abs(draw_item.worldMatrix[0]),
-            glm::abs(draw_item.worldMatrix[1]),
-            glm::abs(draw_item.worldMatrix[2])
-        );
-        glm::vec3 worldExtents = absModel * extents;
-
-        AABB worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
-
-        if (!cameraFrustum.contains(worldAABB) && enable_frustum_culling)
-        {
-            continue; // culled
-        }
-
-        std::vector<VkDescriptorSet> sets = {
-            gpuModel.modelSet.descriptorSet,
-            gpuModel.gpuMaterials[draw_item.gpuMaterialIndex].instance.descriptorSet
-        };
-
-        vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Geo.materialPipelineLayout, 1, 2, sets.data(), 0, nullptr);
-
-        ProjectPushConstants constants{};
-        constants.viewProjection = view_projection;
-        constants.camera = glm::vec4(camera.position, 1.0f);
-        constants.objectIndex = static_cast<uint32_t>(i); // Map to SSBO index
-        vkCmdPushConstants(inCmd, material_Geo.materialPipelineLayout, material_Geo.pushConstantStages, 0, sizeof(ProjectPushConstants), &constants);
-
-        const GPUMesh& mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];
-        vkCmdBindVertexBuffers(inCmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
-        vkCmdBindIndexBuffer(inCmd, mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdDrawIndexed(inCmd, mesh.indexCount, 1, 0, 0, 0);
-
-        AnvilRenderer::engineStats.drawCalls++;
-        AnvilRenderer::engineStats.primitiveCount += (mesh.indexCount / 3);
-    }
+    pRenderer->drawModel(inCmd, gpuModel, camera, pipeline_Geo.pipeline, material_Geo.materialPipelineLayout, VK_NULL_HANDLE, true);
 
     vkCmdEndRendering(inCmd);
 
@@ -313,49 +239,23 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
 
 void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(inSwapchain.swapchainExtent.width);
-    viewport.height = static_cast<float>(inSwapchain.swapchainExtent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(inCmd, 0, 1, &viewport);
-
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = inSwapchain.swapchainExtent;
-    vkCmdSetScissor(inCmd, 0, 1, &scissor);
-
+    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
     sponzaScene.updateGPUBuffer();
+    UI::RenderWorldAxes(camera.getViewMatrix());
 
-    uint32_t cvarDebugMode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
-    bool bSceneDirty = false;
-
-    if (bSceneDirty)
+    uint32_t debugMode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    if (UI::DrawDebugMenu(debugMode))
     {
-        sponzaScene.setGPUSceneData(sponzaScene.data);
-        sponzaScene.updateGPUBuffer();
+        Console::SetCVarInt("r.debugmode", static_cast<int>(debugMode));
     }
 
-    const float aspect = static_cast<float>(inSwapchain.swapchainExtent.width) /
-                         static_cast<float>(inSwapchain.swapchainExtent.height);
-
-    const glm::mat4 projection = camera.getProjectionMatrix(aspect);
-    const glm::mat4 view = camera.getViewMatrix();
-
-    UI::RenderWorldAxes(view);
-
-    vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Light.pipeline);
-    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Light.materialPipelineLayout, 0, 1, &sceneLightingSet.descriptorSet, 0, nullptr);
-
-    ProjectPushConstants pc{};
-    pc.camera = glm::vec4(camera.position, 1.0f);
-    vkCmdPushConstants(inCmd, material_Light.materialPipelineLayout, material_Light.pushConstantStages, 0, sizeof(ProjectPushConstants), &pc);
-
-    // Draw 3 vertices to generate the fullscreen triangle
-    vkCmdDraw(inCmd, 3, 1, 0, 0);
-
-    AnvilRenderer::engineStats.drawCalls++;
-    AnvilRenderer::engineStats.primitiveCount += 3;
+    if (DebugPass::isForwardMode(debugMode))
+    {
+        // Pass `false` because we are drawing Forward directly to the Swapchain
+        pRenderer->drawModel(inCmd, gpuModel, camera, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE, false);
+    }
+    else
+    {
+        pRenderer->drawDeferredLighting(inCmd, gBuffer, camera, pipeline_Light.pipeline, material_Light.materialPipelineLayout, sceneLightingSet.descriptorSet);
+    }
 }
