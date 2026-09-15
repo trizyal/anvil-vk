@@ -19,6 +19,7 @@ class VulkanContext;
 class ShaderCompiler;
 class GBuffer;
 
+#if 0
 /**
  * @brief Render view modes supported by the debug pass.
  */
@@ -36,6 +37,7 @@ enum class DebugMode : uint32_t
     OvershadingComplexity,
     Count
 };
+#endif
 
 struct DebugDeferredPushConstants
 {

@@ -9,6 +9,7 @@
 #include <imgui.h>
 
 #include "Console.h"
+#include "DebugModes.h"
 #include "DebugPass.h"
 #include "imgui_internal.h"
 

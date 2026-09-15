@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+#include "DebugModes.h"
 #include "GPUMesh.h"
 #include "GBuffer.h"
 #include "GPUModel.h"

@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Console.h"
 #include "CPUModel.h"
+#include "DebugModes.h"
 #include "ShaderCompiler.h"
 #include "UIRenderer.h"
 #include "VulkanContext.h"
@@ -52,7 +53,7 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
     });
 
     engineCompiler.initializeShaderCompiler();
-    engineCompiler.addSearchPath(ANVIL_SHADER_DIR);
+    engineCompiler.addSearchPath(SHADER_DIR);
     debugPass.initializeDebugPass(*pContext, engineCompiler, pSwapchain->swapchainFormat, pSwapchain->depthFormat);
 
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
