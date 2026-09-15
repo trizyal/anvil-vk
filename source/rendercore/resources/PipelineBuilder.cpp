@@ -123,7 +123,7 @@ PipelineBuilder& PipelineBuilder::setCullMode(VkCullModeFlags inCullMode, VkFron
 
 PipelineBuilder& PipelineBuilder::disableBlending()
 {
-    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
+    colorBlendAttachments.clear();
     for (size_t i = 0; i < colorAttachmentFormats.size(); i++)
     {
         VkPipelineColorBlendAttachmentState blend{};
@@ -147,7 +147,7 @@ PipelineBuilder& PipelineBuilder::disableBlending()
 
 PipelineBuilder& PipelineBuilder::enableAdditiveBlending()
 {
-    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
+    colorBlendAttachments.clear();
     for (size_t i = 0; i < colorAttachmentFormats.size(); i++) {
         VkPipelineColorBlendAttachmentState blend{};
         blend.blendEnable = VK_TRUE;

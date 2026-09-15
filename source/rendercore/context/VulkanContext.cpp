@@ -39,7 +39,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     vkb_instance_builder.set_app_name(inWindow.getWindowTitle().c_str());
     vkb_instance_builder.require_api_version(AnvilVulkan::API_VERSION);
 
-#   ifndef NDEBUG
+#ifndef NDEBUG
     vkb_instance_builder.request_validation_layers(true);
     vkb_instance_builder.set_debug_callback(VulkanDebug::DebugCallback);
 
@@ -59,9 +59,14 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
         VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
     );
 
+#if 0
+    VkValidationFeatureEnableEXT enables[] = {VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT};
+    vkb_instance_builder.add_validation_feature_enable(enables[0]);
+#endif
+
     // TODO: implement something like vkEnumerateInstanceExtensionProperties and then get available extensions.
     // vkb_instance_builder.enable_extension(VK_EXT_DEVICE_ADDRESS_BINDING_REPORT_EXTENSION_NAME);
-#   endif // NDEBUG
+#endif // NDEBUG
 
     vkb::Result<vkb::Instance> vkb_instance_result = vkb_instance_builder.build();
 
