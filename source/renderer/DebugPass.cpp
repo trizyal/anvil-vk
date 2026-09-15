@@ -149,8 +149,13 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
 {
     switch (static_cast<DebugMode>(mode))
     {
+    case DebugMode::BaseColor:
     case DebugMode::GeometryNormal:
     case DebugMode::RawNormalMap:
+    case DebugMode::WorldNormal:
+    case DebugMode::Metallic:
+    case DebugMode::Roughness:
+    case DebugMode::Depth:
         return pipeline_Forward_Opaque;
 
     case DebugMode::OverdrawComplexity:
@@ -161,11 +166,6 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
 
         // Explicitly cover the rest to prevent compiler warnings
     case DebugMode::None:
-    case DebugMode::BaseColor:
-    case DebugMode::WorldNormal:
-    case DebugMode::Metallic:
-    case DebugMode::Roughness:
-    case DebugMode::Depth:
     case DebugMode::Count:
         return AnvilPipeline{.pipeline = VK_NULL_HANDLE};
     }

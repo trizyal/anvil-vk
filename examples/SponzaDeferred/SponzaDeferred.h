@@ -16,13 +16,6 @@
 #include "Camera.h"
 #include "GBuffer.h"
 
-struct ProjectPushConstants
-{
-    glm::mat4 viewProjection;
-    glm::vec4 camera;
-    uint32_t objectIndex;
-};
-
 class SponzaDeferred
 {
 private:

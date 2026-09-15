@@ -295,7 +295,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     }
 
     // Only apply the debug pipeline if we are rendering forward directly to the Swapchain
-    bool use_debug_pipeline = !isGBufferPass && is_forward_debug;
+    bool use_debug_pipeline = !isGBufferPass && is_debug;
 
     // Only Forward Debug Passes and User Pass is left
     VkPipeline active_pipeline = use_debug_pipeline ? debugPass.getForwardPipeline(debug_mode).pipeline : userPipeline;
@@ -353,7 +353,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
         std::vector<VkDescriptorSet> sets;
         uint32_t first_set = 1;
 
-        if (!is_debug && userSet0 != VK_NULL_HANDLE)
+        if (!use_debug_pipeline && userSet0 != VK_NULL_HANDLE)
         {
             first_set = 0;
             sets.push_back(userSet0);
