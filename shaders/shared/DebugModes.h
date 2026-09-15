@@ -6,7 +6,7 @@
 
 #ifdef __cplusplus
     #include <cstdint>
-    #define CREATE_ENUM(Name) enum class Name : uint32_t
+    #define CREATE_ENUM(Name) enum Name : uint32_t
 #else
     #define CREATE_ENUM(Name) enum Name
 #endif

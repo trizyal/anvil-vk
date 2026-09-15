@@ -1,13 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-struct PushConstants
-{
-    float4x4 viewProjection;
-    float4 cameraPosition;
-    uint32_t objectIndex;
-    uint32_t debugMode; // Ignored
-};
+#include "shared/PushConstants.h"
 
 struct SceneData
 {

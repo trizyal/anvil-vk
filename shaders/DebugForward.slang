@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "shared/DebugModes.h"
+#include "shared/PushConstants.h"
 
 struct VertexInput
 {
@@ -18,14 +19,6 @@ struct VertexOutput
     float3 worldNormal      : NORMAL;
     float4 worldTangent     : TANGENT;
     float2 uv               : TEXCOORD;
-};
-
-struct PushConstants
-{
-    float4x4 viewProjection;
-    float4 cameraPosition;
-    uint32_t objectIndex;
-    DebugMode debugMode;
 };
 
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;

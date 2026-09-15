@@ -16,6 +16,7 @@
 #include "Window.h"
 #include "DebugNames.h"
 #include "GPUModel.h"
+#include "PushConstants.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
 
@@ -387,7 +388,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
         constants.viewProjection = view_projection;
         constants.cameraPosition = glm::vec4(camera.position, 1.0f);
         constants.objectIndex = static_cast<uint32_t>(i); // Map to SSBO index
-        constants.debugMode = debug_mode;
+        constants.debugMode = static_cast<DebugMode>(debug_mode);
         vkCmdPushConstants(inCmd, active_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
 
         const GPUMesh& mesh = model.gpuMeshes[draw_item.gpuMeshIndex];
