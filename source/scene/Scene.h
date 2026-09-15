@@ -25,9 +25,6 @@ struct GlobalSceneData
     glm::vec4 lightDirection;   /**< w = unused/padding */
     glm::vec4 lightColor;       /**< w = intensity */
     glm::vec4 ambientColor;     /**< w = unused/padding */
-
-    //uint32_t debugViewMode;     /**< Maps to the engine's DebugMode enum */
-    //glm::vec3 _padding;         /**< Strictly maintain 16-byte Vulkan UBO alignment */
 };
 
 /**

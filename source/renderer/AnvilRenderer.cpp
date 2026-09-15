@@ -16,7 +16,7 @@
 #include "VulkanResult.h"
 
 CVAR_INT("r.debugmode",
-    "0: None,"
+    "0: None"
     "1: Base Color"
     "2: Geometry Normal",
     0
@@ -256,7 +256,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
 }
 
-void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout)
+void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool hasGBuffer)
 {
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
     bool is_frozen = Console::GetCVarBool("r.freezerendering");

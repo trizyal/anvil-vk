@@ -13,6 +13,7 @@
 #include "AnvilMaterial.h"
 #include "PipelineBuilder.h"
 #include "ShaderProgram.h"
+#include "glm/vec4.hpp"
 
 class VulkanContext;
 class ShaderCompiler;
@@ -85,12 +86,12 @@ public:
     /**
      * @brief Retrieves the unified Forward debug pipeline layout.
      */
-    VkPipelineLayout getForwardLayout() const;
+    [[nodiscard]] VkPipelineLayout getForwardLayout() const;
 
     /**
      * @brief Binds the deferred debug shader and reads the G-Buffer to output the debug view.
      */
-    void drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t mode);
+    void drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t mode, const glm::vec4& camPos);
 };
 
 

@@ -30,7 +30,6 @@ void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSw
     scene_data.lightDirection = glm::vec4(-0.2f, -1.0f, -0.2f, 0.0f);
     scene_data.lightColor = glm::vec4(0.5f, 0.4f, 0.2f, 1.0f);
     scene_data.ambientColor = glm::vec4(0.1f, 0.1f, 0.07f, 1.0f);
-    scene_data.debugViewMode = 0;
 
     sponzaScene.createScene(*pContext);
     sponzaScene.setGPUSceneData(scene_data);
@@ -333,20 +332,6 @@ void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwap
     uint32_t cvarDebugMode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
     bool bSceneDirty = false;
 
-    if (sponzaScene.data.debugViewMode != cvarDebugMode)
-    {
-        sponzaScene.data.debugViewMode = cvarDebugMode;
-        bSceneDirty = true;
-    }
-
-    // 2. Sync from UI back to Scene and Console
-    if (UI::DrawDebugMenu(sponzaScene.data.debugViewMode))
-    {
-        Console::SetCVarInt("r.debugmode", static_cast<int>(sponzaScene.data.debugViewMode));
-        bSceneDirty = true;
-    }
-
-    // 3. Dispatch to GPU only if state changed
     if (bSceneDirty)
     {
         sponzaScene.setGPUSceneData(sponzaScene.data);

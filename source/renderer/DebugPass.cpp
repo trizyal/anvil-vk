@@ -6,6 +6,9 @@
 #include <iostream>
 
 #include "GPUMesh.h"
+#include "GBuffer.h"
+#include "GPUModel.h"
+#include "VulkanContext.h"
 
 void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
                                     VkFormat depthFormat)
@@ -173,4 +176,21 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
 VkPipelineLayout DebugPass::getForwardLayout() const
 {
     return material_Forward.materialPipelineLayout;
+}
+
+void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t mode, const glm::vec4& camPos)
+{
+    set_Deferred = material_Deferred.allocateSet(0);
+    set_Deferred.bindTexture("gAlbedo", gBuffer.albedo);
+    set_Deferred.bindTexture("gNormal", gBuffer.normal);
+    set_Deferred.bindTexture("gPBR", gBuffer.pbr);
+    set_Deferred.bindTexture("gWorldPosition", gBuffer.worldPosition);
+    set_Deferred.updateDescriptorSets();
+
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Deferred.pipeline);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Deferred.materialPipelineLayout, 0, 1, &set_Deferred.descriptorSet, 0, nullptr);
+
+    struct DefPush { uint32_t mode; glm::vec3 pad; glm::vec4 cameraPosition; } pc = { mode, glm::vec3(0), camPos };
+    vkCmdPushConstants(cmd, material_Deferred.materialPipelineLayout, material_Deferred.pushConstantStages, 0, sizeof(DefPush), &pc);
+    vkCmdDraw(cmd, 3, 1, 0, 0);
 }

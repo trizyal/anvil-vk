@@ -11,8 +11,10 @@
 
 #include <functional>
 
+#include "DebugPass.h"
 #include "FrameStats.h"
 #include "GPUProfiler.h"
+#include "ShaderCompiler.h"
 #include "Swapchain.h"
 
 class Camera;
@@ -103,6 +105,8 @@ private:
     bool recreateSwapchain = false;
 
     GPUProfiler gpuProfiler;
+    ShaderCompiler engineCompiler;
+    DebugPass debugPass;
 
 public:
     inline static FrameStats engineStats;
@@ -136,7 +140,18 @@ public:
      */
     void drawFrame(Window& inWindow, const RenderHooks& renderHooks);
 
-    void drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout);
+    /**
+     * @brief Handles frustum culling, culling freezes, and renders geometry.
+     * Overrides rendering with forward debug shaders if necessary.
+     */
+    void drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline,
+        VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool hasGBuffer = false);
+
+    /**
+     * @brief Resolves the G-Buffer lighting or injects deferred debug views.
+     */
+    void DrawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline,
+        VkPipelineLayout userLayout, VkDescriptorSet userSet0);
 
     static void TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
                                       VkImageLayout oldLayout, VkImageLayout newLayout);

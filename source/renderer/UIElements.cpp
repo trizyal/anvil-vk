@@ -260,22 +260,14 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
     bool bChanged = false;
     if (ImGui::Begin("Anvil Debug Views"))
     {
-        static const char* modes[static_cast<int>(DebugMode::Count)] = {
-            "None",
-            "Base Color",
-            "Geometry Normal",
-            "Raw Normal Map",
-            "World Normal",
-            "Metallic",
-            "Roughness",
-            "Depth",
-            "Overdraw Complexity",
-            "Overshading Complexity"
-        };
-
         int current_item = static_cast<int>(currentMode);
 
-        if (ImGui::Combo("View Mode", &current_item, modes, IM_ARRAYSIZE(modes)))
+        auto getter = [](void* data, int index) -> const char*
+        {
+            return GetDebugModeName(static_cast<DebugMode>(index));
+        };
+
+        if (ImGui::Combo("View Mode", &current_item, getter, nullptr, static_cast<int>(DebugMode::Count)))
         {
             currentMode = static_cast<uint32_t>(current_item);
             bChanged = true;
