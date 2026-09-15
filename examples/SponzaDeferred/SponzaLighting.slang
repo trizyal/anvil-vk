@@ -1,8 +1,6 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-import DebugViews;
-
 struct PushConstants
 {
     float4x4 viewProjection;

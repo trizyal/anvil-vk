@@ -19,26 +19,6 @@ class VulkanContext;
 class ShaderCompiler;
 class GBuffer;
 
-#if 0
-/**
- * @brief Render view modes supported by the debug pass.
- */
-enum class DebugMode : uint32_t
-{
-    None = 0,
-    BaseColor,
-    GeometryNormal,
-    RawNormalMap,
-    WorldNormal,
-    Metallic,
-    Roughness,
-    Depth,
-    OverdrawComplexity,
-    OvershadingComplexity,
-    Count
-};
-#endif
-
 struct DebugDeferredPushConstants
 {
     glm::vec4 cameraPosition;

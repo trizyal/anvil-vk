@@ -1,10 +1,12 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
+#include "shared/DebugModes.h"
+
 struct PushConstants
 {
     float4 cameraPosition;
-    uint debugMode;
+    DebugMode debugMode;
 }
 
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
@@ -30,11 +32,11 @@ float4 fragmentMain(float4 pos : SV_Position) : SV_Target {
     float3 wpos   = gWorldPosition.Load(texelCoord).xyz;
 
     switch (pushConstants.debugMode) {
-        case 1: return float4(albedo.rgb, 1.0);
-        case 4: return float4(normal * 0.5 + 0.5, 1.0);
-        case 5: return float4(pbr.b, pbr.b, pbr.b, 1.0);
-        case 6: return float4(pbr.g, pbr.g, pbr.g, 1.0);
-        case 7: {
+        case DebugMode::BaseColor: return float4(albedo.rgb, 1.0);
+        case DebugMode::WorldNormal: return float4(normal * 0.5 + 0.5, 1.0);
+        case DebugMode::Metallic: return float4(pbr.b, pbr.b, pbr.b, 1.0);
+        case DebugMode::Roughness: return float4(pbr.g, pbr.g, pbr.g, 1.0);
+        case DebugMode::Depth: {
             float d = distance(pushConstants.cameraPosition.xyz, wpos) / 50.0f;
             return float4(d, d, d, 1.0);
         }

@@ -1,6 +1,8 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
+#include "shared/DebugModes.h"
+
 struct VertexInput
 {
     float3 position : POSITION;
@@ -23,7 +25,7 @@ struct PushConstants
     float4x4 viewProjection;
     float4 cameraPosition;
     uint32_t objectIndex;
-    uint32_t debugMode;
+    DebugMode debugMode;
 };
 
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
@@ -68,15 +70,24 @@ float4 fragmentMain(VertexOutput input) : SV_Target {
 
     switch (pushConstants.debugMode)
     {
-        case 1: return albedo;
-        case 2: return float4(geoNormal * 0.5 + 0.5, 1.0);
-        case 3: return float4(sampledNormal, 1.0);
-        case 4: return float4(mappedNormal * 0.5 + 0.5, 1.0);
-        case 5: return float4(metallic, metallic, metallic, 1.0);
-        case 6: return float4(roughness, roughness, roughness, 1.0);
-        case 7: return float4(depth, depth, depth, 1.0);
-        case 8: return float4(0.05, 0.20, 0.05, 1.0); // Overdraw
-        case 9: return float4(0.05, 0.20, 0.05, 1.0); // Overshading
+        case DebugMode::BaseColor:
+            return albedo;
+        case DebugMode::GeometryNormal:
+            return float4(geoNormal * 0.5 + 0.5, 1.0);
+        case DebugMode::RawNormalMap:
+            return float4(sampledNormal, 1.0);
+        case DebugMode::WorldNormal:
+            return float4(mappedNormal * 0.5 + 0.5, 1.0);
+        case DebugMode::Metallic:
+            return float4(metallic, metallic, metallic, 1.0);
+        case DebugMode::Roughness:
+            return float4(roughness, roughness, roughness, 1.0);
+        case DebugMode::Depth:
+            return float4(depth, depth, depth, 1.0);
+        case DebugMode::Overdraw:
+            return float4(0.05, 0.20, 0.05, 1.0); // Overdraw
+        case DebugMode::Overshading:
+            return float4(0.05, 0.20, 0.05, 1.0); // Overshading
         default: return float4(0.0);
     }
 }

@@ -109,8 +109,8 @@ bool DebugPass::isDeferredMode(uint32_t mode)
 
     case DebugMode::GeometryNormal:
     case DebugMode::RawNormalMap:
-    case DebugMode::OverdrawComplexity:
-    case DebugMode::OvershadingComplexity:
+    case DebugMode::Overdraw:
+    case DebugMode::Overshading:
         return false;
     }
     // NO default case!
@@ -129,8 +129,8 @@ bool DebugPass::isForwardMode(uint32_t mode)
 
     case DebugMode::GeometryNormal:
     case DebugMode::RawNormalMap:
-    case DebugMode::OverdrawComplexity:
-    case DebugMode::OvershadingComplexity:
+    case DebugMode::Overdraw:
+    case DebugMode::Overshading:
         return true;
 
     case DebugMode::BaseColor:
@@ -159,10 +159,10 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
     case DebugMode::Depth:
         return pipeline_Forward_Opaque;
 
-    case DebugMode::OverdrawComplexity:
+    case DebugMode::Overdraw:
         return pipeline_Forward_Overdraw;
 
-    case DebugMode::OvershadingComplexity:
+    case DebugMode::Overshading:
         return pipeline_Forward_Overshading;
 
         // Explicitly cover the rest to prevent compiler warnings

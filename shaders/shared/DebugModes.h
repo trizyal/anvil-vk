@@ -16,19 +16,19 @@
  */
 CREATE_ENUM(DebugMode)
 {
-    None = 0,
+    None            = 0,
 
-    BaseColor,
-    GeometryNormal,
-    RawNormalMap,
-    WorldNormal,
-    Metallic,
-    Roughness,
-    Depth,
-    OverdrawComplexity,
-    OvershadingComplexity,
+    BaseColor       = 1,
+    GeometryNormal  = 2,
+    RawNormalMap    = 3,
+    WorldNormal     = 4,
+    Metallic        = 5,
+    Roughness       = 6,
+    Depth           = 7,
+    Overdraw        = 8,
+    Overshading     = 9,
 
-    Count = 10
+    Count           = 10
 };
 
 #endif //ANVIL_VK_DEBUGMODES_H

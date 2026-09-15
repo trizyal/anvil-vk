@@ -1,8 +1,6 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-import DebugViews;
-
 struct VertexInput
 {
     float3 position : POSITION;
@@ -25,7 +23,7 @@ struct PushConstants
     float4x4 viewProjection;
     float4 cameraPosition;
     uint32_t objectIndex;
-    uint32_t debugMode;
+    uint32_t debugMode; // Ignored
 };
 
 struct SceneData

@@ -456,8 +456,8 @@ namespace
         case DebugMode::Metallic:              return "Metallic";
         case DebugMode::Roughness:             return "Roughness";
         case DebugMode::Depth:                 return "Depth";
-        case DebugMode::OverdrawComplexity:    return "Overdraw Complexity";
-        case DebugMode::OvershadingComplexity: return "Overshading Complexity";
+        case DebugMode::Overdraw:    return "Overdraw Complexity";
+        case DebugMode::Overshading: return "Overshading Complexity";
         case DebugMode::Count:                 return "Unknown";
             // NO default case!
         }
