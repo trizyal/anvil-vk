@@ -259,22 +259,23 @@ void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<v
 bool UI::DrawDebugMenu(uint32_t& currentMode)
 {
     bool bChanged = false;
-    if (ImGui::Begin("Anvil Debug Views"))
+    if (ImGui::BeginMainMenuBar())
     {
-        int current_item = static_cast<int>(currentMode);
-
-        auto getter = [](void* data, int index) -> const char*
+        if (ImGui::BeginMenu("View"))
         {
-            return GetDebugModeName(static_cast<DebugMode>(index));
-        };
-
-        if (ImGui::Combo("View Mode", &current_item, getter, nullptr, static_cast<int>(DebugMode::Count)))
-        {
-            currentMode = static_cast<uint32_t>(current_item);
-            bChanged = true;
+            for (int i = 0; i < static_cast<int>(DebugMode::Count); ++i)
+            {
+                bool is_selected = (currentMode == i);
+                if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                {
+                    currentMode = i;
+                    bChanged = true;
+                }
+            }
+            ImGui::EndMenu();
         }
+        ImGui::EndMainMenuBar();
     }
-    ImGui::End();
     return bChanged;
 }
 

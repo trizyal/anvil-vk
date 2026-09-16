@@ -29,5 +29,4 @@ struct PushConstants
     DebugMode debugMode;
 };
 
-
 #endif //ANVIL_VK_PUSHCONSTANTS_H
