@@ -38,6 +38,7 @@ anvil-vk/
 │   ├── glm/
 │   ├── imgui/
 │   ├── slang/                   # Run fetch_slang.py to get the directory
+│   ├── stb/
 │   ├── vk-bootstrap/
 │   ├── volk/
 │   ├── Vulkan-Headers/
@@ -54,13 +55,24 @@ anvil-vk/
 │   ├── glTFTruck
 │   ├── BoxAnimated/        
 │   ├── RiggedSimple/        
+│   ├── CesiumMan/        
+│   ├── Sponza/        
+│   ├── SponzaDeferred/        
 │   └── # More to come   
+│   
+├── shaders/
+│   ├── DebugDeferred.slang
+│   ├── DebugForward.slang
+│   ├── DebugViews.slang
+│   └── # More to come
 │      
 └── source/
     │
     ├── core/
     │   ├── Anvil.cpp
-    │   ├── Anvi.h
+    │   ├── Anvil.h
+    │   ├── Console.cpp
+    │   ├── Console.h
     │   ├── Input.cpp
     │   ├── Input.h
     │   ├── Window.cpp
@@ -73,14 +85,14 @@ anvil-vk/
     │   ├── AnvilShaders.h
     │   ├── CPUModel.cpp
     │   ├── CPUModel.h
-    │   ├── GPUMesh.cpp
-    │   ├── GPUMesh.h
     │   ├── GPUModel.cpp
     │   ├── GPUModel.h
     │   ├── MaterialInstance.cpp
     │   ├── MaterialInstance.h
     │   ├── ShaderCompiler.cpp
     │   ├── ShaderCompiler.h
+    │   ├── ShaderProgram.cpp
+    │   ├── ShaderProgram.h
     │   ├── TextureLoader.cpp
     │   ├── TextureLoader.h
     │   │
@@ -96,8 +108,14 @@ anvil-vk/
     │   │   └── VulkanResult.h
     │   │
     │   └── resources/
+    │       ├── GBuffer.cpp
+    │       ├── GBuffer.h
     │       ├── GPUBuffer.cpp
     │       ├── GPUBuffer.h
+    │       ├── GPUMesh.cpp
+    │       ├── GPUMesh.h
+    │       ├── GPUTexture.cpp
+    │       ├── GPUTexture.h
     │       ├── PipelineBuilder.cpp
     │       ├── PipelineBuilder.h
     │       ├── ShaderModule.cpp
@@ -106,7 +124,11 @@ anvil-vk/
     ├── renderer/
     │   ├── AnvilRenderer.cpp
     │   ├── AnvilRenderer.h
+    │   ├── DebugPass.cpp
+    │   ├── DebugPass.h
     │   ├── FrameStats.h
+    │   ├── GPUProfiler.cpp
+    │   ├── GPUProfiler.h
     │   ├── ScreenLogger.cpp
     │   ├── ScreenLogger.h
     │   ├── UIElements.cpp

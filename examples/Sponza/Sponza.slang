@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-import DebugViews;
+#include "shared/PushConstants.h"
 
 struct VertexInput
 {
@@ -20,20 +20,11 @@ struct VertexOutput
     float2 uv               : TEXCOORD;
 };
 
-struct PushConstants
-{
-    float4x4 viewProjection;
-    float4 cameraPosition;
-    uint32_t objectIndex;
-};
-
 struct SceneData
 {
     float4 lightDirection;
     float4 lightColor;
     float4 ambientColor;
-    uint debugMode;
-    float3 _padding;
 };
 
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
@@ -89,12 +80,6 @@ float4 fragmentMain(VertexOutput input) : SV_Target
     // Apply the Normal Map
     float3 sampledNormal = normalTexture.Sample(input.uv).xyz * 2.0 - 1.0;
     float3 normal = normalize(mul(sampledNormal, TBN));
-
-    // --- ENGINE DEBUG OVERRIDE ---
-    if (sceneBuffer.debugMode != 0)
-    {
-        return GetDebugColor(sceneBuffer.debugMode, albedo.rgb, N, normal, metallic, roughness);
-    }
 
     // Calculate basic lighting vectors
     float3 lightDir = normalize(-sceneBuffer.lightDirection.xyz);

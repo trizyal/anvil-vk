@@ -87,9 +87,9 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAn
 
     UI::RenderWorldAxes(view);
 
-    PushConstants constants{};
+    ProjectPushConstants constants{};
     constants.renderMatrix = projection * view;
-    vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(PushConstants), &constants);
+    vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(ProjectPushConstants), &constants);
 
     vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterialInstance.descriptorSet, 0, nullptr);
 

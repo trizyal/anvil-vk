@@ -9,6 +9,8 @@
 #include <imgui.h>
 
 #include "Console.h"
+#include "DebugModes.h"
+#include "DebugPass.h"
 #include "imgui_internal.h"
 
 namespace
@@ -37,6 +39,8 @@ namespace
     } //Axis
 
     int ConsoleInputCallback(ImGuiInputTextCallbackData* data);
+
+    const char* GetDebugModeName(DebugMode mode);
 }
 
 void UI::LoadFonts()
@@ -255,26 +259,23 @@ void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<v
 bool UI::DrawDebugMenu(uint32_t& currentMode)
 {
     bool bChanged = false;
-    if (ImGui::Begin("Anvil Debug Views"))
+    if (ImGui::BeginMainMenuBar())
     {
-        const char* modes[] = {
-            "None",
-            "Base Color",
-            "World Normal",
-            "Normal Map",
-            "Metallic",
-            "Roughness"
-        };
-
-        int current_item = static_cast<int>(currentMode);
-
-        if (ImGui::Combo("View Mode", &current_item, modes, IM_ARRAYSIZE(modes)))
+        if (ImGui::BeginMenu("View"))
         {
-            currentMode = static_cast<uint32_t>(current_item);
-            bChanged = true;
+            for (int i = 0; i < static_cast<int>(DebugMode::Count); ++i)
+            {
+                bool is_selected = (currentMode == i);
+                if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                {
+                    currentMode = i;
+                    bChanged = true;
+                }
+            }
+            ImGui::EndMenu();
         }
+        ImGui::EndMainMenuBar();
     }
-    ImGui::End();
     return bChanged;
 }
 
@@ -442,5 +443,27 @@ namespace
             }
         }
         return 0;
+    }
+
+    const char* GetDebugModeName(DebugMode mode)
+    {
+        switch (mode)
+        {
+        case DebugMode::None:                  return "None";
+        case DebugMode::BaseColor:             return "Base Color";
+        case DebugMode::GeometryNormal:        return "Geometry Normal";
+        case DebugMode::RawNormalMap:          return "Raw Normal Map";
+        case DebugMode::WorldNormal:           return "World Normal";
+        case DebugMode::Metallic:              return "Metallic";
+        case DebugMode::Roughness:             return "Roughness";
+        case DebugMode::Depth:                 return "Depth";
+        case DebugMode::Overdraw:    return "Overdraw Complexity";
+        case DebugMode::Overshading: return "Overshading Complexity";
+        case DebugMode::Count:                 return "Unknown";
+            // NO default case!
+        }
+
+        // Satisfies the compiler in case an invalid integer is cast to the enum
+        return "Unknown";
     }
 }

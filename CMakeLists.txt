@@ -49,6 +49,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Project Directory Variables
 # --------------------------------------------------
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
+set(SHARED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders/shared")
 set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
 
@@ -169,6 +170,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${SOURCE_DIR}/rendercore/context
         ${SOURCE_DIR}/rendercore/resources
         ${SOURCE_DIR}/renderer
+        ${SHARED_DIR}
 )
 
 # Header only cgltf
@@ -201,7 +203,7 @@ if (WIN32)
 endif ()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
-        ANVIL_SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
+        SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
         ASSETS_DIR=\"${CMAKE_SOURCE_DIR}/assets\"
 )
 

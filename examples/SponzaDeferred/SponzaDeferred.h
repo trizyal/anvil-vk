@@ -5,6 +5,7 @@
 #define ANVIL_VK_SPONZADEFERRED_H
 
 #include "AnvilMaterial.h"
+#include "AnvilRenderer.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "Scene.h"
@@ -15,18 +16,12 @@
 #include "Camera.h"
 #include "GBuffer.h"
 
-struct PushConstants
-{
-    glm::mat4 viewProjection;
-    glm::vec4 camera;
-    uint32_t objectIndex;
-};
-
 class SponzaDeferred
 {
 private:
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
+    AnvilRenderer* pRenderer = nullptr;
 
     ShaderCompiler shaderCompiler;
 
@@ -51,7 +46,7 @@ private:
     Camera camera;
 
 public:
-    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain);
+    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer);
     void cleanupProject();
     bool loadPipelines(std::string* outErrorMessage = nullptr);
 

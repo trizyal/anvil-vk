@@ -1,22 +1,13 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-import DebugViews;
-
-struct PushConstants
-{
-    float4x4 viewProjection;
-    float4 cameraPosition;
-    uint32_t objectIndex;
-};
+#include "shared/PushConstants.h"
 
 struct SceneData
 {
     float4 lightDirection;
     float4 lightColor;
     float4 ambientColor;
-    uint debugMode;
-    float3 _padding;
 };
 
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
@@ -48,8 +39,6 @@ float4 fragmentMain(float4 pos : SV_Position) : SV_Target
 
     float roughness = pbr.g;
     float metallic  = pbr.b;
-
-    if (sceneBuffer.debugMode != 0) return GetDebugColor(sceneBuffer.debugMode, albedo.rgb, normal, normal, metallic, roughness);
 
     float3 lightDirection = normalize(-sceneBuffer.lightDirection.xyz);
     float nDotL = max(dot(normal, lightDirection), 0.0);

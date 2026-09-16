@@ -6,13 +6,34 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "Camera.h"
+#include "Console.h"
+#include "CPUModel.h"
+#include "DebugModes.h"
 #include "ShaderCompiler.h"
 #include "UIRenderer.h"
 #include "VulkanContext.h"
 #include "Window.h"
 #include "DebugNames.h"
+#include "GPUModel.h"
+#include "PushConstants.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
+
+CVAR_INT("r.debugmode",
+    "0: None"
+    "1: Base Color"
+    "2: Raw Normal Maps"
+    "3: World Normal"
+    "4: Metallic"
+    "5: Roughness"
+    "6: Depth",
+    0
+);
+
+CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
+
+CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
@@ -26,6 +47,16 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
     const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
     gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
 
+    Console::RegisterCommand("freezerendering", "Freezes the rendering state.", [](const std::vector<std::string>&) {
+        bool current = Console::GetCVarBool("r.freezerendering");
+        Console::SetCVarBool("r.freezerendering", !current);
+        Console::Print(current ? "Rendering frozen." : "Rendering un-frozen.");
+    });
+
+    engineCompiler.initializeShaderCompiler();
+    engineCompiler.addSearchPath(SHADER_DIR);
+    debugPass.initializeDebugPass(*pContext, engineCompiler, pSwapchain->swapchainFormat, pSwapchain->depthFormat);
+
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }
 
@@ -35,6 +66,8 @@ AnvilRenderer::~AnvilRenderer()
     if (pContext && pContext->device)
     {
         vkDeviceWaitIdle(pContext->device);
+        debugPass.cleanupDebugPass();
+        engineCompiler.shutdownShaderCompiler();
 
         for (const AnvilFrame& anvil_frame : anvilFrames)
         {
@@ -132,11 +165,11 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     }
 
     // Transition image here
-    transitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     // Transition Depth Image
-    transitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    TransitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     // Begin Dynamic Rendering
     VkRenderingAttachmentInfo color_attachment_info{};
@@ -179,7 +212,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     vkCmdEndRendering(cmd);
 
     // Transition image to present layout
-    transitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
@@ -245,6 +278,145 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     anvilFrameIndex %= FRAMES_IN_FLIGHT;
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
 }
+
+void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
+{
+    uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    bool is_forward_debug = DebugPass::isForwardMode(debug_mode);
+    bool is_debug = static_cast<DebugMode>(debug_mode) > DebugMode::None;
+    bool is_frozen = Console::GetCVarBool("r.freezerendering");
+    bool is_culling = Console::GetCVarBool("r.frustumculling");
+
+    // Skip G-Buffer geometry generation completely if we are doing a Deferred Debug Pass
+    if (isGBufferPass)
+    {
+        if (is_forward_debug)
+        {
+            return;
+        }
+    }
+
+    // Only apply the debug pipeline if we are rendering forward directly to the Swapchain
+    bool use_debug_pipeline = !isGBufferPass && is_debug;
+
+    // Only Forward Debug Passes and User Pass is left
+    VkPipeline active_pipeline = use_debug_pipeline ? debugPass.getForwardPipeline(debug_mode).pipeline : userPipeline;
+    VkPipelineLayout active_layout = use_debug_pipeline ? debugPass.getForwardLayout() : userLayout;
+
+    const float aspect = static_cast<float>(pSwapchain->swapchainExtent.width) /
+                         static_cast<float>(pSwapchain->swapchainExtent.height);
+    const glm::mat4 projection = camera.getProjectionMatrix(aspect);
+    const glm::mat4 view = camera.getViewMatrix();
+    const glm::mat4 view_projection = projection * view;
+
+    static glm::mat4 frozen_vp = view_projection;
+    static bool was_frozen = false;
+    if (is_frozen && !was_frozen)
+    {
+        frozen_vp = view_projection;
+    }
+    was_frozen = is_frozen;
+
+    Frustum camera_frustum{};
+    camera_frustum.extractPlanes(is_frozen ? frozen_vp : view_projection);
+
+    vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_pipeline);
+
+    VkDeviceSize offset = 0;
+    for (size_t i = 0 ; i < model.drawItems.size() ; ++i)
+    {
+        const GPUModelDrawItem& draw_item = model.drawItems[i];
+        if (draw_item.gpuMeshIndex >= model.gpuMeshes.size())
+        {
+            continue;
+        }
+
+        if (is_culling)
+        {
+            // Fast AABB World Transform & Frustum Check
+            glm::vec3 center = draw_item.localBounds.getCenter();
+            glm::vec3 extents = draw_item.localBounds.getExtents();
+            glm::vec3 worldCenter = glm::vec3(draw_item.worldMatrix * glm::vec4(center, 1.0f));
+            glm::mat3 absModel = glm::mat3(
+                glm::abs(draw_item.worldMatrix[0]),
+                glm::abs(draw_item.worldMatrix[1]),
+                glm::abs(draw_item.worldMatrix[2])
+            );
+            glm::vec3 worldExtents = absModel * extents;
+
+            AABB worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
+
+            if (!camera_frustum.contains(worldAABB))
+            {
+                continue; // culled
+            }
+        }
+
+        std::vector<VkDescriptorSet> sets;
+        uint32_t first_set = 1;
+
+        if (!use_debug_pipeline && userSet0 != VK_NULL_HANDLE)
+        {
+            first_set = 0;
+            sets.push_back(userSet0);
+        }
+
+        // Safely fallback if a primitive is missing a material
+        VkDescriptorSet matSet = VK_NULL_HANDLE;
+        if (draw_item.gpuMaterialIndex >= 0 && draw_item.gpuMaterialIndex < static_cast<int>(model.gpuMaterials.size()))
+        {
+            matSet = model.gpuMaterials[draw_item.gpuMaterialIndex].instance.descriptorSet;
+        }
+        else if (!model.gpuMaterials.empty())
+        {
+            matSet = model.gpuMaterials[0].instance.descriptorSet;
+        }
+
+        // Push Set 1 and Set 2
+        if (model.modelSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets.push_back(model.modelSet.descriptorSet);
+        }
+        if (matSet != VK_NULL_HANDLE)
+        {
+            sets.push_back(matSet);
+        }
+
+        vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_layout, first_set, sets.size(), sets.data(), 0, nullptr);
+
+        PushConstants constants{};
+        constants.viewProjection = view_projection;
+        constants.cameraPosition = glm::vec4(camera.position, 1.0f);
+        constants.objectIndex = static_cast<uint32_t>(i); // Map to SSBO index
+        constants.debugMode = static_cast<DebugMode>(debug_mode);
+        vkCmdPushConstants(inCmd, active_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+
+        const GPUMesh& mesh = model.gpuMeshes[draw_item.gpuMeshIndex];
+        vkCmdBindVertexBuffers(inCmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
+        vkCmdBindIndexBuffer(inCmd, mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(inCmd, mesh.indexCount, 1, 0, 0, 0);
+
+        engineStats.drawCalls++;
+        engineStats.primitiveCount += (mesh.indexCount / 3);
+    }
+}
+
+void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0)
+{
+    uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+
+    if (static_cast<DebugMode>(debug_mode) == DebugMode::None)
+    {
+        vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userPipeline);
+        vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userLayout, 0, 1, &userSet0, 0, nullptr);
+        vkCmdDraw(inCmd, 3, 1, 0, 0);
+    }
+    else if (DebugPass::isDeferredMode(debug_mode))
+    {
+        debugPass.drawDeferredResolve(inCmd, gBuffer, debug_mode, glm::vec4(camera.position, 1.0f));
+    }
+}
+
 
 void AnvilRenderer::setupCommandBuffers()
 {
@@ -331,7 +503,7 @@ AnvilFrame& AnvilRenderer::getCurrentFrame()
     return anvilFrames[anvilFrameIndex % FRAMES_IN_FLIGHT];
 }
 
-void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
+void AnvilRenderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkImageMemoryBarrier image_barrier{};
     image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -391,4 +563,21 @@ void AnvilRenderer::transitionImageLayout(VkCommandBuffer inCmd, VkImage inImage
     }
     
     vkCmdPipelineBarrier(inCmd, src_stage_flags, dst_stage_mask, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);
+}
+
+void AnvilRenderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
+{
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(inSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inSwapchain.swapchainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(inCmd, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = inSwapchain.swapchainExtent;
+    vkCmdSetScissor(inCmd, 0, 1, &scissor);
 }

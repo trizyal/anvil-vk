@@ -5,6 +5,7 @@
 #define EXAMPLE_SPONZA_H
 
 #include "AnvilMaterial.h"
+#include "AnvilRenderer.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "Scene.h"
@@ -14,18 +15,12 @@
 #include "VulkanContext.h"
 #include "Camera.h"
 
-struct PushConstants
-{
-    glm::mat4 viewProjection;
-    glm::vec4 camera;
-    uint32_t objectIndex;
-};
-
 class Sponza
 {
 private:
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
+    AnvilRenderer* pRenderer = nullptr;
 
     ShaderCompiler shaderCompiler;
 
@@ -41,7 +36,7 @@ private:
     AnvilPipeline pipeline;
 
 public:
-    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain);
+    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer);
     void cleanupProject();
     bool loadPipeline(std::string* outErrorMessage = nullptr);
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);

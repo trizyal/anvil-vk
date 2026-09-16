@@ -46,7 +46,7 @@ bool ShaderCompiler::initializeShaderCompiler()
         std::cerr << "Failed to create Slang Global Session." << std::endl;
         return false;
     }
-    searchPaths.emplace_back(ANVIL_SHADER_DIR);
+    searchPaths.emplace_back(SHADER_DIR);
     return true;
 }
 
@@ -125,7 +125,7 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
         }
 
         // Needs to be initialized outside the .empty() block
-        const char* defaultPath[] = {ANVIL_SHADER_DIR};
+        const char* defaultPath[] = {SHADER_DIR};
 
         if (search_paths.empty())
         {

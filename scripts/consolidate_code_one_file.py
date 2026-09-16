@@ -4,11 +4,12 @@ import sys
 # Resolve paths relative to this script's location (root/scripts)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 source_dir = os.path.abspath(os.path.join(script_dir, '..', 'source'))
+shaders_dir = os.path.abspath(os.path.join(script_dir, '..', 'shaders'))
 examples_dir = os.path.abspath(os.path.join(script_dir, '..', 'examples'))
 output_dir = os.path.abspath(os.path.join(script_dir, 'output'))
 
 # Default configuration
-directories_to_walk = [source_dir]
+directories_to_walk = [source_dir, shaders_dir]
 output_filename = 'AnvilCodebase.txt'
 
 # Check for command-line arguments

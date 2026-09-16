@@ -16,7 +16,7 @@
 #include "TextureLoader.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
-struct PushConstants
+struct ProjectPushConstants
 {
     glm::mat4 renderMatrix;
 };
