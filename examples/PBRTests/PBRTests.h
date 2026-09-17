@@ -27,6 +27,8 @@ private:
     bool loadGeometryPipeline(std::string* outErrorMessage);
     bool loadLightingPipeline(std::string* outErrorMessage);
 
+    int pendingSceneIndex = -1;
+
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
     AnvilRenderer* pRenderer = nullptr;

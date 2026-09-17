@@ -145,6 +145,13 @@ bool PBRTests::loadLightingPipeline(std::string* outErrorMessage)
 
 void PBRTests::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
 {
+    if (pendingSceneIndex != -1)
+    {
+        // Safe to destroy old objects here because 'inCmd' hasn't used them yet.
+        sceneManager.loadScene(pendingSceneIndex, *pContext, material_Geo, camera, pbrScene);
+        pendingSceneIndex = -1;
+    }
+
     if (gBuffer.currentExtent.width != inSwapchain.swapchainExtent.width || gBuffer.currentExtent.height != inSwapchain.swapchainExtent.height)
     {
         vkDeviceWaitIdle(pContext->device);
@@ -208,7 +215,9 @@ void PBRTests::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
     {
         if (static_cast<int>(selectedSceneIdx) != activeSceneIdx)
         {
-            sceneManager.loadScene(selectedSceneIdx, *pContext, material_Geo, camera, pbrScene);
+            // FIX: DO NOT load the scene here! Defer it to the start of the next frame.
+            // sceneManager.loadScene(selectedSceneIdx, *pContext, material_Geo, camera, pbrScene);
+            pendingSceneIndex = static_cast<int>(selectedSceneIdx);
         }
     }
     Console::SetCVarInt("r.debugmode", static_cast<int>(debugMode));
