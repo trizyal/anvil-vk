@@ -15,6 +15,8 @@
 #include <imgui.h>
 #include <string>
 
+#include "SceneConfig.h"
+
 namespace UI
 {
     inline const char* FontPath = ASSETS_DIR "/fonts/Open_Sans/OpenSans-Regular.ttf";
@@ -62,6 +64,15 @@ namespace UI
      * @return True if the mode was changed this frame.
      */
     bool DrawDebugMenu(uint32_t& currentMode);
+
+    /**
+     * @brief Renders the top menu bar containing Debug Views and Scene Selection.
+     * @return True if either the Debug View or Active Scene was changed.
+     */
+    bool DrawDebugMenu(uint32_t& currentMode,
+                       const std::vector<SceneConfig>& scenes,
+                       int& activeSceneIdx,
+                       uint32_t& outSelectedScene);
 
     /**
      * @brief Renders the developer console overlay window.
