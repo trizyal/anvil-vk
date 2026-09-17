@@ -43,14 +43,22 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
     vkDeviceWaitIdle(inContext.device);
 
     SceneConfig& scene_config = availableScenes[sceneIndex];
-    SceneConfig::LoadFromFile(scene_config.configPath, scene_config);
+    if (!SceneConfig::LoadFromFile(scene_config.configPath, scene_config))
+    {
+        std::cerr << "[SceneManager] Could not load scene config from file: " << scene_config.configPath << std::endl;
+    }
 
     try
     {
         // Tear down the old model and load the new model
         gpuModel.destroyGPUModel();
         cpuModel = CPUModel();
-        cpuModel.loadGLTF(scene_config.modelPath);
+
+        // FIX: Prepend the absolute ASSETS_DIR macro so it ignores the Working Directory
+        // TODO: Need to find a better way to do this
+        std::string absoluteModelPath = std::string(ASSETS_DIR) + "/" + scene_config.modelPath;
+
+        cpuModel.loadGLTF(absoluteModelPath);
         gpuModel.createGPUModel(inContext, cpuModel, inMaterial);
 
         // Reset camera
@@ -81,6 +89,7 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
     }
     catch (const std::exception& e)
     {
+        std::cerr << "[SceneManager] Fatal Exception while loading: " << e.what() << std::endl;
         LOGUI("[SceneManager] Failed to load scene: " + scene_config.sceneName, AnvilColor::Red);
         return false;
     }

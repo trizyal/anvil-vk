@@ -1,8 +1,8 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_SPONZADEFERRED_H
-#define ANVIL_VK_SPONZADEFERRED_H
+#ifndef EXAMPLE_SPONZADEFERRED_H
+#define EXAMPLE_SPONZADEFERRED_H
 
 #include "AnvilMaterial.h"
 #include "AnvilRenderer.h"
@@ -59,4 +59,4 @@ private:
 };
 
 
-#endif //ANVIL_VK_SPONZADEFERRED_H
+#endif //EXAMPLE_SPONZADEFERRED_H
