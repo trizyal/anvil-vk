@@ -22,9 +22,9 @@ class VulkanContext;
  */
 struct GlobalSceneData
 {
-    glm::vec4 lightDirection;   /**< w = unused/padding */
-    glm::vec4 lightColor;       /**< w = intensity */
-    glm::vec4 ambientColor;     /**< w = unused/padding */
+    glm::vec4 lightDirection = glm::vec4(0.0f);   /**< w = unused/padding */
+    glm::vec4 lightColor = glm::vec4(0.0f);       /**< w = intensity */
+    glm::vec4 ambientColor = glm::vec4(0.0f);     /**< w = unused/padding */
 };
 
 /**
