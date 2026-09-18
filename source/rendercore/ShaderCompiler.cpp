@@ -78,7 +78,7 @@ void ShaderCompiler::resetSession()
     session.setNull();
 }
 
-int32_t ShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel inLevel)
+int32_t ShaderCompiler::GetSlangOptimizationLevel(const OptimizationLevel inLevel)
 {
     switch (inLevel)
     {
@@ -143,7 +143,7 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
             .name = slang::CompilerOptionName::Optimization,
             .value = {
                 .kind = slang::CompilerOptionValueKind::Int,
-                .intValue0 = getSlangOptimizationLevel(optimizationLevel),
+                .intValue0 = GetSlangOptimizationLevel(optimizationLevel),
                 .intValue1 = 0,
                 .stringValue0 = nullptr, .stringValue1 = nullptr
             }
