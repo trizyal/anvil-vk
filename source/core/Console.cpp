@@ -4,6 +4,9 @@
 #include "Console.h"
 #include <sstream>
 
+/**
+ * @brief Internal flag tracking whether the console UI should scroll to the bottom of the log.
+ */
 static bool s_ScrollToBottom = false;
 
 std::unordered_map<std::string, CVar>& Console::GetCVars()
