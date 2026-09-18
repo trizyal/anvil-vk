@@ -58,12 +58,18 @@ anvil-vk/
 │   ├── CesiumMan/        
 │   ├── Sponza/        
 │   ├── SponzaDeferred/        
+│   ├── PBRTests/        
 │   └── # More to come   
 │   
 ├── shaders/
+│   ├── shared/
+│   │   ├── DebugModes.h
+│   │   ├── PushConstants.h
+│   │   └── # More to come
+│   │
 │   ├── DebugDeferred.slang
 │   ├── DebugForward.slang
-│   ├── DebugViews.slang
+│   ├── PBR.slang
 │   └── # More to come
 │      
 └── source/
@@ -140,7 +146,10 @@ anvil-vk/
         ├── Camera.cpp
         ├── Camera.h
         ├── Scene.cpp
-        └── Scene.h
+        ├── Scene.h
+        ├── SceneConfig.h
+        ├── SceneManager.cpp
+        └── SceneManager.h
 ```
 
 ## Conventions

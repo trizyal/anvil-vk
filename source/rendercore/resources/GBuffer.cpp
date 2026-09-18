@@ -46,7 +46,7 @@ VkRenderingAttachmentInfo GBuffer::getAttachmentInfo(const GPUTexture& texture)
     attachment_info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment_info.clearValue.color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+    attachment_info.clearValue.color = {{0.2f, 0.2f, 0.2f, 1.0f}};
 
     return attachment_info;
 }

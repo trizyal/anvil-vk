@@ -279,6 +279,50 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
     return bChanged;
 }
 
+bool UI::DrawDebugMenu(uint32_t& currentMode,
+                       const std::vector<SceneConfig>& scenes,
+                       int& activeSceneIdx,
+                       uint32_t& outSelectedScene)
+{
+    bool bChanged = false;
+    outSelectedScene = static_cast<uint32_t>(activeSceneIdx);
+
+    if (ImGui::BeginMainMenuBar())
+    {
+        // --- SCENE SELECTOR MENU ---
+        if (ImGui::BeginMenu("Scenes"))
+        {
+            for (size_t i = 0; i < scenes.size(); ++i)
+            {
+                bool is_selected = (activeSceneIdx == static_cast<int>(i));
+                if (ImGui::MenuItem(scenes[i].sceneName.c_str(), nullptr, is_selected))
+                {
+                    outSelectedScene = static_cast<uint32_t>(i);
+                    bChanged = true;
+                }
+            }
+            ImGui::EndMenu();
+        }
+
+        // --- DEBUG VIEW MENU ---
+        if (ImGui::BeginMenu("View"))
+        {
+            for (int i = 0; i < static_cast<int>(DebugMode::Count); ++i)
+            {
+                bool is_selected = (currentMode == i);
+                if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                {
+                    currentMode = i;
+                }
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+    return bChanged;
+}
+
 // Static UI state stored securely in the CPP file
 static char s_ConsoleInputBuffer[256] = "";
 static int s_HistoryPosition = -1;
