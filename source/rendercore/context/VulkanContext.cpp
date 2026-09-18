@@ -94,6 +94,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     // Select Physical Device
     VkPhysicalDeviceFeatures base_features{};
     base_features.samplerAnisotropy = VK_TRUE;
+    base_features.fillModeNonSolid = VK_TRUE; // Enable wireframe support
 
     VkPhysicalDeviceVulkan13Features features13{};
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;

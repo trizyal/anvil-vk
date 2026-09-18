@@ -71,6 +71,11 @@ void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
         pipeline_Forward_Overshading = builder.enableDepthTest(true, VK_COMPARE_OP_LESS)
                 .enableAdditiveBlending()
                 .buildPipeline(pContext->device, material_Forward.materialPipelineLayout DNAME("EngineForwardOvershadingDebug"));
+
+        pipeline_Forward_Wireframe = builder.enableDepthTest(true, VK_COMPARE_OP_LESS)
+                .setPolygonMode(VK_POLYGON_MODE_LINE)
+                .disableBlending()
+                .buildPipeline(pContext->device, material_Forward.materialPipelineLayout DNAME("EngineForwardWireframeDebug"));
     }
 }
 
@@ -87,6 +92,7 @@ void DebugPass::cleanupDebugPass()
         pipeline_Forward_Opaque.destroy(pContext);
         pipeline_Forward_Overdraw.destroy(pContext);
         pipeline_Forward_Overshading.destroy(pContext);
+        pipeline_Forward_Wireframe.destroy(pContext);
         material_Forward.destroyMaterial();
         program_Forward.destroyProgram();
     }
@@ -111,6 +117,7 @@ bool DebugPass::isDeferredMode(uint32_t mode)
     case DebugMode::RawNormalMap:
     case DebugMode::Overdraw:
     case DebugMode::Overshading:
+    case DebugMode::Wireframe:
         return false;
     }
     // NO default case!
@@ -131,6 +138,7 @@ bool DebugPass::isForwardMode(uint32_t mode)
     case DebugMode::RawNormalMap:
     case DebugMode::Overdraw:
     case DebugMode::Overshading:
+    case DebugMode::Wireframe:
         return true;
 
     case DebugMode::BaseColor:
@@ -164,6 +172,9 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
 
     case DebugMode::Overshading:
         return pipeline_Forward_Overshading;
+
+    case DebugMode::Wireframe:
+        return pipeline_Forward_Wireframe;
 
         // Explicitly cover the rest to prevent compiler warnings
     case DebugMode::None:

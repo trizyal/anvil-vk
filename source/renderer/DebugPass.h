@@ -44,6 +44,7 @@ public:
     AnvilPipeline pipeline_Forward_Opaque;
     AnvilPipeline pipeline_Forward_Overdraw;
     AnvilPipeline pipeline_Forward_Overshading;
+    AnvilPipeline pipeline_Forward_Wireframe;
 
     // Tracks if the G-Buffer has been recreated
     VkImageView cachedGBufferView = VK_NULL_HANDLE;
