@@ -15,9 +15,19 @@ namespace VulkanResult
 								   "File: " + file + ":" + std::to_string(line) + "\n" +
 								   "Call: " + functionName + "\n";
 
-    		// Optional: Can also use std::cerr here if we want it in the console.
     		std::cerr << error_message << std::endl;
-    		throw std::runtime_error(error_message);
+
+    		// Avoid throwing errors
+    		// throw std::runtime_error(error_message);
+
+    		// Halt execution
+#if defined(_MSC_VER)
+    		__debugbreak(); // Triggers a breakpoint in MSVC
+#else
+    		__builtin_trap(); // Triggers a breakpoint in GCC/Clang
+#endif
+
+    		std::abort(); // Ensures the program terminates
     	}
     }
 
