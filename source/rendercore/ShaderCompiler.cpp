@@ -17,6 +17,10 @@ using namespace AnvilShaders;
 
 namespace
 {
+    /**
+     * @brief Generates an empty, invalid shader artifact to return upon compilation failure.
+     * @return An empty ShaderCompileResult.
+     */
     ShaderCompileResult GetEmptyShaderByteCode()
     {
         ShaderCompileResult empty;
@@ -26,6 +30,11 @@ namespace
         return empty;
     }
 
+    /**
+     * @brief Reads diagnostic output from Slang and appends any errors or warnings to the output string.
+     * @param slangBlob The diagnostic text blob returned by Slang APIs.
+     * @param outErrorMessage String reference where extracted text will be appended.
+     */
     void DiagnoseIfNeeded(slang::IBlob* slangBlob, std::string& outErrorMessage)
     {
         if (slangBlob && slangBlob->getBufferSize() > 0)
@@ -37,7 +46,7 @@ namespace
             outErrorMessage += '\n';
         }
     }
-} //Anonymous
+}
 
 bool ShaderCompiler::initializeShaderCompiler()
 {
