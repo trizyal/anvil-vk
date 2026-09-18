@@ -63,24 +63,29 @@ public:
      * @brief Wrapper for glfwWindowShouldClose().
      * @return `true` if window should close, otherwise `false`
      */
-    [[nodiscard]] bool bShouldClose() const;
+    [[nodiscard]]
+    bool bShouldClose() const;
 
     /**
      * @brief Checks if the window is currently minimized by the OS.
      * @return True if the framebuffer extent width or height is 0, false otherwise.
      */
-    [[nodiscard]] bool isMinimised() const;
+    [[nodiscard]]
+    bool isMinimised() const;
 
     /**
+     * @brief Returns the title of the GLFW window.
      * @return Window title.
      */
-    [[nodiscard]] std::string getWindowTitle() const;
+    [[nodiscard]]
+    std::string getWindowTitle() const;
 
     /**
      * @brief Returns the underlying GLFW window handle.
      * @return Pointer to the native GLFW window.
      */
-    [[nodiscard]] GLFWwindow* getGLFWWindow() const;
+    [[nodiscard]]
+    GLFWwindow* getGLFWWindow() const;
 
     /**
      * @brief Creates a Vulkan surface for this window.
@@ -88,13 +93,15 @@ public:
      * @return Vulkan surface.
      * @throws std::runtime_error If surface creation fails.
      */
-    [[nodiscard]] VkSurfaceKHR createSurface(VkInstance inInstance) const;
+    [[nodiscard]]
+    VkSurfaceKHR createSurface(VkInstance inInstance) const;
 
     /**
      * @brief Wrapper for glfwGetFramebufferSize().
      * @return Framebuffer size in form of Vulkan extent.
      */
-    [[nodiscard]] VkExtent2D getFramebufferExtent() const;
+    [[nodiscard]]
+    VkExtent2D getFramebufferExtent() const;
 };
 
 #endif //ANVIL_VK_WINDOW_H
