@@ -76,7 +76,7 @@ public:
     AnvilRenderer() = default;
 
     /**
-     * @brief Destroys the frame data.
+     * @brief Waits for the GPU to idle and destroys all per-frame Vulkan resources.
      */
     ~AnvilRenderer();
 
@@ -122,11 +122,6 @@ public:
     void initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain);
 
     /**
-     * @brief Waits for the GPU to idle and destroys all per-frame Vulkan resources.
-     */
-
-
-    /**
      * @brief Prepare a frame for rendering, executes the draw callback, and presents.
      *
      * Handles CPU-GPU synchronization, acquiring a swapchain image, executing user-provided
@@ -134,7 +129,7 @@ public:
      * Flags the swapchain for recreation if window resizing is detected.
      *
      * @param inWindow Reference to the Anvil Window to check for the resized or minimized state from GLFW.
-     * @param drawCallback A lambda or function invoked with the active command buffer and swapchain.
+     * @param renderHooks A lambda or function invoked with the active command buffer and swapchain.
      *
      * @note drawCallback is triggered after BeginRendering is called and before the UI renders.
      */
@@ -157,6 +152,8 @@ public:
                                       VkImageLayout oldLayout, VkImageLayout newLayout);
 
     static void SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain);
+
+    bool reloadDebugShaders(std::string* outError);
 
 private:
     AnvilFrame& getCurrentFrame();

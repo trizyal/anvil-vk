@@ -52,8 +52,8 @@ public:
     /**
      * @brief Compiles and initializes all engine debug pipelines.
      */
-    void initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
-                             VkFormat depthFormat);
+    bool initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
+                             VkFormat depthFormat, std::string* outError = nullptr);
 
     /**
      * @brief Destroys all debug pipelines and layouts.

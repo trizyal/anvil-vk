@@ -34,6 +34,10 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
         glfwSetWindowShouldClose(window->getGLFWWindow(), GLFW_TRUE);
     });
 
+    addShaderReloadCallback([this](std::string* err) -> bool {
+        return renderer.reloadDebugShaders(err);
+    });
+
     initialized = true;
     const auto cpuEnd = std::chrono::high_resolution_clock::now();
     const auto initTime = std::chrono::duration<float, std::milli>(cpuEnd - cpuStart).count();

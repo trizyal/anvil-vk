@@ -11,16 +11,17 @@
 #include "GPUModel.h"
 #include "VulkanContext.h"
 
-void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
-                                    VkFormat depthFormat)
+bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
+                                    VkFormat depthFormat, std::string* outError)
 {
     pContext = &inContext;
+    bool bSuccess = true;
 
     // Deferred Fullscreen Debug Pipeline
     AnvilShaders::ShaderCompileRequest def_v{"DebugDeferred", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest def_f{"DebugDeferred", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    if (program_Deferred.buildProgram(*pContext, inCompiler, def_v, def_f))
+    if (program_Deferred.buildProgram(*pContext, inCompiler, def_v, def_f, outError))
     {
         material_Deferred.buildMaterialFromProgram(*pContext, program_Deferred);
 
@@ -39,12 +40,16 @@ void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
                               material_Deferred.materialPipelineLayout DNAME(
                                   "EngineDeferredDebug"));
     }
+    else
+    {
+        bSuccess = false;
+    }
 
     // Forward Geometry Debug Pipelines
     AnvilShaders::ShaderCompileRequest fwd_v{"DebugForward", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fwd_f{"DebugForward", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    if (program_Forward.buildProgram(*pContext, inCompiler, fwd_v, fwd_f))
+    if (program_Forward.buildProgram(*pContext, inCompiler, fwd_v, fwd_f, outError))
     {
         material_Forward.buildMaterialFromProgram(*pContext, program_Forward);
 
@@ -77,6 +82,12 @@ void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
                 .disableBlending()
                 .buildPipeline(pContext->device, material_Forward.materialPipelineLayout DNAME("EngineForwardWireframeDebug"));
     }
+    else
+    {
+        bSuccess = false;
+    }
+
+    return bSuccess;
 }
 
 void DebugPass::cleanupDebugPass()

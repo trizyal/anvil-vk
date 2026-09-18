@@ -119,7 +119,10 @@ bool PBRTests::loadLightingPipeline(std::string* outErrorMessage)
     AnvilShaders::ShaderCompileRequest f_req{"PBRLighting", "fragmentMain", AnvilShaders::ST_Fragment};
 
     ShaderProgram new_program;
-    if (!new_program.buildProgram(*pContext, shaderCompiler, v_req, f_req, outErrorMessage)) return false;
+    if (!new_program.buildProgram(*pContext, shaderCompiler, v_req, f_req, outErrorMessage))
+    {
+        return false;
+    }
 
     pipeline_Light.destroy(pContext);
     material_Light.destroyMaterial();
