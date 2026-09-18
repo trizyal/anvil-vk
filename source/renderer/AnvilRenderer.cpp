@@ -409,6 +409,11 @@ void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer
     {
         vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userPipeline);
         vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userLayout, 0, 1, &userSet0, 0, nullptr);
+
+        PushConstants pc{};
+        pc.cameraPosition = glm::vec4(camera.position, 1.0f);
+        pc.debugMode = DebugMode::None;
+        
         vkCmdDraw(inCmd, 3, 1, 0, 0);
     }
     else if (DebugPass::isDeferredMode(debug_mode))

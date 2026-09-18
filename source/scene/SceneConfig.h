@@ -27,7 +27,9 @@ struct SceneConfig
     std::optional<glm::vec4> lightColor;
     std::optional<glm::vec4> ambientColor;
 
-    static bool LoadFromFile(const std::string& filePath, SceneConfig& outConfig)
+    // filePath cannot be a reference as the string it will reference is outConfig.configPath
+    // and we reset outConfig and subsequently loose the actual string being referenced by filePath
+    static bool LoadFromFile(const std::string filePath, SceneConfig& outConfig)
     {
         std::ifstream file(filePath);
         if (!file.is_open())
