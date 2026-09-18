@@ -12,14 +12,62 @@
 
 namespace
 {
+    /**
+     * @brief Extracts the base directory path from a full file path.
+     * @param file_path The full file path (e.g., "assets/models/scene.gltf").
+     * @return The directory path ending with a separator, or an empty string if none exists.
+     */
     std::string GetBaseDirectory(const std::string& file_path);
+
+    /**
+     * @brief Joins a base directory with a relative URI, or returns the URI if it is absolute.
+     * @param base_directory The root directory of the model file.
+     * @param uri The resource URI to append.
+     * @return The combined absolute or relative file path.
+     */
     std::string JoinPath(const std::string& base_directory, const char* uri);
 
+    /**
+     * @brief Parses and loads texture metadata from the glTF data.
+     * @param model The CPUModel being populated.
+     * @param gltf_data The parsed cgltf structural data.
+     * @param base_directory The base path to resolve relative texture URIs against.
+     */
     void LoadTextures(CPUModel& model, const cgltf_data* gltf_data, const std::string& base_directory);
+
+    /**
+     * @brief Parses and loads material properties from the glTF data.
+     * @param model The CPUModel being populated.
+     * @param gltf_data The parsed cgltf structural data.
+     */
     void LoadMaterials(CPUModel& model, const cgltf_data* gltf_data);
+
+    /**
+     * @brief Parses and loads mesh primitives, vertex attributes, and indices from the glTF data.
+     * @param cpu_model The CPUModel being populated.
+     * @param gltf_data The parsed cgltf structural data.
+     */
     void LoadMeshes(CPUModel& cpu_model, const cgltf_data* gltf_data);
+
+    /**
+     * @brief Parses and loads the scene graph nodes and their local transforms.
+     * @param cpu_model The CPUModel being populated.
+     * @param gltf_data The parsed cgltf structural data.
+     */
     void LoadNodes(CPUModel& cpu_model, const cgltf_data* gltf_data);
+
+    /**
+     * @brief Parses and loads skeletal skinning data and inverse bind matrices.
+     * @param cpu_model The CPUModel being populated.
+     * @param gltf_data The parsed cgltf structural data.
+     */
     void LoadSkins(CPUModel& cpu_model, const cgltf_data* gltf_data);
+
+    /**
+     * @brief Parses and loads animation tracks, channels, and keyframes.
+     * @param cpu_model The CPUModel being populated.
+     * @param gltf_data The parsed cgltf structural data.
+     */
     void LoadAnimations(CPUModel& cpu_model, const cgltf_data* gltf_data);
 
     int GetTextureIndex(const cgltf_data* data, const cgltf_texture* texture);
@@ -28,9 +76,33 @@ namespace
     int GetNodeIndex(const cgltf_data* data, const cgltf_node* node);
     int GetSkinIndex(const cgltf_data* data, const cgltf_skin* skin);
 
+    /**
+     * @brief Converts a column-major cgltf float array into a glm::mat4.
+     * @param cgltf_matrix The 16-element float array from cgltf.
+     * @return A standard glm::mat4 transform.
+     */
     glm::mat4 ConvertMatrix(const cgltf_float* cgltf_matrix);
+
+    /**
+     * @brief Constructs a local transform matrix from a node's Translation, Rotation, and Scale (TRS).
+     * @param cpu_node The populated CPUNode containing TRS data.
+     * @return A glm::mat4 representing the local transform.
+     */
     glm::mat4 MakeLocalMatrix(const CPUNode& cpu_node);
+
+    /**
+     * @brief Reads individual Translation, Rotation, and Scale components from a cgltf node.
+     * @param cpu_node The CPU node to write the extracted TRS data to.
+     * @param gltf_node The source cgltf node.
+     */
     void ReadNodeTRS(CPUNode& cpu_node, const cgltf_node* gltf_node);
+
+    /**
+     * @brief Recursively computes the absolute world matrices for a node and all its children.
+     * @param cpu_model The CPUModel containing the node array.
+     * @param node_index The index of the node to update.
+     * @param parent_matrix The computed world matrix of the parent node.
+     */
     void ComputeWorldMatrices(CPUModel& cpu_model, int node_index, const glm::mat4& parent_matrix);
 }
 
