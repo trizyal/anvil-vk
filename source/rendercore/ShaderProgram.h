@@ -79,7 +79,12 @@ public:
      */
     std::vector<VkPushConstantRange> rawReflectedPushConstants;
 
-
+    /**
+     * @brief Maps shader variable names to their reflected descriptor binding metadata.
+     *
+     * Allows for rapid runtime lookups of descriptor set indices, binding slots, and resource types
+     * when binding textures or buffers by their string variable name in the Slang shader code.
+     */
     std::unordered_map<std::string, ShaderBinding> bindingMap;
 
 private:
@@ -102,6 +107,9 @@ public:
                       const AnvilShaders::ShaderCompileRequest& inFragReq,
                       std::string* outErrorMessage = nullptr);
 
+    /**
+     * @brief Safely destroys all shaders and clears data.
+     */
     void destroyProgram();
 
 private:
