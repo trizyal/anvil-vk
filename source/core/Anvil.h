@@ -62,16 +62,24 @@ private:
     Swapchain swapchain;
     AnvilRenderer renderer;
     UIRenderer uiRenderer;
+
+    /** Tracks whether the engine has been successfully bootstrapped. */
     bool initialized = false;
 
-    // std::vector<std::function<void()>> shaderReloadQueue;
+    /** Queue of callbacks to execute when a shader hot-reload is triggered. */
     std::vector<std::function<bool(std::string*)>> shaderReloadQueue;
 
+    /** Flag indicating if the shader compilation error modal is currently active. */
     bool bShaderErrorModalOpen = false;
+
+    /** Stores the latest output log from a failed shader compilation. */
     std::string activeShaderErrorLog;
 
-    /** Tracks whether the developer console is currently rendering. */
-    int bConsoleState = 0;
+    /**
+     * Tracks whether the developer console is currently rendering.
+     * (0=Hidden, 1=Mini, 2=Full)
+     */
+    int consoleState = 0;
 
 public:
     /**
@@ -164,6 +172,12 @@ public:
     AnvilRenderer& getRenderer();
 
 private:
+    /**
+     * @brief Halts the GPU and triggers execution of all queued shader reload callbacks.
+     *
+     * If compilation fails, the error modal is opened and the GPU remains paused until
+     * the user resolves the error or aborts.
+     */
     void triggerShaderHotReload();
 };
 

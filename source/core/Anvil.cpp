@@ -93,7 +93,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
         // Toggle Developer Console with the tilde key (~)
         if (Input::IsKeyPressed_Frame(GLFW_KEY_GRAVE_ACCENT))
         {
-            bConsoleState = (bConsoleState + 1) % 3;
+            consoleState = (consoleState + 1) % 3;
         }
 
         // Check for Shader Reload
@@ -107,7 +107,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
 
         UIRenderer::BeginUIFrame();
         ScreenLogger::DrawOverlay();
-        UI::DrawConsoleWindow(&bConsoleState);
+        UI::DrawConsoleWindow(&consoleState);
 
         // Render Error Dialog if hot reload failed
         if (bShaderErrorModalOpen)
