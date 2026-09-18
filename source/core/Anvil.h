@@ -133,31 +133,35 @@ public:
 
     /**
      * @brief Retrieves a reference to the active application window.
-     * @return Reference to the AnvilWindow instance.
+     * @return Reference to the Window instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] Window& getWindow() const;
+    [[nodiscard]]
+    Window& getWindow() const;
 
     /**
      * @brief Retrieves the core Vulkan context (instance, device, memory allocator).
-     * @return Reference to the AnvilVulkanContext instance.
+     * @return Reference to the VulkanContext instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] VulkanContext& getContext();
+    [[nodiscard]]
+    VulkanContext& getContext();
 
     /**
      * @brief Retrieves the active Vulkan swapchain.
-     * @return Reference to the AnvilSwapchain instance.
+     * @return Reference to the Swapchain instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] Swapchain& getSwapchain();
+    [[nodiscard]]
+    Swapchain& getSwapchain();
 
     /**
      * @brief Retrieves the main renderer responsible for command buffer orchestration.
      * @return Reference to the AnvilRenderer instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] AnvilRenderer& getRenderer();
+    [[nodiscard]]
+    AnvilRenderer& getRenderer();
 
 private:
     void triggerShaderHotReload();

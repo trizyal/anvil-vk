@@ -63,6 +63,10 @@ public:
      */
     void destroy();
 
+    /**
+     * @brief Retrieves rendering attachment infos for all color targets (Albedo, Normal, PBR, WorldPos).
+     * @return A vector of Vulkan rendering attachment info structures.
+     */
     std::vector<VkRenderingAttachmentInfo> getRenderingAttachments();
 
     VkRenderingAttachmentInfo getAttachmentInfo(const GPUTexture& texture);

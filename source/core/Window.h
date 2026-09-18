@@ -65,6 +65,10 @@ public:
      */
     [[nodiscard]] bool bShouldClose() const;
 
+    /**
+     * @brief Checks if the window is currently minimized by the OS.
+     * @return True if the framebuffer extent width or height is 0, false otherwise.
+     */
     [[nodiscard]] bool isMinimised() const;
 
     /**

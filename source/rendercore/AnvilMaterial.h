@@ -130,15 +130,28 @@ public:
     [[nodiscard]]
     ShaderBinding getBinding(const std::string& name) const;
 
+    /**
+     * @brief Checks if a specific descriptor set index has been successfully allocated.
+     * @param setIndex The descriptor set index to verify (e.g., 0, 1, 2).
+     * @return True if the set layout exists and is not null, false otherwise.
+     */
     [[nodiscard]]
     bool hasSet(uint32_t setIndex) const;
 
+    /**
+     * @brief Retrieves the compiled vertex shader module.
+     * @return The VkShaderModule handle, or VK_NULL_HANDLE if no program is active.
+     */
     [[nodiscard]]
     VkShaderModule getVertexShader() const
     {
         return pActiveProgram ? pActiveProgram->vertexShader.get() : VK_NULL_HANDLE;
     }
 
+    /**
+     * @brief Retrieves the compiled fragment shader module.
+     * @return The VkShaderModule handle, or VK_NULL_HANDLE if no program is active.
+     */
     [[nodiscard]]
     VkShaderModule getFragmentShader() const
     {
