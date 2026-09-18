@@ -413,6 +413,7 @@ void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer
         PushConstants pc{};
         pc.cameraPosition = glm::vec4(camera.position, 1.0f);
         pc.debugMode = DebugMode::None;
+        vkCmdPushConstants(inCmd, userLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &pc);
         
         vkCmdDraw(inCmd, 3, 1, 0, 0);
     }

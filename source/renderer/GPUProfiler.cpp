@@ -38,6 +38,9 @@ GPUProfiler::~GPUProfiler()
 
 void GPUProfiler::beginGPUProfilerFrame(VkCommandBuffer inCmdBuffer, const uint32_t frameIndex) const
 {
+    // Reset submission flag to prevent reading stale data on aborted frames
+    const_cast<GPUProfiler*>(this)->querySubmitted[frameIndex] = 0;
+
     // Reset the pool before using it this frame
     vkCmdResetQueryPool(inCmdBuffer, queryPools[frameIndex], 0, 2);
 
