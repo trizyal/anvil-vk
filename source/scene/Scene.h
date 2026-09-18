@@ -45,11 +45,16 @@ public:
 
 private:
     VulkanContext* pContext = nullptr;
+
+    /** Tracks if the CPU scene data has been modified and requires a GPU upload. */
     bool isDirty = true;
 
 public:
-    GlobalSceneData data{}; // CPU data
-    GPUBuffer sceneUBO; // GPU data
+    /** @brief CPU-side storage for the global scene lighting data. */
+    GlobalSceneData data{};
+
+    /** @brief GPU-side uniform buffer mapped to the scene data. */
+    GPUBuffer sceneUBO;
 
     /**
      * @brief Creates an empty scene with GPUBuffer that can be set and updated.

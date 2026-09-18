@@ -4,6 +4,11 @@
 #ifndef ANVIL_VK_SCENECONFIG_H
 #define ANVIL_VK_SCENECONFIG_H
 
+/**
+ * @file SceneConfig.h
+ * @brief Data structures and parsers for loading scene configurations from .ini files.
+ */
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -12,10 +17,21 @@
 
 #include <glm/glm.hpp>
 
+/**
+ * @brief Represents a deserialized scene configuration loaded from disk.
+ *
+ * Maps parameters from a `.ini` file into strongly-typed C++ data, including model paths,
+ * initial camera transforms, and global lighting settings. Uses std::optional for values
+ * that might be omitted in the configuration file.
+ */
 struct SceneConfig
 {
+    /** Absolute or relative path to the source .ini configuration file. */
     std::string configPath;
+
     std::string sceneName = "Unnamed Scene";
+
+    /** The file path to the primary 3D model (glTF/glb) for this scene. */
     std::string modelPath;
 
     // Optionals: Only hold a value if explicitly defined in the .ini file
@@ -27,8 +43,19 @@ struct SceneConfig
     std::optional<glm::vec4> lightColor;
     std::optional<glm::vec4> ambientColor;
 
-    // filePath cannot be a reference as the string it will reference is outConfig.configPath
-    // and we reset outConfig and subsequently loose the actual string being referenced by filePath
+    /**
+     * @brief Parses a `.ini` configuration file and populates a SceneConfig structure.
+     *
+     * Iterates through the file line-by-line, stripping whitespace and comments, and maps
+     * key-value pairs to the corresponding SceneConfig fields.
+     *
+     * @param filePath The absolute or relative path to the `.ini` file.
+     * @param outConfig Reference to the SceneConfig object to populate.
+     * @return True if the file was parsed successfully and a model path was found; false otherwise.
+     *
+     * @note filePath cannot be a reference as the string it will reference is outConfig.configPath
+     * and we reset outConfig and subsequently loose the actual string being referenced by filePath.
+     */
     static bool LoadFromFile(const std::string filePath, SceneConfig& outConfig)
     {
         std::ifstream file(filePath);
