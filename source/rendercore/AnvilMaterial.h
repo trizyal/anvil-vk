@@ -60,6 +60,7 @@ private:
     VulkanContext* pContext = nullptr;
 
     /** Fallback storage for legacy build Material. */
+    [[deprecated]]
     std::unique_ptr<ShaderProgram> legacyProgram;
 
 public:
