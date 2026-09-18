@@ -25,6 +25,10 @@ struct AnvilPipeline
     /** Underlying Vulkan pipeline object handle. */
     VkPipeline pipeline = VK_NULL_HANDLE;
 
+    /**
+     * @brief Safely destroys the Vulkan pipeline object.
+     * @param inContext The VulkanContext providing the logical device.
+     */
     void destroy(const VulkanContext* inContext)
     {
         if (pipeline != VK_NULL_HANDLE)
@@ -51,21 +55,6 @@ public:
     PipelineBuilder();
 
 private:
-    // VkFormat colorAttachmentFormat = VK_FORMAT_UNDEFINED;
-    VkFormat depthAttachmentFormat = VK_FORMAT_UNDEFINED;
-
-    std::vector<VkFormat> colorAttachmentFormats;
-
-    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
-
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-    VkPipelineRasterizationStateCreateInfo rasterizer{};
-    VkPipelineColorBlendStateCreateInfo colorBlend{};
-    VkPipelineMultisampleStateCreateInfo multisampling{};
-    VkPipelineDepthStencilStateCreateInfo depthStencil{};
-    VkPipelineRenderingCreateInfo dynamicRendering{};
-
     /** Shader stages included in the graphics pipeline. */
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
@@ -74,6 +63,36 @@ private:
 
     /** Vertex attribute descriptions used by the vertex input state. */
     std::vector<VkVertexInputAttributeDescription> vertexAttributes;
+
+    /** @brief Vulkan configuration struct for vertex input state (bindings and attributes). */
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+
+    /** @brief Vulkan configuration struct for input assembly (topology and primitive restart). */
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+
+    /** @brief Vulkan configuration struct for rasterization (culling, polygon mode). */
+    VkPipelineRasterizationStateCreateInfo rasterizer{};
+
+    /** Configured blend states per color attachment. */
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
+
+    /** @brief Vulkan configuration struct for color blending across attachments. */
+    VkPipelineColorBlendStateCreateInfo colorBlend{};
+
+    /** @brief Vulkan configuration struct for multisampling (MSAA). */
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+
+    /** @brief Vulkan configuration struct for depth and stencil testing. */
+    VkPipelineDepthStencilStateCreateInfo depthStencil{};
+
+    /** Tracked depth attachment format for dynamic rendering. */
+    VkFormat depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+
+    /** Vector of color attachment formats used in dynamic rendering. */
+    std::vector<VkFormat> colorAttachmentFormats;
+
+    /** @brief Vulkan configuration struct for dynamic rendering (Vulkan 1.3 feature). */
+    VkPipelineRenderingCreateInfo dynamicRendering{};
 
 public:
     /**

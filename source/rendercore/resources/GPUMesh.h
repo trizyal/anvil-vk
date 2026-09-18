@@ -10,6 +10,7 @@
  */
 
 #include <array>
+
 #include <volk.h>
 #include <glm/glm.hpp>
 
@@ -17,14 +18,17 @@
 #include "VulkanContext.h"
 #include "CPUModel.h"
 
+/**
+ * @brief Identifiers for specific vertex attributes configurable in the pipeline.
+ */
 enum VertexAttribute
 {
-    POSITION,
-    UV,
-    NORMAL,
-    TANGENT,
-    JOINTS,
-    WEIGHTS
+    POSITION, /**< 3D Cartesian coordinates (x, y, z). */
+    UV,       /**< 2D Texture coordinates (u, v). */
+    NORMAL,   /**< 3D Normal vector for lighting. */
+    TANGENT,  /**< 4D Tangent vector for normal mapping (includes bitangent sign). */
+    JOINTS,   /**< 4D Unsigned integer vector containing bone indices. */
+    WEIGHTS   /**< 4D Float vector containing bone blend weights. */
 };
 
 /**

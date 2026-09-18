@@ -10,6 +10,7 @@
  */
 
 #include <volk.h>
+
 #include "GPUTexture.h"
 
 class VulkanContext;
@@ -69,7 +70,17 @@ public:
      */
     std::vector<VkRenderingAttachmentInfo> getRenderingAttachments();
 
+    /**
+     * @brief Generates rendering attachment information for a specific G-Buffer color texture.
+     * @param texture The GPUTexture to generate the attachment info for.
+     * @return A configured VkRenderingAttachmentInfo struct ready for dynamic rendering.
+     */
     VkRenderingAttachmentInfo getAttachmentInfo(const GPUTexture& texture);
+
+    /**
+     * @brief Generates rendering attachment information for the G-Buffer depth texture.
+     * @return A configured VkRenderingAttachmentInfo struct for depth-stencil attachment.
+     */
     VkRenderingAttachmentInfo getDepthAttachmentInfo();
 };
 
