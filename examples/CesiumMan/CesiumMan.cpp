@@ -42,6 +42,7 @@ void CesiumMan::cleanupProject()
 
         gpuModel.destroyGPUModel();
         cesiumMaterial.destroyMaterial();
+        cesiumProgram.destroyProgram();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -61,13 +62,15 @@ void CesiumMan::loadPipeline()
         vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         cesiumMaterial.destroyMaterial();
+        cesiumProgram.destroyProgram();
     }
 
     AnvilShaders::ShaderCompileRequest vReq{"CesiumMan", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fReq{"CesiumMan", "fragmentMain", AnvilShaders::ST_Fragment};
 
     // Compile, reflect, and build bindings (handles textures, UBOs, and SSBOs automatically)
-    cesiumMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
+    cesiumProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);
+    cesiumMaterial.buildMaterialFromProgram(*pContext, cesiumProgram);
 
     globalSet = cesiumMaterial.allocateSet(0);
     globalSet.bindUniformBuffer("sceneBuffer", cesiumScene.sceneUBO);
@@ -81,7 +84,7 @@ void CesiumMan::loadPipeline()
     PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(cesiumMaterial.getVertexShader(), cesiumMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(pSwapchain->swapchainFormat)
+        .setColorAttachmentFormats({pSwapchain->swapchainFormat})
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)

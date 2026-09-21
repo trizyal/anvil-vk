@@ -21,15 +21,20 @@ int main()
         CesiumMan project;
         project.initializeProject(anvil.getContext(), anvil.getSwapchain());
 
-        // Register hot-reload event
-        anvil.addShaderReloadCallback([&]() {
+        // Register hot-reload event using the updated boolean callback signature
+        anvil.addShaderReloadCallback([&](std::string* /*err*/) -> bool {
             project.loadPipeline();
+            return true;
         });
 
-        anvil.runAnvil([&](VkCommandBuffer cmd, Swapchain* swapchain)
+        // Pass the RenderHooks struct instead of a raw lambda
+        RenderHooks hooks;
+        hooks.onSwapchain = [&](VkCommandBuffer cmd, Swapchain* swapchain)
         {
             project.recordCommands(cmd, *swapchain);
-        });
+        };
+
+        anvil.runAnvil(hooks);
 
         project.cleanupProject();
         anvil.shutdownAnvil();
