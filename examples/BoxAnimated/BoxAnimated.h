@@ -36,7 +36,9 @@ private:
     Camera camera;
     Scene boxScene;
 
+    ShaderProgram boxProgram; // Explicitly manage program layout
     AnvilMaterial boxMaterial;
+    MaterialInstance globalSet; // Manage the scene UBO
 
     CPUModel cpuModel;
     GPUModel gpuModel;
