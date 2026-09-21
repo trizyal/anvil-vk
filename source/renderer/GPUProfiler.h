@@ -33,8 +33,13 @@ public:
 private:
     VulkanContext* pContext = nullptr;
 
+    /** Array of Vulkan query pools tracking timestamps per frame in flight. */
     std::vector<VkQueryPool> queryPools;
+
+    /** Array tracking whether a frame's query has been fully submitted and is safe to read. */
     std::vector<uint8_t> querySubmitted;
+
+    /** Factor used to convert timestamp ticks into nanoseconds (queried from physical device). */
     float timestampPeriod = 1.0f;
 
 public:
@@ -70,7 +75,7 @@ public:
      * @param frameIndex Current frame.
      * @return GPU time in milliseconds.
      */
-    float getGPUTime(uint32_t frameIndex) const;
+    [[nodiscard]] float getGPUTime(uint32_t frameIndex) const;
 };
 
 
