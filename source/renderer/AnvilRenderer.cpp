@@ -419,7 +419,7 @@ void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer
     }
     else if (DebugPass::isDeferredMode(debug_mode))
     {
-        debugPass.drawDeferredResolve(inCmd, gBuffer, debug_mode, glm::vec4(camera.position, 1.0f));
+        debugPass.drawDeferredResolve(inCmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
     }
 }
 

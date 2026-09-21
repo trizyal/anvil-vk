@@ -32,4 +32,6 @@ CREATE_ENUM(DebugMode)
     Count           = 11
 };
 
+#undef CREATE_ENUM
+
 #endif //ANVIL_VK_DEBUGMODES_H

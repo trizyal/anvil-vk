@@ -170,12 +170,15 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
     switch (static_cast<DebugMode>(mode))
     {
     case DebugMode::BaseColor:
-    case DebugMode::GeometryNormal:
-    case DebugMode::RawNormalMap:
     case DebugMode::WorldNormal:
     case DebugMode::Metallic:
     case DebugMode::Roughness:
     case DebugMode::Depth:
+        // Allow Fallthrough because
+        // When the pipeline is forward only, these have to use
+        // the forward pipeline
+    case DebugMode::GeometryNormal:
+    case DebugMode::RawNormalMap:
         return pipeline_Forward_Opaque;
 
     case DebugMode::Overdraw:
@@ -201,7 +204,7 @@ VkPipelineLayout DebugPass::getForwardLayout() const
     return material_Forward.materialPipelineLayout;
 }
 
-void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t debugMode, const glm::vec4& camPos)
+void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos)
 {
     // CRITICAL FIX: Only allocate from the pool if we haven't done it yet!
     if (set_Deferred.descriptorSet == VK_NULL_HANDLE)
