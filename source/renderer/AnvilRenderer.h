@@ -96,12 +96,16 @@ private:
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
 
+    /** Array of frame-sync structures for flighted rendering. */
     AnvilFrame anvilFrames[FRAMES_IN_FLIGHT];
+
+    /** The current frame index (modulo FRAMES_IN_FLIGHT). */
     uint32_t anvilFrameIndex = 0;
 
     /** Signaled when rendering is finished, and image ready to present. */
     std::vector<VkSemaphore> renderFinishedSemaphores;
 
+    /** Flag triggered when a window resize requires the swapchain to be rebuilt. */
     bool recreateSwapchain = false;
 
     GPUProfiler gpuProfiler;
@@ -109,6 +113,7 @@ private:
     DebugPass debugPass;
 
 public:
+    /** Global tracking of engine performance metrics (FPS, GPU/CPU time). */
     inline static FrameStats engineStats;
 
     /**
@@ -138,26 +143,73 @@ public:
     /**
      * @brief Handles frustum culling, culling freezes, and renders geometry.
      * Overrides rendering with forward debug shaders if necessary.
+     *
+     * @param inCmd Active Vulkan command buffer to record draw commands into.
+     * @param model The GPU model containing the meshes, materials, and draw items to render.
+     * @param camera The active camera used for frustum culling and view-projection matrices.
+     * @param userPipeline The default graphics pipeline to use when not in a debug rendering mode.
+     * @param userLayout The pipeline layout associated with the userPipeline.
+     * @param userSet0 Optional user-provided descriptor set (Set 0) to bind alongside the model's internal sets.
+     * @param isGBufferPass Flag indicating if this draw call is targeting the G-Buffer, which bypasses forward debug overrides.
      */
     void drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline,
         VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass = false) const;
 
     /**
      * @brief Resolves the G-Buffer lighting or injects deferred debug views.
+     *
+     * @param inCmd Active Vulkan command buffer to record the fullscreen resolve draw into.
+     * @param gBuffer The populated G-Buffer containing geometry attachments (Albedo, Normals, PBR, Depth).
+     * @param camera The active camera, used for position reconstruction in deferred debug views.
+     * @param userPipeline The standard deferred lighting pipeline to use when not in a debug mode.
+     * @param userLayout The pipeline layout associated with the userPipeline.
+     * @param userSet0 The user-provided descriptor set containing the bound G-Buffer textures and lighting data.
      */
     void drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline,
         VkPipelineLayout userLayout, VkDescriptorSet userSet0);
 
+    /**
+     * @brief Helper to insert a Vulkan image memory barrier for layout transitions.
+     *
+     * @param inCmd Active command buffer to record the barrier into.
+     * @param inImage The Vulkan image to transition.
+     * @param oldLayout The current layout of the image.
+     * @param newLayout The desired layout of the image.
+     */
     static void TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage,
                                       VkImageLayout oldLayout, VkImageLayout newLayout);
 
+    /**
+     * @brief Helper to dynamically set the viewport and scissor rect to match the swapchain.
+     *
+     * @param inCmd Active command buffer.
+     * @param inSwapchain The swapchain to pull the extent from.
+     */
     static void SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain);
 
+    /**
+     * @brief Recompiles and reloads the engine debug shaders at runtime.
+     *
+     * @param outError String to store compilation errors if the reload fails.
+     * @return True if the shaders successfully compiled and reloaded, false otherwise.
+     */
     bool reloadDebugShaders(std::string* outError);
 
 private:
+    /**
+     * @brief Retrieves the frame sync structure for the current flight index.
+     * @return Reference to the active AnvilFrame.
+     */
     AnvilFrame& getCurrentFrame();
+
+    /**
+     * @brief Allocates command pools and buffers for all frames in flight.
+     */
     void setupCommandBuffers();
+
+    /**
+     * @brief Creates semaphores and fences for CPU/GPU and Queue synchronization.
+     */
     void setupSyncStructures();
 };
 
