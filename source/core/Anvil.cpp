@@ -59,15 +59,6 @@ void Anvil::shutdownAnvil()
     initialized = false;
 }
 
-void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback)
-{
-    RenderHooks legacyHooks;
-    legacyHooks.onSwapchain = renderCallback;
-
-    // Forward to the master loop
-    runAnvil(legacyHooks);
-}
-
 void Anvil::runAnvil(const RenderHooks& renderHooks)
 {
     if (!initialized)
@@ -135,15 +126,6 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
     }
 
     vkDeviceWaitIdle(context.device);
-}
-
-void Anvil::addShaderReloadCallback(const std::function<void()>& shaderCallback)
-{
-    // Wrap the legacy void callback so it fits the new internal queue.
-    shaderReloadQueue.emplace_back([shaderCallback](std::string* /*outErr*/) -> bool {
-        shaderCallback();
-        return true;
-    });
 }
 
 void Anvil::addShaderReloadCallback(const std::function<bool(std::string*)>& shaderCallback)

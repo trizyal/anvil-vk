@@ -307,56 +307,6 @@ void CPUModel::computeJointMatrices(const int nodeIndex, std::vector<glm::mat4>&
     }
 }
 
-namespace ModelLoader
-{
-    void UpdateAllMatrices(CPUModel& cpuModel)
-    {
-        for (const int rootNodeIndex : cpuModel.sceneRootNodes)
-        {
-            ComputeWorldMatrices(cpuModel, rootNodeIndex, glm::mat4(1.0f));
-        }
-    }
-
-    CPUModel LoadGLTF(const std::string& filePath)
-    {
-        CPUModel cpu_model;
-        cpu_model.loadGLTF(filePath);
-        return cpu_model;
-    }
-
-    // Only returns CPU data
-    CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath)
-    {
-        CPUModel model = LoadGLTF(filePath);
-
-        if (model.meshes.empty())
-        {
-            return {};
-        }
-
-        CPUMesh_Single returnMesh;
-        CPUMesh internalCPUMesh= model.meshes[0];
-
-        if (!internalCPUMesh.primitives.empty())
-        {
-            returnMesh.vertices = internalCPUMesh.primitives[0].vertices;
-            returnMesh.indices = internalCPUMesh.primitives[0].indices;
-
-            const int materialIndex = internalCPUMesh.primitives[0].materialIndex;
-            if (materialIndex >= 0 && materialIndex < static_cast<int>(model.materials.size()))
-            {
-                const int textureIndex = model.materials[materialIndex].baseColorTextureIndex;
-                if (textureIndex >= 0 && textureIndex < static_cast<int>(model.textures.size()))
-                {
-                    returnMesh.texturePath = model.textures[textureIndex].imagePath;
-                }
-            }
-        }
-
-        return returnMesh;
-    }
-} //AnvilModelLoader
-
 namespace
 {
     std::string GetBaseDirectory(const std::string& file_path)

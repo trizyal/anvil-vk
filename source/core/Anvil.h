@@ -93,19 +93,6 @@ public:
     void initializeAnvil(const AnvilCreateInfo& inCreateInfo = {});
 
     /**
-     * @brief LEGACY: Starts the main application event loop and provides the renderer with the draw callback.
-     *
-     * Runs continuously until the window is closed or an exit signal is received.
-     * Automatically polls OS events, processes any queued shader reloads, and invokes
-     * the provided render callback every frame.
-     * @param renderCallback Function invoked per-frame with the active command buffer and swapchain.
-     * @throws std::runtime_error If the AnvilApplication is uninitialized or `drawFrame` throws.
-     * @attention Shader reloading happening here is not ideal.
-     */
-    [[deprecated("Pass RenderHooks instead of a single callback.")]]
-    void runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback);
-
-    /**
      * @brief Starts the main application event loop and provides the renderer with the draw callback.
      *
      * Runs continuously until the window is closed or an exit signal is received.
@@ -123,15 +110,6 @@ public:
      * Waits for the GPU device to idle before releasing handles.
      */
     void shutdownAnvil();
-
-    /**
-     * @brief LEGACY: Queues a basic void callback. Assumes compilation always succeeds.
-     *
-     * Useful for hot-reloading shaders at runtime without restarting the application.
-     * @param shaderCallback The function to execute when a reload is triggered.
-     */
-    [[deprecated]]
-    void addShaderReloadCallback(const std::function<void()>& shaderCallback);
 
     /**
      * @brief Queues a callback function to be executed when a shader reload event occurs.
