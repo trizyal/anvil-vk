@@ -44,6 +44,7 @@ void RiggedSimple::cleanupProject()
 
         gpuModel.destroyGPUModel();
         riggedMaterial.destroyMaterial();
+        riggedProgram.destroyProgram();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -65,25 +66,30 @@ void RiggedSimple::loadPipeline()
         vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         riggedMaterial.destroyMaterial();
+        riggedProgram.destroyProgram();
     }
 
     // Create shader compilation request
     AnvilShaders::ShaderCompileRequest vReq{"RiggedSimple", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fReq{"RiggedSimple", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
-    riggedMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
+    // Split build process to build Program then Material
+    riggedProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);
+    riggedMaterial.buildMaterialFromProgram(*pContext, riggedProgram);
 
-    const auto attributes = GPUMesh::GetAttributeDescriptions5();
+    // Allocate and update Set 0 (Global Scene UBO)
+    globalSet = riggedMaterial.allocateSet(0);
+    globalSet.bindUniformBuffer("sceneBuffer", riggedScene.sceneUBO);
+    globalSet.updateDescriptorSets();
 
-    // Vertex Descriptions
+    // Use initializer list for non-deprecated GetAttributeDescriptions
+    const auto attributes = GPUMesh::GetAttributeDescriptions({POSITION, NORMAL, UV, JOINTS, WEIGHTS});
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
 
-    // Create pipeline
     PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(riggedMaterial.getVertexShader(), riggedMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(pSwapchain->swapchainFormat)
+        .setColorAttachmentFormats({pSwapchain->swapchainFormat}) // Wrapped format in {}
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
@@ -92,7 +98,8 @@ void RiggedSimple::loadPipeline()
         .disableBlending()
         .buildPipeline(pContext->device, riggedMaterial.materialPipelineLayout DNAME("RiggedSimplePipeline"));
 
-    gpuModel.createGPUModel( *pContext, cpuModel, riggedMaterial, "sceneBuffer", riggedScene.sceneUBO, "texture");
+    // Use standard 3-parameter setup now that Sets are automatically handled
+    gpuModel.createGPUModel(*pContext, cpuModel, riggedMaterial);
 }
 
 void RiggedSimple::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
@@ -175,11 +182,25 @@ void RiggedSimple::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
             base_color_factor = material.baseColorFactor;
         }
 
-        // Bind the specific descriptor set for this material (textures + scene UBO)
+        // Aggregate and bind all active descriptor sets
+        std::vector<VkDescriptorSet> sets_to_bind;
+        if (globalSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(globalSet.descriptorSet);
+        }
+        if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(gpuModel.modelSet.descriptorSet);
+        }
         if (descriptor_set != VK_NULL_HANDLE)
         {
+            sets_to_bind.push_back(descriptor_set);
+        }
+
+        if (!sets_to_bind.empty())
+        {
             vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, riggedMaterial.materialPipelineLayout,
-                0, 1, &descriptor_set, 0, nullptr);
+                0, static_cast<uint32_t>(sets_to_bind.size()), sets_to_bind.data(), 0, nullptr);
         }
 
         // Update push constants (Transform matrices + base color)
