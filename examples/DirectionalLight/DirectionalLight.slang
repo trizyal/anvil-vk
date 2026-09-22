@@ -5,7 +5,8 @@ struct PushConstants
 {
     float4x4 renderMatrix; // Projection * View * Model
     float4x4 modelMatrix;  // Model rotation for world-space normals
-    float3 camera;
+    float4 camera;
+    float4 baseColorFactor;
 }
 
 // [[vk::push_constant]] tells Slang to map this to Vulkan Push Constants
@@ -19,16 +20,18 @@ struct SceneData
     float4 ambientColor;
 };
 
-// Reflection should automatically map this to a Uniform Buffer binding
+// SET 0: Scene
+[[vk::binding(0, 0)]]
 ConstantBuffer<SceneData> sceneBuffer;
 
-Sampler2D texture; // Do I need [[vk::binding(0, 0)]]
+// SET 2: Material
+[[vk::binding(0, 2)]]
+Sampler2D baseColorTexture;
 
-// Vertex Input also needs glTF Normals
 struct VertexInput
 {
     float3 position : POSITION;
-    float3 normal   : NORMAL; // AnvilMeshBuffer needs to provide this
+    float3 normal   : NORMAL;
     float2 uv       : TEXCOORD;
 };
 
@@ -67,7 +70,9 @@ float4 fragmentMain(VertexOutput input) : SV_Target
     // Combine Ambient + Diffuse
     float3 finalLighting = sceneBuffer.ambientColor.xyz + diffuse;
 
-    // Sample base texture and multiply by lighting
-    float4 textureColor = texture.Sample(input.uv);
-    return float4(textureColor.rgb * finalLighting, textureColor.a);
+    // Sample base texture and multiply by lighting & push constants
+    float4 textureColor = baseColorTexture.Sample(input.uv);
+    float4 baseColor = textureColor * pushConstants.baseColorFactor;
+
+    return float4(baseColor.rgb * finalLighting, baseColor.a);
 }
