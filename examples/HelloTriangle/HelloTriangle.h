@@ -5,26 +5,26 @@
 #define EXAMPLE_HELLOTRIANGLE_H
 
 #include "VulkanContext.h"
-#include "ShaderModule.h"
+#include "AnvilMaterial.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
 #include "Swapchain.h"
+#include "ShaderProgram.h"
 
 class HelloTriangle
 {
 private:
-    VulkanContext* ptrAContext = nullptr;
-    Swapchain* ptrASwapchain = nullptr;
-
-    ShaderModule vertexShader;
-    ShaderModule fragmentShader;
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    AnvilPipeline pipeline = {};
+    VulkanContext* pContext = nullptr;
+    Swapchain* pSwapchain = nullptr;
 
     ShaderCompiler shaderCompiler;
 
+    ShaderProgram myProgram; // Explicitly manage program layout
+    AnvilMaterial myMaterial;
+    AnvilPipeline pipeline = {};
+
 public:
-    void initalizeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
+    void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
