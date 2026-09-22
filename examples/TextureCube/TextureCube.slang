@@ -1,29 +1,34 @@
+// ==========================================
 // TextureCube.slang
+// ==========================================
+
+// Copyright (C) 2026 trizyal
+// SPDX-License-Identifier: GPL-3.0-only
 
 struct PushConstants
 {
-    float4x4 renderMatrix;
+    float4x4 renderMatrix; // Projection * View * Model
+    float4x4 modelMatrix;  // Model rotation for world-space normals
+    float4 baseColorFactor;
 };
 
 // [[vk::push_constant]] tells Slang to map this to Vulkan Push Constants
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
 
-// [[vk::binding(0, 0)]] forces it to use Set 0, Binding 0 to match your C++ setup.
-[[vk::binding(0, 0)]]
-Sampler2D texSampler;
+// SET 2: Material (Matches GPUModel architecture)
+[[vk::binding(0, 2)]]
+Sampler2D baseColorTexture;
 
 struct VertexInput
 {
     float3 position : POSITION;
-    float3 color    : COLOR;
     float2 uv       : TEXCOORD;
 };
 
 struct VertexOutput
 {
     float4 position : SV_Position;
-    float3 color;
-    float2 uv;
+    float2 uv       : TEXCOORD;
 };
 
 [shader("vertex")]
@@ -31,10 +36,7 @@ VertexOutput vertexMain(VertexInput input)
 {
     VertexOutput output;
 
-    // Apply the C++ matrix transform
-    // This multiplication if other way around, was breaking things
-    output.position = mul(pushConstants.renderMatrix, float4(input.position,1));
-    output.color = input.color;
+    output.position = mul(pushConstants.renderMatrix, float4(input.position, 1.0));
     output.uv = input.uv;
 
     return output;
@@ -43,8 +45,8 @@ VertexOutput vertexMain(VertexInput input)
 [shader("fragment")]
 float4 fragmentMain(VertexOutput input) : SV_Target
 {
-    // Sample the texture at the given UV coordinates
-    float4 textureColor = texSampler.Sample(input.uv);
+    // Sample the standard Set 2 texture
+    float4 textureColor = baseColorTexture.Sample(input.uv);
 
-    return textureColor;
+    return textureColor * pushConstants.baseColorFactor;
 }
