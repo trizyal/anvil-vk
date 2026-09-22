@@ -1,3 +1,6 @@
+// Copyright (C) 2026 trizyal
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include <iostream>
 
 #include "Anvil.h"
@@ -14,19 +17,24 @@ int main()
     });
 
     HelloCube project;
-    project.initalizeProject(anvil.getContext(), anvil.getSwapchain());
+    project.initializeProject(anvil.getContext(), anvil.getSwapchain());
 
-    // Register hot-reload event
-    anvil.addShaderReloadCallback([&]() {
+    // Register hot-reload event using the new boolean callback signature
+    anvil.addShaderReloadCallback([&](std::string* /*err*/) -> bool {
         project.loadPipeline();
+        return true;
     });
 
     try
     {
-        anvil.runAnvil([&](VkCommandBuffer cmd, Swapchain* swapchain)
+        // Use the RenderHooks struct to pass the callback
+        RenderHooks hooks;
+        hooks.onSwapchain = [&](VkCommandBuffer cmd, Swapchain* swapchain)
         {
             project.recordCommands(cmd, *swapchain);
-        });
+        };
+
+        anvil.runAnvil(hooks);
     }
     catch (const std::exception& e)
     {

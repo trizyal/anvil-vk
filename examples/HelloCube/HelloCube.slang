@@ -1,4 +1,5 @@
-// HelloCube.slang
+// Copyright (C) 2026 trizyal
+// SPDX-License-Identifier: GPL-3.0-only
 
 struct PushConstants
 {
@@ -7,6 +8,17 @@ struct PushConstants
 
 // [[vk::push_constant]] tells Slang to map this to Vulkan Push Constants
 [[vk::push_constant]] ConstantBuffer<PushConstants> pushConstants;
+
+// SET 0: Scene - Let's use this to tint the cube to prove we correctly attached the Scene module!
+struct SceneData
+{
+    float4 lightDirection;
+    float4 lightColor;
+    float4 ambientColor;
+};
+
+[[vk::binding(0, 0)]]
+ConstantBuffer<SceneData> sceneBuffer;
 
 struct VertexInput
 {
@@ -25,9 +37,7 @@ VertexOutput vertexMain(VertexInput input)
 {
     VertexOutput output;
 
-    // Apply the C++ matrix transform
-    // This multiplication if other way around, was breaking things
-    output.position = mul(pushConstants.renderMatrix, float4(input.position,1));
+    output.position = mul(pushConstants.renderMatrix, float4(input.position, 1.0));
     output.color = input.color;
 
     return output;
@@ -36,5 +46,8 @@ VertexOutput vertexMain(VertexInput input)
 [shader("fragment")]
 float4 fragmentMain(VertexOutput input) : SV_Target
 {
-    return float4(input.color, 1.0);
+    // Use the scene buffer data to tint the vertex color
+    float3 tintedColor = input.color * sceneBuffer.lightColor.rgb;
+
+    return float4(tintedColor, 1.0);
 }
