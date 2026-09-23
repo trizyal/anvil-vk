@@ -6,7 +6,10 @@
   - SPDX-License-Identifier: Zlib
 - glm @ 1.0.3 (Dec 2025)
   - SPDX-License-Identifier: LicenseRef-scancode-happy-bunny
-- imgui @v1.92.8-docking (May 2026)
+- imgui @ v1.92.8-docking (May 2026)
+  - SPDX-License-Identifier: MIT
+- renderdoc @ v1.46 (Aug 2026)
+  - Only 1 file `renderdoc_app.h`
   - SPDX-License-Identifier: MIT
 - stb @ 31c1ad3 (July 2026)
   - Only 1 file `stb_image.h` 
@@ -23,6 +26,6 @@
 
 **Require fetch**
 
-- slang @ v2026.14.1 (July 2026)
+- slang @ v2026.18 (Sept 2026)
   - `python fetch_slang.py`
   - SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
