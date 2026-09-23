@@ -6,47 +6,48 @@
 
 #include <glm/glm.hpp>
 
-#include "GPUBuffer.h"
 #include "Camera.h"
-#include "GPUMesh.h"
+#include "AnvilMaterial.h"
+#include "CPUModel.h"
+#include "GPUModel.h"
 #include "VulkanContext.h"
-#include "ShaderModule.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
 #include "Swapchain.h"
+#include "ShaderProgram.h" // Added explicit shader program
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct ProjectPushConstants
 {
-    glm::mat4 renderMatrix;
+    glm::mat4 renderMatrix; /**< Projection * View * Model */
+    glm::mat4 modelMatrix;  /**< Model rotation for world-space normals */
+    glm::vec4 baseColorFactor;
 };
 
 class BoxModel
 {
 private:
-    VulkanContext* ptrAContext = nullptr;
-    Swapchain* ptrASwapchain = nullptr;
-
-    ShaderModule vertexShader;
-    ShaderModule fragmentShader;
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    AnvilPipeline pipeline = {};
-
-    GPUMesh meshBuffer;
-
+    VulkanContext* pContext = nullptr;
+    Swapchain* pSwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
+    AnvilPipeline pipeline = {};
     Camera camera;
+
+    ShaderProgram myProgram; // Explicitly manage program layout
+    AnvilMaterial myMaterial;
+
+    CPUModel cpuModel;
+    GPUModel gpuModel;
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
     // Function that records commands to trigger in AnvilRenderer
-    void recordCommands(VkCommandBuffer inCmd, const Swapchain &inAnvilSwapchain);
+    void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
 };
-
 
 #endif //EXAMPLE_BOXMODEL_H

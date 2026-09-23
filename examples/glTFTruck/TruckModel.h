@@ -36,7 +36,9 @@ private:
     Camera camera;
     Scene myScene;
 
+    ShaderProgram myProgram; // Explicitly manage program layout
     AnvilMaterial myMaterial;
+    MaterialInstance globalSet;
 
     CPUModel cpuModel;
     GPUModel gpuModel;

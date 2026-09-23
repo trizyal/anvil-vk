@@ -16,10 +16,10 @@
 #include <volk.h>
 
 #include "AnvilMaterial.h"
-#include "GPUMesh.h"
-#include "MaterialInstance.h"
 #include "CPUModel.h"
 #include "GPUTexture.h"
+#include "GPUMesh.h"
+#include "MaterialInstance.h"
 
 class VulkanContext;
 
@@ -105,19 +105,6 @@ public:
     GPUBuffer modelMatricesBuffer;
 
     /**
-     * @brief Legacy function to upload a CPUModel to GPU-side resources and generates a draw list.
-     */
-    [[deprecated("Use the multi-set architecture instead.")]]
-    void createGPUModel(
-        VulkanContext& inContext,
-        const CPUModel& inModel,
-        const AnvilMaterial& inMaterial,
-        const std::string& sceneBufferName,
-        const GPUBuffer& sceneBuffer,
-        const std::string& textureName
-    );
-
-    /**
      * @brief Uploads a CPUModel to GPU-side resources and generates a draw list.
      *
      * @param inContext Reference to the active Anvil Vulkan context.
@@ -164,15 +151,6 @@ private:
      * @param inModel The CPU model providing texture paths and colors.
      */
     void createTextures(const CPUModel& inModel);
-
-    [[deprecated("Use the multi-set architecture instead.")]]
-    void createMaterialDescriptorSets(
-        const CPUModel& inModel,
-        const AnvilMaterial& inMaterial,
-        const std::string& sceneBufferName,
-        const GPUBuffer& sceneBuffer,
-        const std::string& textureName
-    );
 
     /**
      * @brief Allocates and writes Vulkan descriptor sets for the model's global data (Set 1) and materials (Set 2).

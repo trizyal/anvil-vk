@@ -12,18 +12,6 @@
 #include "DebugNames.h"
 #include "VulkanResult.h"
 
-void AnvilMaterial::buildMaterial(VulkanContext& inContext,
-    ShaderCompiler& inCompiler,
-    const AnvilShaders::ShaderCompileRequest& inVertReq,
-    const AnvilShaders::ShaderCompileRequest& inFragReq)
-{
-    // Backwards compatibility wrapper
-    legacyProgram = std::make_unique<ShaderProgram>();
-    legacyProgram->buildProgram(inContext, inCompiler, inVertReq, inFragReq);
-
-    buildMaterialFromProgram(inContext, *legacyProgram);
-}
-
 void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram)
 {
     pContext = &inContext;
@@ -117,11 +105,6 @@ void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const Sha
     SET_DNAME_HERE(pContext->device, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, inProgram.name.c_str());
 }
 
-MaterialInstance AnvilMaterial::createInstance() const
-{
-    return allocateSet(0);
-}
-
 MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
 {
     MaterialInstance instance;
@@ -172,13 +155,6 @@ void AnvilMaterial::destroyMaterial()
 {
     if (pContext)
     {
-        // Destroy legacy program if this material owns it (backwards compatibility)
-        if (legacyProgram)
-        {
-            legacyProgram->destroyProgram();
-            legacyProgram.reset();
-        }
-
         if (materialDescriptorPool)
         {
             vkDestroyDescriptorPool(pContext->device, materialDescriptorPool, nullptr);

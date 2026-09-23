@@ -36,7 +36,9 @@ private:
     Camera camera;
     Scene riggedScene;
 
+    ShaderProgram riggedProgram; // Explicitly manage program layout
     AnvilMaterial riggedMaterial;
+    MaterialInstance globalSet;  // Manage the scene UBO
 
     CPUModel cpuModel;
     GPUModel gpuModel;

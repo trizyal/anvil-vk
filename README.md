@@ -32,7 +32,7 @@ Anvil is intended to be a starting point rather than a rigid, all-in-one rendere
 
 2. Fetch Slang binaries into the `external/` directory:
     ```bash
-    python fetch_slang.py
+    python scripts/fetch_slang.py
     ```
 
 3. Configure and build using CMake: (NEED TO UPDATE DUE TO EXAMPLES CMAKE)

@@ -51,6 +51,7 @@ void BoxAnimated::cleanupProject()
 
         gpuModel.destroyGPUModel();
         boxMaterial.destroyMaterial();
+        boxProgram.destroyProgram();
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -72,27 +73,32 @@ void BoxAnimated::loadPipeline()
         vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         boxMaterial.destroyMaterial();
+        boxProgram.destroyProgram();
     }
 
     // Create shader compilation request
     AnvilShaders::ShaderCompileRequest vReq{"BoxAnimated", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fReq{"BoxAnimated", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
-    boxMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
+    // Split build process to build Program then Material
+    boxProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);
+    boxMaterial.buildMaterialFromProgram(*pContext, boxProgram);
 
-    const auto attributesArray = GPUMesh::GetAttributeDescriptionsArray3();
+    // Allocate and update Set 0 (Global Scene UBO)
+    globalSet = boxMaterial.allocateSet(0);
+    globalSet.bindUniformBuffer("sceneBuffer", boxScene.sceneUBO);
+    globalSet.updateDescriptorSets();
 
-    // Vertex Descriptions
+    // Use initializer list for non-deprecated GetAttributeDescriptions
+    const auto attributes = GPUMesh::GetAttributeDescriptions({POSITION, NORMAL, UV});
+
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
-    std::vector<VkVertexInputAttributeDescription> attributes =
-    {attributesArray[0], attributesArray[1], attributesArray[2]};
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(boxMaterial.getVertexShader(), boxMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(pSwapchain->swapchainFormat)
+        .setColorAttachmentFormats({pSwapchain->swapchainFormat}) // Wrapped format in {}
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
@@ -101,7 +107,8 @@ void BoxAnimated::loadPipeline()
         .disableBlending()
         .buildPipeline(pContext->device, boxMaterial.materialPipelineLayout DNAME("BoxAnimatedPipeline"));
 
-    gpuModel.createGPUModel( *pContext, cpuModel, boxMaterial, "sceneBuffer", boxScene.sceneUBO, "texture");
+    // Use standard 3-parameter setup now that Sets are automatically handled
+    gpuModel.createGPUModel(*pContext, cpuModel, boxMaterial);
 }
 
 void BoxAnimated::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
@@ -179,11 +186,25 @@ void BoxAnimated::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
             base_color_factor = material.baseColorFactor;
         }
 
-        // Bind the specific descriptor set for this material (textures + scene UBO)
+        // Aggregate and bind all active descriptor sets
+        std::vector<VkDescriptorSet> sets_to_bind;
+        if (globalSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(globalSet.descriptorSet);
+        }
+        if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(gpuModel.modelSet.descriptorSet);
+        }
         if (descriptor_set != VK_NULL_HANDLE)
         {
+            sets_to_bind.push_back(descriptor_set);
+        }
+
+        if (!sets_to_bind.empty())
+        {
             vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, boxMaterial.materialPipelineLayout,
-                0, 1, &descriptor_set, 0, nullptr);
+                0, static_cast<uint32_t>(sets_to_bind.size()), sets_to_bind.data(), 0, nullptr);
         }
 
         // Update push constants (Transform matrices + base color)

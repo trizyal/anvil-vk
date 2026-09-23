@@ -34,6 +34,7 @@ private:
     CPUModel cpuModel;
     GPUModel gpuModel;
 
+    ShaderProgram cesiumProgram;
     AnvilMaterial cesiumMaterial;
     MaterialInstance globalSet;
     Scene cesiumScene;

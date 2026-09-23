@@ -58,15 +58,6 @@ PipelineBuilder& PipelineBuilder::setShaders(VkShaderModule inVertexShader, VkSh
     return *this;
 }
 
-PipelineBuilder& PipelineBuilder::setColorAttachmentFormat(const VkFormat inColorFormat)
-{
-    colorAttachmentFormats.push_back(inColorFormat);
-    dynamicRendering.colorAttachmentCount = 1;
-    dynamicRendering.pColorAttachmentFormats = &colorAttachmentFormats[0];
-
-    return *this;
-}
-
 PipelineBuilder& PipelineBuilder::setColorAttachmentFormats(const std::vector<VkFormat>& inColorFormats)
 {
     colorAttachmentFormats = inColorFormats;

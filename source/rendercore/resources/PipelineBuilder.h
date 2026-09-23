@@ -115,16 +115,6 @@ public:
     PipelineBuilder& setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader);
 
     /**
-     * @brief Sets the format of the color attachment used by dynamic rendering.
-     * @param inColorFormat Vulkan format of the color attachment.
-     * @return Reference to this builder for method chaining.
-     *
-     * @note Only use-case is forward shading.
-     */
-    [[deprecated]]
-    PipelineBuilder& setColorAttachmentFormat(VkFormat inColorFormat);
-
-    /**
      * @brief Sets the format of the color attachments used by dynamic rendering.
      * @param inColorFormats Vector of Vulkan format of the color attachments.
      * @return Reference to this builder for method chaining.

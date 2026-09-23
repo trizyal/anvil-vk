@@ -263,7 +263,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
     {
         if (ImGui::BeginMenu("View"))
         {
-            for (int i = 0; i < static_cast<int>(DebugMode::Count); ++i)
+            for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
             {
                 bool is_selected = (currentMode == i);
                 if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))

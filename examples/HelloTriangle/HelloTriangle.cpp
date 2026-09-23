@@ -7,14 +7,14 @@
 #include <stdexcept>
 
 #include "ShaderCompiler.h"
+#include "DebugNames.h"
 
-void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
+void HelloTriangle::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
-    ptrAContext = &inAnvilContext;
-    ptrASwapchain = &inAnvilSwapchain;
+    pContext = &inAnvilContext;
+    pSwapchain = &inAnvilSwapchain;
 
     // Initialize shader compiler
-    // AnvilShaderCompiler shaderCompiler;
     if (!shaderCompiler.initializeShaderCompiler())
     {
         throw std::runtime_error("Failed to initialize shader compiler!");
@@ -27,12 +27,20 @@ void HelloTriangle::initalizeProject(VulkanContext& inAnvilContext, Swapchain& i
 
 void HelloTriangle::cleanupProject()
 {
-    if (ptrAContext)
+    if (pContext)
     {
-        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
-        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
-        vertexShader.destroyShaderModule();
-        fragmentShader.destroyShaderModule();
+        vkDeviceWaitIdle(pContext->device);
+
+        myMaterial.destroyMaterial();
+        myProgram.destroyProgram(); // Clean up explicit program
+
+        if (pipeline.pipeline != VK_NULL_HANDLE)
+        {
+            vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
+            pipeline.pipeline = VK_NULL_HANDLE;
+        }
+
+        shaderCompiler.shutdownShaderCompiler();
     }
 }
 
@@ -55,7 +63,7 @@ void HelloTriangle::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwap
     scissor.extent = inAnvilSwapchain.swapchainExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 
-    // Draw
+    // Draw the hardcoded 3 vertices
     vkCmdDraw(inCmd, 3, 1, 0, 0);
 }
 
@@ -65,43 +73,31 @@ void HelloTriangle::loadPipeline()
 
     shaderCompiler.resetSession();
 
-    // NO wait idle here. Anvil handled it.
     if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
-        vkDestroyPipelineLayout(ptrAContext->device, pipelineLayout, nullptr);
+        vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
+        pipeline.pipeline = VK_NULL_HANDLE;
+        myMaterial.destroyMaterial();
+        myProgram.destroyProgram(); // Clean up explicit program
     }
-    vertexShader.destroyShaderModule();
-    fragmentShader.destroyShaderModule();
 
     // Create shader compilation request
     AnvilShaders::ShaderCompileRequest vReq{"HelloTriangle", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fReq{"HelloTriangle", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    // Compile shaders
-    auto vSpirv = shaderCompiler.compileToSPIRV(vReq);
-    auto fSpirv = shaderCompiler.compileToSPIRV(fReq);
+    // Split build process to build Program then Material
+    myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);
+    myMaterial.buildMaterialFromProgram(*pContext, myProgram);
 
-    // Create shader modules
-    vertexShader.createShaderModule(*ptrAContext, vSpirv);
-    fragmentShader.createShaderModule(*ptrAContext, fSpirv);
-
-    // Create pipeline layout
-    VkPipelineLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (vkCreatePipelineLayout(ptrAContext->device, &layoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create pipeline layout!");
-    }
-
-    // Create pipeline
+    // Create pipeline (Passing empty vectors for vertex input because it's hardcoded in shader)
     PipelineBuilder pipelineBuilder;
-
-    pipeline = pipelineBuilder.setShaders(vertexShader.get(), fragmentShader.get())
-        .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
-        .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
+    pipeline = pipelineBuilder.setShaders(myMaterial.getVertexShader(), myMaterial.getFragmentShader())
+        .setVertexInput({}, {})
+        .setColorAttachmentFormats({pSwapchain->swapchainFormat})
+        .setDepthAttachmentFormat(pSwapchain->depthFormat)
+        .enableDepthTest(false, VK_COMPARE_OP_ALWAYS) // No depth testing needed for a single triangle
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .setPolygonMode(VK_POLYGON_MODE_FILL)
         .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE)
         .disableBlending()
-        .buildPipeline(ptrAContext->device, pipelineLayout, "HelloTrianglePipeline");
+        .buildPipeline(pContext->device, myMaterial.materialPipelineLayout DNAME("HelloTrianglePipeline"));
 }

@@ -7,10 +7,11 @@ import platform
 
 # --- Configuration ---
 # Update this string to pull a newer version in the future
-SLANG_VERSION = "2026.14.1"
+SLANG_VERSION = "2026.18"
 
-# Set up paths relative to this script
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# Set up paths relative to this script (now located in root/scripts)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) # Steps back up to the project root
 EXTERNAL_DIR = os.path.join(PROJECT_ROOT, "external")
 SLANG_DIR = os.path.join(EXTERNAL_DIR, "slang")
 ZIP_PATH = os.path.join(EXTERNAL_DIR, "slang_download.zip")

@@ -7,42 +7,38 @@
 #include <glm/glm.hpp>
 
 #include "Camera.h"
-#include "GPUMesh.h"
+#include "AnvilMaterial.h"
+#include "CPUModel.h"
+#include "GPUModel.h"
 #include "VulkanContext.h"
-#include "ShaderModule.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
 #include "Swapchain.h"
-#include "TextureLoader.h"
+#include "ShaderProgram.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct ProjectPushConstants
 {
-    glm::mat4 renderMatrix;
+    glm::mat4 renderMatrix; /**< Projection * View * Model */
+    glm::mat4 modelMatrix;  /**< Model rotation for world-space normals */
+    glm::vec4 baseColorFactor;
 };
 
 class TextureCube
 {
 private:
-    VulkanContext* ptrAContext = nullptr;
-    Swapchain* ptrASwapchain = nullptr;
-
-    ShaderModule vertexShader;
-    ShaderModule fragmentShader;
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    AnvilPipeline pipeline = {};
-
-    GPUMesh meshBuffer;
-
+    VulkanContext* pContext = nullptr;
+    Swapchain* pSwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
+    AnvilPipeline pipeline = {};
     Camera camera;
 
-    // Things for textures
-    AnvilTexture myTexture;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    ShaderProgram myProgram; // Explicitly manage program layout
+    AnvilMaterial myMaterial;
+
+    CPUModel cpuModel;
+    GPUModel gpuModel;
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
@@ -52,9 +48,6 @@ public:
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
-
-    void setupDescriptors();
 };
-
 
 #endif //EXAMPLE_TEXTURECUBE_H
