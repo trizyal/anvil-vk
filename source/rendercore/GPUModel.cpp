@@ -33,21 +33,6 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
     return *this;
 }
 
-[[deprecated("Use the multi-set architecture instead.")]]
-void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial,
-    const std::string& sceneBufferName, const GPUBuffer& sceneBuffer, const std::string& textureName)
-{
-    // Destroy the old vulkan objects
-    destroyGPUModel();
-
-    pContext = &inContext;
-
-    createJointBuffer();
-    createTextures(inModel);
-    createMaterialDescriptorSets(inModel, inMaterial, sceneBufferName, sceneBuffer, textureName);
-    createMeshesAndDrawItems(inModel);
-}
-
 void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial)
 {
     // Destroy the old vulkan objects
@@ -184,55 +169,6 @@ void GPUModel::createTextures(const CPUModel& inModel)
             textures.push_back(std::move(fallback));
 #endif
         }
-    }
-}
-
-[[deprecated("Use the multi-set architecture instead.")]]
-void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial,
-    const std::string& sceneBufferName, const GPUBuffer& sceneBuffer, const std::string& textureName)
-{
-    gpuMaterials.clear();
-    gpuMaterials.reserve(inModel.materials.size());
-
-    for (size_t material_index = 0; material_index < inModel.materials.size(); material_index++)
-    {
-        const CPUMaterial& cpu_material = inModel.materials[material_index];
-
-        GPUModelMaterial gpu_material;
-        gpu_material.materialIndex = static_cast<int>(material_index);
-        gpu_material.baseColorFactor = cpu_material.baseColorFactor;
-        gpu_material.instance = inMaterial.createInstance();
-
-        if (inMaterial.hasBinding(sceneBufferName))
-        {
-            gpu_material.instance.bindUniformBuffer(sceneBufferName, sceneBuffer);
-        }
-
-        if (inMaterial.hasBinding("jointMatrices"))
-        {
-            gpu_material.instance.bindStorageBuffer("jointMatrices", jointBuffer);
-        }
-
-        if (inMaterial.hasBinding(textureName))
-        {
-            if (cpu_material.baseColorTextureIndex >= 0 &&
-                cpu_material.baseColorTextureIndex < static_cast<int>(textures.size()) &&
-                textures[cpu_material.baseColorTextureIndex].imageView != VK_NULL_HANDLE)
-            {
-                gpu_material.instance.bindTexture(textureName, textures[cpu_material.baseColorTextureIndex]);
-            }
-            else if (!textures.empty() && textures[0].imageView != VK_NULL_HANDLE)
-            {
-                gpu_material.instance.bindTexture(textureName, textures[0]);
-            }
-            else
-            {
-                std::cerr << "Unhandled Stuff" << std::endl;
-            }
-        }
-
-        gpu_material.instance.updateDescriptorSets();
-        gpuMaterials.push_back(std::move(gpu_material));
     }
 }
 

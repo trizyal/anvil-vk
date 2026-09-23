@@ -47,13 +47,23 @@ public:
     };
 
 private:
+    /** The root Slang context managing module lifecycles. */
     Slang::ComPtr<slang::IGlobalSession> globalSession;
+
+    /** The active compilation session handling the current target and profiles. */
     Slang::ComPtr<slang::ISession> session;
 
     // Configuration State
+    /** Active optimization level for code generation. */
     OptimizationLevel optimizationLevel = OptimizationLevel::Default;
+
+    /** Directories to search for shaders and `#include` dependencies. */
     std::vector<std::string> searchPaths;
+
+    /** Flag dictating if raw SPIR-V binaries should be written to disk. */
     bool bDumpSpirv = false;
+
+    /** Path where dumped SPIR-V files are saved. */
     std::string dumpDirectory;
 
 public:
@@ -106,7 +116,12 @@ public:
     AnvilShaders::ShaderCompileResult compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request);
 
 private:
-    static int32_t getSlangOptimizationLevel(OptimizationLevel inLevel);
+    /**
+     * @brief Translates an internal OptimizationLevel to the equivalent Slang SDK constant.
+     * @param inLevel The Anvil optimization tier.
+     * @return The corresponding Slang optimization level integer.
+     */
+    static int32_t GetSlangOptimizationLevel(OptimizationLevel inLevel);
 };
 
 #endif //ANVIL_VK_SHADERCOMPILER_H

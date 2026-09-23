@@ -74,7 +74,10 @@ private:
     glm::vec3 up = WORLD_UP;
     glm::vec3 right = WORLD_RIGHT;
 
+    /** The camera's yaw (horizontal) rotation in degrees. */
     float yawDegree;
+
+    /** The camera's pitch (vertical) rotation in degrees. */
     float pitchDegree;
 
 public:
@@ -114,6 +117,12 @@ public:
     [[nodiscard]] glm::mat4 getProjectionMatrix(float aspectRatio) const;
 
 private:
+    /**
+     * @brief Recalculates the front, right, and up direction vectors based on the current yaw and pitch.
+     *
+     * Called internally whenever the camera is moved or rotated to ensure the view matrix
+     * axes remain orthogonal and accurate.
+     */
     void updateCameraVectors();
 };
 

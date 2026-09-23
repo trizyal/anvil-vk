@@ -10,6 +10,7 @@
  */
 
 #include <string>
+
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
@@ -99,8 +100,26 @@ public:
      */
     void destroyTexture();
 
+    /**
+     * @brief Internal helper to allocate and create the base Vulkan Image.
+     * @param width Width in pixels.
+     * @param height Height in pixels.
+     * @param mipLevels Number of mipmap levels to allocate.
+     * @param format Vulkan format to use for the image.
+     */
     void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format D_DECL());
+
+    /**
+     * @brief Internal helper to create the Vulkan ImageView for the texture.
+     * @param mipLevels Number of mipmap levels to expose to the view.
+     * @param format Vulkan format to interpret the image as.
+     */
     void createImageView(uint32_t mipLevels, VkFormat format D_DECL());
+
+    /**
+     * @brief Internal helper to create the default linear Vulkan Sampler for the texture.
+     * @param mipLevels Maximum mip level the sampler is allowed to access.
+     */
     void createSampler(uint32_t mipLevels D_DECL());
 };
 

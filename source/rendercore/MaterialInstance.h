@@ -62,12 +62,19 @@ public:
 
 private:
     VulkanContext* pContext = nullptr;
+
+    /** Pointer to the factory material that generated this instance. */
     const AnvilMaterial* pParentMaterial = nullptr;
 
+    /** Queue of textures waiting to be written to the descriptor set. */
     std::vector<PendingTextureBind> pendingTextures;
+
+    /** Queue of buffers waiting to be written to the descriptor set. */
     std::vector<PendingBufferBind> pendingBuffers;
 
-    [[maybe_unused]] bool bDirty = false;
+    /** Tracks if the descriptor set has pending updates. */
+    [[maybe_unused]]
+    bool bDirty = false;
 
 public:
     /** The Vulkan descriptor set unique to this instance. */

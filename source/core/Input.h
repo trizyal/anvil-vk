@@ -54,14 +54,25 @@ public:
 private:
     static GLFWwindow* s_glfwWindow;
 
+    /** State of all keyboard keys during the current frame. */
     static bool s_CurrentKeys[KEY_COUNT];
+
+    /** State of all keyboard keys during the previous frame. */
     static bool s_PreviousKeys[KEY_COUNT];
 
+    /** State of all mouse buttons during the current frame. */
     static bool s_CurrentMouseButtons[BUTTON_COUNT];
+
+    /** State of all mouse buttons during the previous frame. */
     static bool s_PreviousMouseButtons[BUTTON_COUNT];
 
+    /** The absolute XY pixel coordinates of the mouse cursor this frame. */
     static glm::vec2 s_MousePosition;
+
+    /** The frame-to-frame pixel movement delta of the mouse cursor. */
     static glm::vec2 s_MouseDelta;
+
+    /** Flag ensuring the initial mouse position does not cause a huge delta spike. */
     static bool s_FirstMouseUpdate;
 
 public:

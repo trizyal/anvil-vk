@@ -14,11 +14,16 @@
 
 namespace AnvilVulkan
 {
-    // Target Vulkan API Version Components
+    /** The major version of the Vulkan API targeted by the engine. */
     constexpr uint32_t API_VERSION_MAJOR = 1;
+
+    /** The minor version of the Vulkan API targeted by the engine. */
     constexpr uint32_t API_VERSION_MINOR = 3;
+
+    /** The patch version of the Vulkan API targeted by the engine. */
     constexpr uint32_t API_VERSION_PATCH = 0;
 
+    /** The packed 32-bit integer representing the complete Vulkan API version target. */
     constexpr uint32_t API_VERSION = VK_MAKE_API_VERSION(0, API_VERSION_MAJOR, API_VERSION_MINOR, API_VERSION_PATCH);
 }
 

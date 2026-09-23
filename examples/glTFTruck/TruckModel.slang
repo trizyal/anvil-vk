@@ -21,8 +21,8 @@ struct SceneData
 [[vk::binding(0, 0)]]
 ConstantBuffer<SceneData> sceneBuffer;
 
-[[vk::binding(1, 0)]]
-Sampler2D texture;
+[[vk::binding(0, 2)]]
+Sampler2D baseColorTexture;
 
 [[vk::push_constant]] // Tells Slang to map this to Vulkan Push Constants
 ConstantBuffer<PushConstants> pushConstants;
@@ -63,7 +63,7 @@ VertexOutput vertexMain(VertexInput input)
 [shader("fragment")]
 float4 fragmentMain(VertexOutput input) : SV_Target
 {
-    float4 textureColor = texture.Sample(input.uv);
+    float4 textureColor = baseColorTexture.Sample(input.uv);
     float4 baseColor = textureColor * pushConstants.baseColorFactor;
 
     float3 normal = normalize(input.worldNormal);

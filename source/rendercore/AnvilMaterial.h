@@ -14,10 +14,9 @@
 #include <volk.h>
 
 #include "MaterialInstance.h"
-#include "ShaderCompiler.h"
 #include "ShaderModule.h"
-#include "VulkanContext.h"
 #include "ShaderProgram.h"
+#include "VulkanContext.h"
 
 /**
  * @brief Encapsulates shaders and acts as a factory for Material Instances.
@@ -59,33 +58,7 @@ public:
 private:
     VulkanContext* pContext = nullptr;
 
-    /** Fallback storage for legacy build Material. */
-    std::unique_ptr<ShaderProgram> legacyProgram;
-
 public:
-    /**
-     * @brief LEGACY: Backwards compatible wrapper for older projects.
-     *
-     * Compiles the requested vertex and fragment via Slang, inspects the resulting reflection
-     * metadata to build descriptor layouts and push constants, and allocates a descriptor set.
-     *
-     * @param inContext Reference to the active Anvil Vulkan context.
-     * @param inCompiler Reference to the active Slang shader compiler.
-     * @param inVertReq Compilation request parameters for the vertex shader stage.
-     * @param inFragReq Compilation request parameters for the fragment shader stage.
-     *
-     * @throws std::runtime_error If shader compilation fails or Vulkan layouts cannot be created.
-     *
-     * @warning Internally spins up an owned ShaderProgram.
-     *
-     * @todo Need to change function name to include legacy.
-     */
-    [[deprecated("Use AnvilMaterial::buildMaterialFromProgram")]]
-    void buildMaterial(VulkanContext& inContext,
-                       ShaderCompiler& inCompiler,
-                       const AnvilShaders::ShaderCompileRequest& inVertReq,
-                       const AnvilShaders::ShaderCompileRequest& inFragReq);
-
     /**
      * @brief Builds layout using an already compiled ShaderProgram.
      *
@@ -98,14 +71,6 @@ public:
      * @brief Destroys all Vulkan layouts, descriptor pools, and shader modules owned by this material.
      */
     void destroyMaterial();
-
-    /**
-     * @brief Allocates a new material instance with its own Vulkan descriptor set.
-     *
-     * @return A ready-to-use MaterialInstance tied to this material's layout.
-     */
-    [[deprecated]][[nodiscard]]
-    MaterialInstance createInstance() const;
 
     /**
      * @brief Allocates a new instance for a specific Descriptor Set Index.
@@ -130,15 +95,28 @@ public:
     [[nodiscard]]
     ShaderBinding getBinding(const std::string& name) const;
 
+    /**
+     * @brief Checks if a specific descriptor set index has been successfully allocated.
+     * @param setIndex The descriptor set index to verify (e.g., 0, 1, 2).
+     * @return True if the set layout exists and is not null, false otherwise.
+     */
     [[nodiscard]]
     bool hasSet(uint32_t setIndex) const;
 
+    /**
+     * @brief Retrieves the compiled vertex shader module.
+     * @return The VkShaderModule handle, or VK_NULL_HANDLE if no program is active.
+     */
     [[nodiscard]]
     VkShaderModule getVertexShader() const
     {
         return pActiveProgram ? pActiveProgram->vertexShader.get() : VK_NULL_HANDLE;
     }
 
+    /**
+     * @brief Retrieves the compiled fragment shader module.
+     * @return The VkShaderModule handle, or VK_NULL_HANDLE if no program is active.
+     */
     [[nodiscard]]
     VkShaderModule getFragmentShader() const
     {

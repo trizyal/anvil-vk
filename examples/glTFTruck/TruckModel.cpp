@@ -8,10 +8,10 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "AnvilRenderer.h"
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
-#include "TextureLoader.h"
 #include "UIRenderer.h"
 #include "UIElements.h"
 
@@ -21,7 +21,7 @@ void TruckModel::initializeProject(VulkanContext& inAnvilContext, Swapchain& inA
     pSwapchain = &inAnvilSwapchain;
 
     const char* modelPath = PROJECT_DIR "/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf";
-    cpuModel = ModelLoader::LoadGLTF(modelPath);
+    cpuModel.loadGLTF(modelPath);
 
     // Setup initial light values
     GlobalSceneData sceneLighting{};
@@ -51,6 +51,7 @@ void TruckModel::cleanupProject()
 
         gpuModel.destroyGPUModel();
         myMaterial.destroyMaterial();
+        myProgram.destroyProgram(); // Clean up explicit program
 
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -73,27 +74,30 @@ void TruckModel::loadPipeline()
         vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
         pipeline.pipeline = VK_NULL_HANDLE;
         myMaterial.destroyMaterial();
+        myProgram.destroyProgram(); // Clean up explicit program
     }
 
     // Create shader compilation request
     AnvilShaders::ShaderCompileRequest vReq{"TruckModel", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fReq{"TruckModel", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
-    myMaterial.buildMaterial(*pContext, shaderCompiler, vReq, fReq);
+    // Split build process to build Program then Material
+    myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);
+    myMaterial.buildMaterialFromProgram(*pContext, myProgram);
 
-    auto attributesArray = GPUMesh::GetAttributeDescriptionsArray3();
+    // Allocate and update Set 0 (Global Scene UBO)
+    globalSet = myMaterial.allocateSet(0);
+    globalSet.bindUniformBuffer("sceneBuffer", myScene.sceneUBO);
+    globalSet.updateDescriptorSets();
 
-    // Vertex Descriptions
+    const auto attributes = GPUMesh::GetAttributeDescriptions({POSITION, NORMAL, UV});
     std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
-    std::vector<VkVertexInputAttributeDescription> attributes =
-    {attributesArray[0], attributesArray[1], attributesArray[2]};
 
     // Create pipeline
     PipelineBuilder pipelineBuilder;
     pipeline = pipelineBuilder.setShaders(myMaterial.getVertexShader(), myMaterial.getFragmentShader())
         .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(pSwapchain->swapchainFormat)
+        .setColorAttachmentFormats({pSwapchain->swapchainFormat}) // Wrapped format in {}
         .setDepthAttachmentFormat(pSwapchain->depthFormat)
         .enableDepthTest(true, VK_COMPARE_OP_LESS)
         .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
@@ -102,7 +106,7 @@ void TruckModel::loadPipeline()
         .disableBlending()
         .buildPipeline(pContext->device, myMaterial.materialPipelineLayout DNAME("TruckModelPipeline"));
 
-    gpuModel.createGPUModel( *pContext, cpuModel, myMaterial, "sceneBuffer", myScene.sceneUBO, "texture");
+    gpuModel.createGPUModel(*pContext, cpuModel, myMaterial);
 }
 
 void TruckModel::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapchain)
@@ -180,11 +184,25 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapcha
             base_color_factor = material.baseColorFactor;
         }
 
-        // Bind the specific descriptor set for this material (textures + scene UBO)
+        // Aggregate and bind all active descriptor sets
+        std::vector<VkDescriptorSet> sets_to_bind;
+        if (globalSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(globalSet.descriptorSet);
+        }
+        if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE)
+        {
+            sets_to_bind.push_back(gpuModel.modelSet.descriptorSet);
+        }
         if (descriptor_set != VK_NULL_HANDLE)
         {
+            sets_to_bind.push_back(descriptor_set);
+        }
+
+        if (!sets_to_bind.empty())
+        {
             vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout,
-                0, 1, &descriptor_set, 0, nullptr);
+                0, static_cast<uint32_t>(sets_to_bind.size()), sets_to_bind.data(), 0, nullptr);
         }
 
         // Update push constants (Transform matrices + base color)
@@ -201,5 +219,8 @@ void TruckModel::recordCommands(VkCommandBuffer inCmd, Swapchain& inAnvilSwapcha
         vkCmdBindVertexBuffers(inCmd, 0, 1, &gpu_mesh.vertexBuffer.buffer, &offset);
         vkCmdBindIndexBuffer(inCmd, gpu_mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
         vkCmdDrawIndexed(inCmd, gpu_mesh.indexCount, 1, 0, 0, 0);
+
+        AnvilRenderer::engineStats.drawCalls++;
+        AnvilRenderer::engineStats.primitiveCount += (gpu_mesh.indexCount/3);
     }
 }

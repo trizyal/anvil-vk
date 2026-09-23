@@ -27,8 +27,11 @@ CREATE_ENUM(DebugMode)
     Depth           = 7,
     Overdraw        = 8,
     Overshading     = 9,
+    Wireframe       =10,
 
-    Count           = 10
+    Count           = 11
 };
+
+#undef CREATE_ENUM
 
 #endif //ANVIL_VK_DEBUGMODES_H

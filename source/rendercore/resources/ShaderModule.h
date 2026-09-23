@@ -11,8 +11,8 @@
 
 #include <volk.h>
 
-#include "AnvilShaders.h"
 #include "VulkanContext.h"
+#include "AnvilShaders.h"
 #include "DebugNames.h"
 
 /**
@@ -38,9 +38,11 @@ public:
     ShaderModule(ShaderModule&&) noexcept;
     ShaderModule& operator=(ShaderModule&&) noexcept;
 
+    /** Underlying Vulkan shader module handle. */
     VkShaderModule shaderModule = VK_NULL_HANDLE;
 
 private:
+    /** Cached logical device handle required for self-destruction. */
     VkDevice device = VK_NULL_HANDLE;
 
 public:

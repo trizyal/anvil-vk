@@ -263,7 +263,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
     {
         if (ImGui::BeginMenu("View"))
         {
-            for (int i = 0; i < static_cast<int>(DebugMode::Count); ++i)
+            for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
             {
                 bool is_selected = (currentMode == i);
                 if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
@@ -307,7 +307,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
         // --- DEBUG VIEW MENU ---
         if (ImGui::BeginMenu("View"))
         {
-            for (int i = 0; i < static_cast<int>(DebugMode::Count); ++i)
+            for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
             {
                 bool is_selected = (currentMode == i);
                 if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
@@ -493,17 +493,19 @@ namespace
     {
         switch (mode)
         {
-        case DebugMode::None:                  return "None";
-        case DebugMode::BaseColor:             return "Base Color";
-        case DebugMode::GeometryNormal:        return "Geometry Normal";
-        case DebugMode::RawNormalMap:          return "Raw Normal Map";
-        case DebugMode::WorldNormal:           return "World Normal";
-        case DebugMode::Metallic:              return "Metallic";
-        case DebugMode::Roughness:             return "Roughness";
-        case DebugMode::Depth:                 return "Depth";
-        case DebugMode::Overdraw:    return "Overdraw Complexity";
-        case DebugMode::Overshading: return "Overshading Complexity";
-        case DebugMode::Count:                 return "Unknown";
+        case DebugMode::None:                   return "None";
+        case DebugMode::BaseColor:              return "Base Color";
+        case DebugMode::GeometryNormal:         return "Geometry Normal";
+        case DebugMode::RawNormalMap:           return "Raw Normal Map";
+        case DebugMode::WorldNormal:            return "World Normal";
+        case DebugMode::Metallic:               return "Metallic";
+        case DebugMode::Roughness:              return "Roughness";
+        case DebugMode::Depth:                  return "Depth";
+        case DebugMode::Overdraw:               return "Overdraw";
+        case DebugMode::Overshading:            return "Overshading";
+        case DebugMode::Wireframe:              return "Wireframe";
+
+        case DebugMode::Count:                  return "Unknown";
             // NO default case!
         }
 

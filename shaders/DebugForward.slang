@@ -81,6 +81,8 @@ float4 fragmentMain(VertexOutput input) : SV_Target {
             return float4(0.05, 0.20, 0.05, 1.0); // Overdraw
         case DebugMode::Overshading:
             return float4(0.05, 0.20, 0.05, 1.0); // Overshading
+        case DebugMode::Wireframe:
+            return float4(0.02, 0.4, 0.02, 1.0); // Bright green wireframe
         default: return float4(0.0);
     }
 }

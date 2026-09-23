@@ -8,31 +8,20 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "AnvilRenderer.h"
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
-#include "TextureLoader.h"
 #include "UIElements.h"
-#include "UIRenderer.h"
 
 void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain)
 {
-    ptrAContext = &inAnvilContext;
-    ptrASwapchain = &inAnvilSwapchain;
+    pContext = &inAnvilContext;
+    pSwapchain = &inAnvilSwapchain;
 
+    // Use CPUModel to parse the file instead of the deprecated Loader
     const char* modelPath = PROJECT_DIR "/Cube/glTF/Cube.gltf";
-    const CPUMesh_Single cubeMesh = ModelLoader::LoadSingleMeshGLTF(modelPath);
-    meshBuffer.createGPUMesh(*ptrAContext, cubeMesh);
-
-    if (!cubeMesh.texturePath.empty())
-    {
-        std::cout << "Loading texture: " << cubeMesh.texturePath << std::endl;
-
-        myTexture = TextureLoader::LoadTexture(
-            cubeMesh.texturePath,
-            *ptrAContext
-        );
-    }
+    cpuModel.loadGLTF(modelPath);
 
     // Initialize shader compiler
     if (!shaderCompiler.initializeShaderCompiler())
@@ -46,19 +35,69 @@ void ShaderReflectionCube::initializeProject(VulkanContext& inAnvilContext, Swap
 
 void ShaderReflectionCube::cleanupProject()
 {
-    if (ptrAContext)
+    if (pContext)
     {
-        myTexture.destroyAnvilTexture(ptrAContext);
+        vkDeviceWaitIdle(pContext->device);
+
+        gpuModel.destroyGPUModel();
         myMaterial.destroyMaterial();
-        meshBuffer.destroyGPUMesh();
-        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
+        myProgram.destroyProgram(); // Clean up explicit program
+
+        if (pipeline.pipeline != VK_NULL_HANDLE)
+        {
+            vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
+            pipeline.pipeline = VK_NULL_HANDLE;
+        }
+
+        shaderCompiler.shutdownShaderCompiler();
     }
+}
+
+void ShaderReflectionCube::loadPipeline()
+{
+    std::cout << "Creating ShaderReflectionCube pipeline." << std::endl;
+
+    shaderCompiler.resetSession();
+
+    // NO wait idle here. Anvil handled it.
+    if (pipeline.pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(pContext->device, pipeline.pipeline, nullptr);
+        pipeline.pipeline = VK_NULL_HANDLE;
+        myMaterial.destroyMaterial();
+        myProgram.destroyProgram(); // Clean up explicit program
+    }
+
+    // Create shader compilation request
+    AnvilShaders::ShaderCompileRequest vReq{"ShaderReflectionCube", "vertexMain", AnvilShaders::ST_Vertex};
+    AnvilShaders::ShaderCompileRequest fReq{"ShaderReflectionCube", "fragmentMain", AnvilShaders::ST_Fragment};
+
+    // Split build process to build Program then Material
+    myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);
+    myMaterial.buildMaterialFromProgram(*pContext, myProgram);
+
+    // Use initializer list for non-deprecated GetAttributeDescriptions
+    const auto attributes = GPUMesh::GetAttributeDescriptions({POSITION, UV});
+    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
+
+    // Create pipeline
+    PipelineBuilder pipelineBuilder;
+    pipeline = pipelineBuilder.setShaders(myMaterial.getVertexShader(), myMaterial.getFragmentShader())
+        .setVertexInput(bindings, attributes)
+        .setColorAttachmentFormats({pSwapchain->swapchainFormat}) // Wrapped format in {}
+        .setDepthAttachmentFormat(pSwapchain->depthFormat)
+        .enableDepthTest(true, VK_COMPARE_OP_LESS)
+        .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .setPolygonMode(VK_POLYGON_MODE_FILL)
+        .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+        .disableBlending()
+        .buildPipeline(pContext->device, myMaterial.materialPipelineLayout DNAME("ShaderReflectionCubePipeline"));
+
+    // Upload to GPU
+    gpuModel.createGPUModel(*pContext, cpuModel, myMaterial);
 }
 
 void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain)
 {
-    vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
-
     // Set Dynamic States required by your AnvilPipelineBuilder
     VkViewport viewport{};
     viewport.x = 0.0f;
@@ -76,7 +115,11 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAn
 
     // Calculate C++ Transforms
     static float time = 0.0f;
-    static float dt = 0.016f; // Simple delta time
+    static auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float dt = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastFrameTime).count();
+    lastFrameTime = currentTime;
+    time += dt;
 
     camera.updateCamera(dt);
 
@@ -87,67 +130,43 @@ void ShaderReflectionCube::recordCommands(VkCommandBuffer inCmd, Swapchain &inAn
 
     UI::RenderWorldAxes(view);
 
-    ProjectPushConstants constants{};
-    constants.renderMatrix = projection * view;
-    vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(ProjectPushConstants), &constants);
-
-    vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 0, 1, &myMaterialInstance.descriptorSet, 0, nullptr);
+    vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
     VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(inCmd, 0, 1, &meshBuffer.vertexBuffer.buffer, &offset);
 
-    // This was VK_INDEX_TYPE_UINT16, but everything else uses 32
-    // Caused a bug where half the triangles were not being rendered.
-    vkCmdBindIndexBuffer(inCmd, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-    // Draw
-    vkCmdDrawIndexed(inCmd, meshBuffer.indexCount, 1, 0, 0, 0);
-}
-
-void ShaderReflectionCube::loadPipeline()
-{
-    std::cout << "Creating ShaderReflectionCube pipeline." << std::endl;
-
-    shaderCompiler.resetSession();
-
-    // NO wait idle here. Anvil handled it.
-    if (pipeline.pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(ptrAContext->device, pipeline.pipeline, nullptr);
-        myMaterial.destroyMaterial();
-    }
-
-    // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"ShaderReflectionCube", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"ShaderReflectionCube", "fragmentMain", AnvilShaders::ST_Fragment};
-
-    // One call for material: Compile, Reflect, Shader Modules, and Build Layouts
-    myMaterial.buildMaterial(*ptrAContext, shaderCompiler, vReq, fReq);
-
-    // Bind by name
-    if (myTexture.imageView != VK_NULL_HANDLE)
+    for (const GPUModelDrawItem& draw_item : gpuModel.drawItems)
     {
-        myMaterialInstance = myMaterial.createInstance(); // Spawn it!
-        myMaterialInstance.bindTexture("texSampler", myTexture);
-        myMaterialInstance.updateDescriptorSets();
+        if (draw_item.gpuMeshIndex >= gpuModel.gpuMeshes.size())
+        {
+            continue;
+        }
+
+        const GPUMesh& gpu_mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];
+
+        // Retrieve the material instance containing the texture
+        VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
+        if (draw_item.gpuMaterialIndex >= 0 && draw_item.gpuMaterialIndex < static_cast<int>(gpuModel.gpuMaterials.size()))
+        {
+            descriptor_set = gpuModel.gpuMaterials[draw_item.gpuMaterialIndex].instance.descriptorSet;
+        }
+
+        // Bind Set 2 (Material Textures) if available.
+        // Note: GPUModel explicitly assigns materials to Set 2.
+        if (descriptor_set != VK_NULL_HANDLE)
+        {
+            vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, myMaterial.materialPipelineLayout, 2, 1, &descriptor_set, 0, nullptr);
+        }
+
+        ProjectPushConstants constants{};
+        constants.renderMatrix = projection * view * draw_item.worldMatrix;
+        vkCmdPushConstants(inCmd, myMaterial.materialPipelineLayout, myMaterial.pushConstantStages, 0, sizeof(ProjectPushConstants), &constants);
+
+        // Bind buffers and draw
+        vkCmdBindVertexBuffers(inCmd, 0, 1, &gpu_mesh.vertexBuffer.buffer, &offset);
+        vkCmdBindIndexBuffer(inCmd, gpu_mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(inCmd, gpu_mesh.indexCount, 1, 0, 0, 0);
+
+        AnvilRenderer::engineStats.drawCalls++;
+        AnvilRenderer::engineStats.primitiveCount += (gpu_mesh.indexCount/3);
     }
-
-    auto attributesArray = GPUMesh::GetAttributeDescriptionsArray3();
-
-    // Vertex Descriptions
-    std::vector<VkVertexInputBindingDescription> bindings = {GPUMesh::GetBindingDescription()};
-    std::vector<VkVertexInputAttributeDescription> attributes =
-        {attributesArray[0], attributesArray[1], attributesArray[2]};
-
-    // Create pipeline
-    PipelineBuilder pipelineBuilder;
-    pipeline = pipelineBuilder.setShaders(myMaterial.getVertexShader(), myMaterial.getFragmentShader())
-        .setVertexInput(bindings, attributes)
-        .setColorAttachmentFormat(ptrASwapchain->swapchainFormat)
-        .setDepthAttachmentFormat(ptrASwapchain->depthFormat)
-        .enableDepthTest(true, VK_COMPARE_OP_LESS)
-        .setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
-        .setPolygonMode(VK_POLYGON_MODE_FILL)
-        .setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-        .disableBlending()
-        .buildPipeline(ptrAContext->device, myMaterial.materialPipelineLayout);
 }

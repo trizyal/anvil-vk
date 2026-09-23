@@ -17,6 +17,7 @@
 #include "DebugNames.h"
 
 class VulkanContext;
+
 /**
  * @brief Manages the lifecycle of a GPU Vulkan buffer and its backing VMA memory allocation.
  *

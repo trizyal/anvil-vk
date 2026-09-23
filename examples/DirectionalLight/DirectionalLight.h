@@ -9,37 +9,40 @@
 #include "Camera.h"
 #include "AnvilMaterial.h"
 #include "GPUMesh.h"
+#include "GPUModel.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "Scene.h"
 #include "ShaderCompiler.h"
 #include "Swapchain.h"
-#include "TextureLoader.h"
+#include "ShaderProgram.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct ProjectPushConstants
 {
     glm::mat4 renderMatrix; /**< Projection * View * Model */
     glm::mat4 modelMatrix;  /**< Model rotation for world-space normals */
-    glm::vec3 camera;
+    glm::vec4 camera;
+    glm::vec4 baseColorFactor;
 };
 
 class DirectionalLight
 {
 private:
-    VulkanContext* ptrAContext = nullptr;
-    Swapchain* ptrASwapchain = nullptr;
+    VulkanContext* pContext = nullptr;
+    Swapchain* pSwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
-    GPUMesh meshBuffer;
     Camera camera;
     Scene myScene;
 
-    // Things for textures
-    AnvilTexture myTexture;
+    ShaderProgram myProgram; // Explicitly manage program layout
     AnvilMaterial myMaterial;
-    MaterialInstance myMaterialInstance;
+    MaterialInstance globalSet;
+
+    CPUModel cpuModel;
+    GPUModel gpuModel;
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);

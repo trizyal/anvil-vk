@@ -8,12 +8,13 @@
 
 #include "Camera.h"
 #include "AnvilMaterial.h"
-#include "GPUMesh.h"
+#include "CPUModel.h"
+#include "GPUModel.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
 #include "Swapchain.h"
-#include "TextureLoader.h"
+#include "ShaderProgram.h"
 
 // The data we push to the shader every frame (Must be <= 128 bytes)
 struct ProjectPushConstants
@@ -24,18 +25,18 @@ struct ProjectPushConstants
 class ShaderReflectionCube
 {
 private:
-    VulkanContext* ptrAContext = nullptr;
-    Swapchain* ptrASwapchain = nullptr;
+    VulkanContext* pContext = nullptr;
+    Swapchain* pSwapchain = nullptr;
     ShaderCompiler shaderCompiler;
 
     AnvilPipeline pipeline = {};
-    GPUMesh meshBuffer;
     Camera camera;
 
-    // Things for textures
-    AnvilTexture myTexture;
+    ShaderProgram myProgram; // Explicitly manage program layout
     AnvilMaterial myMaterial;
-    MaterialInstance myMaterialInstance;
+
+    CPUModel cpuModel;
+    GPUModel gpuModel;
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
@@ -46,6 +47,5 @@ public:
 
     void loadPipeline();
 };
-
 
 #endif //EXAMPLE_SHADERREFLECTIONCUBE_H

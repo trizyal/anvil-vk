@@ -413,12 +413,13 @@ void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer
         PushConstants pc{};
         pc.cameraPosition = glm::vec4(camera.position, 1.0f);
         pc.debugMode = DebugMode::None;
+        vkCmdPushConstants(inCmd, userLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &pc);
         
         vkCmdDraw(inCmd, 3, 1, 0, 0);
     }
     else if (DebugPass::isDeferredMode(debug_mode))
     {
-        debugPass.drawDeferredResolve(inCmd, gBuffer, debug_mode, glm::vec4(camera.position, 1.0f));
+        debugPass.drawDeferredResolve(inCmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
     }
 }
 
@@ -585,4 +586,36 @@ void AnvilRenderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& i
     scissor.offset = {0, 0};
     scissor.extent = inSwapchain.swapchainExtent;
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
+}
+
+bool AnvilRenderer::reloadDebugShaders(std::string* outError)
+{
+    // Force Slang to drop its module cache and read from disk again
+    engineCompiler.resetSession();
+
+    // 1. Create a temporary pass and attempt to initialize it
+    DebugPass tempPass;
+    bool bSuccess = tempPass.initializeDebugPass(*pContext, engineCompiler, pSwapchain->swapchainFormat, pSwapchain->depthFormat, outError);
+
+    if (bSuccess)
+    {
+        // 2a. Compilation Succeeded!
+        // Safely tear down the old pipelines first.
+        debugPass.cleanupDebugPass();
+
+        // Transfer ownership of the new Vulkan handles to the active debugPass.
+        debugPass = std::move(tempPass);
+
+        // Clear cached G-Buffer view so the new deferred descriptor set knows to rebind it.
+        debugPass.cachedGBufferView = VK_NULL_HANDLE;
+    }
+    else
+    {
+        // 2b. Compilation Failed!
+        // Clean up whatever partially compiled in the temporary pass.
+        // The active debugPass remains completely untouched, preventing the VK_NULL_HANDLE crash.
+        tempPass.cleanupDebugPass();
+    }
+
+    return bSuccess;
 }

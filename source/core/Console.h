@@ -215,7 +215,14 @@ struct AutoRegisterCommand
     }
 };
 
+/**
+ * @brief Internal macro for resolving line numbers in macro expansion.
+ */
 #define CONCAT_IMPL(x, y) x##y
+
+/**
+ * @brief Internal macro for concatenating auto-generated variable names.
+ */
 #define CONCAT(x, y) CONCAT_IMPL(x, y)
 
 /**

@@ -59,7 +59,8 @@ VkRenderingAttachmentInfo GBuffer::getDepthAttachmentInfo()
     attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
     attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment_info.clearValue = {1.0f, 0};
+    attachment_info.clearValue.color = {{1.0f}};
+    attachment_info.clearValue.depthStencil = {1.0f, 0};
 
     return attachment_info;
 }

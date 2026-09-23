@@ -11,16 +11,17 @@
 #include "GPUModel.h"
 #include "VulkanContext.h"
 
-void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
-                                    VkFormat depthFormat)
+bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
+                                    VkFormat depthFormat, std::string* outError)
 {
     pContext = &inContext;
+    bool bSuccess = true;
 
     // Deferred Fullscreen Debug Pipeline
     AnvilShaders::ShaderCompileRequest def_v{"DebugDeferred", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest def_f{"DebugDeferred", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    if (program_Deferred.buildProgram(*pContext, inCompiler, def_v, def_f))
+    if (program_Deferred.buildProgram(*pContext, inCompiler, def_v, def_f, outError))
     {
         material_Deferred.buildMaterialFromProgram(*pContext, program_Deferred);
 
@@ -39,12 +40,16 @@ void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
                               material_Deferred.materialPipelineLayout DNAME(
                                   "EngineDeferredDebug"));
     }
+    else
+    {
+        bSuccess = false;
+    }
 
     // Forward Geometry Debug Pipelines
     AnvilShaders::ShaderCompileRequest fwd_v{"DebugForward", "vertexMain", AnvilShaders::ST_Vertex};
     AnvilShaders::ShaderCompileRequest fwd_f{"DebugForward", "fragmentMain", AnvilShaders::ST_Fragment};
 
-    if (program_Forward.buildProgram(*pContext, inCompiler, fwd_v, fwd_f))
+    if (program_Forward.buildProgram(*pContext, inCompiler, fwd_v, fwd_f, outError))
     {
         material_Forward.buildMaterialFromProgram(*pContext, program_Forward);
 
@@ -71,7 +76,18 @@ void DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
         pipeline_Forward_Overshading = builder.enableDepthTest(true, VK_COMPARE_OP_LESS)
                 .enableAdditiveBlending()
                 .buildPipeline(pContext->device, material_Forward.materialPipelineLayout DNAME("EngineForwardOvershadingDebug"));
+
+        pipeline_Forward_Wireframe = builder.enableDepthTest(true, VK_COMPARE_OP_LESS)
+                .setPolygonMode(VK_POLYGON_MODE_LINE)
+                .disableBlending()
+                .buildPipeline(pContext->device, material_Forward.materialPipelineLayout DNAME("EngineForwardWireframeDebug"));
     }
+    else
+    {
+        bSuccess = false;
+    }
+
+    return bSuccess;
 }
 
 void DebugPass::cleanupDebugPass()
@@ -87,6 +103,7 @@ void DebugPass::cleanupDebugPass()
         pipeline_Forward_Opaque.destroy(pContext);
         pipeline_Forward_Overdraw.destroy(pContext);
         pipeline_Forward_Overshading.destroy(pContext);
+        pipeline_Forward_Wireframe.destroy(pContext);
         material_Forward.destroyMaterial();
         program_Forward.destroyProgram();
     }
@@ -111,6 +128,7 @@ bool DebugPass::isDeferredMode(uint32_t mode)
     case DebugMode::RawNormalMap:
     case DebugMode::Overdraw:
     case DebugMode::Overshading:
+    case DebugMode::Wireframe:
         return false;
     }
     // NO default case!
@@ -131,6 +149,7 @@ bool DebugPass::isForwardMode(uint32_t mode)
     case DebugMode::RawNormalMap:
     case DebugMode::Overdraw:
     case DebugMode::Overshading:
+    case DebugMode::Wireframe:
         return true;
 
     case DebugMode::BaseColor:
@@ -151,12 +170,15 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
     switch (static_cast<DebugMode>(mode))
     {
     case DebugMode::BaseColor:
-    case DebugMode::GeometryNormal:
-    case DebugMode::RawNormalMap:
     case DebugMode::WorldNormal:
     case DebugMode::Metallic:
     case DebugMode::Roughness:
     case DebugMode::Depth:
+        // Allow Fallthrough because
+        // When the pipeline is forward only, these have to use
+        // the forward pipeline
+    case DebugMode::GeometryNormal:
+    case DebugMode::RawNormalMap:
         return pipeline_Forward_Opaque;
 
     case DebugMode::Overdraw:
@@ -164,6 +186,9 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
 
     case DebugMode::Overshading:
         return pipeline_Forward_Overshading;
+
+    case DebugMode::Wireframe:
+        return pipeline_Forward_Wireframe;
 
         // Explicitly cover the rest to prevent compiler warnings
     case DebugMode::None:
@@ -179,7 +204,7 @@ VkPipelineLayout DebugPass::getForwardLayout() const
     return material_Forward.materialPipelineLayout;
 }
 
-void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, uint32_t debugMode, const glm::vec4& camPos)
+void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos)
 {
     // CRITICAL FIX: Only allocate from the pool if we haven't done it yet!
     if (set_Deferred.descriptorSet == VK_NULL_HANDLE)

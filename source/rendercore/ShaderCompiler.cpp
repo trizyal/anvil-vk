@@ -17,6 +17,10 @@ using namespace AnvilShaders;
 
 namespace
 {
+    /**
+     * @brief Generates an empty, invalid shader artifact to return upon compilation failure.
+     * @return An empty ShaderCompileResult.
+     */
     ShaderCompileResult GetEmptyShaderByteCode()
     {
         ShaderCompileResult empty;
@@ -26,6 +30,11 @@ namespace
         return empty;
     }
 
+    /**
+     * @brief Reads diagnostic output from Slang and appends any errors or warnings to the output string.
+     * @param slangBlob The diagnostic text blob returned by Slang APIs.
+     * @param outErrorMessage String reference where extracted text will be appended.
+     */
     void DiagnoseIfNeeded(slang::IBlob* slangBlob, std::string& outErrorMessage)
     {
         if (slangBlob && slangBlob->getBufferSize() > 0)
@@ -37,7 +46,7 @@ namespace
             outErrorMessage += '\n';
         }
     }
-} //Anonymous
+}
 
 bool ShaderCompiler::initializeShaderCompiler()
 {
@@ -78,7 +87,7 @@ void ShaderCompiler::resetSession()
     session.setNull();
 }
 
-int32_t ShaderCompiler::getSlangOptimizationLevel(const OptimizationLevel inLevel)
+int32_t ShaderCompiler::GetSlangOptimizationLevel(const OptimizationLevel inLevel)
 {
     switch (inLevel)
     {
@@ -143,7 +152,7 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
             .name = slang::CompilerOptionName::Optimization,
             .value = {
                 .kind = slang::CompilerOptionValueKind::Int,
-                .intValue0 = getSlangOptimizationLevel(optimizationLevel),
+                .intValue0 = GetSlangOptimizationLevel(optimizationLevel),
                 .intValue1 = 0,
                 .stringValue0 = nullptr, .stringValue1 = nullptr
             }

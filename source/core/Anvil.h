@@ -62,16 +62,24 @@ private:
     Swapchain swapchain;
     AnvilRenderer renderer;
     UIRenderer uiRenderer;
+
+    /** Tracks whether the engine has been successfully bootstrapped. */
     bool initialized = false;
 
-    // std::vector<std::function<void()>> shaderReloadQueue;
+    /** Queue of callbacks to execute when a shader hot-reload is triggered. */
     std::vector<std::function<bool(std::string*)>> shaderReloadQueue;
 
+    /** Flag indicating if the shader compilation error modal is currently active. */
     bool bShaderErrorModalOpen = false;
+
+    /** Stores the latest output log from a failed shader compilation. */
     std::string activeShaderErrorLog;
 
-    /** Tracks whether the developer console is currently rendering. */
-    int bConsoleState = 0;
+    /**
+     * Tracks whether the developer console is currently rendering.
+     * (0=Hidden, 1=Mini, 2=Full)
+     */
+    int consoleState = 0;
 
 public:
     /**
@@ -83,19 +91,6 @@ public:
      * @throws std::runtime_error If GLFW or any core Vulkan subsystems fail to initialize.
      */
     void initializeAnvil(const AnvilCreateInfo& inCreateInfo = {});
-
-    /**
-     * @brief LEGACY: Starts the main application event loop and provides the renderer with the draw callback.
-     *
-     * Runs continuously until the window is closed or an exit signal is received.
-     * Automatically polls OS events, processes any queued shader reloads, and invokes
-     * the provided render callback every frame.
-     * @param renderCallback Function invoked per-frame with the active command buffer and swapchain.
-     * @throws std::runtime_error If the AnvilApplication is uninitialized or `drawFrame` throws.
-     * @attention Shader reloading happening here is not ideal.
-     */
-    [[deprecated("Pass RenderHooks instead of a single callback.")]]
-    void runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback);
 
     /**
      * @brief Starts the main application event loop and provides the renderer with the draw callback.
@@ -117,15 +112,6 @@ public:
     void shutdownAnvil();
 
     /**
-     * @brief LEGACY: Queues a basic void callback. Assumes compilation always succeeds.
-     *
-     * Useful for hot-reloading shaders at runtime without restarting the application.
-     * @param shaderCallback The function to execute when a reload is triggered.
-     */
-    [[deprecated]]
-    void addShaderReloadCallback(const std::function<void()>& shaderCallback);
-
-    /**
      * @brief Queues a callback function to be executed when a shader reload event occurs.
      * @param shaderCallback Callback returning bool (true = success) and filling error output string.
      */
@@ -133,33 +119,43 @@ public:
 
     /**
      * @brief Retrieves a reference to the active application window.
-     * @return Reference to the AnvilWindow instance.
+     * @return Reference to the Window instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] Window& getWindow() const;
+    [[nodiscard]]
+    Window& getWindow() const;
 
     /**
      * @brief Retrieves the core Vulkan context (instance, device, memory allocator).
-     * @return Reference to the AnvilVulkanContext instance.
+     * @return Reference to the VulkanContext instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] VulkanContext& getContext();
+    [[nodiscard]]
+    VulkanContext& getContext();
 
     /**
      * @brief Retrieves the active Vulkan swapchain.
-     * @return Reference to the AnvilSwapchain instance.
+     * @return Reference to the Swapchain instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] Swapchain& getSwapchain();
+    [[nodiscard]]
+    Swapchain& getSwapchain();
 
     /**
      * @brief Retrieves the main renderer responsible for command buffer orchestration.
      * @return Reference to the AnvilRenderer instance.
      * @note The reference cannot be discarded.
      */
-    [[nodiscard]] AnvilRenderer& getRenderer();
+    [[nodiscard]]
+    AnvilRenderer& getRenderer();
 
 private:
+    /**
+     * @brief Halts the GPU and triggers execution of all queued shader reload callbacks.
+     *
+     * If compilation fails, the error modal is opened and the GPU remains paused until
+     * the user resolves the error or aborts.
+     */
     void triggerShaderHotReload();
 };
 

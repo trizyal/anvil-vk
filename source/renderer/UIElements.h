@@ -4,8 +4,6 @@
 #ifndef ANVIL_VK_UIELEMENTS_H
 #define ANVIL_VK_UIELEMENTS_H
 
-#include "FrameStats.h"
-
 /**
  * @file UIElements.h
  * @brief Free functions for different UI elements.
@@ -16,12 +14,20 @@
 #include <string>
 
 #include "SceneConfig.h"
+#include "FrameStats.h"
 
 namespace UI
 {
+    /** Relative path to the default TrueType font used by ImGui. */
     inline const char* FontPath = ASSETS_DIR "/fonts/Open_Sans/OpenSans-Regular.ttf";
+
+    /** The base font handle used for standard UI text. */
     inline ImFont* base = nullptr;
+
+    /** A smaller font variant used for debug statistics and compact overlays. */
     inline ImFont* debugUI = nullptr;
+
+    /** Font handle designated for the developer console logs. */
     inline ImFont* debugLog = nullptr;
 
     /**
@@ -67,7 +73,12 @@ namespace UI
 
     /**
      * @brief Renders the top menu bar containing Debug Views and Scene Selection.
-     * @return True if either the Debug View or Active Scene was changed.
+     *
+     * @param currentMode Reference to the active debug mode state, updated if changed by the user.
+     * @param scenes A vector of available scene configurations to populate the scene selector dropdown.
+     * @param activeSceneIdx Reference to the currently active scene index, used to highlight the active scene in the menu.
+     * @param outSelectedScene Output parameter populated with the index of the newly selected scene if the user changes it.
+     * @return True if either the Debug View or Active Scene was changed this frame, false otherwise.
      */
     bool DrawDebugMenu(uint32_t& currentMode,
                        const std::vector<SceneConfig>& scenes,

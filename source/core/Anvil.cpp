@@ -34,6 +34,10 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
         glfwSetWindowShouldClose(window->getGLFWWindow(), GLFW_TRUE);
     });
 
+    addShaderReloadCallback([this](std::string* err) -> bool {
+        return renderer.reloadDebugShaders(err);
+    });
+
     initialized = true;
     const auto cpuEnd = std::chrono::high_resolution_clock::now();
     const auto initTime = std::chrono::duration<float, std::milli>(cpuEnd - cpuStart).count();
@@ -53,15 +57,6 @@ void Anvil::shutdownAnvil()
     window.reset();
 
     initialized = false;
-}
-
-void Anvil::runAnvil(const std::function<void(VkCommandBuffer, Swapchain*)>& renderCallback)
-{
-    RenderHooks legacyHooks;
-    legacyHooks.onSwapchain = renderCallback;
-
-    // Forward to the master loop
-    runAnvil(legacyHooks);
 }
 
 void Anvil::runAnvil(const RenderHooks& renderHooks)
@@ -89,7 +84,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
         // Toggle Developer Console with the tilde key (~)
         if (Input::IsKeyPressed_Frame(GLFW_KEY_GRAVE_ACCENT))
         {
-            bConsoleState = (bConsoleState + 1) % 3;
+            consoleState = (consoleState + 1) % 3;
         }
 
         // Check for Shader Reload
@@ -103,7 +98,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
 
         UIRenderer::BeginUIFrame();
         ScreenLogger::DrawOverlay();
-        UI::DrawConsoleWindow(&bConsoleState);
+        UI::DrawConsoleWindow(&consoleState);
 
         // Render Error Dialog if hot reload failed
         if (bShaderErrorModalOpen)
@@ -131,15 +126,6 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
     }
 
     vkDeviceWaitIdle(context.device);
-}
-
-void Anvil::addShaderReloadCallback(const std::function<void()>& shaderCallback)
-{
-    // Wrap the legacy void callback so it fits the new internal queue.
-    shaderReloadQueue.emplace_back([shaderCallback](std::string* /*outErr*/) -> bool {
-        shaderCallback();
-        return true;
-    });
 }
 
 void Anvil::addShaderReloadCallback(const std::function<bool(std::string*)>& shaderCallback)

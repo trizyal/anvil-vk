@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -117,17 +118,6 @@ struct MeshVertex
     // Max 4 bones per vertex
     glm::uvec4 joints = glm::uvec4(0);
     glm::vec4 weights = glm::vec4(0.0f);
-};
-
-/**
- * @brief Legacy CPU-side container for indexed 3D geometry and associated material data.
- */
-struct [[deprecated("Use CPUMesh and CPUMeshPrimitive")]]
-    CPUMesh_Single
-{
-    std::vector<MeshVertex> vertices; /**< Contiguous list of unique vertex attributes. */
-    std::vector<uint32_t> indices; /**< Index list defining triangle faces (3 indices per triangle). */
-    std::string texturePath; /**< Absolute or relative file path to the associated diffuse/albedo texture. */
 };
 
 /**
@@ -313,51 +303,5 @@ public:
      */
     void computeJointMatrices(int nodeIndex, std::vector<glm::mat4>& matrices) const;
 };
-
-/**
- * @brief Free functions for parsing and extracting asset data from disk.
- */
-namespace ModelLoader
-{
-    /**
-     * @brief Legacy function to parse a glTF 2.0 file from disk and extracts its primary mesh and texture data.
-     *
-     * Reads `.gltf` or `.glb` files, extracting vertex positions, vertex colors, texture
-     * coordinates, and triangle indices into standard CPU vectors. This function performs
-     * disk I/O and parsing only; it does not allocate any Vulkan GPU resources.
-     *
-     * @param filePath Path to the `.gltf` or `.glb` file on disk.
-     * @return CPUModel populated with extracted glTF scene data.
-     *
-     * @throws std::runtime_error If the file cannot be read, or if parsing fails.
-     */
-    [[deprecated("Use CPUModel::loadGLTF()")]]
-    CPUModel LoadGLTF(const std::string& filePath);
-
-    /**
-     * @brief Legacy convenience loader that returns the first mesh/primitive only.
-     *
-     * Reads `.gltf` or `.glb` files, extracting vertex positions, vertex colors, texture
-     * coordinates, and triangle indices into standard CPU vectors, for one / first mesh in the file.
-     *
-     * @param filePath Path to the `.gltf` or `.glb` file on disk.
-     * @return CPUMesh_Single populated with the extracted vertex, index, and material path data.
-     *
-     * @throws std::runtime_error If the file cannot be read, or if parsing fails.
-     */
-    [[deprecated("Use CPUModel::loadGLTF()")]]
-    CPUMesh_Single LoadSingleMeshGLTF(const std::string& filePath);
-
-    /**
-     * @brief Legacy convenience function to update all matrices in nodes according to their parents.
-     *
-     * @param cpuModel CPUModel that stores the model data and matrices.
-     *
-     * @note Legacy code. No improvements will be made here.
-     * @see CPUModel::updateAllMatrices().
-     */
-    [[deprecated("Use CPUModel::updateAllMatrices()")]]
-    void UpdateAllMatrices(CPUModel& cpuModel);
-} //AnvilModelLoader
 
 #endif //ANVIL_VK_CPUMODEL_H

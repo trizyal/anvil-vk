@@ -16,6 +16,9 @@ struct FrameStats
     uint32_t drawCalls = 0;
     uint32_t primitiveCount = 0;
 
+    /**
+     * @brief Resets the accumulative frame counters (draw calls and primitives) for the next frame.
+     */
     void resetFrameStats()
     {
         drawCalls = 0;

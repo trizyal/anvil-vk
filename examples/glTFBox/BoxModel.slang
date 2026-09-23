@@ -1,8 +1,11 @@
-// HelloCube.slang
+// Copyright (C) 2026 trizyal
+// SPDX-License-Identifier: GPL-3.0-only
 
 struct PushConstants
 {
     float4x4 renderMatrix;
+    float4x4 modelMatrix;
+    float4 baseColorFactor;
 };
 
 // [[vk::push_constant]] tells Slang to map this to Vulkan Push Constants
@@ -11,7 +14,7 @@ struct PushConstants
 struct VertexInput
 {
     float3 position : POSITION;
-    float3 color    : COLOR;
+    float3 normal   : NORMAL;
 };
 
 struct VertexOutput
@@ -25,10 +28,10 @@ VertexOutput vertexMain(VertexInput input)
 {
     VertexOutput output;
 
-    // Apply the C++ matrix transform
-    // This multiplication if other way around, was breaking things
-    output.position = mul(pushConstants.renderMatrix, float4(input.position,1));
-    output.color = input.color;
+    output.position = mul(pushConstants.renderMatrix, float4(input.position, 1.0));
+
+    // We map the glTF Normal data to the color output so we have something nice to look at
+    output.color = input.normal * 0.5 + 0.5;
 
     return output;
 }
@@ -36,5 +39,5 @@ VertexOutput vertexMain(VertexInput input)
 [shader("fragment")]
 float4 fragmentMain(VertexOutput input) : SV_Target
 {
-    return float4(input.color, 1.0);
+    return float4(input.color, 1.0) * pushConstants.baseColorFactor;
 }

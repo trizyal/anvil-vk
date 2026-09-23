@@ -16,10 +16,10 @@
 #include <volk.h>
 
 #include "AnvilMaterial.h"
-#include "GPUMesh.h"
-#include "MaterialInstance.h"
 #include "CPUModel.h"
 #include "GPUTexture.h"
+#include "GPUMesh.h"
+#include "MaterialInstance.h"
 
 class VulkanContext;
 
@@ -105,19 +105,6 @@ public:
     GPUBuffer modelMatricesBuffer;
 
     /**
-     * @brief Legacy function to upload a CPUModel to GPU-side resources and generates a draw list.
-     */
-    [[deprecated("Use the multi-set architecture instead.")]]
-    void createGPUModel(
-        VulkanContext& inContext,
-        const CPUModel& inModel,
-        const AnvilMaterial& inMaterial,
-        const std::string& sceneBufferName,
-        const GPUBuffer& sceneBuffer,
-        const std::string& textureName
-    );
-
-    /**
      * @brief Uploads a CPUModel to GPU-side resources and generates a draw list.
      *
      * @param inContext Reference to the active Anvil Vulkan context.
@@ -131,34 +118,64 @@ public:
     );
 
     /**
+     * @brief Safely destroys all GPU-side resources managed by this model.
+     *
+     * Releases VMA allocations, destroys Vulkan buffers (joints, model matrices),
+     * destroys textures, and clears all draw items and materials.
+     */
+    void destroyGPUModel();
+
+    /**
      * @brief Synchronizes the GPU draw list matrices with the latest CPU node matrices.
+     *
+     * Iterates through the draw items, extracts the updated world matrices from the
+     * associated CPU nodes, and uploads them to the model matrices SSBO.
+     *
+     * @param inModel Reference to the CPU model containing the updated node transforms.
      */
     void updateTransforms(const CPUModel& inModel);
 
+    /**
+     * @brief Computes and uploads the latest skeletal joint matrices to the GPU for skinning.
+     *
+     * Calculates the absolute joint transforms relative to the bind pose and writes
+     * the data to the joint SSBO.
+     *
+     * @param inModel Reference to the CPU model containing the animated skeleton data.
+     */
     void updateJoints(const CPUModel& inModel) const;
 
-    void destroyGPUModel();
-
 private:
+    /**
+     * @brief Iterates over the CPU model and allocates GPU textures for every material.
+     * @param inModel The CPU model providing texture paths and colors.
+     */
     void createTextures(const CPUModel& inModel);
 
-    [[deprecated("Use the multi-set architecture instead.")]]
-    void createMaterialDescriptorSets(
-        const CPUModel& inModel,
-        const AnvilMaterial& inMaterial,
-        const std::string& sceneBufferName,
-        const GPUBuffer& sceneBuffer,
-        const std::string& textureName
-    );
-
+    /**
+     * @brief Allocates and writes Vulkan descriptor sets for the model's global data (Set 1) and materials (Set 2).
+     * @param inModel The CPU model containing material metadata.
+     * @param inMaterial The AnvilMaterial factory to allocate sets from.
+     */
     void createMaterialDescriptorSets(
         const CPUModel& inModel,
         const AnvilMaterial& inMaterial
     );
 
+    /**
+     * @brief Flattens CPU nodes and meshes into a linear list of renderable GPU draw items.
+     * @param inCPUModel The structured scene graph and mesh data.
+     */
     void createMeshesAndDrawItems(const CPUModel& inCPUModel);
 
+    /**
+     * @brief Allocates an SSBO capable of holding up to MAX_BONES joint matrices.
+     */
     void createJointBuffer();
+
+    /**
+     * @brief Allocates a host-visible SSBO to store the latest world transforms for all draw items.
+     */
     void createModelMatricesBuffer();
 };
 
