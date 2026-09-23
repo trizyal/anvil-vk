@@ -166,6 +166,7 @@ add_library(${PROJECT_NAME} STATIC ${ANVIL_CORE_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${SOURCE_DIR}/core
         ${SOURCE_DIR}/scene
+        ${SOURCE_DIR}/programs
         ${SOURCE_DIR}/rendercore
         ${SOURCE_DIR}/rendercore/context
         ${SOURCE_DIR}/rendercore/resources
@@ -181,6 +182,11 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
 # Header only stb
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
         ${EXTERNAL_DIR}/stb
+)
+
+# Header only renderdoc
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+        ${EXTERNAL_DIR}/renderdoc
 )
 
 # --------------------------------------------------

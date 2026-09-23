@@ -12,6 +12,7 @@
 #include "DebugModes.h"
 #include "DebugPass.h"
 #include "imgui_internal.h"
+#include "RenderDoc.h"
 
 namespace
 {
@@ -314,6 +315,16 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
                 {
                     currentMode = i;
                 }
+            }
+            ImGui::EndMenu();
+        }
+
+        // --- TOOLS MENU ---
+        if (ImGui::BeginMenu("Tools"))
+        {
+            if (ImGui::MenuItem("Capture Frame (RenderDoc)"))
+            {
+                RenderDoc::TriggerCapture();
             }
             ImGui::EndMenu();
         }
