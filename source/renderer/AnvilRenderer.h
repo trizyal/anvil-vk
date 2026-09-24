@@ -201,6 +201,15 @@ public:
      */
     bool reloadDebugShaders(std::string* outError);
 
+    /**
+     * @brief Expose Tracy context getter for project-level rendering hooks
+    */
+    [[nodiscard]]
+    TracyVkCtx getTracyVkContext() const
+    {
+        return tracyVkCtx;
+    }
+
 private:
     /**
      * @brief Retrieves the frame sync structure for the current flight index.

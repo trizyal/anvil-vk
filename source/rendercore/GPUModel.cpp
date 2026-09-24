@@ -6,6 +6,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "Trace.h"
+
 GPUModel::GPUModel(GPUModel&& other) noexcept
 {
     *this = std::move(other);
@@ -35,6 +37,7 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
 
 void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial)
 {
+    SCOPE_CPU;
     // Destroy the old vulkan objects
     destroyGPUModel();
 
@@ -50,6 +53,7 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
 
 void GPUModel::destroyGPUModel()
 {
+    SCOPE_CPU;
     if (!pContext)
     {
         return;
@@ -81,6 +85,7 @@ void GPUModel::destroyGPUModel()
 
 void GPUModel::updateTransforms(const CPUModel& inModel)
 {
+    SCOPE_CPU;
     if (drawItems.empty() || modelMatricesBuffer.buffer == VK_NULL_HANDLE)
     {
         return;
@@ -108,6 +113,7 @@ void GPUModel::updateTransforms(const CPUModel& inModel)
 
 void GPUModel::updateJoints(const CPUModel& inModel) const
 {
+    SCOPE_CPU;
     if (jointBuffer.buffer != VK_NULL_HANDLE && !inModel.skins.empty())
     {
         std::vector<glm::mat4> jointMatrices;
@@ -143,6 +149,7 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
 
 void GPUModel::createTextures(const CPUModel& inModel)
 {
+    SCOPE_CPU;
     defaultWhiteTexture.createSolidColorTexture(*pContext, WhiteColor);
     defaultNormalTexture.createSolidColorTexture(*pContext, NormalColor);
     defaultTransparentTexture.createSolidColorTexture(*pContext, TransparentColor);
@@ -174,6 +181,7 @@ void GPUModel::createTextures(const CPUModel& inModel)
 
 void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial)
 {
+    SCOPE_CPU;
     // Configure Set 1 - Model Data
     if (inMaterial.hasSet(1))
     {
@@ -250,6 +258,7 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
 
 void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 {
+    SCOPE_CPU;
     gpuMeshes.clear();
     drawItems.clear();
 
@@ -329,6 +338,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 
 void GPUModel::createJointBuffer()
 {
+    SCOPE_CPU;
     // We must provide initial data because GPUBuffer::createBuffer always calls std::memcpy.
     // Initializing with Identity Matrices means vertices won't stretch to infinity on frame 0.
     std::vector<glm::mat4> initial_matrices(MAX_BONES, glm::mat4(1.0f));
@@ -347,6 +357,7 @@ void GPUModel::createJointBuffer()
 
 void GPUModel::createModelMatricesBuffer()
 {
+    SCOPE_CPU;
     if (drawItems.empty())
     {
         return;

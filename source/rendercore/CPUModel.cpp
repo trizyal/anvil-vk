@@ -10,6 +10,8 @@
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
 
+#include "Trace.h"
+
 namespace
 {
     /**
@@ -108,6 +110,7 @@ namespace
 
 void CPUModel::loadGLTF(const std::string& filePath)
 {
+    SCOPE_CPU;
     cgltf_options options{};
     cgltf_data* gltf_data = nullptr;
 
@@ -186,6 +189,7 @@ void CPUModel::loadGLTF(const std::string& filePath)
 
 void CPUModel::updateAllMatrices()
 {
+    SCOPE_CPU;
     for (const int rootNodeIndex : sceneRootNodes)
     {
         ComputeWorldMatrices(*this, rootNodeIndex, glm::mat4(1.0f));
@@ -194,6 +198,7 @@ void CPUModel::updateAllMatrices()
 
 void CPUModel::applyAnimation(const int animationIndex, const float time)
 {
+    SCOPE_CPU;
     if (animationIndex < 0 || animationIndex >= static_cast<int>(animations.size()))
     {
         return;
@@ -280,6 +285,7 @@ void CPUModel::applyAnimation(const int animationIndex, const float time)
 
 void CPUModel::computeJointMatrices(const int nodeIndex, std::vector<glm::mat4>& matrices) const
 {
+    SCOPE_CPU;
     if (nodeIndex < 0 || nodeIndex >= static_cast<int>(nodes.size()))
     {
         return;

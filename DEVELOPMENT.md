@@ -37,8 +37,10 @@ anvil-vk/
 │   ├── glfw/
 │   ├── glm/
 │   ├── imgui/
+│   ├── renderdoc/
 │   ├── slang/                   # Run fetch_slang.py to get the directory
 │   ├── stb/
+│   ├── tracy/                   # Run fetch_tracy.py to get the directory
 │   ├── vk-bootstrap/
 │   ├── volk/
 │   ├── Vulkan-Headers/
@@ -62,6 +64,16 @@ anvil-vk/
 │   ├── SponzaDeferred/        
 │   ├── PBRTests/        
 │   └── # More to come   
+│ 
+├── scripts/          
+│   ├── consolidate_code_one_file.py
+│   ├── fetch_slang.py
+│   ├── fetch_tracy.py
+│   └── # More to come
+│   
+├── tools/
+│   ├── tracy/
+│   └── # More to come
 │   
 ├── shaders/
 │   ├── shared/
@@ -85,6 +97,15 @@ anvil-vk/
     │   ├── Input.h
     │   ├── Window.cpp
     │   └── Window.h
+    │
+    ├── programs/
+    │   ├── RenderDoc.cpp
+    │   ├── RenderDoc.h
+    │   └── # More to come
+    │
+    ├── diagnostics/
+    │   ├── Trace.h
+    │   └── # More to come
     │
     ├── rendercore/
     │   ├── AnvilMaterial.cpp

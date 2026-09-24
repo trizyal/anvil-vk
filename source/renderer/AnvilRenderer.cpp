@@ -19,6 +19,7 @@
 #include "PushConstants.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
+#include "Trace.h"
 
 CVAR_INT("r.debugmode",
     "0: None"
@@ -37,6 +38,8 @@ CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
+    SCOPE_CPU_NAME("AnvilRenderer::initializeRenderer");
+
     std::cout << "Initializing AnvilRenderer" << std::endl;
     this->pContext = inAnvilContext;
     this->pSwapchain = inAnvilSwapchain;
@@ -97,6 +100,7 @@ AnvilRenderer::~AnvilRenderer()
 
 void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 {
+    SCOPE_CPU_NAME("AnvilRenderer::drawFrame");
     // Recreate swapchain maybe
     if (recreateSwapchain)
     {
@@ -172,9 +176,10 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     gpuProfiler.beginGPUProfilerFrame(cmd, anvilFrameIndex);
 
     {
-        TracyVkZone(tracyVkCtx, cmd, "Main Frame Render");
+        SCOPE_GPU(tracyVkCtx, cmd, "DrawFrame");
         if (renderHooks.onPreSwapchain)
         {
+            SCOPE_GPU(tracyVkCtx, cmd, "Offscreen / Geometry Pass");
             // G-Buffer Geometry Pass
             renderHooks.onPreSwapchain(cmd, pSwapchain);
         }
@@ -218,12 +223,16 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     // Anvil has no idea what is being drawn here, it just executes the user's code.
     if (renderHooks.onSwapchain)
     {
+        SCOPE_GPU(tracyVkCtx, cmd, "Main Swapchain Pass");
         renderHooks.onSwapchain(cmd, pSwapchain);
     }
 
-    engineStats.fps = 1000.f/engineStats.frameTime;
-    UI::FrameStats(engineStats);
-    UIRenderer::RecordUICommands(cmd);
+    {
+        SCOPE_GPU(tracyVkCtx, cmd, "UI RenderPass");
+        engineStats.fps = 1000.f/engineStats.frameTime;
+        UI::FrameStats(engineStats);
+        UIRenderer::RecordUICommands(cmd);
+    }
 
     vkCmdEndRendering(cmd);
 
@@ -294,12 +303,13 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     anvilFrameIndex %= FRAMES_IN_FLIGHT;
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
 
-    FrameMark;
+    SCOPE_FRAME;
 }
 
 void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
 {
-    ZoneScoped;
+    SCOPE_CPU_NAME("AnvilRenderer::drawModel");
+    SCOPE_GPU(tracyVkCtx, inCmd, "Draw Model");
 
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
     bool is_forward_debug = DebugPass::isForwardMode(debug_mode);
@@ -346,6 +356,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     for (size_t i = 0 ; i < model.drawItems.size() ; ++i)
     {
         const GPUModelDrawItem& draw_item = model.drawItems[i];
+        SCOPE_GPU(tracyVkCtx, inCmd, "Draw Item")
         if (draw_item.gpuMeshIndex >= model.gpuMeshes.size())
         {
             continue;
@@ -353,6 +364,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
 
         if (is_culling)
         {
+            SCOPE_CPU_NAME("Frustum Culling")
             // Fast AABB World Transform & Frustum Check
             glm::vec3 center = draw_item.localBounds.getCenter();
             glm::vec3 extents = draw_item.localBounds.getExtents();
