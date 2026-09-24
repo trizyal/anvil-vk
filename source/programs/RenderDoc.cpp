@@ -21,7 +21,7 @@ void RenderDoc::InitializeRenderDoc()
 
 #ifdef _WIN32
     // Loads the dll if RenderDoc is installed and in the system PATH, or if launched via RenderDoc
-    if (HMODULE mod = GetModuleHandleA("renderdoc.dll"))
+    if (HMODULE mod = LoadLibraryA("renderdoc.dll"))
     {
         RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
     }
@@ -43,7 +43,7 @@ void RenderDoc::InitializeRenderDoc()
             nullptr
         );
 
-        std::cerr << "GetModuleHandleA failed (" << error << "): "
+        std::cerr << "LoadLibraryA failed (" << error << "): "
                   << (message ? message : "Unknown error")
                   << '\n';
 
@@ -61,6 +61,9 @@ void RenderDoc::InitializeRenderDoc()
         int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
         assert(ret == 1);
         std::cout << "[RenderDoc] API loaded successfully." << std::endl;
+
+        // Hide RenderDoc onscreen UI
+        rdoc_api->MaskOverlayBits(eRENDERDOC_Overlay_None, eRENDERDOC_Overlay_None);
     }
 }
 

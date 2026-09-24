@@ -11,7 +11,6 @@
 #include "Console.h"
 #include "DebugModes.h"
 #include "DebugPass.h"
-#include "imgui_internal.h"
 #include "RenderDoc.h"
 
 namespace
@@ -322,9 +321,19 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
         // --- TOOLS MENU ---
         if (ImGui::BeginMenu("Tools"))
         {
-            if (ImGui::MenuItem("Capture Frame (RenderDoc)"))
+            if (RenderDoc::IsInitialized())
             {
-                RenderDoc::TriggerCapture();
+                if (ImGui::MenuItem("Capture Frame (RenderDoc)"))
+                {
+                    RenderDoc::TriggerCapture();
+                }
+            }
+            else
+            {
+                // Greys out the item and prevents clicking
+                ImGui::BeginDisabled();
+                ImGui::MenuItem("RenderDoc not connected");
+                ImGui::EndDisabled();
             }
             ImGui::EndMenu();
         }

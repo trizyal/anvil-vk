@@ -18,6 +18,11 @@ public:
 
     /** Captures the next frame and launches the RenderDoc UI. */
     static void TriggerCapture();
+
+    static bool IsInitialized()
+    {
+        return rdoc_api != nullptr;
+    }
 };
 
 
