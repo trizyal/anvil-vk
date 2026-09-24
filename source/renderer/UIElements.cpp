@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <iostream>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <imgui.h>
 
 #include "Console.h"
@@ -335,6 +339,20 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
                 ImGui::MenuItem("RenderDoc not connected");
                 ImGui::EndDisabled();
             }
+
+            if (ImGui::MenuItem("Open Tracy Profiler"))
+            {
+                // Launch the external Tracy profiler UI asynchronously.
+#ifdef _WIN32
+                std::string tracyPath = std::string(TOOLS_DIR) + "/tracy/tracy-profiler.exe";
+
+                // ShellExecuteA(nullptr, "open", tracyPath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+                std::system(("start " + tracyPath).c_str());
+#else
+                // Unimplemented
+#endif
+            }
+
             ImGui::EndMenu();
         }
 

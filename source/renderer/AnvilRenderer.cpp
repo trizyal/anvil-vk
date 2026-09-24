@@ -44,6 +44,11 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
     setupCommandBuffers();
     setupSyncStructures();
 
+    pContext->immediateSubmit([this](VkCommandBuffer cmd)
+    {
+        tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);
+    });
+
     const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
     gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
 
@@ -66,6 +71,12 @@ AnvilRenderer::~AnvilRenderer()
     if (pContext && pContext->device)
     {
         vkDeviceWaitIdle(pContext->device);
+
+        if (tracyVkCtx)
+        {
+            TracyVkDestroy(tracyVkCtx);
+        }
+
         debugPass.cleanupDebugPass();
         engineCompiler.shutdownShaderCompiler();
 
@@ -156,47 +167,52 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin_info);
 
+    TracyVkCollect(tracyVkCtx, cmd);
+
     gpuProfiler.beginGPUProfilerFrame(cmd, anvilFrameIndex);
 
-    if (renderHooks.onPreSwapchain)
     {
-        // G-Buffer Geometry Pass
-        renderHooks.onPreSwapchain(cmd, pSwapchain);
+        TracyVkZone(tracyVkCtx, cmd, "Main Frame Render");
+        if (renderHooks.onPreSwapchain)
+        {
+            // G-Buffer Geometry Pass
+            renderHooks.onPreSwapchain(cmd, pSwapchain);
+        }
+
+        // Transition image here
+        TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+        // Transition Depth Image
+        TransitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+
+        // Begin Dynamic Rendering
+        VkRenderingAttachmentInfo color_attachment_info{};
+        color_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        color_attachment_info.imageView = pSwapchain->swapchainImageViews[image_index];
+        color_attachment_info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        color_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        color_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        color_attachment_info.clearValue.color = {{0.05f, 0.05f, 0.05f, 1.0f}};
+
+        // 2. Define the Depth Attachment
+        VkRenderingAttachmentInfo depth_attachment_info{.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+        depth_attachment_info.imageView = pSwapchain->depthImageView;
+        depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depth_attachment_info.clearValue.depthStencil = {1.0f, 0}; // 1.0 is the furthest depth
+
+        VkRenderingInfo rendering_info{};
+        rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        rendering_info.renderArea = {{0, 0}, {pSwapchain->swapchainExtent.width, pSwapchain->swapchainExtent.height}};
+        rendering_info.layerCount = 1;
+        rendering_info.colorAttachmentCount = 1;
+        rendering_info.pColorAttachments = &color_attachment_info;
+        rendering_info.pDepthAttachment = &depth_attachment_info;
+
+        vkCmdBeginRendering(cmd, &rendering_info);
     }
-
-    // Transition image here
-    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
-        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-    // Transition Depth Image
-    TransitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
-
-    // Begin Dynamic Rendering
-    VkRenderingAttachmentInfo color_attachment_info{};
-    color_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-    color_attachment_info.imageView = pSwapchain->swapchainImageViews[image_index];
-    color_attachment_info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    color_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    color_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    color_attachment_info.clearValue.color = {{0.05f, 0.05f, 0.05f, 1.0f}};
-
-    // 2. Define the Depth Attachment
-    VkRenderingAttachmentInfo depth_attachment_info{.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-    depth_attachment_info.imageView = pSwapchain->depthImageView;
-    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-    depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    depth_attachment_info.clearValue.depthStencil = {1.0f, 0}; // 1.0 is the furthest depth
-
-    VkRenderingInfo rendering_info{};
-    rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-    rendering_info.renderArea = {{0, 0}, {pSwapchain->swapchainExtent.width, pSwapchain->swapchainExtent.height}};
-    rendering_info.layerCount = 1;
-    rendering_info.colorAttachmentCount = 1;
-    rendering_info.pColorAttachments = &color_attachment_info;
-    rendering_info.pDepthAttachment = &depth_attachment_info;
-
-    vkCmdBeginRendering(cmd, &rendering_info);
 
     // --- EXECUTE PROJECT POLICY ---
     // Anvil has no idea what is being drawn here, it just executes the user's code.
@@ -277,10 +293,14 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     assert(sizeof(anvilFrames) / sizeof(AnvilFrame) == FRAMES_IN_FLIGHT);
     anvilFrameIndex %= FRAMES_IN_FLIGHT;
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
+
+    FrameMark;
 }
 
 void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
 {
+    ZoneScoped;
+
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
     bool is_forward_debug = DebugPass::isForwardMode(debug_mode);
     bool is_debug = static_cast<DebugMode>(debug_mode) > DebugMode::None;

@@ -189,6 +189,30 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
         ${EXTERNAL_DIR}/renderdoc
 )
 
+# ----------------------------------------------
+# Tracy Setup
+# ----------------------------------------------
+# Add a toggle so you can easily turn profiling off for release builds
+option(TRACY "Enable Tracy Profiler" ON)
+if(TRACY)
+    target_sources(${PROJECT_NAME} PRIVATE external/tracy/TracyClient.cpp)
+
+    # Tell the compiler where to find <tracy/Tracy.hpp>
+    target_include_directories(${PROJECT_NAME} PUBLIC external/tracy)
+
+    # Activate the Tracy macros globally in your codebase
+    target_compile_definitions(${PROJECT_NAME} PUBLIC TRACY_ENABLE)
+
+    # Tracy requires system threading libraries to run its background telemetry
+    find_package(Threads REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+
+    # Linux specifically requires the 'dl' library for dynamic loading
+    if (UNIX AND NOT APPLE)
+        target_link_libraries(${PROJECT_NAME} PRIVATE dl)
+    endif()
+endif()
+
 # --------------------------------------------------
 # Target properties & compile definitions
 # --------------------------------------------------
@@ -211,6 +235,7 @@ endif ()
 target_compile_definitions(${PROJECT_NAME} PUBLIC
         SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
         ASSETS_DIR=\"${CMAKE_SOURCE_DIR}/assets\"
+        TOOLS_DIR=\"${CMAKE_SOURCE_DIR}/tools\"
 )
 
 # --------------------------------------------------

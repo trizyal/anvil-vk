@@ -11,6 +11,10 @@
 
 #include <functional>
 
+#include <volk.h>
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyVulkan.hpp>
+
 #include "DebugPass.h"
 #include "FrameStats.h"
 #include "GPUProfiler.h"
@@ -111,6 +115,8 @@ private:
     GPUProfiler gpuProfiler;
     ShaderCompiler engineCompiler;
     DebugPass debugPass;
+
+    TracyVkCtx tracyVkCtx = nullptr;
 
 public:
     /** Global tracking of engine performance metrics (FPS, GPU/CPU time). */
