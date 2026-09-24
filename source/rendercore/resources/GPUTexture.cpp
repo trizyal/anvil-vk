@@ -10,6 +10,7 @@
 #include <stb_image.h>
 
 #include "GPUBuffer.h"
+#include "Trace.h"
 #include "VulkanResult.h"
 
 GPUTexture::GPUTexture(GPUTexture&& other) noexcept
@@ -66,6 +67,8 @@ void GPUTexture::destroyTexture()
 
 void GPUTexture::createTexture(const VulkanContext& inContext, const std::string& filepath, const bool bIsSRGB)
 {
+    SCOPE_CPU;
+
     destroyTexture();
     pContext = &inContext;
 

@@ -198,6 +198,11 @@ option(TRACY "Enable Tracy Profiler" ON)
 if(TRACY)
     target_sources(${PROJECT_NAME} PRIVATE external/tracy/TracyClient.cpp)
 
+    # Suppress all strict engine compiler warnings for the external Tracy client file
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        set_source_files_properties(external/tracy/TracyClient.cpp PROPERTIES COMPILE_OPTIONS "-w")
+    endif()
+
     # Tell the compiler where to find <tracy/Tracy.hpp>
     target_include_directories(${PROJECT_NAME} PUBLIC external/tracy)
 

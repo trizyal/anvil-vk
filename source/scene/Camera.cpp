@@ -8,6 +8,7 @@
 #include <ostream>
 
 #include "Input.h"
+#include "Trace.h"
 #include "glm/gtc/matrix_transform.hpp"
 
 Camera::Camera(const glm::vec3 inStartPosition)
@@ -36,6 +37,7 @@ glm::mat4 Camera::getProjectionMatrix(const float aspectRatio) const
 
 void Camera::updateCamera(float deltaTime)
 {
+    SCOPE_CPU;
     float velocity = cameraSpeed * deltaTime;
 
     // Mouse Look

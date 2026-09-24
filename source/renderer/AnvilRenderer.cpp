@@ -356,7 +356,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     for (size_t i = 0 ; i < model.drawItems.size() ; ++i)
     {
         const GPUModelDrawItem& draw_item = model.drawItems[i];
-        SCOPE_GPU(tracyVkCtx, inCmd, "Draw Item")
+        SCOPE_GPU(tracyVkCtx, inCmd, "Draw Item");
         if (draw_item.gpuMeshIndex >= model.gpuMeshes.size())
         {
             continue;

@@ -3,6 +3,7 @@
 
 #include "SceneManager.h"
 #include "ScreenLogger.h"
+#include "Trace.h"
 
 void SceneManager::discoverScenes(const std::string& sceneDirectory)
 {
@@ -34,6 +35,8 @@ void SceneManager::discoverScenes(const std::string& sceneDirectory)
 
 bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, const AnvilMaterial& inMaterial, Camera& camera, Scene& scene)
 {
+    SCOPE_CPU;
+
     if (sceneIndex >= availableScenes.size())
     {
         std::cerr << "[SceneManager] Scene does not exist with index: " << sceneIndex << std::endl;
