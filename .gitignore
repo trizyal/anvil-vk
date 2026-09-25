@@ -37,15 +37,19 @@
 .junie
 
 # Build artifacts
-intermediate
-binaries/shaderc
 docs
 tests
-scripts/output
 build
 
 # Slang
 external/slang
+
+# tracy
+external/tracy
+tools/tracy
+
+# scripts
+scripts/output
 
 # RenderDoc
 *.rdc

@@ -13,6 +13,7 @@
 #include <slang-com-helper.h>
 
 #include "AnvilShaders.h"
+#include "Trace.h"
 using namespace AnvilShaders;
 
 namespace
@@ -105,6 +106,8 @@ int32_t ShaderCompiler::GetSlangOptimizationLevel(const OptimizationLevel inLeve
 
 ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& request)
 {
+    SCOPE_CPU;
+
     ShaderCompileResult shader_result = GetEmptyShaderByteCode();
     if (!globalSession)
     {

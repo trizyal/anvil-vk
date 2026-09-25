@@ -8,6 +8,7 @@
 
 #include "Console.h"
 #include "Input.h"
+#include "RenderDoc.h"
 #include "ScreenLogger.h"
 #include "UIElements.h"
 
@@ -19,6 +20,8 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     {
         return;
     }
+
+    RenderDoc::InitializeRenderDoc();
 
     window = std::make_unique<Window>(inCreateInfo.width, inCreateInfo.height, inCreateInfo.title);
     context.initializeVulkanContext(*window);

@@ -10,6 +10,7 @@
 #include <stb_image.h>
 
 #include "GPUBuffer.h"
+#include "Trace.h"
 #include "VulkanResult.h"
 
 GPUTexture::GPUTexture(GPUTexture&& other) noexcept
@@ -66,6 +67,8 @@ void GPUTexture::destroyTexture()
 
 void GPUTexture::createTexture(const VulkanContext& inContext, const std::string& filepath, const bool bIsSRGB)
 {
+    SCOPE_CPU;
+
     destroyTexture();
     pContext = &inContext;
 
@@ -77,7 +80,7 @@ void GPUTexture::createTexture(const VulkanContext& inContext, const std::string
         throw std::runtime_error("Failed to load texture image: " + filepath);
     }
 
-    VkDeviceSize image_size = tex_width * tex_height * 4;
+    VkDeviceSize image_size = static_cast<VkDeviceSize>(tex_width * tex_height * 4);
     VkFormat texture_format = bIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
 
     // Calculate how many mip levels we need
@@ -94,7 +97,7 @@ void GPUTexture::createTexture(const VulkanContext& inContext, const std::string
 
     stbi_image_free(pixels);
 
-    createImage(tex_width, tex_height, mip_levels, texture_format DNAME(image_name.c_str()));
+    createImage(static_cast<uint32_t>(tex_width), static_cast<uint32_t>(tex_height), mip_levels, texture_format DNAME(image_name.c_str()));
 
     inContext.immediateSubmit([&](VkCommandBuffer cmd)
     {

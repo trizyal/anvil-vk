@@ -1,0 +1,2 @@
+CheckOptions:
+  bugprone-reserved-identifier.AllowedIdentifiers: '___tracy_gpu_zone;___tracy_scoped_zone;___tracy_source_location'

@@ -19,6 +19,7 @@
 #include "PushConstants.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
+#include "Trace.h"
 
 CVAR_INT("r.debugmode",
     "0: None"
@@ -37,12 +38,19 @@ CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
+    SCOPE_CPU_NAME("AnvilRenderer::initializeRenderer");
+
     std::cout << "Initializing AnvilRenderer" << std::endl;
     this->pContext = inAnvilContext;
     this->pSwapchain = inAnvilSwapchain;
 
     setupCommandBuffers();
     setupSyncStructures();
+
+    pContext->immediateSubmit([this]([[maybe_unused]]VkCommandBuffer cmd)
+    {
+        tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);
+    });
 
     const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
     gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
@@ -66,6 +74,12 @@ AnvilRenderer::~AnvilRenderer()
     if (pContext && pContext->device)
     {
         vkDeviceWaitIdle(pContext->device);
+
+        if (tracyVkCtx)
+        {
+            TracyVkDestroy(tracyVkCtx);
+        }
+
         debugPass.cleanupDebugPass();
         engineCompiler.shutdownShaderCompiler();
 
@@ -86,6 +100,7 @@ AnvilRenderer::~AnvilRenderer()
 
 void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 {
+    SCOPE_CPU_NAME("AnvilRenderer::drawFrame");
     // Recreate swapchain maybe
     if (recreateSwapchain)
     {
@@ -156,58 +171,68 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin_info);
 
+    TracyVkCollect(tracyVkCtx, cmd);
+
     gpuProfiler.beginGPUProfilerFrame(cmd, anvilFrameIndex);
 
-    if (renderHooks.onPreSwapchain)
     {
-        // G-Buffer Geometry Pass
-        renderHooks.onPreSwapchain(cmd, pSwapchain);
+        SCOPE_GPU(tracyVkCtx, cmd, "DrawFrame");
+        if (renderHooks.onPreSwapchain)
+        {
+            SCOPE_GPU(tracyVkCtx, cmd, "Offscreen / Geometry Pass");
+            // G-Buffer Geometry Pass
+            renderHooks.onPreSwapchain(cmd, pSwapchain);
+        }
+
+        // Transition image here
+        TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+        // Transition Depth Image
+        TransitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+
+        // Begin Dynamic Rendering
+        VkRenderingAttachmentInfo color_attachment_info{};
+        color_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        color_attachment_info.imageView = pSwapchain->swapchainImageViews[image_index];
+        color_attachment_info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        color_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        color_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        color_attachment_info.clearValue.color = {{0.05f, 0.05f, 0.05f, 1.0f}};
+
+        // 2. Define the Depth Attachment
+        VkRenderingAttachmentInfo depth_attachment_info{.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+        depth_attachment_info.imageView = pSwapchain->depthImageView;
+        depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depth_attachment_info.clearValue.depthStencil = {1.0f, 0}; // 1.0 is the furthest depth
+
+        VkRenderingInfo rendering_info{};
+        rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        rendering_info.renderArea = {{0, 0}, {pSwapchain->swapchainExtent.width, pSwapchain->swapchainExtent.height}};
+        rendering_info.layerCount = 1;
+        rendering_info.colorAttachmentCount = 1;
+        rendering_info.pColorAttachments = &color_attachment_info;
+        rendering_info.pDepthAttachment = &depth_attachment_info;
+
+        vkCmdBeginRendering(cmd, &rendering_info);
     }
-
-    // Transition image here
-    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
-        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-    // Transition Depth Image
-    TransitionImageLayout(cmd, pSwapchain->depthImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
-
-    // Begin Dynamic Rendering
-    VkRenderingAttachmentInfo color_attachment_info{};
-    color_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-    color_attachment_info.imageView = pSwapchain->swapchainImageViews[image_index];
-    color_attachment_info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    color_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    color_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    color_attachment_info.clearValue.color = {{0.05f, 0.05f, 0.05f, 1.0f}};
-
-    // 2. Define the Depth Attachment
-    VkRenderingAttachmentInfo depth_attachment_info{.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-    depth_attachment_info.imageView = pSwapchain->depthImageView;
-    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-    depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    depth_attachment_info.clearValue.depthStencil = {1.0f, 0}; // 1.0 is the furthest depth
-
-    VkRenderingInfo rendering_info{};
-    rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-    rendering_info.renderArea = {{0, 0}, {pSwapchain->swapchainExtent.width, pSwapchain->swapchainExtent.height}};
-    rendering_info.layerCount = 1;
-    rendering_info.colorAttachmentCount = 1;
-    rendering_info.pColorAttachments = &color_attachment_info;
-    rendering_info.pDepthAttachment = &depth_attachment_info;
-
-    vkCmdBeginRendering(cmd, &rendering_info);
 
     // --- EXECUTE PROJECT POLICY ---
     // Anvil has no idea what is being drawn here, it just executes the user's code.
     if (renderHooks.onSwapchain)
     {
+        SCOPE_GPU(tracyVkCtx, cmd, "Main Swapchain Pass");
         renderHooks.onSwapchain(cmd, pSwapchain);
     }
 
-    engineStats.fps = 1000.f/engineStats.frameTime;
-    UI::FrameStats(engineStats);
-    UIRenderer::RecordUICommands(cmd);
+    {
+        SCOPE_GPU(tracyVkCtx, cmd, "UI RenderPass");
+        engineStats.fps = 1000.f/engineStats.frameTime;
+        UI::FrameStats(engineStats);
+        UIRenderer::RecordUICommands(cmd);
+    }
 
     vkCmdEndRendering(cmd);
 
@@ -277,10 +302,15 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     assert(sizeof(anvilFrames) / sizeof(AnvilFrame) == FRAMES_IN_FLIGHT);
     anvilFrameIndex %= FRAMES_IN_FLIGHT;
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
+
+    SCOPE_FRAME;
 }
 
 void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
 {
+    SCOPE_CPU_NAME("AnvilRenderer::drawModel");
+    SCOPE_GPU(tracyVkCtx, inCmd, "Draw Model");
+
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
     bool is_forward_debug = DebugPass::isForwardMode(debug_mode);
     bool is_debug = static_cast<DebugMode>(debug_mode) > DebugMode::None;
@@ -326,6 +356,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     for (size_t i = 0 ; i < model.drawItems.size() ; ++i)
     {
         const GPUModelDrawItem& draw_item = model.drawItems[i];
+        SCOPE_GPU(tracyVkCtx, inCmd, "Draw Item");
         if (draw_item.gpuMeshIndex >= model.gpuMeshes.size())
         {
             continue;
@@ -333,6 +364,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
 
         if (is_culling)
         {
+            SCOPE_CPU_NAME("Frustum Culling")
             // Fast AABB World Transform & Frustum Check
             glm::vec3 center = draw_item.localBounds.getCenter();
             glm::vec3 extents = draw_item.localBounds.getExtents();
@@ -382,7 +414,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
             sets.push_back(matSet);
         }
 
-        vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_layout, first_set, sets.size(), sets.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_layout, first_set, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
 
         PushConstants constants{};
         constants.viewProjection = view_projection;
@@ -454,11 +486,8 @@ void AnvilRenderer::setupCommandBuffers()
         std::string cmd_name  = "AnvilFrame[" + std::to_string(i) + "]_CommandBuffer";
 
         // We can rely on the default std::source_location parameter here!
-        SET_DNAME_HERE(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdPool),
-                                VK_OBJECT_TYPE_COMMAND_POOL, pool_name.c_str());
-
-        SET_DNAME_HERE(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdBuffer),
-                                VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
+        SET_DNAME_HERE(pContext->device, anvil_frame.cmdPool, VK_OBJECT_TYPE_COMMAND_POOL, pool_name.c_str());
+        SET_DNAME_HERE(pContext->device, anvil_frame.cmdBuffer, VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
 #endif
     }
 }

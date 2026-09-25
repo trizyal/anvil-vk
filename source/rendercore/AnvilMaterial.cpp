@@ -10,10 +10,13 @@
 #include <unordered_map>
 
 #include "DebugNames.h"
+#include "Trace.h"
 #include "VulkanResult.h"
 
 void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram)
 {
+    SCOPE_CPU;
+
     pContext = &inContext;
     pActiveProgram = &inProgram;
 

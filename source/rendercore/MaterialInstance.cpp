@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include "AnvilMaterial.h"
+#include "Trace.h"
 #include "VulkanContext.h"
 
 MaterialInstance::MaterialInstance(MaterialInstance&& other) noexcept
@@ -89,6 +90,8 @@ void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffe
 
 void MaterialInstance::updateDescriptorSets()
 {
+    SCOPE_CPU;
+
     if (pendingTextures.empty() && pendingBuffers.empty())
     {
         std::cerr << "No textures and buffers to bind." << std::endl;

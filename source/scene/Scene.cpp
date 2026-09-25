@@ -3,6 +3,7 @@
 
 #include "Scene.h"
 
+#include "Trace.h"
 #include "VulkanContext.h"
 
 Scene::~Scene()
@@ -33,6 +34,8 @@ void Scene::setGPUSceneData(const GlobalSceneData& inData)
 
 void Scene::updateGPUBuffer()
 {
+    SCOPE_CPU;
+
     if (!isDirty || sceneUBO.buffer == VK_NULL_HANDLE)
     {
         return;

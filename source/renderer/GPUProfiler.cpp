@@ -82,7 +82,7 @@ float GPUProfiler::getGPUTime(uint32_t frameIndex) const
     {
         const uint64_t delta_ticks = timestamps[1] - timestamps[0];
         // Convert ticks to nanoseconds, then to milliseconds
-        return (delta_ticks * timestampPeriod) / 1000000.0f;
+        return (static_cast<float>(delta_ticks) * timestampPeriod) / 1000000.0f;
     }
 
     return 0.0f; // Data not ready yet

@@ -6,6 +6,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "Trace.h"
+
 GPUModel::GPUModel(GPUModel&& other) noexcept
 {
     *this = std::move(other);
@@ -35,6 +37,7 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
 
 void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial)
 {
+    SCOPE_CPU;
     // Destroy the old vulkan objects
     destroyGPUModel();
 
@@ -50,6 +53,7 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
 
 void GPUModel::destroyGPUModel()
 {
+    SCOPE_CPU;
     if (!pContext)
     {
         return;
@@ -81,6 +85,7 @@ void GPUModel::destroyGPUModel()
 
 void GPUModel::updateTransforms(const CPUModel& inModel)
 {
+    SCOPE_CPU;
     if (drawItems.empty() || modelMatricesBuffer.buffer == VK_NULL_HANDLE)
     {
         return;
@@ -89,10 +94,10 @@ void GPUModel::updateTransforms(const CPUModel& inModel)
     std::vector<glm::mat4> model_matrices(drawItems.size());
 
     // // Update draw item matrices from CPU model
-    for (size_t i = 0; i < drawItems.size(); ++i)
+    for (tml::index32 i = 0; i < drawItems.size(); ++i)
     {
         GPUModelDrawItem& item = drawItems[i];
-        if (item.cpuNodeIndex >= 0 && item.cpuNodeIndex < static_cast<int>(inModel.nodes.size()))
+        if (item.cpuNodeIndex >= 0 && item.cpuNodeIndex < inModel.nodes.size())
         {
             item.worldMatrix = inModel.nodes[item.cpuNodeIndex].worldMatrix;
         }
@@ -108,12 +113,13 @@ void GPUModel::updateTransforms(const CPUModel& inModel)
 
 void GPUModel::updateJoints(const CPUModel& inModel) const
 {
+    SCOPE_CPU;
     if (jointBuffer.buffer != VK_NULL_HANDLE && !inModel.skins.empty())
     {
         std::vector<glm::mat4> jointMatrices;
 
         // Find the first node that is rigged to a skeleton
-        for (int i = 0; i < static_cast<int>(inModel.nodes.size()); ++i)
+        for (tml::index32 i = 0; i < inModel.nodes.size(); ++i)
         {
             if (inModel.nodes[i].skinIndex >= 0)
             {
@@ -143,6 +149,7 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
 
 void GPUModel::createTextures(const CPUModel& inModel)
 {
+    SCOPE_CPU;
     defaultWhiteTexture.createSolidColorTexture(*pContext, WhiteColor);
     defaultNormalTexture.createSolidColorTexture(*pContext, NormalColor);
     defaultTransparentTexture.createSolidColorTexture(*pContext, TransparentColor);
@@ -174,6 +181,7 @@ void GPUModel::createTextures(const CPUModel& inModel)
 
 void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial)
 {
+    SCOPE_CPU;
     // Configure Set 1 - Model Data
     if (inMaterial.hasSet(1))
     {
@@ -250,10 +258,11 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
 
 void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 {
+    SCOPE_CPU;
     gpuMeshes.clear();
     drawItems.clear();
 
-    std::vector<std::vector<uint32_t>> primitive_to_gpu_mesh;
+    std::vector<std::vector<tml::index32>> primitive_to_gpu_mesh;
     primitive_to_gpu_mesh.resize(inCPUModel.meshes.size()); // cannot use reserve here.
 
     for (size_t cpu_mesh_index = 0; cpu_mesh_index < inCPUModel.meshes.size(); cpu_mesh_index++)
@@ -270,7 +279,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
             GPUMesh gpu_mesh;
             gpu_mesh.createGPUMesh(*pContext, primitive);
 
-            const uint32_t gpu_mesh_index = static_cast<uint32_t>(gpuMeshes.size());
+            const tml::index32 gpu_mesh_index = gpuMeshes.size();
             gpuMeshes.push_back(std::move(gpu_mesh));
             primitive_to_gpu_mesh[cpu_mesh_index].push_back(gpu_mesh_index);
         }
@@ -278,16 +287,16 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 
     if (!inCPUModel.nodes.empty())
     {
-        for (int node_index = 0; node_index < static_cast<int>(inCPUModel.nodes.size()); node_index++)
+        for (tml::index32 node_index = 0; node_index < inCPUModel.nodes.size(); ++node_index)
         {
             const CPUNode& node = inCPUModel.nodes[node_index];
-            if (node.meshIndex < 0 || node.meshIndex >= static_cast<int>(inCPUModel.meshes.size()))
+            if (node.meshIndex < 0 || node.meshIndex >= inCPUModel.meshes.size())
             {
                 continue;
             }
 
             const CPUMesh& cpu_mesh = inCPUModel.meshes[node.meshIndex];
-            const std::vector<uint32_t>& primitive_gpu_indices = primitive_to_gpu_mesh[node.meshIndex];
+            const std::vector<tml::index32>& primitive_gpu_indices = primitive_to_gpu_mesh[node.meshIndex];
 
             for (size_t primitive_index = 0; primitive_index < cpu_mesh.primitives.size(); primitive_index++)
             {
@@ -310,7 +319,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
     for (size_t cpu_mesh_index = 0; cpu_mesh_index < inCPUModel.meshes.size(); cpu_mesh_index++)
     {
         const CPUMesh& cpu_mesh = inCPUModel.meshes[cpu_mesh_index];
-        const std::vector<uint32_t>& primitive_gpu_indices = primitive_to_gpu_mesh[cpu_mesh_index];
+        const std::vector<tml::index32>& primitive_gpu_indices = primitive_to_gpu_mesh[cpu_mesh_index];
 
         for (size_t primitive_index = 0; primitive_index < cpu_mesh.primitives.size(); primitive_index++)
         {
@@ -329,6 +338,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 
 void GPUModel::createJointBuffer()
 {
+    SCOPE_CPU;
     // We must provide initial data because GPUBuffer::createBuffer always calls std::memcpy.
     // Initializing with Identity Matrices means vertices won't stretch to infinity on frame 0.
     std::vector<glm::mat4> initial_matrices(MAX_BONES, glm::mat4(1.0f));
@@ -347,6 +357,7 @@ void GPUModel::createJointBuffer()
 
 void GPUModel::createModelMatricesBuffer()
 {
+    SCOPE_CPU;
     if (drawItems.empty())
     {
         return;

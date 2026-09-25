@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include "Trace.h"
+
 void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderStageFlagBits stage)
 {
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
@@ -96,6 +98,8 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
 bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCompiler, const AnvilShaders::ShaderCompileRequest& inVertReq,
     const AnvilShaders::ShaderCompileRequest& inFragReq, std::string* outErrorMessage)
 {
+    SCOPE_CPU;
+
     pContext = &inContext;
     name = inVertReq.moduleName;
 

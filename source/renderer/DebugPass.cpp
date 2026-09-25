@@ -9,6 +9,7 @@
 #include "GPUMesh.h"
 #include "GBuffer.h"
 #include "GPUModel.h"
+#include "Trace.h"
 #include "VulkanContext.h"
 
 bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
