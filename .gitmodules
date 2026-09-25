@@ -22,3 +22,6 @@
 [submodule "external/cgltf"]
 	path = external/cgltf
 	url = git@github.com:jkuhlmann/cgltf.git
+[submodule "external/tml"]
+	path = external/tml
+	url = git@github.com:trizyal/tml.git

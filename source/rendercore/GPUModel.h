@@ -40,7 +40,7 @@ constexpr size_t MAX_BONES = 256;
  */
 struct GPUModelMaterial
 {
-    int materialIndex = -1; /**< Index corresponding to CPUModel::materials. */
+    tml::index32 materialIndex = -1; /**< Index corresponding to CPUModel::materials. */
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
     MaterialInstance instance; /**< Descriptor set manager for this specific material. */
 };
@@ -55,10 +55,10 @@ struct GPUModelMaterial
  */
 struct GPUModelDrawItem
 {
-    uint32_t gpuMeshIndex = 0; /**< Index into GPUModel::gpuMeshes. */
-    int gpuMaterialIndex = -1; /**< Index into GPUModel::gpuMaterials. */
+    tml::index32 gpuMeshIndex = 0; /**< Index into GPUModel::gpuMeshes. */
+    tml::index32 gpuMaterialIndex = -1; /**< Index into GPUModel::gpuMaterials. */
     glm::mat4 worldMatrix = glm::mat4(1.0f);
-    int cpuNodeIndex = -1; /**< Map back to CPU node for animation matrix updates. */
+    tml::index32 cpuNodeIndex = -1; /**< Map back to CPU node for animation matrix updates. */
 
     /** Local-space bounding box used for fast CPU-side frustum culling tests. */
     AABB localBounds;

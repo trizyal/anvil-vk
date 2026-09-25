@@ -91,8 +91,21 @@ namespace VulkanDebug
     inline void SetAutoName(VkDevice inDevice, T inObjectHandle, VkObjectType inObjectType,
             const char* inName = nullptr, std::source_location location = std::source_location::current())
     {
+#if DEPRECATED // Avoiding c-style casts
         // Double cast prevents warnings across different OS handle architectures
         SetAutoName(inDevice, (uint64_t)(size_t)(inObjectHandle), inObjectType, inName, location);
+#endif
+
+        uint64_t handle = 0;
+        if constexpr (std::is_pointer_v<T>)
+        {
+            handle = reinterpret_cast<uint64_t>(inObjectHandle);
+        }
+        else
+        {
+            handle = static_cast<uint64_t>(inObjectHandle);
+        }
+        SetAutoName(inDevice, handle, inObjectType, inName, location);
     }
 
     /**
@@ -141,10 +154,10 @@ DNAME(std::source_location const aDbgSrcLoc)
  */
 #if ANVIL_DEBUG
 #   define SET_DNAME(dev, handle, type) \
-    VulkanDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, aDbgSrcLoc)
+    VulkanDebug::SetAutoName(dev, handle, type, aDebugName, aDbgSrcLoc)
 
 #   define SET_DNAME_HERE(dev, handle, type, aDebugName) \
-    VulkanDebug::SetAutoName(dev, (uint64_t)handle, type, aDebugName, std::source_location::current())
+    VulkanDebug::SetAutoName(dev, handle, type, aDebugName, std::source_location::current())
 #else
 #   define SET_DNAME(dev, handle, type) do {} while (0)
 #   define SET_DNAME_HERE(dev, handle, type, aDebugName) do {} while (0)

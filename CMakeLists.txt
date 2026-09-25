@@ -59,6 +59,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 # Engine properties & compile definitions
 target_compile_definitions(${PROJECT_NAME} PUBLIC
+        DEPRECATED=0
         SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
         ASSETS_DIR=\"${CMAKE_SOURCE_DIR}/assets\"
         TOOLS_DIR=\"${CMAKE_SOURCE_DIR}/tools\"
@@ -146,6 +147,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         stb
         renderdoc
         tracy_client
+        tml
 )
 
 # Examples

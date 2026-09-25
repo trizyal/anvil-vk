@@ -53,6 +53,9 @@ add_subdirectory(vk-bootstrap SYSTEM)
 # -- glm
 add_subdirectory(glm SYSTEM)
 
+# -- tml
+add_subdirectory(tml)
+
 # -- vma
 add_library(vma INTERFACE)
 target_include_directories(vma SYSTEM INTERFACE VulkanMemoryAllocator/include)

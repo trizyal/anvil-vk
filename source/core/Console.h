@@ -229,19 +229,19 @@ struct AutoRegisterCommand
  * @brief Macro to define a global integer CVar anywhere in the codebase.
  */
 #define CVAR_INT(name, description, defaultValue) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, (int)defaultValue)
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<int>(defaultValue))
 
 /**
  * @brief Macro to define a global float CVar anywhere in the codebase.
  */
 #define CVAR_FLOAT(name, description, defaultValue) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, (float)defaultValue)
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<float>(defaultValue))
 
 /**
  * @brief Macro to define a global boolean CVar anywhere in the codebase.
  */
 #define CVAR_BOOL(name, description, defaultValue) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, (bool)defaultValue)
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<bool>(defaultValue))
 
 /**
  * @brief Macro to define a global Console Command anywhere in the codebase.

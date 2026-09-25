@@ -32,7 +32,7 @@ namespace AnvilShaders
         std::ofstream file(filename, std::ios::out | std::ios::binary);
         if (file.is_open()) {
             // Cast the uint32_t array to a char array so file.write can process it bytes-wise
-            file.write(reinterpret_cast<const char*>(inSPIRV.data()), inSPIRV.size() * sizeof(uint32_t));
+            file.write(reinterpret_cast<const char*>(inSPIRV.data()), static_cast<std::streamsize>(inSPIRV.size() * sizeof(uint32_t)));
             file.close();
             std::cout << "Saved SPIR-V dump to: " << filename << "\n";
         } else {

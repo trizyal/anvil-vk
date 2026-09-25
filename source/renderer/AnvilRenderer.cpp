@@ -47,7 +47,7 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
     setupCommandBuffers();
     setupSyncStructures();
 
-    pContext->immediateSubmit([this](VkCommandBuffer cmd)
+    pContext->immediateSubmit([this]([[maybe_unused]]VkCommandBuffer cmd)
     {
         tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);
     });
@@ -414,7 +414,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
             sets.push_back(matSet);
         }
 
-        vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_layout, first_set, sets.size(), sets.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_layout, first_set, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
 
         PushConstants constants{};
         constants.viewProjection = view_projection;
@@ -486,11 +486,8 @@ void AnvilRenderer::setupCommandBuffers()
         std::string cmd_name  = "AnvilFrame[" + std::to_string(i) + "]_CommandBuffer";
 
         // We can rely on the default std::source_location parameter here!
-        SET_DNAME_HERE(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdPool),
-                                VK_OBJECT_TYPE_COMMAND_POOL, pool_name.c_str());
-
-        SET_DNAME_HERE(pContext->device, reinterpret_cast<uint64_t>(anvil_frame.cmdBuffer),
-                                VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
+        SET_DNAME_HERE(pContext->device, anvil_frame.cmdPool, VK_OBJECT_TYPE_COMMAND_POOL, pool_name.c_str());
+        SET_DNAME_HERE(pContext->device, anvil_frame.cmdBuffer, VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
 #endif
     }
 }

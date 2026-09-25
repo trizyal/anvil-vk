@@ -21,14 +21,20 @@ namespace
 {
     namespace Color
     {
+        // Avoid ImGui's C-style macro casts by doing the bitshift ourselves
+        constexpr ImU32 MakeCol32(ImU32 r, ImU32 g, ImU32 b, ImU32 a)
+        {
+            return (a << IM_COL32_A_SHIFT) | (b << IM_COL32_B_SHIFT) | (g << IM_COL32_G_SHIFT) | (r << IM_COL32_R_SHIFT);
+        }
+
         /** Bright red for x axis. */
-        inline constexpr ImU32 X_AXIS = IM_COL32(255, 50, 50, 255);
+        inline constexpr ImU32 X_AXIS = MakeCol32(255, 50, 50, 255);
 
         /** Bright green for y axis. */
-        inline constexpr ImU32 Y_AXIS = IM_COL32(50, 255, 50, 255);
+        inline constexpr ImU32 Y_AXIS = MakeCol32(50, 255, 50, 255);
 
         /** Light blue for z axis. Lighter to contrast with dark backgrounds */
-        inline constexpr ImU32 Z_AXIS = IM_COL32(50, 150, 255, 255);
+        inline constexpr ImU32 Z_AXIS = MakeCol32(50, 150, 255, 255);
 
         ImVec4 BgGrey = ImVec4(0.7f, 0.7f, 0.7f, 0.4f);
         ImVec4 BgDarkGrey = ImVec4(0.1f, 0.1f, 0.1f, 0.5f);
@@ -104,21 +110,22 @@ void UI::FrameStats(const ::FrameStats& stats, bool* pOpen)
         ImGui::PopFont();
 
         ImGui::PushFont(debugUI);
+
         ImGui::Text("FPS:");
         ImGui::SameLine(80.0f);
-        ImGui::TextColored(getMetricColor(1000.0f / (stats.fps + 0.001f)), "%.1f", stats.fps);
+        ImGui::TextColored(getMetricColor(1000.0f / (stats.fps + 0.001f)), "%.1f", static_cast<double>(stats.fps));
 
         ImGui::Text("Frame:");
         ImGui::SameLine(80.0f);
-        ImGui::TextColored(getMetricColor(stats.frameTime), "%.2f ms", stats.frameTime);
+        ImGui::TextColored(getMetricColor(stats.frameTime), "%.2f ms", static_cast<double>(stats.frameTime));
 
         ImGui::Text("CPU:");
         ImGui::SameLine(80.0f);
-        ImGui::TextColored(getMetricColor(stats.cpuTime), "%.2f ms", stats.cpuTime);
+        ImGui::TextColored(getMetricColor(stats.cpuTime), "%.2f ms", static_cast<double>(stats.cpuTime));
 
         ImGui::Text("GPU:");
         ImGui::SameLine(80.0f);
-        ImGui::TextColored(getMetricColor(stats.gpuTime), "%.2f ms", stats.gpuTime);
+        ImGui::TextColored(getMetricColor(stats.gpuTime), "%.2f ms", static_cast<double>(stats.gpuTime));
 
         ImGui::Separator();
 
@@ -446,7 +453,7 @@ void UI::DrawConsoleWindow(const int* pState)
     ImGui::PushStyleColor(ImGuiCol_NavHighlight, Color::BgDarkGrey);
     ImGui::PushStyleColor(ImGuiCol_Border, Color::BgDarkGrey);
     ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackCharFilter;
-    if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, IM_ARRAYSIZE(s_ConsoleInputBuffer), input_flags, ConsoleInputCallback))
+    if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, std::size(s_ConsoleInputBuffer), input_flags, ConsoleInputCallback))
     {
         std::string s = s_ConsoleInputBuffer;
 
@@ -519,7 +526,7 @@ namespace
             // Only update text buffer if the position changed
             if (previousHistoryPosition != s_HistoryPosition)
             {
-                const std::string history_string = (s_HistoryPosition >= 0) ? history[s_HistoryPosition] : "";
+                const std::string history_string = (s_HistoryPosition >= 0) ? history[static_cast<size_t>(s_HistoryPosition)] : "";
                 data->DeleteChars(0, data->BufTextLen);
                 data->InsertChars(0, history_string.c_str());
             }
