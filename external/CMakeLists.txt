@@ -9,6 +9,11 @@ add_subdirectory(volk SYSTEM)
 # Volk uses Vulkan-Headers instead of find_package(Vulkan)
 target_link_libraries(volk PUBLIC Vulkan::Headers)
 
+target_compile_definitions(volk PUBLIC
+        VK_NO_PROTOTYPES
+        VK_ENABLE_BETA_EXTENSIONS
+)
+
 # GLFW Configuration
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -38,6 +43,9 @@ endif ()
 
 # -- glfw
 add_subdirectory(glfw SYSTEM)
+target_compile_definitions(glfw INTERFACE
+        GLFW_INCLUDE_NONE
+)
 
 # -- vk-bootstrap
 add_subdirectory(vk-bootstrap SYSTEM)
@@ -47,26 +55,26 @@ add_subdirectory(glm SYSTEM)
 
 # -- vma
 add_library(vma INTERFACE)
-target_include_directories(vma INTERFACE VulkanMemoryAllocator/include)
+target_include_directories(vma SYSTEM INTERFACE VulkanMemoryAllocator/include)
 
 # -- cgltf
 add_library(cgltf INTERFACE)
-target_include_directories(cgltf INTERFACE cgltf)
+target_include_directories(cgltf SYSTEM INTERFACE cgltf)
 
 # -- stb
 add_library(stb INTERFACE)
-target_include_directories(stb INTERFACE stb)
+target_include_directories(stb SYSTEM INTERFACE stb)
 
 # -- renderdoc
 add_library(renderdoc INTERFACE)
-target_include_directories(renderdoc INTERFACE renderdoc)
+target_include_directories(renderdoc SYSTEM INTERFACE renderdoc)
 
 # -- slang
 add_library(slang INTERFACE)
-target_include_directories(slang INTERFACE slang/include)
+target_include_directories(slang SYSTEM INTERFACE slang/include)
 # linking slang with the precompiled library
 if (WIN32)
-    target_link_libraries(slang INTERFACE slang/lib/slang.lib)
+    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/lib/slang.lib)
 elseif (UNIX)
     # unsure
     target_link_libraries(slang INTERFACE slang/lib/libslang.so)
