@@ -4,6 +4,7 @@
 #include "AnvilRenderer.h"
 
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 
 #include "Camera.h"
@@ -17,6 +18,7 @@
 #include "DebugNames.h"
 #include "GPUModel.h"
 #include "PushConstants.h"
+#include "ScreenLogger.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
 #include "Trace.h"
@@ -35,6 +37,8 @@ CVAR_INT("r.debugmode",
 CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
 
 CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
+CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
+
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
@@ -55,15 +59,47 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
     const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
     gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
 
-    Console::RegisterCommand("freezerendering", "Freezes the rendering state.", [](const std::vector<std::string>&) {
-        bool current = Console::GetCVarBool("r.freezerendering");
-        Console::SetCVarBool("r.freezerendering", !current);
-        Console::Print(current ? "Rendering frozen." : "Rendering un-frozen.");
-    });
-
     engineCompiler.initializeShaderCompiler();
     engineCompiler.addSearchPath(SHADER_DIR);
     debugPass.initializeDebugPass(*pContext, engineCompiler, pSwapchain->swapchainFormat, pSwapchain->depthFormat);
+
+    COMMAND("freezerendering",
+    "Freezes the rendering state.",
+    [](const std::vector<std::string>&)
+    {
+        bool current = Console::GetCVarBool("r.freezerendering");
+        Console::SetCVarBool("r.freezerendering", !current);
+        Console::Print(current ? "Rendering un-frozen." : "Rendering frozen.");
+    }
+);
+
+    COMMAND("vmastats",
+        "Dumps VMA memory stats to vma_dumps.json.",
+        [this](const std::vector<std::string>&)
+        {
+            char* stats_string;
+            vmaBuildStatsString(pContext->allocator, &stats_string, VK_TRUE);
+
+            // Write to file
+            std::string dump_file_path = SAVED_DIR "/vma_dumps.json";
+            std::ofstream dump_file;
+            dump_file.open("vma_dumps.json");
+            if (dump_file.is_open())
+            {
+                dump_file << stats_string;
+                dump_file.close();
+                Console::Print("Successfully dumped VMA stats to vma_dumps.json.");
+                LOGUI("VMA Stats Dumped", AnvilColor::Blue);
+            }
+            else
+            {
+                Console::Print("Failed to open vma_dumps.json for writing.");
+                LOGUI("Failed to dump VMA Stats", AnvilColor::Red);
+            }
+
+            vmaFreeStatsString(pContext->allocator, stats_string);
+        }
+    );
 
     std::cout << "Finished Initializing AnvilRenderer" << std::endl;
 }

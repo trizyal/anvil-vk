@@ -64,6 +64,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
         SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
         ASSETS_DIR=\"${CMAKE_SOURCE_DIR}/assets\"
         TOOLS_DIR=\"${CMAKE_SOURCE_DIR}/tools\"
+        SAVED_DIR=\"${CMAKE_SOURCE_DIR}/saved\"
 )
 
 # OS specific API rules
