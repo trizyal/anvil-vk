@@ -28,8 +28,8 @@ set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 set(BINARIES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/binaries")
 
 # Prevent find_package(Vulkan) from looking for system SDKs
-#set(CMAKE_DISABLE_FIND_PACKAGE_Vulkan ON)
-#unset(ENV{VULKAN_SDK})
+set(CMAKE_DISABLE_FIND_PACKAGE_Vulkan ON)
+unset(ENV{VULKAN_SDK})
 
 # External dependencies
 add_subdirectory(external)
@@ -59,6 +59,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 # Engine properties & compile definitions
 target_compile_definitions(${PROJECT_NAME} PUBLIC
+        UNIMPLEMENTED=0
         DEPRECATED=0
         SHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders\"
         ASSETS_DIR=\"${CMAKE_SOURCE_DIR}/assets\"

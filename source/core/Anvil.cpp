@@ -33,7 +33,7 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     Console::Initialize();
 
     // Register inbuilt exit command globally
-    Console::RegisterCommand("quit", "Exits the engine safely.", [this](const std::vector<std::string>&) {
+    COMMAND("quit", "Exits the engine safely.", [this](const std::vector<std::string>&) {
         glfwSetWindowShouldClose(window->getGLFWWindow(), GLFW_TRUE);
     });
 

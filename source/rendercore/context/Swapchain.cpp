@@ -175,8 +175,8 @@ void Swapchain::createDepthAttachment()
     depth_alloc_info.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     CHECK(vmaCreateImage(pContext->allocator, &depth_image_info,&depth_alloc_info, &depthImage, &depthImageAllocation, nullptr));
-
     SET_DNAME_HERE(pContext->device, depthImageView, VK_OBJECT_TYPE_IMAGE_VIEW, "SwapchainDepthImageView");
+    SET_VMA_DNAME_HERE(pContext->allocator, depthImageAllocation, "SwapchainDepthImageViewAllocation");
 
     // Create depth imageview
     VkImageViewCreateInfo depth_image_view_info{};

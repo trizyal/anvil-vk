@@ -158,9 +158,19 @@ DNAME(std::source_location const aDbgSrcLoc)
 
 #   define SET_DNAME_HERE(dev, handle, type, aDebugName) \
     VulkanDebug::SetAutoName(dev, handle, type, aDebugName, std::source_location::current())
+
+#   define SET_VMA_DNAME(allocator, allocation) \
+    vmaSetAllocationName(allocator, allocation, aDebugName)
+
+#   define SET_VMA_DNAME_HERE(allocator, allocation, aDebugName) \
+    vmaSetAllocationName(allocator, allocation, aDebugName)
 #else
 #   define SET_DNAME(dev, handle, type) do {} while (0)
 #   define SET_DNAME_HERE(dev, handle, type, aDebugName) do {} while (0)
+
+#   define SET_VMA_DNAME(allocator, allocation) do {} while (0)
+#   define SET_VMA_DNAME_HERE(allocator, allocation, aDebugName) do {} while (0)
+#define
 #endif
 
 /**

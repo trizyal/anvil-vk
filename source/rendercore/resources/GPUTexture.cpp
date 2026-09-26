@@ -290,6 +290,7 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width
 
     CHECK(vmaCreateImage(pContext->allocator, &image_info, &alloc_info, &image, &allocation, nullptr));
     SET_DNAME(pContext->device, image, VK_OBJECT_TYPE_IMAGE);
+    SET_VMA_DNAME(pContext->allocator, allocation);
 
     VkImageAspectFlags aspect_mask = (format == VK_FORMAT_D32_SFLOAT) ?
                                      VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
@@ -348,6 +349,7 @@ void GPUTexture::createImage(const uint32_t width, const uint32_t height, const 
 
     CHECK(vmaCreateImage(pContext->allocator, &image_info, &alloc_info, &image, &allocation, nullptr));
     SET_DNAME(pContext->device, image, VK_OBJECT_TYPE_IMAGE);
+    SET_VMA_DNAME(pContext->allocator, allocation);
 }
 
 void GPUTexture::createImageView(const uint32_t mipLevels, const VkFormat format D_DEFN)

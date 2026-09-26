@@ -57,6 +57,7 @@ void GPUBuffer::createBuffer(const VulkanContext& inContext, const void* inData,
     }
 
     SET_DNAME(inContext.device, buffer, VK_OBJECT_TYPE_BUFFER);
+    SET_VMA_DNAME(allocator, allocation);
 
     // Direct memory mapping and immediate transfer
     void* mapped_memory = nullptr;

@@ -4,6 +4,25 @@
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
+#ifndef NDEBUG
+// Fills new allocations with a bit pattern to catch uninitialized memory reads
+#define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
+
+// Adds a 16-byte margin around allocations to detect buffer overruns/underruns
+#define VMA_DEBUG_MARGIN 16
+#define VMA_DEBUG_DETECT_CORRUPTION 1
+
+#if UNIMPLEMENTED
+#include <cstdio>
+
+// Routes VMA's internal leak tracking and warnings to standard error
+#define VMA_DEBUG_LOG(format, ...) do { \
+    fprintf(stderr, "[VMA] " format "\n", __VA_ARGS__); \
+    } while(false)
+#endif // UNIMPLEMENTED
+
+#endif // ifndef NDEBUG
+
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
