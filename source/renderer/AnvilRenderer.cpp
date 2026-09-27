@@ -380,7 +380,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     }
     was_frozen = is_frozen;
 
-    Frustum camera_frustum{};
+    tml::frustum camera_frustum{};
     camera_frustum.extractPlanes(is_frozen ? frozen_vp : view_projection);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_pipeline);
@@ -409,7 +409,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
             );
             glm::vec3 worldExtents = absModel * extents;
 
-            AABB worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
+            tml::aabb worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
 
             if (!camera_frustum.contains(worldAABB))
             {

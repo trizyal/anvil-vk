@@ -61,7 +61,7 @@ struct GPUModelDrawItem
     tml::index32 cpuNodeIndex = -1; /**< Map back to CPU node for animation matrix updates. */
 
     /** Local-space bounding box used for fast CPU-side frustum culling tests. */
-    AABB localBounds;
+    tml::aabb localBounds;
 };
 
 /**
