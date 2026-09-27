@@ -35,10 +35,7 @@ CVAR_INT("r.debugmode",
 );
 
 CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
-
 CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
-CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
-
 
 void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
