@@ -8,11 +8,14 @@
 
 #ifdef __cplusplus
     #include <glm/glm.hpp>
+    #include <index32.h>
     #define MAT4 glm::mat4
     #define VEC4 glm::vec4
+    #define INDEX tml::index32
 #else
     #define MAT4 float4x4
     #define VEC4 float4
+    #define INDEX uint32_t
 #endif
 
 /**
@@ -25,7 +28,7 @@ struct PushConstants
 {
     MAT4 viewProjection;
     VEC4 cameraPosition;
-    uint32_t objectIndex;
+    INDEX objectIndex;
     DebugMode debugMode;
 };
 

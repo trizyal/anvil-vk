@@ -386,7 +386,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_pipeline);
 
     VkDeviceSize offset = 0;
-    for (size_t i = 0 ; i < model.drawItems.size() ; ++i)
+    for (tml::index32 i = 0 ; i < model.drawItems.size() ; ++i)
     {
         const GPUModelDrawItem& draw_item = model.drawItems[i];
         SCOPE_GPU(tracyVkCtx, inCmd, "Draw Item");
@@ -452,7 +452,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
         PushConstants constants{};
         constants.viewProjection = view_projection;
         constants.cameraPosition = glm::vec4(camera.position, 1.0f);
-        constants.objectIndex = static_cast<uint32_t>(i); // Map to SSBO index
+        constants.objectIndex = i; // Map to SSBO index
         constants.debugMode = static_cast<DebugMode>(debug_mode);
         vkCmdPushConstants(inCmd, active_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
 
