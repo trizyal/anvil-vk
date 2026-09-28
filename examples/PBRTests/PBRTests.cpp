@@ -23,7 +23,7 @@ void PBRTests::initializeProject(VulkanContext& inContext, Swapchain& inSwapchai
     sceneManager.discoverScenes(PROJECT_DIR "/scenes");
     if (!sceneManager.availableScenes.empty())
     {
-        sceneManager.loadScene(0, *pContext, material_Geo, camera, pbrScene);
+        sceneManager.loadScene(3, *pContext, material_Geo, camera, pbrScene);
     }
 }
 

@@ -380,13 +380,13 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     }
     was_frozen = is_frozen;
 
-    tml::frustum camera_frustum{};
+    Frustum camera_frustum{};
     camera_frustum.extractPlanes(is_frozen ? frozen_vp : view_projection);
 
     vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_pipeline);
 
     VkDeviceSize offset = 0;
-    for (tml::index32 i = 0 ; i < model.drawItems.size() ; ++i)
+    for (Index32 i = 0 ; i < model.drawItems.size() ; ++i)
     {
         const GPUModelDrawItem& draw_item = model.drawItems[i];
         SCOPE_GPU(tracyVkCtx, inCmd, "Draw Item");
@@ -409,7 +409,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
             );
             glm::vec3 worldExtents = absModel * extents;
 
-            tml::aabb worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
+            AABB worldAABB{ .min = worldCenter - worldExtents, .max = worldCenter + worldExtents };
 
             if (!camera_frustum.contains(worldAABB))
             {

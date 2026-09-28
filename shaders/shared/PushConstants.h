@@ -8,10 +8,10 @@
 
 #ifdef __cplusplus
     #include <glm/glm.hpp>
-    #include <index32.h>
+    #include <Index32.h>
     #define MAT4 glm::mat4
     #define VEC4 glm::vec4
-    #define INDEX tml::index32
+    #define INDEX Index32
 #else
     #define MAT4 float4x4
     #define VEC4 float4

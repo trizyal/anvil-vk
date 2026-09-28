@@ -49,6 +49,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${SOURCE_DIR}/core
     ${SOURCE_DIR}/scene
     ${SOURCE_DIR}/diagnostics
+    ${SOURCE_DIR}/math
     ${SOURCE_DIR}/rendercore
     ${SOURCE_DIR}/rendercore/context
     ${SOURCE_DIR}/rendercore/resources
@@ -148,7 +149,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         stb
         renderdoc
         tracy_client
-        tml
 )
 
 # Examples

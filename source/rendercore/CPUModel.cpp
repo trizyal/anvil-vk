@@ -105,7 +105,7 @@ namespace
      * @param node_index The index of the node to update.
      * @param parent_matrix The computed world matrix of the parent node.
      */
-    void ComputeWorldMatrices(CPUModel& cpu_model, tml::index32 node_index, const glm::mat4& parent_matrix);
+    void ComputeWorldMatrices(CPUModel& cpu_model, Index32 node_index, const glm::mat4& parent_matrix);
 }
 
 void CPUModel::loadGLTF(const std::string& filePath)
@@ -169,7 +169,7 @@ void CPUModel::loadGLTF(const std::string& filePath)
 
     if (sceneRootNodes.empty())
     {
-        for (tml::index32 nodeIndex = 0; nodeIndex < nodes.size(); ++nodeIndex)
+        for (Index32 nodeIndex = 0; nodeIndex < nodes.size(); ++nodeIndex)
         {
             if (nodes[nodeIndex].parentIndex < 0)
             {
@@ -190,13 +190,13 @@ void CPUModel::loadGLTF(const std::string& filePath)
 void CPUModel::updateAllMatrices()
 {
     SCOPE_CPU;
-    for (const tml::index32 rootNodeIndex : sceneRootNodes)
+    for (const Index32 rootNodeIndex : sceneRootNodes)
     {
         ComputeWorldMatrices(*this, rootNodeIndex, glm::mat4(1.0f));
     }
 }
 
-void CPUModel::applyAnimation(const tml::index32 animationIndex, const float time)
+void CPUModel::applyAnimation(const Index32 animationIndex, const float time)
 {
     SCOPE_CPU;
     if (animationIndex < 0 || animationIndex >= animations.size())
@@ -283,7 +283,7 @@ void CPUModel::applyAnimation(const tml::index32 animationIndex, const float tim
     updateAllMatrices();
 }
 
-void CPUModel::computeJointMatrices(const tml::index32 nodeIndex, std::vector<glm::mat4>& matrices) const
+void CPUModel::computeJointMatrices(const Index32 nodeIndex, std::vector<glm::mat4>& matrices) const
 {
     SCOPE_CPU;
     if (nodeIndex < 0 || nodeIndex >= nodes.size())
@@ -532,7 +532,7 @@ namespace
                 else
                 {
                     cpu_mesh_primitive.indices.resize(cpu_mesh_primitive.vertices.size());
-                    for (tml::index32 index_index = 0; index_index < cpu_mesh_primitive.vertices.size(); ++index_index)
+                    for (Index32 index_index = 0; index_index < cpu_mesh_primitive.vertices.size(); ++index_index)
                     {
                         cpu_mesh_primitive.indices[index_index] = index_index;
                     }
@@ -850,7 +850,7 @@ namespace
         }
     }
 
-    void ComputeWorldMatrices(CPUModel& cpu_model, const tml::index32 node_index, const glm::mat4& parent_matrix)
+    void ComputeWorldMatrices(CPUModel& cpu_model, const Index32 node_index, const glm::mat4& parent_matrix)
     {
         if (node_index < 0 || node_index >= static_cast<int>(cpu_model.nodes.size()))
         {
@@ -860,7 +860,7 @@ namespace
         CPUNode& node = cpu_model.nodes[node_index];
         node.worldMatrix = parent_matrix * node.localMatrix;
 
-        for (const tml::index32 child_index : node.children)
+        for (const Index32 child_index : node.children)
         {
             // Some recursion, hopefully does not causes crashes
             ComputeWorldMatrices(cpu_model, child_index, node.worldMatrix);

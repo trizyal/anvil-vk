@@ -14,7 +14,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <tml.h>
+
+#include "Frustum.h"
+#include "Index32.h"
 
 /**
  * @brief CPU-side representation of a single mesh vertex.
@@ -53,9 +55,9 @@ struct CPUMaterial
     std::string name;
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
 
-    tml::index32 baseColorTextureIndex = -1;
-    tml::index32 normalTextureIndex = -1;
-    tml::index32 metallicRoughnessTextureIndex = -1;
+    Index32 baseColorTextureIndex = -1;
+    Index32 normalTextureIndex = -1;
+    Index32 metallicRoughnessTextureIndex = -1;
 
     float metallicFactor = 1.0f;
     float roughnessFactor = 1.0f;
@@ -70,11 +72,11 @@ struct CPUMaterial
 struct CPUMeshPrimitive
 {
     std::vector<MeshVertex> vertices;
-    std::vector<tml::index32> indices;
-    tml::index32 materialIndex = -1;
+    std::vector<Index32> indices;
+    Index32 materialIndex = -1;
 
     /** Local-space bounding box calculated from this primitive's vertex positions. */
-    tml::aabb localBounds;
+    AABB localBounds;
 };
 
 /**
@@ -94,8 +96,8 @@ struct CPUMesh
 struct CPUSkin
 {
     std::string name;
-    tml::index32 skeletonRootNode = -1;
-    std::vector<tml::index32> jointNodes; /**< CPU nodes that act as bones */
+    Index32 skeletonRootNode = -1;
+    std::vector<Index32> jointNodes; /**< CPU nodes that act as bones */
     std::vector<glm::mat4> inverseBindMatrices; /**< Rest pose inverse matrices. */
 };
 
@@ -109,10 +111,10 @@ struct CPUSkin
 struct CPUNode
 {
     std::string name;
-    tml::index32 meshIndex = -1;
-    tml::index32 skinIndex = -1;
-    tml::index32 parentIndex = -1;
-    std::vector<tml::index32> children;
+    Index32 meshIndex = -1;
+    Index32 skinIndex = -1;
+    Index32 parentIndex = -1;
+    std::vector<Index32> children;
 
     glm::vec3 translation = glm::vec3(0.0f);
     glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
@@ -138,7 +140,7 @@ enum class AnimationPath
  */
 struct CPUAnimationChannel
 {
-    tml::index32 targetNodeIndex = -1;
+    Index32 targetNodeIndex = -1;
     AnimationPath path = AnimationPath::Unknown;
 
     std::vector<float> keyframeTimes;
@@ -169,7 +171,7 @@ public:
     std::vector<CPUMaterial> materials;
     std::vector<CPUMesh> meshes;
     std::vector<CPUNode> nodes;
-    std::vector<tml::index32> sceneRootNodes;
+    std::vector<Index32> sceneRootNodes;
 
     std::vector<CPUAnimation> animations;
     std::vector<CPUSkin> skins;
@@ -198,7 +200,7 @@ public:
      * @param animationIndex The index of the CPUModel::animation to play.
      * @param time The current playback time in seconds.
      */
-    void applyAnimation(tml::index32 animationIndex, float time);
+    void applyAnimation(Index32 animationIndex, float time);
 
     /**
      * @brief Computes the final skinning matrices for all joints affecting a specific skinned mesh node.
@@ -214,7 +216,7 @@ public:
      * @param matrices A reference to a vector that will be resized and populated with
      * the computed glm::mat4 joint matrices.
      */
-    void computeJointMatrices(tml::index32 nodeIndex, std::vector<glm::mat4>& matrices) const;
+    void computeJointMatrices(Index32 nodeIndex, std::vector<glm::mat4>& matrices) const;
 };
 
 #endif //ANVIL_VK_CPUMODEL_H

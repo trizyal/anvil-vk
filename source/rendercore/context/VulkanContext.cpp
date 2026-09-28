@@ -21,7 +21,7 @@
         } while(false)
     #endif // UNIMPLEMENTED
 
-#include <ensure.h>
+#include <Ensure.h>
     // Pipe VMA corruption checks to your engine's crash handler
     #define VMA_ASSERT(expr) FATAL((expr), "VMA Internal Assertion Failed: " #expr)
 #endif // NDEBUG
