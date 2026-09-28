@@ -12,6 +12,29 @@
 #include "ScreenLogger.h"
 #include "UIElements.h"
 
+CVAR_BOOL("attachrenderdoc",
+    "Start the executable with RenderDoc attached.",
+    true
+);
+
+CVAR_BOOL("attachtracy",
+    "Start the executable with Tracy attached.",
+    true
+);
+
+CVAR_INT("r.shadowmapsize",
+    "Resolution of shadow maps.",
+    1048
+);
+
+CVAR_INT("a.logverbosity",
+    "0: Errors"
+    "1: Warnings"
+    "2: Info"
+    "3: Debug",
+    3
+);
+
 void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
 {
     std::cout << "Initializing Anvil..." << std::endl;
