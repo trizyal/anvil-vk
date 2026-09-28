@@ -6,10 +6,24 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 source_dir = os.path.abspath(os.path.join(script_dir, '..', 'source'))
 shaders_dir = os.path.abspath(os.path.join(script_dir, '..', 'shaders'))
 examples_dir = os.path.abspath(os.path.join(script_dir, '..', 'examples'))
+tml_dir = os.path.abspath(os.path.join(script_dir, '..', 'external', 'tml', 'include'))
 output_dir = os.path.abspath(os.path.join(script_dir, 'output'))
 
+def read_cmake(in_filename, in_outfile):
+    # Write the header
+    in_outfile.write(f"\n// {'=' * 42}\n")
+    in_outfile.write(f"// {in_filename}\n")
+    in_outfile.write(f"// {'=' * 42}\n\n")
+
+    # Write the source code
+    try:
+        with open(in_filename, 'r', encoding='utf-8') as local_infile:
+            in_outfile.write(local_infile.read() + '\n')
+    except Exception as e:
+        in_outfile.write(f"// Could not read file: {e}\n")
+
 # Default configuration
-directories_to_walk = [source_dir, shaders_dir]
+directories_to_walk = [source_dir, shaders_dir, tml_dir]
 output_filename = 'AnvilCodebase.txt'
 
 # Check for command-line arguments
@@ -42,7 +56,7 @@ output_file = os.path.abspath(os.path.join(output_dir, output_filename))
 
 allowed_extensions = ('.cpp', '.h', '.slang')
 # Folders to ignore so we don't grab third-party code
-exclude_folders = {'cmake-build-debug', 'cmake-build-release', 'external'}
+exclude_folders = {'cmake-build-debug', 'cmake-build-release'}
 
 with open(output_file, 'w', encoding='utf-8') as outfile:
     # Iterate through all target directories (source + optional examples)
@@ -66,5 +80,15 @@ with open(output_file, 'w', encoding='utf-8') as outfile:
                             outfile.write(infile.read() + '\n')
                     except Exception as e:
                         outfile.write(f"// Could not read file: {e}\n")
+
+    # Get the CMakeLists.txts
+
+    filename1 = "../CMakeLists.txt"
+    filename2 = "../external/CMakeLists.txt"
+    filename3 = "../examples/CMakeLists.txt"
+    read_cmake(filename1, outfile)
+    read_cmake(filename2, outfile)
+    read_cmake(filename3, outfile)
+
 
 print(f"Successfully combined files into {output_file}")
