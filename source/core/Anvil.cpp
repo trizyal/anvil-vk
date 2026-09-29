@@ -28,10 +28,12 @@ CVAR_INT("r.shadowmapsize",
 );
 
 CVAR_INT("a.logverbosity",
-    "0: Errors"
-    "1: Warnings"
-    "2: Info"
-    "3: Debug",
+    "0: Fatal"
+    "1: Error"
+    "2: Warning"
+    "3: Info"
+    "4: Debug"
+    "5: Trace",
     3
 );
 
