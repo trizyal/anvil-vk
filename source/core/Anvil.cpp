@@ -103,6 +103,8 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
 
     while (!window->bShouldClose())
     {
+        SCOPE_CPU;
+        
         auto frame_start = std::chrono::high_resolution_clock::now();
 
         Window::pollEvents();
@@ -190,6 +192,8 @@ Renderer& Anvil::getRenderer()
 
 void Anvil::triggerShaderHotReload()
 {
+    SCOPE_CPU;
+
     if (shaderReloadQueue.empty()) return;
 
     LOG_DEBUG("[Anvil] Hot-reload triggered. Pausing GPU.");

@@ -21,6 +21,7 @@ void RenderDoc::InitializeRenderDoc()
 {
     SCOPE_CPU;
     LOG_TRACE("Initializing RenderDoc.");
+    
     pRENDERDOC_GetAPI RENDERDOC_GetAPI = nullptr;
 
 #ifdef _WIN32

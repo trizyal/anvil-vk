@@ -9,6 +9,8 @@
 
 void SceneManager::discoverScenes(const std::string& sceneDirectory)
 {
+    SCOPE_CPU;
+
     availableScenes.clear();
 
     if (!std::filesystem::exists(sceneDirectory))
@@ -104,6 +106,8 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
 
 void SceneManager::reloadActiveScene(VulkanContext& inContext, const Material& inMaterial, Camera& camera, Scene& scene)
 {
+    SCOPE_CPU;
+
     ENSURE(activeSceneIndex >= 0, "SceneIndex is bad.");
     loadScene(static_cast<uint32_t>(activeSceneIndex), inContext, inMaterial, camera, scene);
 }

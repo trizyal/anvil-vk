@@ -18,6 +18,7 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
 {
     SCOPE_CPU;
     LOG_TRACE("Creating Swapchain");
+
     pContext = &inAnvilContext;
 
     vkb::SwapchainBuilder vkb_swapchain_builder{
@@ -163,6 +164,7 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 void Swapchain::createDepthAttachment()
 {
     SCOPE_CPU;
+
     // Create depth image via VMA
     VkImageCreateInfo depth_image_info{};
     depth_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

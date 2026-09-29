@@ -15,6 +15,8 @@
 bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
                                     VkFormat depthFormat, std::string* outError)
 {
+    SCOPE_CPU;
+
     pContext = &inContext;
     bool bSuccess = true;
 
@@ -231,6 +233,7 @@ VkPipelineLayout DebugPass::getForwardLayout() const
 
 void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos)
 {
+    SCOPE_CPU;
     // CRITICAL FIX: Only allocate from the pool if we haven't done it yet!
     if (set_Deferred.descriptorSet == VK_NULL_HANDLE)
     {

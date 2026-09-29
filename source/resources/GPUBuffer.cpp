@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "DebugNames.h"
+#include "Trace.h"
 #include "VulkanContext.h"
 
 GPUBuffer::GPUBuffer(GPUBuffer&& other) noexcept
@@ -35,6 +36,8 @@ GPUBuffer& GPUBuffer::operator=(GPUBuffer&& other) noexcept
 void GPUBuffer::createBuffer(const VulkanContext& inContext, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
     D_DEFN)
 {
+    SCOPE_CPU;
+
     // Clean up if this object wrapper is being reused
     if (buffer != VK_NULL_HANDLE)
     {
@@ -68,6 +71,8 @@ void GPUBuffer::createBuffer(const VulkanContext& inContext, const void* inData,
 
 void GPUBuffer::destroyBuffer()
 {
+    SCOPE_CPU;
+
     if (buffer != VK_NULL_HANDLE && allocation != VK_NULL_HANDLE)
     {
         vmaDestroyBuffer(allocator, buffer, allocation);

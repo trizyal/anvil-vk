@@ -5,6 +5,7 @@
 
 #include <utility>
 
+#include "Trace.h"
 #include "VulkanResult.h"
 
 ShaderModule::ShaderModule(ShaderModule&& other) noexcept
@@ -28,6 +29,8 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& other) noexcept
 void ShaderModule::createShaderModule(const VulkanContext& inContext, const Shaders::ShaderCompileResult& inSPIRV
         D_DEFN)
 {
+    SCOPE_CPU;
+
     device = inContext.device;
     if (!inSPIRV.isValid())
     {

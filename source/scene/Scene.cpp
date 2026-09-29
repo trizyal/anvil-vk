@@ -13,6 +13,8 @@ Scene::~Scene()
 
 void Scene::createScene(VulkanContext& inContext)
 {
+    SCOPE_CPU;
+
     pContext = &inContext;
 
     // Create the UBO

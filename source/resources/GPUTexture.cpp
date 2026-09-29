@@ -40,6 +40,8 @@ GPUTexture& GPUTexture::operator=(GPUTexture&& other) noexcept
 
 void GPUTexture::destroyTexture()
 {
+    SCOPE_CPU;
+
     if (!pContext)
     {
         return;
@@ -211,6 +213,8 @@ void GPUTexture::createTexture(const VulkanContext& inContext, const std::string
 
 void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4])
 {
+    SCOPE_CPU;
+
     destroyTexture();
     pContext = &inContext;
 
@@ -266,6 +270,8 @@ void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const u
 
 void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage D_DEFN)
 {
+    SCOPE_CPU;
+
     destroyTexture();
     pContext = &inContext;
 
@@ -329,6 +335,8 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width
 void GPUTexture::createImage(const uint32_t width, const uint32_t height, const uint32_t mipLevels,
                              const VkFormat format D_DEFN)
 {
+    SCOPE_CPU;
+
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     image_info.imageType = VK_IMAGE_TYPE_2D;
@@ -354,6 +362,8 @@ void GPUTexture::createImage(const uint32_t width, const uint32_t height, const 
 
 void GPUTexture::createImageView(const uint32_t mipLevels, const VkFormat format D_DEFN)
 {
+    SCOPE_CPU;
+
     VkImageViewCreateInfo image_view_info{};
     image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     image_view_info.image = image;
@@ -371,6 +381,8 @@ void GPUTexture::createImageView(const uint32_t mipLevels, const VkFormat format
 
 void GPUTexture::createSampler(const uint32_t mipLevels D_DEFN)
 {
+    SCOPE_CPU;
+
     VkSamplerCreateInfo sampler_info{};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     sampler_info.magFilter = VK_FILTER_LINEAR;

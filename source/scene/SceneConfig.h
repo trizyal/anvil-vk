@@ -17,6 +17,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Trace.h"
+
 /**
  * @brief Represents a deserialized scene configuration loaded from disk.
  *
@@ -58,6 +60,8 @@ struct SceneConfig
      */
     static bool LoadFromFile(const std::string filePath, SceneConfig& outConfig)
     {
+        SCOPE_CPU;
+
         std::ifstream file(filePath);
         if (!file.is_open())
         {

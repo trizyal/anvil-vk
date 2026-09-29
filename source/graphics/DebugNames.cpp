@@ -10,6 +10,8 @@
 #include <sstream>
 #include <cstring>
 
+#include "Trace.h"
+
 namespace VulkanDebug
 {
     VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
@@ -61,6 +63,8 @@ namespace VulkanDebug
 
     void SetObjectName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType, const char* inDebugName)
     {
+        SCOPE_CPU;
+
         if (!inDevice || !inObjectHandle || !vkSetDebugUtilsObjectNameEXT)
         {
             return;
@@ -78,6 +82,8 @@ namespace VulkanDebug
     void SetAutoName(VkDevice inDevice, uint64_t inObjectHandle, VkObjectType inObjectType,
         const char* inName, std::source_location location)
     {
+        SCOPE_CPU;
+        
         std::string final_name;
 
         // Extract file name

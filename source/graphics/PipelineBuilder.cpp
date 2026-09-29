@@ -5,6 +5,8 @@
 
 #include <stdexcept>
 
+#include "Trace.h"
+
 PipelineBuilder::PipelineBuilder()
 {
     // Initialise standard structs to safe zero values
@@ -167,6 +169,8 @@ PipelineBuilder& PipelineBuilder::enableAdditiveBlending()
 
 AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout D_DEFN) const
 {
+    SCOPE_CPU;
+
     // Viewport state setup
     // Using dynamic states so we can resize the window
     VkPipelineViewportStateCreateInfo viewport_state_info{};

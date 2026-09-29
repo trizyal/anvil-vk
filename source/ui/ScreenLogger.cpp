@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "Logger.h"
+#include "Trace.h"
 
 std::vector<UILogMessage> ScreenLogger::messages;
 std::mutex ScreenLogger::queueMutex;
@@ -18,6 +19,8 @@ void ScreenLogger::AddLog(const std::string& inText, const ImVec4 inColor)
 
 void ScreenLogger::DrawOverlay()
 {
+    SCOPE_CPU;
+
     const float dt = ImGui::GetIO().DeltaTime;
 
     // Update and Cull phase

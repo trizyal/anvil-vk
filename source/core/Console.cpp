@@ -4,6 +4,8 @@
 #include "Console.h"
 #include <sstream>
 
+#include "Trace.h"
+
 /**
  * @brief Internal flag tracking whether the console UI should scroll to the bottom of the log.
  */
@@ -152,6 +154,8 @@ void Console::ClearScroll()
 
 void Console::Execute(const std::string& commandLine)
 {
+    SCOPE_CPU;
+
     Print("] " + commandLine);
 
     // Save to command history, preventing consecutive duplicates

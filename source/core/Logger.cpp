@@ -8,6 +8,7 @@
 
 #include "Console.h"
 #include "Ensure.h"
+#include "Trace.h"
 
 // Initialize static members
 std::ofstream Logger::s_FileStream;
@@ -15,7 +16,9 @@ std::mutex Logger::s_LogMutex;
 
 void Logger::InitializeLogger(const std::string& logFilePath)
 {
-    // 1. Ensure the target directory exists before creating the file
+    SCOPE_CPU;
+    
+    // Ensure the target directory exists before creating the file
     std::filesystem::path path(logFilePath);
     if (path.has_parent_path())
     {
@@ -102,6 +105,8 @@ std::string Logger::GetTimestamp()
 
 void Logger::LogMessage(LogLevel level, const std::source_location& location, const std::string& message)
 {
+    SCOPE_CPU;
+
     // Filter by CVar verbosity
     int verbosity = GetMaxVerbosity();
     int level_int = static_cast<int>(level);

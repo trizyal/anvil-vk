@@ -35,6 +35,8 @@ MaterialInstance& MaterialInstance::operator=(MaterialInstance&& other) noexcept
 
 void MaterialInstance::bindTexture(const std::string& name, const GPUTexture& inTexture)
 {
+    SCOPE_CPU;
+
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
         std::cerr << "Binding not found for: " << name << std::endl;
@@ -56,6 +58,8 @@ void MaterialInstance::bindTexture(const std::string& name, const GPUTexture& in
 
 void MaterialInstance::bindUniformBuffer(const std::string& name, const GPUBuffer& inBuffer)
 {
+    SCOPE_CPU;
+
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
         return;
@@ -73,6 +77,8 @@ void MaterialInstance::bindUniformBuffer(const std::string& name, const GPUBuffe
 
 void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffer& inBuffer)
 {
+    SCOPE_CPU;
+
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
         return;

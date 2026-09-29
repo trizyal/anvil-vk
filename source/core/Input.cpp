@@ -5,6 +5,8 @@
 
 #include <cstring>
 
+#include "Trace.h"
+
 // Define static variables
 GLFWwindow* Input::s_glfwWindow = nullptr;
 bool Input::s_CurrentKeys[KEY_COUNT] = {false};
@@ -22,6 +24,8 @@ void Input::InitializeInputSystem(GLFWwindow* inWindow)
 
 void Input::UpdateInputs()
 {
+    SCOPE_CPU;
+
     // Save previous frame's states
     std::memcpy(s_PreviousKeys, s_CurrentKeys, sizeof(s_CurrentKeys));
     std::memcpy(s_PreviousMouseButtons, s_CurrentMouseButtons, sizeof(s_CurrentMouseButtons));

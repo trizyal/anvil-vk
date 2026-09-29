@@ -9,6 +9,8 @@
 
 void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderStageFlagBits stage)
 {
+    SCOPE_CPU;
+
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
 
     if (!reflection)
@@ -141,6 +143,8 @@ bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCom
 
 void ShaderProgram::destroyProgram()
 {
+    SCOPE_CPU;
+    
     if (pContext)
     {
         vertexShader.destroyShaderModule();

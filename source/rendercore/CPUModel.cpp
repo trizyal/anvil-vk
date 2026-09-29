@@ -111,6 +111,7 @@ namespace
 void CPUModel::loadGLTF(const std::string& filePath)
 {
     SCOPE_CPU;
+
     cgltf_options options{};
     cgltf_data* gltf_data = nullptr;
 
@@ -190,6 +191,7 @@ void CPUModel::loadGLTF(const std::string& filePath)
 void CPUModel::updateAllMatrices()
 {
     SCOPE_CPU;
+
     for (const Index32 rootNodeIndex : sceneRootNodes)
     {
         ComputeWorldMatrices(*this, rootNodeIndex, glm::mat4(1.0f));
@@ -199,6 +201,7 @@ void CPUModel::updateAllMatrices()
 void CPUModel::applyAnimation(const Index32 animationIndex, const float time)
 {
     SCOPE_CPU;
+
     if (animationIndex < 0 || animationIndex >= animations.size())
     {
         return;
@@ -286,6 +289,7 @@ void CPUModel::applyAnimation(const Index32 animationIndex, const float time)
 void CPUModel::computeJointMatrices(const Index32 nodeIndex, std::vector<glm::mat4>& matrices) const
 {
     SCOPE_CPU;
+
     if (nodeIndex < 0 || nodeIndex >= nodes.size())
     {
         return;

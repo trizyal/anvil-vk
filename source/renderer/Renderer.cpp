@@ -274,9 +274,12 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     vkCmdEndRendering(cmd);
 
     // Transition image to present layout
-    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    {
+        SCOPE_GPU(tracyVkCtx, cmd, "Transition to Present");
+        TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    }
 
     gpuProfiler.endGPUProfilerFrame(cmd, anvilFrameIndex);
 

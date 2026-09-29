@@ -14,6 +14,7 @@
 #include "Swapchain.h"
 #include "VulkanContext.h"
 #include "DebugNames.h"
+#include "Trace.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
 
@@ -37,6 +38,8 @@ namespace
 
 bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, Swapchain* inSwapchain)
 {
+    SCOPE_CPU;
+
     pContext = inContext;
 
     VkDevice device = inContext->device;
@@ -132,6 +135,8 @@ UIRenderer::~UIRenderer()
 
 void UIRenderer::BeginUIFrame()
 {
+    SCOPE_CPU;
+
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -139,6 +144,8 @@ void UIRenderer::BeginUIFrame()
 
 void UIRenderer::EndUIFrame()
 {
+    SCOPE_CPU;
+
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {

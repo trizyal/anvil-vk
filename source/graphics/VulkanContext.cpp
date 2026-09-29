@@ -4,8 +4,6 @@
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
-#include "Logger.h"
-
 #ifndef NDEBUG
     // Fills new allocations with a bit pattern to catch uninitialized memory reads
     #define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
@@ -43,9 +41,12 @@
 #include "VulkanResult.h"
 #include "Window.h"
 #include "VulkanConfig.h"
+#include "Logger.h"
+#include "Trace.h"
 
 void VulkanContext::initializeVulkanContext(Window& inWindow)
 {
+    SCOPE_CPU;
     LOG_TRACE("Initializing VulkanContext");
 
     pWindow = &inWindow;
@@ -230,6 +231,8 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
 void VulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction) const
 {
+    SCOPE_CPU;
+    
     VkCommandBufferAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     alloc_info.commandPool = uploadCommandPool;

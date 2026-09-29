@@ -16,6 +16,7 @@
 #include "DebugModes.h"
 #include "DebugPass.h"
 #include "RenderDoc.h"
+#include "Trace.h"
 
 namespace
 {
@@ -53,6 +54,8 @@ namespace
 
 void UI::LoadFonts()
 {
+    SCOPE_CPU;
+
     ImGuiIO& io = ImGui::GetIO();
 
     base = io.Fonts->AddFontFromFileTTF(FontPath, 22.0f);
@@ -66,6 +69,8 @@ void UI::LoadFonts()
 
 void UI::ApplyAnvilTheme()
 {
+    SCOPE_CPU;
+
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
@@ -76,6 +81,8 @@ void UI::ApplyAnvilTheme()
 
 void UI::FrameStats(const ::FrameStats& stats, bool* pOpen)
 {
+    SCOPE_CPU;
+
     const float PAD = 10.0f;
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 workPos = viewport->WorkPos;
@@ -141,6 +148,8 @@ void UI::FrameStats(const ::FrameStats& stats, bool* pOpen)
 
 void UI::RenderWorldAxes(const glm::mat4& viewMatrix)
 {
+    SCOPE_CPU;
+
     // TODO: Clean up the DrawDebugAxis function
 
     // Position a small transparent window in the bottom right
@@ -223,6 +232,8 @@ void UI::RenderWorldAxes(const glm::mat4& viewMatrix)
 void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry,
                           const std::function<void()>& onAbort)
 {
+    SCOPE_CPU;
+
     ImGui::OpenPopup("Shader Compilation Error");
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -267,6 +278,8 @@ void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<v
 
 bool UI::DrawDebugMenu(uint32_t& currentMode)
 {
+    SCOPE_CPU;
+
     bool bChanged = false;
     if (ImGui::BeginMainMenuBar())
     {
@@ -293,6 +306,8 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
                        int& activeSceneIdx,
                        uint32_t& outSelectedScene)
 {
+    SCOPE_CPU;
+
     bool bChanged = false;
     outSelectedScene = static_cast<uint32_t>(activeSceneIdx);
 
@@ -372,6 +387,8 @@ static int s_HistoryPosition = -1;
 
 void UI::DrawConsoleWindow(const int* pState)
 {
+    SCOPE_CPU;
+
     if (*pState == 0)
     {
         return;
@@ -482,6 +499,8 @@ namespace
 {
     int ConsoleInputCallback(ImGuiInputTextCallbackData* data)
     {
+        SCOPE_CPU;
+
         // Block the grave accent (`) and tilde (~) from being typed
         if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
         {

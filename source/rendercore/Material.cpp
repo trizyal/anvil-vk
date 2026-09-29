@@ -110,6 +110,8 @@ void Material::buildMaterialFromProgram(VulkanContext& inContext, const ShaderPr
 
 MaterialInstance Material::allocateSet(const uint32_t setIndex) const
 {
+    SCOPE_CPU;
+
     MaterialInstance instance;
     instance.pContext = pContext;
     instance.pParentMaterial = this;
@@ -132,11 +134,15 @@ MaterialInstance Material::allocateSet(const uint32_t setIndex) const
 
 bool Material::hasBinding(const std::string& name) const
 {
+    SCOPE_CPU;
+
     return pActiveProgram && pActiveProgram->bindingMap.contains(name);
 }
 
 ShaderBinding Material::getBinding(const std::string& name) const
 {
+    SCOPE_CPU;
+
     return pActiveProgram->bindingMap.at(name);
 
 #if 0 // not sure which way is better yet
@@ -151,11 +157,15 @@ ShaderBinding Material::getBinding(const std::string& name) const
 
 bool Material::hasSet(uint32_t setIndex) const
 {
+    SCOPE_CPU;
+
     return setIndex < descriptorSetLayouts.size() && descriptorSetLayouts[setIndex] != VK_NULL_HANDLE;
 }
 
 void Material::destroyMaterial()
 {
+    SCOPE_CPU;
+
     if (pContext)
     {
         if (materialDescriptorPool)
