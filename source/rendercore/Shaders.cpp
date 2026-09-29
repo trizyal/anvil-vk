@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "Logger.h"
+
 namespace Shaders
 {
     SlangStage ConvertToSlangStage(const ShaderType inShaderType)
@@ -30,13 +32,16 @@ namespace Shaders
     {
         // Open in binary mode!
         std::ofstream file(filename, std::ios::out | std::ios::binary);
-        if (file.is_open()) {
+        if (file.is_open())
+        {
             // Cast the uint32_t array to a char array so file.write can process it bytes-wise
             file.write(reinterpret_cast<const char*>(inSPIRV.data()), static_cast<std::streamsize>(inSPIRV.size() * sizeof(uint32_t)));
             file.close();
-            std::cout << "Saved SPIR-V dump to: " << filename << "\n";
-        } else {
-            std::cerr << "Failed to open file for SPIR-V dump: " << filename << "\n";
+            LOG_INFO("Saved SPIR-V dump to: {}", filename);
+        }
+        else
+        {
+            LOG_ERROR("Failed to open file for SPIR-V dump: {}", filename);
         }
     }
 } //Shaders

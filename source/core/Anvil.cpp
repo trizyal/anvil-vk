@@ -75,8 +75,8 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     initialized = true;
     const auto cpuEnd = std::chrono::high_resolution_clock::now();
     const auto initTime = std::chrono::duration<float, std::milli>(cpuEnd - cpuStart).count();
-    std::cout << "Anvil initialization complete!" << std::endl;
-    std::cout << "Initialization took:" << initTime << "ms" << std::endl;
+    LOG_INFO("Anvil initialization complete!");
+    LOG_INFO("Initialization took: {}ms", initTime);
 }
 
 void Anvil::shutdownAnvil()
@@ -191,7 +191,7 @@ void Anvil::triggerShaderHotReload()
 {
     if (shaderReloadQueue.empty()) return;
 
-    std::cout << "[Anvil] Hot-reload triggered. Pausing GPU..." << std::endl;
+    LOG_DEBUG("[Anvil] Hot-reload triggered. Pausing GPU.");
     vkDeviceWaitIdle(context.device);
 
     bool all_succeeded = true;
@@ -211,13 +211,14 @@ void Anvil::triggerShaderHotReload()
     {
         bShaderErrorModalOpen = false;
         activeShaderErrorLog.clear();
-        std::cout << "[Anvil] Hot-reload complete." << std::endl;
+        LOG_DEBUG("Shader Hot-reload complete.");
         LOGUI("[Anvil] Shaders successfully reloaded!");
     }
     else
     {
         bShaderErrorModalOpen = true;
         activeShaderErrorLog = accumulated_errors;
+        LOG_ERROR("Shader hot-reload failed.");
         LOGUI("[Anvil] Shader hot-reload failed!", AnvilColor::Red);
     }
 }

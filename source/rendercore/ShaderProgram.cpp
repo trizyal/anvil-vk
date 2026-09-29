@@ -18,8 +18,6 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
     }
 
     const uint32_t param_count = reflection->getParameterCount();
-    std::cout << "ParamCount received in AnvilMaterial: " << param_count << std::endl;
-
     for (uint32_t i = 0; i < param_count; i++)
     {
         slang::VariableLayoutReflection* var_layout = reflection->getParameterByIndex(i);
@@ -43,8 +41,6 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
             }
 
             rawReflectedPushConstants.push_back(range);
-
-            std::cout << "Reflected Push Constant: " << param_name << " Size: " << range.size << "\n";
             continue;
         }
 

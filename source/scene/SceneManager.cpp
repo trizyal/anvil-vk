@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "SceneManager.h"
+
+#include "Logger.h"
 #include "ScreenLogger.h"
 #include "Trace.h"
 
@@ -27,7 +29,7 @@ void SceneManager::discoverScenes(const std::string& sceneDirectory)
             if (SceneConfig::LoadFromFile(entry.path().string(), scene_config))
             {
                 availableScenes.push_back(scene_config);
-                std::cout << "[SceneManager] Discovered Scene: " << scene_config.sceneName << std::endl;
+                LOG_INFO("Discovered Scene: {}", scene_config.sceneName);
             }
         }
     }
@@ -39,7 +41,7 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
 
     if (sceneIndex >= availableScenes.size())
     {
-        std::cerr << "[SceneManager] Scene does not exist with index: " << sceneIndex << std::endl;
+        LOG_ERROR("Scene does not exist with index: {}", sceneIndex);
         return false;
     }
 
@@ -48,7 +50,8 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
     SceneConfig& scene_config = availableScenes[sceneIndex];
     if (!SceneConfig::LoadFromFile(scene_config.configPath, scene_config))
     {
-        std::cerr << "[SceneManager] Could not load scene config from file: " << scene_config.configPath << std::endl;
+        LOG_ERROR("Could not load scene config from file: {}", scene_config.configPath);
+        return false;
     }
 
     try
@@ -87,12 +90,13 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
 
         activeSceneIndex = static_cast<int>(sceneIndex);
 
+        LOG_INFO("Loaded Scene: {}", scene_config.sceneName);
         LOGUI("[SceneManager] Loaded Scene: " + scene_config.sceneName, AnvilColor::Blue);
         return true;
     }
     catch (const std::exception& e)
     {
-        std::cerr << "[SceneManager] Fatal Exception while loading: " << e.what() << std::endl;
+        LOG_ERROR("Fatal Exception while loading: {}", e.what());
         LOGUI("[SceneManager] Failed to load scene: " + scene_config.sceneName, AnvilColor::Red);
         return false;
     }
@@ -100,12 +104,6 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
 
 void SceneManager::reloadActiveScene(VulkanContext& inContext, const Material& inMaterial, Camera& camera, Scene& scene)
 {
-    if (activeSceneIndex >= 0)
-    {
-        loadScene(static_cast<uint32_t>(activeSceneIndex), inContext, inMaterial, camera, scene);
-    }
-    else
-    {
-        throw std::runtime_error("[SceneManager::reloadActiveScene] Something went wrong. SceneIndex is bad.");
-    }
+    ENSURE(activeSceneIndex >= 0, "SceneIndex is bad.");
+    loadScene(static_cast<uint32_t>(activeSceneIndex), inContext, inMaterial, camera, scene);
 }

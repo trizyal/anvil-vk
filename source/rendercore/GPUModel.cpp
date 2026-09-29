@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "Logger.h"
 #include "Trace.h"
 
 GPUModel::GPUModel(GPUModel&& other) noexcept
@@ -165,12 +166,13 @@ void GPUModel::createTextures(const CPUModel& inModel)
         }
         catch (...)
         {
-            std::cout << "Texture load failed for " << cpu_texture.name << ". Falling back to default." << std::endl;
-            std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
+            LOG_WARN("Texture load failed for {}. Falling back to default.",cpu_texture.name);
+            LOG_WARN("Color Space for {} is {}.", cpu_texture.name, (cpu_texture.isSRGB ? "SRGB" : "UNORM"));
 
             // Push an empty shell texture to maintain index alignment
             textures.emplace_back();
-#if 0 // Creates copies of default texture which we don't want
+
+#if DEPRECATED // Creates copies of default texture which we don't want
             GPUTexture fallback;
             fallback.createSolidColorTexture(*pContext, WhiteColor);
             textures.push_back(std::move(fallback));
