@@ -88,6 +88,7 @@ void Anvil::shutdownAnvil()
 
     vkDeviceWaitIdle(context.device);
 
+    Logger::ShutdownLogger();
     window.reset();
 
     initialized = false;
