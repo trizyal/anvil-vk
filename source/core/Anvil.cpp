@@ -42,6 +42,9 @@ CVAR_INT("a.logverbosity",
 void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
 {
     SCOPE_CPU;
+    std::string log_file = SAVED_DIR "/logs/log.txt";
+    Logger::InitializeLogger(log_file);
+
     LOG_TRACE("Initializing Anvil");
     const auto cpuStart = std::chrono::high_resolution_clock::now();
     if (initialized)

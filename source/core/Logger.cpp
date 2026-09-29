@@ -4,6 +4,7 @@
 #include "Logger.h"
 
 #include <chrono>
+#include <filesystem>
 
 #include "Console.h"
 #include "Ensure.h"
@@ -14,6 +15,20 @@ std::mutex Logger::s_LogMutex;
 
 void Logger::InitializeLogger(const std::string& logFilePath)
 {
+    // 1. Ensure the target directory exists before creating the file
+    std::filesystem::path path(logFilePath);
+    if (path.has_parent_path())
+    {
+        if (!std::filesystem::create_directories(path.parent_path()))
+        {
+            LOG_ERROR("Failed to create log directory: {}", path.parent_path().string());
+        }
+        else
+        {
+            LOG_INFO("Created log directory: {}", path.parent_path().string());
+        }
+    }
+
     // Open the log file, truncating any previous run's data
     s_FileStream.open(logFilePath, std::ios::out | std::ios::trunc);
     if (!s_FileStream.is_open())
@@ -21,8 +36,13 @@ void Logger::InitializeLogger(const std::string& logFilePath)
         // If the log file doesn't open
         // logging is done just in the terminal
         // It should not change any of the usecase though
-        LOG_ERROR("Failed to open log file.");
+        LOG_ERROR("Failed to open log file: {}.", logFilePath);
     }
+    else
+    {
+        LOG_INFO("Open log file: {}", logFilePath);
+    }
+
     LOG_INFO("Logger initialized.");
 }
 

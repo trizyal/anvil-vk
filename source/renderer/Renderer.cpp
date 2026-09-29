@@ -500,6 +500,7 @@ void Renderer::setupCommandBuffers()
 {
     SCOPE_CPU;
     LOG_TRACE("Setting up Command Buffers");
+
     VkCommandPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
