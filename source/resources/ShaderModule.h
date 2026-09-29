@@ -12,7 +12,7 @@
 #include <volk.h>
 
 #include "VulkanContext.h"
-#include "AnvilShaders.h"
+#include "Shaders.h"
 #include "DebugNames.h"
 
 /**

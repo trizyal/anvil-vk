@@ -5,7 +5,7 @@
 #define ANVIL_VK_SHADERS_H
 
 /**
- * @file AnvilShaders.h
+ * @file Shaders.h
  * @brief Data types and helper functions for Slang shader compilation requests and SPIR-V results.
  */
 

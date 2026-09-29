@@ -12,7 +12,7 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 
-#include "AnvilShaders.h"
+#include "Shaders.h"
 
 /**
  * @brief Runtime compiler wrapper around the Slang compilation API.

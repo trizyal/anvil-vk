@@ -12,7 +12,7 @@
 #include <slang-com-ptr.h>
 #include <slang-com-helper.h>
 
-#include "AnvilShaders.h"
+#include "Shaders.h"
 #include "Trace.h"
 using namespace Shaders;
 
