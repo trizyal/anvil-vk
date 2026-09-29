@@ -16,7 +16,7 @@
 #include "GPUBuffer.h"
 #include "GPUTexture.h"
 
-class AnvilMaterial;
+class Material;
 class VulkanContext;
 
 /**
@@ -40,7 +40,7 @@ struct PendingBufferBind
 /**
  * @brief A unique instance of an AnvilMaterial containing specific resource bindings.
  *
- * Spawned by an AnvilMaterial factory. Each instance owns a unique Vulkan descriptor set
+ * Spawned by an Material factory. Each instance owns a unique Vulkan descriptor set
  * allocated from the parent material's pool. It allows multiple objects to share the same
  * shader pipeline while using different textures or buffer data.
  *
@@ -48,7 +48,7 @@ struct PendingBufferBind
  */
 class MaterialInstance
 {
-    friend class AnvilMaterial;
+    friend class Material;
 
 public:
     MaterialInstance() = default;
@@ -64,7 +64,7 @@ private:
     VulkanContext* pContext = nullptr;
 
     /** Pointer to the factory material that generated this instance. */
-    const AnvilMaterial* pParentMaterial = nullptr;
+    const Material* pParentMaterial = nullptr;
 
     /** Queue of textures waiting to be written to the descriptor set. */
     std::vector<PendingTextureBind> pendingTextures;

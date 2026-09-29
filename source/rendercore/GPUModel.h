@@ -114,7 +114,7 @@ public:
     void createGPUModel(
         VulkanContext& inContext,
         const CPUModel& inModel,
-        const AnvilMaterial& inMaterial
+        const Material& inMaterial
     );
 
     /**
@@ -159,7 +159,7 @@ private:
      */
     void createMaterialDescriptorSets(
         const CPUModel& inModel,
-        const AnvilMaterial& inMaterial
+        const Material& inMaterial
     );
 
     /**

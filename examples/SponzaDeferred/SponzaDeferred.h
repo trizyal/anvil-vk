@@ -32,12 +32,12 @@ private:
 
     // Geometry Pass
     ShaderProgram shaderProgram_Geo;
-    AnvilMaterial material_Geo;
+    Material material_Geo;
     AnvilPipeline pipeline_Geo;
 
     // Lighting Pass
     ShaderProgram shaderProgram_Light;
-    AnvilMaterial material_Light;
+    Material material_Light;
     AnvilPipeline pipeline_Light;
 
     MaterialInstance sceneLightingSet; // Manages set 0 : GlobalSceneData

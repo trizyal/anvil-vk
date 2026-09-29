@@ -20,7 +20,7 @@ private:
     ShaderCompiler shaderCompiler;
 
     ShaderProgram myProgram; // Explicitly manage program layout
-    AnvilMaterial myMaterial;
+    Material myMaterial;
     AnvilPipeline pipeline = {};
 
 public:

@@ -35,7 +35,7 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
     return *this;
 }
 
-void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial)
+void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const Material& inMaterial)
 {
     SCOPE_CPU;
     // Destroy the old vulkan objects
@@ -179,7 +179,7 @@ void GPUModel::createTextures(const CPUModel& inModel)
     }
 }
 
-void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial)
+void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Material& inMaterial)
 {
     SCOPE_CPU;
     // Configure Set 1 - Model Data

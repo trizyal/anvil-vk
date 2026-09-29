@@ -13,7 +13,7 @@
 #include "Trace.h"
 #include "VulkanResult.h"
 
-void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram)
+void Material::buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram)
 {
     SCOPE_CPU;
 
@@ -108,7 +108,7 @@ void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const Sha
     SET_DNAME_HERE(pContext->device, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, inProgram.name.c_str());
 }
 
-MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
+MaterialInstance Material::allocateSet(const uint32_t setIndex) const
 {
     MaterialInstance instance;
     instance.pContext = pContext;
@@ -130,12 +130,12 @@ MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
     return instance;
 }
 
-bool AnvilMaterial::hasBinding(const std::string& name) const
+bool Material::hasBinding(const std::string& name) const
 {
     return pActiveProgram && pActiveProgram->bindingMap.contains(name);
 }
 
-ShaderBinding AnvilMaterial::getBinding(const std::string& name) const
+ShaderBinding Material::getBinding(const std::string& name) const
 {
     return pActiveProgram->bindingMap.at(name);
 
@@ -143,18 +143,18 @@ ShaderBinding AnvilMaterial::getBinding(const std::string& name) const
     const auto it = pActiveProgram->bindingMap.find(name);
     if (it == pActiveProgram->bindingMap.end())
     {
-        throw std::runtime_error("AnvilMaterial binding does not exist: " + name);
+        throw std::runtime_error("Material binding does not exist: " + name);
     }
     return it->second;
 #endif
 }
 
-bool AnvilMaterial::hasSet(uint32_t setIndex) const
+bool Material::hasSet(uint32_t setIndex) const
 {
     return setIndex < descriptorSetLayouts.size() && descriptorSetLayouts[setIndex] != VK_NULL_HANDLE;
 }
 
-void AnvilMaterial::destroyMaterial()
+void Material::destroyMaterial()
 {
     if (pContext)
     {

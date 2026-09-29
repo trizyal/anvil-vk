@@ -42,7 +42,7 @@ public:
     ShaderProgram program_Deferred;
 
     /** Material layout for the deferred debug pipeline. */
-    AnvilMaterial material_Deferred;
+    Material material_Deferred;
 
     /** Graphics pipeline for rendering a fullscreen deferred quad. */
     AnvilPipeline pipeline_Deferred;
@@ -54,7 +54,7 @@ public:
     ShaderProgram program_Forward;
 
     /** Material layout for the forward debug pipeline. */
-    AnvilMaterial material_Forward;
+    Material material_Forward;
 
     /** Pipeline used for solid debug overlays (e.g., Normals, Albedo). */
     AnvilPipeline pipeline_Forward_Opaque;

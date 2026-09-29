@@ -37,7 +37,7 @@ private:
     Scene boxScene;
 
     ShaderProgram boxProgram; // Explicitly manage program layout
-    AnvilMaterial boxMaterial;
+    Material boxMaterial;
     MaterialInstance globalSet; // Manage the scene UBO
 
     CPUModel cpuModel;

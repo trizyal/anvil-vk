@@ -41,11 +41,11 @@ private:
     ShaderCompiler shaderCompiler;
 
     ShaderProgram shaderProgram_Geo;
-    AnvilMaterial material_Geo;
+    Material material_Geo;
     AnvilPipeline pipeline_Geo;
 
     ShaderProgram shaderProgram_Light;
-    AnvilMaterial material_Light;
+    Material material_Light;
     AnvilPipeline pipeline_Light;
     MaterialInstance sceneLightingSet;
 };

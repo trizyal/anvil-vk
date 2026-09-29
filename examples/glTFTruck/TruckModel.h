@@ -37,7 +37,7 @@ private:
     Scene myScene;
 
     ShaderProgram myProgram; // Explicitly manage program layout
-    AnvilMaterial myMaterial;
+    Material myMaterial;
     MaterialInstance globalSet;
 
     CPUModel cpuModel;

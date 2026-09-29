@@ -35,7 +35,7 @@ private:
     Camera camera;
 
     ShaderProgram myProgram; // Explicitly manage program layout
-    AnvilMaterial myMaterial;
+    Material myMaterial;
 
     CPUModel cpuModel;
     GPUModel gpuModel;

@@ -54,7 +54,7 @@ public:
      * @param scene Reference to the active Scene object to be updated with new lighting data.
      * @return True if the scene was successfully loaded and deployed to the GPU; false otherwise.
      */
-    bool loadScene(uint32_t sceneIndex, VulkanContext& inContext, const AnvilMaterial& inMaterial,
+    bool loadScene(uint32_t sceneIndex, VulkanContext& inContext, const Material& inMaterial,
         Camera& camera, Scene& scene);
 
     /**
@@ -69,7 +69,7 @@ public:
      *
      * @throws std::runtime_error If called while activeSceneIndex is invalid.
      */
-    void reloadActiveScene(VulkanContext& inContext, const AnvilMaterial& inMaterial,
+    void reloadActiveScene(VulkanContext& inContext, const Material& inMaterial,
         Camera& camera, Scene& scene);
 };
 

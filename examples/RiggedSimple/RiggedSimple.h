@@ -37,7 +37,7 @@ private:
     Scene riggedScene;
 
     ShaderProgram riggedProgram; // Explicitly manage program layout
-    AnvilMaterial riggedMaterial;
+    Material riggedMaterial;
     MaterialInstance globalSet;  // Manage the scene UBO
 
     CPUModel cpuModel;

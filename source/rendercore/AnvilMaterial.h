@@ -29,17 +29,17 @@
  *
  * @warning Only stores one pair of vertex and fragment shaders, may need re-architecting.
  */
-class AnvilMaterial
+class Material
 {
 public:
-    AnvilMaterial() = default;
-    ~AnvilMaterial() = default;
+    Material() = default;
+    ~Material() = default;
 
-    AnvilMaterial(const AnvilMaterial&) = delete;
-    AnvilMaterial& operator=(const AnvilMaterial&) = delete;
+    Material(const Material&) = delete;
+    Material& operator=(const Material&) = delete;
 
-    AnvilMaterial(AnvilMaterial&&) noexcept = default;
-    AnvilMaterial& operator=(AnvilMaterial&&) noexcept = default;
+    Material(Material&&) noexcept = default;
+    Material& operator=(Material&&) noexcept = default;
 
     /** Reflected layouts for the material's descriptor sets (Index 0 = Set 0, etc). */
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;

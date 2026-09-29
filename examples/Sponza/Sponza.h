@@ -28,7 +28,7 @@ private:
     GPUModel gpuModel;
 
     ShaderProgram sponzaProgram;
-    AnvilMaterial sponzaMaterial;
+    Material sponzaMaterial;
     MaterialInstance globalSet; // Manages Set 0
     Scene sponzaScene;
     Camera camera;
