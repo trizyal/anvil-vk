@@ -78,8 +78,8 @@ void DirectionalLight::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"DirectionalLight", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"DirectionalLight", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"DirectionalLight", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"DirectionalLight", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

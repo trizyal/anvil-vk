@@ -103,8 +103,8 @@ public:
      */
     bool buildProgram(VulkanContext& inContext,
                       ShaderCompiler& inCompiler,
-                      const AnvilShaders::ShaderCompileRequest& inVertReq,
-                      const AnvilShaders::ShaderCompileRequest& inFragReq,
+                      const Shaders::ShaderCompileRequest& inVertReq,
+                      const Shaders::ShaderCompileRequest& inFragReq,
                       std::string* outErrorMessage = nullptr);
 
     /**

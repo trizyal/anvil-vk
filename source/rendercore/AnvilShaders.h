@@ -19,7 +19,7 @@
 /**
  * @brief Functions and structures to support shader compilation
  */
-namespace AnvilShaders
+namespace Shaders
 {
     /**
      * @brief Supported pipeline shader execution stages.
@@ -85,6 +85,6 @@ namespace AnvilShaders
      * @return Corresponding SlangStage value required by the Slang API.
      */
     SlangStage ConvertToSlangStage(ShaderType inShaderType);
-} //AnvilShaders
+} //Shaders
 
 #endif //ANVIL_VK_SHADERS_H

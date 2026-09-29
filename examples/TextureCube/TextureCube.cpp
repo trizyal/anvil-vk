@@ -69,8 +69,8 @@ void TextureCube::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"TextureCube", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"TextureCube", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"TextureCube", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"TextureCube", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

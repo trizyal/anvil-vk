@@ -65,8 +65,8 @@ void CesiumMan::loadPipeline()
         cesiumProgram.destroyProgram();
     }
 
-    AnvilShaders::ShaderCompileRequest vReq{"CesiumMan", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"CesiumMan", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"CesiumMan", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"CesiumMan", "fragmentMain", Shaders::ST_Fragment};
 
     // Compile, reflect, and build bindings (handles textures, UBOs, and SSBOs automatically)
     cesiumProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

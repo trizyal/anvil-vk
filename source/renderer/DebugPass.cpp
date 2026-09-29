@@ -19,8 +19,8 @@ bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
     bool bSuccess = true;
 
     // Deferred Fullscreen Debug Pipeline
-    AnvilShaders::ShaderCompileRequest def_v{"DebugDeferred", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest def_f{"DebugDeferred", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest def_v{"DebugDeferred", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest def_f{"DebugDeferred", "fragmentMain", Shaders::ST_Fragment};
 
     if (program_Deferred.buildProgram(*pContext, inCompiler, def_v, def_f, outError))
     {
@@ -47,8 +47,8 @@ bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
     }
 
     // Forward Geometry Debug Pipelines
-    AnvilShaders::ShaderCompileRequest fwd_v{"DebugForward", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fwd_f{"DebugForward", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest fwd_v{"DebugForward", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fwd_f{"DebugForward", "fragmentMain", Shaders::ST_Fragment};
 
     if (program_Forward.buildProgram(*pContext, inCompiler, fwd_v, fwd_f, outError))
     {

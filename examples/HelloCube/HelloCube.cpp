@@ -146,8 +146,8 @@ void HelloCube::loadPipeline()
         myProgram.destroyProgram();
     }
 
-    AnvilShaders::ShaderCompileRequest vReq{"HelloCube", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"HelloCube", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"HelloCube", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"HelloCube", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

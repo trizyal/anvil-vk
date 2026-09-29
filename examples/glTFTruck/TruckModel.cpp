@@ -78,8 +78,8 @@ void TruckModel::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"TruckModel", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"TruckModel", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"TruckModel", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"TruckModel", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

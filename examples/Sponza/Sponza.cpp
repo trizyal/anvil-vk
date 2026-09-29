@@ -68,8 +68,8 @@ bool Sponza::loadPipeline(std::string* outErrorMessage)
     std::cout << "Loading Pipeline." << std::endl;
     shaderCompiler.resetSession();
 
-    AnvilShaders::ShaderCompileRequest v_req{"Sponza", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"Sponza", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"Sponza", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"Sponza", "fragmentMain", Shaders::ST_Fragment};
 
     // Try building new program into a temporary instance
     ShaderProgram new_program;

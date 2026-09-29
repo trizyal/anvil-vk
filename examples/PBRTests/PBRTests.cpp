@@ -75,8 +75,8 @@ bool PBRTests::loadPipelines(std::string* outErrorMessage)
 
 bool PBRTests::loadGeometryPipeline(std::string* outErrorMessage)
 {
-    AnvilShaders::ShaderCompileRequest v_req{"PBRGeometry", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"PBRGeometry", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"PBRGeometry", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"PBRGeometry", "fragmentMain", Shaders::ST_Fragment};
 
     ShaderProgram new_program;
     if (!new_program.buildProgram(*pContext, shaderCompiler, v_req, f_req, outErrorMessage)) return false;
@@ -115,8 +115,8 @@ bool PBRTests::loadGeometryPipeline(std::string* outErrorMessage)
 
 bool PBRTests::loadLightingPipeline(std::string* outErrorMessage)
 {
-    AnvilShaders::ShaderCompileRequest v_req{"PBRLighting", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"PBRLighting", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"PBRLighting", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"PBRLighting", "fragmentMain", Shaders::ST_Fragment};
 
     ShaderProgram new_program;
     if (!new_program.buildProgram(*pContext, shaderCompiler, v_req, f_req, outErrorMessage))

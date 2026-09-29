@@ -95,8 +95,8 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
     }
 }
 
-bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCompiler, const AnvilShaders::ShaderCompileRequest& inVertReq,
-    const AnvilShaders::ShaderCompileRequest& inFragReq, std::string* outErrorMessage)
+bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCompiler, const Shaders::ShaderCompileRequest& inVertReq,
+    const Shaders::ShaderCompileRequest& inFragReq, std::string* outErrorMessage)
 {
     SCOPE_CPU;
 

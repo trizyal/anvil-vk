@@ -113,7 +113,7 @@ public:
      *
      * @bug Should throw a runtime_error instead of an empty return.
      */
-    AnvilShaders::ShaderCompileResult compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request);
+    Shaders::ShaderCompileResult compileToSPIRV(const Shaders::ShaderCompileRequest& request);
 
 private:
     /**

@@ -77,8 +77,8 @@ void BoxAnimated::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"BoxAnimated", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"BoxAnimated", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"BoxAnimated", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"BoxAnimated", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     boxProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

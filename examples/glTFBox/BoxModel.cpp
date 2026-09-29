@@ -67,8 +67,8 @@ void BoxModel::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"BoxModel", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"BoxModel", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"BoxModel", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"BoxModel", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

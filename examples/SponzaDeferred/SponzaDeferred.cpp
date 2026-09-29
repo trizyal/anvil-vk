@@ -95,8 +95,8 @@ bool SponzaDeferred::loadGeometryPipeline(std::string* outErrorMessage)
 {
     std::cout << "Loading Geometry Pipeline." << std::endl;
 
-    AnvilShaders::ShaderCompileRequest v_req{"SponzaGeometry", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"SponzaGeometry", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"SponzaGeometry", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"SponzaGeometry", "fragmentMain", Shaders::ST_Fragment};
 
     // Try building new program into a temporary instance
     ShaderProgram new_program;
@@ -146,8 +146,8 @@ bool SponzaDeferred::loadLightingPipeline(std::string* outErrorMessage)
 {
     std::cout << "Loading Lighting Pipeline." << std::endl;
 
-    AnvilShaders::ShaderCompileRequest v_req{"SponzaLighting", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"SponzaLighting", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"SponzaLighting", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"SponzaLighting", "fragmentMain", Shaders::ST_Fragment};
 
     // Try building new program into a temporary instance
     ShaderProgram new_program;
