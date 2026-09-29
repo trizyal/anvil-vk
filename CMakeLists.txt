@@ -48,12 +48,15 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${SOURCE_DIR}/core
     ${SOURCE_DIR}/scene
+    ${SOURCE_DIR}/ui
     ${SOURCE_DIR}/diagnostics
+    ${SOURCE_DIR}/graphics
     ${SOURCE_DIR}/math
     ${SOURCE_DIR}/rendercore
     ${SOURCE_DIR}/rendercore/context
     ${SOURCE_DIR}/rendercore/resources
     ${SOURCE_DIR}/renderer
+    ${SOURCE_DIR}/resources
     ${SHARED_DIR}
 )
 
