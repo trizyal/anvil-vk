@@ -74,27 +74,27 @@ constexpr uint32_t FRAMES_IN_FLIGHT = 2;
  *
  * @note This class is non-copyable and non-movable. May need to change that.
  */
-class AnvilRenderer
+class Renderer
 {
 public:
-    AnvilRenderer() = default;
+    Renderer() = default;
 
     /**
      * @brief Waits for the GPU to idle and destroys all per-frame Vulkan resources.
      */
-    ~AnvilRenderer();
+    ~Renderer();
 
     /** Copy construction is disabled (Prevents double-freeing Vulkan sync objects & pools) */
-    AnvilRenderer(const AnvilRenderer&) = delete;
+    Renderer(const Renderer&) = delete;
 
     /** Copy assignment is disabled */
-    AnvilRenderer& operator=(const AnvilRenderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
 
     /** Move construction is disabled */
-    AnvilRenderer(AnvilRenderer&&) = delete;
+    Renderer(Renderer&&) = delete;
 
     /** Move assignment is disabled */
-    AnvilRenderer& operator=(AnvilRenderer&&) = delete;
+    Renderer& operator=(Renderer&&) = delete;
 
 private:
     VulkanContext* pContext = nullptr;

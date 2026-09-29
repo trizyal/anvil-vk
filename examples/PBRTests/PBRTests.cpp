@@ -6,7 +6,7 @@
 #include "Console.h"
 #include "UIElements.h"
 
-void PBRTests::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer)
+void PBRTests::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer)
 {
     pContext = &inContext;
     pSwapchain = &inSwapchain;
@@ -174,11 +174,11 @@ void PBRTests::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& inSwap
     camera.updateCamera(deltaTime);
     sceneManager.gpuModel.updateTransforms(sceneManager.cpuModel);
 
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     const auto color_attachments = gBuffer.getRenderingAttachments();
     const auto depth_attachment = gBuffer.getDepthAttachmentInfo();
@@ -192,21 +192,21 @@ void PBRTests::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& inSwap
     render_info.pDepthAttachment = &depth_attachment;
 
     vkCmdBeginRendering(inCmd, &render_info);
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
 
     pRenderer->drawModel(inCmd, sceneManager.gpuModel, camera, pipeline_Geo.pipeline, material_Geo.materialPipelineLayout, VK_NULL_HANDLE, true);
 
     vkCmdEndRendering(inCmd);
 
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void PBRTests::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
     pbrScene.updateGPUBuffer();
     UI::RenderWorldAxes(camera.getViewMatrix());
 

@@ -37,11 +37,11 @@ CVAR_INT("r.debugmode",
 CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
 CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
 
-void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
+void Renderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
-    SCOPE_CPU_NAME("AnvilRenderer::initializeRenderer");
+    SCOPE_CPU_NAME("Renderer::initializeRenderer");
 
-    std::cout << "Initializing AnvilRenderer" << std::endl;
+    std::cout << "Initializing Renderer" << std::endl;
     this->pContext = inAnvilContext;
     this->pSwapchain = inAnvilSwapchain;
 
@@ -98,10 +98,10 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
         }
     );
 
-    std::cout << "Finished Initializing AnvilRenderer" << std::endl;
+    std::cout << "Finished Initializing Renderer" << std::endl;
 }
 
-AnvilRenderer::~AnvilRenderer()
+Renderer::~Renderer()
 {
     // Wait for GPU
     if (pContext && pContext->device)
@@ -131,9 +131,9 @@ AnvilRenderer::~AnvilRenderer()
     }
 }
 
-void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
+void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 {
-    SCOPE_CPU_NAME("AnvilRenderer::drawFrame");
+    SCOPE_CPU_NAME("Renderer::drawFrame");
     // Recreate swapchain maybe
     if (recreateSwapchain)
     {
@@ -339,9 +339,9 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     SCOPE_FRAME;
 }
 
-void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
+void Renderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
 {
-    SCOPE_CPU_NAME("AnvilRenderer::drawModel");
+    SCOPE_CPU_NAME("Renderer::drawModel");
     SCOPE_GPU(tracyVkCtx, inCmd, "Draw Model");
 
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
@@ -466,7 +466,7 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     }
 }
 
-void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0)
+void Renderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0)
 {
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
 
@@ -489,7 +489,7 @@ void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer
 }
 
 
-void AnvilRenderer::setupCommandBuffers()
+void Renderer::setupCommandBuffers()
 {
     VkCommandPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -525,7 +525,7 @@ void AnvilRenderer::setupCommandBuffers()
     }
 }
 
-void AnvilRenderer::setupSyncStructures()
+void Renderer::setupSyncStructures()
 {
     VkSemaphoreCreateInfo semaphore_info{};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -566,12 +566,12 @@ void AnvilRenderer::setupSyncStructures()
     }
 }
 
-AnvilFrame& AnvilRenderer::getCurrentFrame()
+AnvilFrame& Renderer::getCurrentFrame()
 {
     return anvilFrames[anvilFrameIndex % FRAMES_IN_FLIGHT];
 }
 
-void AnvilRenderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
+void Renderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkImageMemoryBarrier image_barrier{};
     image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -633,7 +633,7 @@ void AnvilRenderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage
     vkCmdPipelineBarrier(inCmd, src_stage_flags, dst_stage_mask, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);
 }
 
-void AnvilRenderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
+void Renderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
 {
     VkViewport viewport{};
     viewport.x = 0.0f;
@@ -650,7 +650,7 @@ void AnvilRenderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& i
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 }
 
-bool AnvilRenderer::reloadDebugShaders(std::string* outError)
+bool Renderer::reloadDebugShaders(std::string* outError)
 {
     // Force Slang to drop its module cache and read from disk again
     engineCompiler.resetSession();

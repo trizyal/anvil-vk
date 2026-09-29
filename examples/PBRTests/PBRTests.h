@@ -15,7 +15,7 @@
 class PBRTests
 {
 public:
-    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer);
+    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer);
     void cleanupProject();
 
     bool loadPipelines(std::string* outErrorMessage = nullptr);
@@ -31,7 +31,7 @@ private:
 
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
-    AnvilRenderer* pRenderer = nullptr;
+    Renderer* pRenderer = nullptr;
 
     SceneManager sceneManager;
     Camera camera;

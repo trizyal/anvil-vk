@@ -60,7 +60,7 @@ private:
     std::unique_ptr<Window> window;
     VulkanContext context;
     Swapchain swapchain;
-    AnvilRenderer renderer;
+    Renderer renderer;
     UIRenderer uiRenderer;
 
     /** Tracks whether the engine has been successfully bootstrapped. */
@@ -147,7 +147,7 @@ public:
      * @note The reference cannot be discarded.
      */
     [[nodiscard]]
-    AnvilRenderer& getRenderer();
+    Renderer& getRenderer();
 
 private:
     /**

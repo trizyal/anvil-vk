@@ -49,7 +49,7 @@ public:
     void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain);
     void cleanupProject();
 
-    // Function that records commands to trigger in AnvilRenderer
+    // Function that records commands to trigger in Renderer
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);
 
     void loadPipeline();

@@ -9,7 +9,7 @@
 #include "Console.h"
 #include "UIElements.h"
 
-void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer)
+void SponzaDeferred::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer)
 {
     std::cout << "Initialize project" << std::endl;
     pContext = &inContext;
@@ -205,11 +205,11 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
     gpuModel.updateTransforms(cpuModel);
 
     // Transition G-Buffer to Attachment Optimal
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     // Begin Geometry Rendering Pass
     const auto color_attachments = gBuffer.getRenderingAttachments();
@@ -224,22 +224,22 @@ void SponzaDeferred::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& 
     render_info.pDepthAttachment = &depth_attachment;
 
     vkCmdBeginRendering(inCmd, &render_info);
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
 
     pRenderer->drawModel(inCmd, gpuModel, camera, pipeline_Geo.pipeline, material_Geo.materialPipelineLayout, VK_NULL_HANDLE, true);
 
     vkCmdEndRendering(inCmd);
 
     // Transition G-Buffer to Shader Read
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void SponzaDeferred::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
     sponzaScene.updateGPUBuffer();
     UI::RenderWorldAxes(camera.getViewMatrix());
 

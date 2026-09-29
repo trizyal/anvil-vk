@@ -148,7 +148,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
         UIRenderer::EndUIFrame();
 
         auto frame_end = std::chrono::high_resolution_clock::now();
-        AnvilRenderer::engineStats.frameTime = std::chrono::duration<float, std::milli>(frame_end - frame_start).count();
+        Renderer::engineStats.frameTime = std::chrono::duration<float, std::milli>(frame_end - frame_start).count();
     }
 
     vkDeviceWaitIdle(context.device);
@@ -174,7 +174,7 @@ Swapchain& Anvil::getSwapchain()
     return swapchain;
 }
 
-AnvilRenderer& Anvil::getRenderer()
+Renderer& Anvil::getRenderer()
 {
     return renderer;
 }

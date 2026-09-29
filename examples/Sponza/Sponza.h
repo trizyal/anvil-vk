@@ -20,7 +20,7 @@ class Sponza
 private:
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
-    AnvilRenderer* pRenderer = nullptr;
+    Renderer* pRenderer = nullptr;
 
     ShaderCompiler shaderCompiler;
 
@@ -36,7 +36,7 @@ private:
     AnvilPipeline pipeline;
 
 public:
-    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer);
+    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer);
     void cleanupProject();
     bool loadPipeline(std::string* outErrorMessage = nullptr);
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);

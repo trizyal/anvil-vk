@@ -9,7 +9,7 @@
 #include "Console.h"
 #include "UIElements.h"
 
-void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer)
+void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer)
 {
     std::cout << "Initialize project" << std::endl;
     pContext = &inContext;
@@ -123,7 +123,7 @@ bool Sponza::loadPipeline(std::string* outErrorMessage)
 
 void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
 
     static auto lastFrameTime = std::chrono::high_resolution_clock::now();
     auto currentTime = std::chrono::high_resolution_clock::now();
