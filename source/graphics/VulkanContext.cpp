@@ -4,6 +4,8 @@
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
+#include "Logger.h"
+
 #ifndef NDEBUG
     // Fills new allocations with a bit pattern to catch uninitialized memory reads
     #define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
@@ -44,7 +46,7 @@
 
 void VulkanContext::initializeVulkanContext(Window& inWindow)
 {
-    std::cout << "Initialising AnvilVulkanContext..." << std::endl;
+    LOG_TRACE("Initializing VulkanContext");
 
     pWindow = &inWindow;
 

@@ -6,6 +6,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "Logger.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -16,7 +18,7 @@ RENDERDOC_API_1_1_2* RenderDoc::rdoc_api = nullptr;
 
 void RenderDoc::InitializeRenderDoc()
 {
-    std::cout << "Initializing RenderDoc." << std::endl;
+    LOG_TRACE("Initializing RenderDoc");
     pRENDERDOC_GetAPI RENDERDOC_GetAPI = nullptr;
 
 #ifdef _WIN32
@@ -61,7 +63,7 @@ void RenderDoc::InitializeRenderDoc()
         int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, reinterpret_cast<void**>(&rdoc_api));
         assert(ret == 1);
 
-        std::cout << "[RenderDoc] API loaded successfully." << std::endl;
+        LOG_INFO("RenderDoc API loaded successfully");
 
         // Hide RenderDoc onscreen UI
         rdoc_api->MaskOverlayBits(eRENDERDOC_Overlay_None, eRENDERDOC_Overlay_None);
@@ -82,6 +84,6 @@ void RenderDoc::TriggerCapture()
     }
     else
     {
-        std::cerr << "[RenderDoc] Cannot capture: API not initialized or renderdoc.dll missing." << std::endl;
+        LOG_ERROR("Cannot capture: API not initialized or renderdoc.dll missing");
     }
 }

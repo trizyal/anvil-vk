@@ -9,12 +9,13 @@
 #include <VkBootstrap.h>
 
 #include "DebugNames.h"
+#include "Logger.h"
 #include "VulkanContext.h"
 #include "VulkanResult.h"
 
 void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
-    std::cout << "Creating AnvilSwapchain" << std::endl;
+    LOG_TRACE("Creating Swapchain");
     pContext = &inAnvilContext;
 
     vkb::SwapchainBuilder vkb_swapchain_builder{
@@ -63,12 +64,12 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
 
     createDepthAttachment();
 
-    std::cout << "Finished creating AnvilSwapchain" << std::endl;
+    LOG_TRACE("Finished creating AnvilSwapchain");
 }
 
 void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 {
-    std::cout << "Re-Creating AnvilSwapchain" << std::endl;
+    LOG_TRACE("Re-creating AnvilSwapchain");
 
     // Wait for GPU to finish
     vkDeviceWaitIdle(pContext->device);
@@ -150,10 +151,10 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 
     if (old_format != swapchainFormat)
     {
-        std::cerr << "Swapchain format has changed!" << std::endl;
+        LOG_ERROR("Swapchain format has changed!");
     }
 
-    std::cout << "Finished creating AnvilSwapchain" << std::endl;
+    LOG_TRACE("Finished re-creating AnvilSwapchain");
 }
 
 void Swapchain::createDepthAttachment()

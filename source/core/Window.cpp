@@ -7,10 +7,12 @@
 #include <stdexcept>
 #include <utility>
 
+#include "Logger.h"
+
 Window::Window(const uint32_t inWidth, const uint32_t inHeight, std::string inTitle)
     : width(inWidth), height(inHeight), anvilTitle(std::move(inTitle))
 {
-    std::cout << "Creating AnvilWindow..." << std::endl;
+    LOG_TRACE("Creating Window");
     glfwInit();
 
     // No OpenGL
@@ -28,7 +30,7 @@ Window::Window(const uint32_t inWidth, const uint32_t inHeight, std::string inTi
     {
         throw std::runtime_error("Failed to create GLFW window");
     }
-    std::cout << "Finishing creating AnvilWindow" << std::endl;
+    LOG_TRACE("Finishing creating AnvilWindow");
 }
 
 Window::~Window()

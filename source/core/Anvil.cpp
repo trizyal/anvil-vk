@@ -8,8 +8,10 @@
 
 #include "Console.h"
 #include "Input.h"
+#include "Logger.h"
 #include "RenderDoc.h"
 #include "ScreenLogger.h"
+#include "Trace.h"
 #include "UIElements.h"
 
 CVAR_BOOL("attachrenderdoc",
@@ -39,7 +41,8 @@ CVAR_INT("a.logverbosity",
 
 void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
 {
-    std::cout << "Initializing Anvil..." << std::endl;
+    SCOPE_CPU;
+    LOG_TRACE("Initializing Anvil");
     const auto cpuStart = std::chrono::high_resolution_clock::now();
     if (initialized)
     {
