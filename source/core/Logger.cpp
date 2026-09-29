@@ -19,13 +19,22 @@ void Logger::InitializeLogger(const std::string& logFilePath)
     std::filesystem::path path(logFilePath);
     if (path.has_parent_path())
     {
-        if (!std::filesystem::create_directories(path.parent_path()))
+        std::filesystem::path parent = path.parent_path();
+        std::error_code ec;
+
+        if (std::filesystem::exists(parent))
         {
-            LOG_ERROR("Failed to create log directory: {}", path.parent_path().string());
+            // It already exists. We can log this if we want, or just stay silent.
+            LOG_INFO("Log directory already exists: {}", parent.string());
+        }
+        else if (std::filesystem::create_directories(parent, ec))
+        {
+            LOG_INFO("Created log directory: {}", parent.string());
         }
         else
         {
-            LOG_INFO("Created log directory: {}", path.parent_path().string());
+            // ec.message() will tell us exactly why it failed (e.g., "Permission denied")
+            LOG_ERROR("Failed to create log directory: {} - {}", parent.string(), ec.message());
         }
     }
 
