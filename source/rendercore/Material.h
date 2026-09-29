@@ -5,7 +5,7 @@
 #define ANVIL_VK_MATERIAL_H
 
 /**
- * @file AnvilMaterial.h
+ * @file Material.h
  * @brief Factory class managing Slang shader compilation, reflection, and Vulkan layouts.
  */
 
@@ -23,7 +23,7 @@
  *
  * Owns the vertex and fragment shader modules. Uses Slang reflection metadata during build time
  * to automatically generate Vulkan descriptor set layouts, pipeline layouts, and descriptor pools.
- * Creates and dispenses `AnvilMaterialInstance` objects for rendering.
+ * Creates and dispenses `MaterialInstance` objects for rendering.
  *
  * @note This class in non-copyable. Moving is allowed.
  *

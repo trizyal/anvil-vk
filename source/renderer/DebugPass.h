@@ -10,7 +10,7 @@
  */
 
 #include <volk.h>
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "DebugModes.h"
 #include "PipelineBuilder.h"
 #include "ShaderProgram.h"

@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include <stdexcept>
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "Trace.h"
 #include "VulkanContext.h"
 

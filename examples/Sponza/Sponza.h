@@ -4,7 +4,7 @@
 #ifndef EXAMPLE_SPONZA_H
 #define EXAMPLE_SPONZA_H
 
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "Renderer.h"
 #include "CPUModel.h"
 #include "GPUModel.h"

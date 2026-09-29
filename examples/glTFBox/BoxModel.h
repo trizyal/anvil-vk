@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "VulkanContext.h"

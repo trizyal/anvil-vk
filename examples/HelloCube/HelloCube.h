@@ -9,7 +9,7 @@
 
 #include "GPUBuffer.h"
 #include "Camera.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "Scene.h"

@@ -4,7 +4,7 @@
 #ifndef EXAMPLE_PBRTESTS_H
 #define EXAMPLE_PBRTESTS_H
 
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "Renderer.h"
 #include "Camera.h"
 #include "GBuffer.h"

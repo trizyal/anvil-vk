@@ -15,7 +15,7 @@
 #include <glm/glm.hpp>
 #include <volk.h>
 
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "CPUModel.h"
 #include "GPUTexture.h"
 #include "GPUMesh.h"

@@ -12,7 +12,7 @@
 #include "PipelineBuilder.h"
 #include "Camera.h"
 #include "Scene.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 

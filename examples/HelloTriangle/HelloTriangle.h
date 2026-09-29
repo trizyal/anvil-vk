@@ -5,7 +5,7 @@
 #define EXAMPLE_HELLOTRIANGLE_H
 
 #include "VulkanContext.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
 #include "Swapchain.h"
