@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "UIElements.h"
 
 void RiggedSimple::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)

@@ -5,7 +5,7 @@
 #define EXAMPLE_SPONZADEFERRED_H
 
 #include "AnvilMaterial.h"
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "Scene.h"

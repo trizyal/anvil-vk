@@ -8,7 +8,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "ShaderCompiler.h"

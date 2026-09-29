@@ -5,7 +5,7 @@
 #define EXAMPLE_PBRTESTS_H
 
 #include "AnvilMaterial.h"
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "Camera.h"
 #include "GBuffer.h"
 #include "Scene.h"

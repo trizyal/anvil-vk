@@ -8,7 +8,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "UIElements.h"
 
 // 24 vertices (4 per face) to prevent color interpolation

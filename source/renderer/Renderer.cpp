@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 
 #include <iostream>
 #include <fstream>
