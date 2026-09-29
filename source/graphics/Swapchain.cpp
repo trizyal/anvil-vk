@@ -10,11 +10,13 @@
 
 #include "DebugNames.h"
 #include "Logger.h"
+#include "Trace.h"
 #include "VulkanContext.h"
 #include "VulkanResult.h"
 
 void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
+    SCOPE_CPU;
     LOG_TRACE("Creating Swapchain");
     pContext = &inAnvilContext;
 
@@ -69,6 +71,7 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
 
 void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 {
+    SCOPE_CPU;
     LOG_TRACE("Re-creating AnvilSwapchain");
 
     // Wait for GPU to finish
@@ -159,6 +162,7 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 
 void Swapchain::createDepthAttachment()
 {
+    SCOPE_CPU;
     // Create depth image via VMA
     VkImageCreateInfo depth_image_info{};
     depth_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

@@ -106,6 +106,13 @@ public:
     static bool isDeferredMode(uint32_t mode);
 
     /**
+     * @brief Translates a debug mode integer into a string literal for UI and Profiling.
+     * @param mode The enum representation of the active DebugMode.
+     * @return String representing the debug mode.
+     */
+    static const char* GetDebugModeName(DebugMode mode);
+
+    /**
      * @brief Retrieves the correct Forward pipeline based on the requested debug mode.
      *
      * @param mode The integer representation of the active DebugMode.

@@ -36,7 +36,7 @@ CVAR_INT("a.logverbosity",
     "3: Info"
     "4: Debug"
     "5: Trace",
-    3
+    5
 );
 
 void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)

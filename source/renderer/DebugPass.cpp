@@ -200,6 +200,30 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
     return AnvilPipeline{.pipeline = VK_NULL_HANDLE};
 }
 
+const char* DebugPass::GetDebugModeName(DebugMode mode)
+{
+    switch (mode)
+    {
+    case DebugMode::None:                   return "None";
+    case DebugMode::BaseColor:              return "Base Color";
+    case DebugMode::GeometryNormal:         return "Geometry Normal";
+    case DebugMode::RawNormalMap:           return "Raw Normal Map";
+    case DebugMode::WorldNormal:            return "World Normal";
+    case DebugMode::Metallic:               return "Metallic";
+    case DebugMode::Roughness:              return "Roughness";
+    case DebugMode::Depth:                  return "Depth";
+    case DebugMode::Overdraw:               return "Overdraw";
+    case DebugMode::Overshading:            return "Overshading";
+    case DebugMode::Wireframe:              return "Wireframe";
+
+    case DebugMode::Count:                  return "Unknown";
+        // NO default case!
+    }
+
+    // Satisfies the compiler in case an invalid integer is cast to the enum
+    return "Unknown";
+}
+
 VkPipelineLayout DebugPass::getForwardLayout() const
 {
     return material_Forward.materialPipelineLayout;

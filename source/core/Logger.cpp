@@ -54,8 +54,8 @@ const char* Logger::LevelToString(LogLevel level)
     {
     case LogLevel::Fatal:   return "FATAL";
     case LogLevel::Error:   return "ERROR";
-    case LogLevel::Warning: return "WARN ";
-    case LogLevel::Info:    return "INFO ";
+    case LogLevel::Warning: return "WARN";
+    case LogLevel::Info:    return "INFO";
     case LogLevel::Debug:   return "DEBUG";
     case LogLevel::Trace:   return "TRACE";
     }

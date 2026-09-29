@@ -49,8 +49,6 @@ namespace
     } //Axis
 
     int ConsoleInputCallback(ImGuiInputTextCallbackData* data);
-
-    const char* GetDebugModeName(DebugMode mode);
 }
 
 void UI::LoadFonts()
@@ -277,7 +275,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
             for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
             {
                 bool is_selected = (currentMode == i);
-                if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
                 {
                     currentMode = i;
                     bChanged = true;
@@ -321,7 +319,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
             for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
             {
                 bool is_selected = (currentMode == i);
-                if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
                 {
                     currentMode = i;
                 }
@@ -532,29 +530,5 @@ namespace
             }
         }
         return 0;
-    }
-
-    const char* GetDebugModeName(DebugMode mode)
-    {
-        switch (mode)
-        {
-        case DebugMode::None:                   return "None";
-        case DebugMode::BaseColor:              return "Base Color";
-        case DebugMode::GeometryNormal:         return "Geometry Normal";
-        case DebugMode::RawNormalMap:           return "Raw Normal Map";
-        case DebugMode::WorldNormal:            return "World Normal";
-        case DebugMode::Metallic:               return "Metallic";
-        case DebugMode::Roughness:              return "Roughness";
-        case DebugMode::Depth:                  return "Depth";
-        case DebugMode::Overdraw:               return "Overdraw";
-        case DebugMode::Overshading:            return "Overshading";
-        case DebugMode::Wireframe:              return "Wireframe";
-
-        case DebugMode::Count:                  return "Unknown";
-            // NO default case!
-        }
-
-        // Satisfies the compiler in case an invalid integer is cast to the enum
-        return "Unknown";
     }
 }

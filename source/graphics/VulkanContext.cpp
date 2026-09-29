@@ -225,7 +225,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
         throw std::runtime_error(std::string("Failed to create upload fence. VkResult: ") + VulkanResult::ToString(fence_result));
     }
 
-    std::cout << "Finished initializing AnvilVulkanContext" << std::endl;
+    LOG_TRACE("Finished Initializing VulkanContext");
 }
 
 void VulkanContext::immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction) const

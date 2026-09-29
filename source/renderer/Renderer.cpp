@@ -17,6 +17,7 @@
 #include "Window.h"
 #include "DebugNames.h"
 #include "GPUModel.h"
+#include "Logger.h"
 #include "PushConstants.h"
 #include "ScreenLogger.h"
 #include "UIElements.h"
@@ -39,9 +40,9 @@ CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
 
 void Renderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
-    SCOPE_CPU_NAME("Renderer::initializeRenderer");
+    SCOPE_CPU;
+    LOG_TRACE("Initializing Renderer");
 
-    std::cout << "Initializing Renderer" << std::endl;
     this->pContext = inAnvilContext;
     this->pSwapchain = inAnvilSwapchain;
 
@@ -50,6 +51,8 @@ void Renderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAn
 
     pContext->immediateSubmit([this]([[maybe_unused]]VkCommandBuffer cmd)
     {
+        SCOPE_CPU_NAME("TracyContext(immediateSubmit)");
+        LOG_INFO("Creating Tracy Context");
         tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);
     });
 
@@ -61,14 +64,14 @@ void Renderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAn
     debugPass.initializeDebugPass(*pContext, engineCompiler, pSwapchain->swapchainFormat, pSwapchain->depthFormat);
 
     COMMAND("freezerendering",
-    "Freezes the rendering state.",
-    [](const std::vector<std::string>&)
-    {
-        bool current = Console::GetCVarBool("r.freezerendering");
-        Console::SetCVarBool("r.freezerendering", !current);
-        Console::Print(current ? "Rendering un-frozen." : "Rendering frozen.");
-    }
-);
+        "Freezes the rendering state.",
+        [](const std::vector<std::string>&)
+        {
+            bool current = Console::GetCVarBool("r.freezerendering");
+            Console::SetCVarBool("r.freezerendering", !current);
+            Console::Print(current ? "Rendering un-frozen." : "Rendering frozen.");
+        }
+    );
 
     COMMAND("vmastats",
         "Dumps VMA memory stats to vma_dumps.json.",
@@ -98,7 +101,7 @@ void Renderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAn
         }
     );
 
-    std::cout << "Finished Initializing Renderer" << std::endl;
+    LOG_TRACE("Finished initializing Renderer");
 }
 
 Renderer::~Renderer()
@@ -133,7 +136,8 @@ Renderer::~Renderer()
 
 void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 {
-    SCOPE_CPU_NAME("Renderer::drawFrame");
+    SCOPE_CPU;
+
     // Recreate swapchain maybe
     if (recreateSwapchain)
     {
@@ -341,7 +345,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 
 void Renderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
 {
-    SCOPE_CPU_NAME("Renderer::drawModel");
+    SCOPE_CPU;
     SCOPE_GPU(tracyVkCtx, inCmd, "Draw Model");
 
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
@@ -468,10 +472,12 @@ void Renderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Cam
 
 void Renderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0)
 {
+    SCOPE_CPU;
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
 
     if (static_cast<DebugMode>(debug_mode) == DebugMode::None)
     {
+        SCOPE_GPU(tracyVkCtx, inCmd, "Deferred Lighting");
         vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userPipeline);
         vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userLayout, 0, 1, &userSet0, 0, nullptr);
 
@@ -484,6 +490,7 @@ void Renderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, con
     }
     else if (DebugPass::isDeferredMode(debug_mode))
     {
+        SCOPE_GPU(tracyVkCtx, inCmd, "Deferred Debug");
         debugPass.drawDeferredResolve(inCmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
     }
 }
@@ -491,6 +498,8 @@ void Renderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, con
 
 void Renderer::setupCommandBuffers()
 {
+    SCOPE_CPU;
+    LOG_TRACE("Setting up Command Buffers");
     VkCommandPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -514,6 +523,7 @@ void Renderer::setupCommandBuffers()
         CHECK(vkAllocateCommandBuffers(pContext->device, &alloc_info, &anvil_frame.cmdBuffer));
 
 #if ANVIL_DEBUG
+        LOG_DEBUG("Debug names for Command Buffer data set.");
         // When function structure doesn't allow ANVIL_DEBUG_NAME, we can directly use the SetAutoName function
         std::string pool_name = "AnvilFrame[" + std::to_string(i) + "]_CommandPool";
         std::string cmd_name  = "AnvilFrame[" + std::to_string(i) + "]_CommandBuffer";
@@ -523,10 +533,15 @@ void Renderer::setupCommandBuffers()
         SET_DNAME_HERE(pContext->device, anvil_frame.cmdBuffer, VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
 #endif
     }
+
+    LOG_TRACE("Command Buffers setup finished.");
 }
 
 void Renderer::setupSyncStructures()
 {
+    SCOPE_CPU;
+    LOG_TRACE("Setting up Sync Structures");
+
     VkSemaphoreCreateInfo semaphore_info{};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -573,6 +588,8 @@ AnvilFrame& Renderer::getCurrentFrame()
 
 void Renderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
+    SCOPE_CPU;
+
     VkImageMemoryBarrier image_barrier{};
     image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     image_barrier.oldLayout = oldLayout;
@@ -635,6 +652,8 @@ void Renderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkI
 
 void Renderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
 {
+    SCOPE_CPU;
+
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -652,6 +671,9 @@ void Renderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwap
 
 bool Renderer::reloadDebugShaders(std::string* outError)
 {
+    SCOPE_CPU;
+    LOG_DEBUG("Reloading Debug Shaders.");
+
     // Force Slang to drop its module cache and read from disk again
     engineCompiler.resetSession();
 
