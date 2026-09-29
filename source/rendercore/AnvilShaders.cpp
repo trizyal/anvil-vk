@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace AnvilShaders
+namespace Shaders
 {
     SlangStage ConvertToSlangStage(const ShaderType inShaderType)
     {
@@ -39,4 +39,4 @@ namespace AnvilShaders
             std::cerr << "Failed to open file for SPIR-V dump: " << filename << "\n";
         }
     }
-} //AnvilShaders
+} //Shaders

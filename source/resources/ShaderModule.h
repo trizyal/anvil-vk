@@ -60,7 +60,7 @@ public:
      *
      * @see ShaderCompileResult
      */
-    void createShaderModule(const VulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV D_DECL());
+    void createShaderModule(const VulkanContext& inContext, const Shaders::ShaderCompileResult& inSPIRV D_DECL());
 
     /**
      * @brief Destroys the underlying Vulkan shader module using the cached logical device.

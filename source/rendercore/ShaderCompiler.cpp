@@ -14,7 +14,7 @@
 
 #include "AnvilShaders.h"
 #include "Trace.h"
-using namespace AnvilShaders;
+using namespace Shaders;
 
 namespace
 {
