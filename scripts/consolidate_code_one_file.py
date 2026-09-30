@@ -6,7 +6,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 source_dir = os.path.abspath(os.path.join(script_dir, '..', 'source'))
 shaders_dir = os.path.abspath(os.path.join(script_dir, '..', 'shaders'))
 examples_dir = os.path.abspath(os.path.join(script_dir, '..', 'examples'))
-tml_dir = os.path.abspath(os.path.join(script_dir, '..', 'external', 'tml', 'include'))
 output_dir = os.path.abspath(os.path.join(script_dir, 'output'))
 
 def read_cmake(in_filename, in_outfile):
@@ -23,7 +22,7 @@ def read_cmake(in_filename, in_outfile):
         in_outfile.write(f"// Could not read file: {e}\n")
 
 # Default configuration
-directories_to_walk = [source_dir, shaders_dir, tml_dir]
+directories_to_walk = [source_dir, shaders_dir]
 output_filename = 'AnvilCodebase.txt'
 
 # Check for command-line arguments
