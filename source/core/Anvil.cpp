@@ -7,9 +7,12 @@
 #include <iostream>
 
 #include "Console.h"
+#include "Ensure.h"
 #include "Input.h"
+#include "Logger.h"
 #include "RenderDoc.h"
 #include "ScreenLogger.h"
+#include "Trace.h"
 #include "UIElements.h"
 
 CVAR_BOOL("attachrenderdoc",
@@ -28,19 +31,26 @@ CVAR_INT("r.shadowmapsize",
 );
 
 CVAR_INT("a.logverbosity",
-    "0: Errors"
-    "1: Warnings"
-    "2: Info"
-    "3: Debug",
-    3
+    "0: Fatal"
+    "1: Error"
+    "2: Warning"
+    "3: Info"
+    "4: Debug"
+    "5: Trace",
+    5
 );
 
 void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
 {
-    std::cout << "Initializing Anvil..." << std::endl;
+    SCOPE_CPU;
+    std::string log_file = SAVED_DIR "/logs/log.txt";
+    Logger::InitializeLogger(log_file);
+
+    LOG_TRACE("Initializing Anvil");
     const auto cpuStart = std::chrono::high_resolution_clock::now();
     if (initialized)
     {
+        LOG_WARN("Anvil is already initialized");
         return;
     }
 
@@ -67,12 +77,14 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     initialized = true;
     const auto cpuEnd = std::chrono::high_resolution_clock::now();
     const auto initTime = std::chrono::duration<float, std::milli>(cpuEnd - cpuStart).count();
-    std::cout << "Anvil initialization complete!" << std::endl;
-    std::cout << "Initialization took:" << initTime << "ms" << std::endl;
+    LOG_INFO("Anvil initialization complete.");
+    LOG_INFO("Initialization took: {}ms", initTime);
 }
 
 void Anvil::shutdownAnvil()
 {
+    LOG_TRACE("Shutting down Anvil.");
+
     if (!initialized)
     {
         return;
@@ -80,6 +92,7 @@ void Anvil::shutdownAnvil()
 
     vkDeviceWaitIdle(context.device);
 
+    Logger::ShutdownLogger();
     window.reset();
 
     initialized = false;
@@ -87,19 +100,18 @@ void Anvil::shutdownAnvil()
 
 void Anvil::runAnvil(const RenderHooks& renderHooks)
 {
-    if (!initialized)
-    {
-        throw std::runtime_error("AnvilApplication::runAnvil() called before initialization");
-    }
+    FATAL(initialized, "AnvilApplication::runAnvil() called before initialization");
 
     while (!window->bShouldClose())
     {
+        SCOPE_CPU_NAME("AnvilFrame");
+        
         auto frame_start = std::chrono::high_resolution_clock::now();
 
         Window::pollEvents();
         Input::UpdateInputs();
 
-        // FIX: Catch the minimized window state
+        // FIX: Check for minimized window state
        if (window->isMinimised())
        {
            // Skip the rest of the loop entirely!
@@ -148,7 +160,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
         UIRenderer::EndUIFrame();
 
         auto frame_end = std::chrono::high_resolution_clock::now();
-        AnvilRenderer::engineStats.frameTime = std::chrono::duration<float, std::milli>(frame_end - frame_start).count();
+        Renderer::engineStats.frameTime = std::chrono::duration<float, std::milli>(frame_end - frame_start).count();
     }
 
     vkDeviceWaitIdle(context.device);
@@ -174,16 +186,18 @@ Swapchain& Anvil::getSwapchain()
     return swapchain;
 }
 
-AnvilRenderer& Anvil::getRenderer()
+Renderer& Anvil::getRenderer()
 {
     return renderer;
 }
 
 void Anvil::triggerShaderHotReload()
 {
+    SCOPE_CPU;
+
     if (shaderReloadQueue.empty()) return;
 
-    std::cout << "[Anvil] Hot-reload triggered. Pausing GPU..." << std::endl;
+    LOG_DEBUG("[Anvil] Hot-reload triggered. Pausing GPU.");
     vkDeviceWaitIdle(context.device);
 
     bool all_succeeded = true;
@@ -203,13 +217,14 @@ void Anvil::triggerShaderHotReload()
     {
         bShaderErrorModalOpen = false;
         activeShaderErrorLog.clear();
-        std::cout << "[Anvil] Hot-reload complete." << std::endl;
+        LOG_DEBUG("Shader Hot-reload complete.");
         LOGUI("[Anvil] Shaders successfully reloaded!");
     }
     else
     {
         bShaderErrorModalOpen = true;
         activeShaderErrorLog = accumulated_errors;
+        LOG_ERROR("Shader hot-reload failed.");
         LOGUI("[Anvil] Shader hot-reload failed!", AnvilColor::Red);
     }
 }

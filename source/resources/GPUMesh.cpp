@@ -29,6 +29,8 @@ GPUMesh& GPUMesh::operator=(GPUMesh&& other) noexcept
 
 void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMeshPrimitive& inMeshPrimitive)
 {
+    SCOPE_CPU;
+
     this->pContext = &inContext;
 
     indexCount = static_cast<uint32_t>(inMeshPrimitive.indices.size());
@@ -50,12 +52,16 @@ void GPUMesh::createGPUMesh(const VulkanContext& inContext, const CPUMeshPrimiti
 
 void GPUMesh::destroyGPUMesh()
 {
+    SCOPE_CPU;
+
     vertexBuffer.destroyBuffer();
     indexBuffer.destroyBuffer();
 }
 
 VkVertexInputBindingDescription GPUMesh::GetBindingDescription()
 {
+    SCOPE_CPU;
+
     VkVertexInputBindingDescription binding_description{};
     binding_description.binding = 0;
     binding_description.stride = sizeof(MeshVertex);
@@ -66,6 +72,8 @@ VkVertexInputBindingDescription GPUMesh::GetBindingDescription()
 
 std::vector<VkVertexInputAttributeDescription> GPUMesh::GetAttributeDescriptions(const std::vector<VertexAttribute>& attributes)
 {
+    SCOPE_CPU;
+
     std::vector<VkVertexInputAttributeDescription> descriptions;
     descriptions.reserve(attributes.size());
 

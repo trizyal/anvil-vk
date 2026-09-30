@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "VulkanContext.h"
@@ -35,7 +35,7 @@ private:
     Camera camera;
 
     ShaderProgram myProgram; // Explicitly manage program layout
-    AnvilMaterial myMaterial;
+    Material myMaterial;
 
     CPUModel cpuModel;
     GPUModel gpuModel;
@@ -44,7 +44,7 @@ public:
     void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
-    // Function that records commands to trigger in AnvilRenderer
+    // Function that records commands to trigger in Renderer
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();

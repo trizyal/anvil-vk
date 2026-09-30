@@ -10,7 +10,7 @@
  */
 
 #include <volk.h>
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "DebugModes.h"
 #include "PipelineBuilder.h"
 #include "ShaderProgram.h"
@@ -42,7 +42,7 @@ public:
     ShaderProgram program_Deferred;
 
     /** Material layout for the deferred debug pipeline. */
-    AnvilMaterial material_Deferred;
+    Material material_Deferred;
 
     /** Graphics pipeline for rendering a fullscreen deferred quad. */
     AnvilPipeline pipeline_Deferred;
@@ -54,7 +54,7 @@ public:
     ShaderProgram program_Forward;
 
     /** Material layout for the forward debug pipeline. */
-    AnvilMaterial material_Forward;
+    Material material_Forward;
 
     /** Pipeline used for solid debug overlays (e.g., Normals, Albedo). */
     AnvilPipeline pipeline_Forward_Opaque;
@@ -104,6 +104,13 @@ public:
      * @return True if the mode requires reading from the G-Buffer (e.g., BaseColor, WorldNormal), false otherwise.
      */
     static bool isDeferredMode(uint32_t mode);
+
+    /**
+     * @brief Translates a debug mode integer into a string literal for UI and Profiling.
+     * @param mode The enum representation of the active DebugMode.
+     * @return String representing the debug mode.
+     */
+    static const char* GetDebugModeName(DebugMode mode);
 
     /**
      * @brief Retrieves the correct Forward pipeline based on the requested debug mode.

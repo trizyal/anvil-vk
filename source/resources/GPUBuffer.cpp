@@ -8,7 +8,9 @@
 #include <utility>
 
 #include "DebugNames.h"
+#include "Trace.h"
 #include "VulkanContext.h"
+#include "VulkanResult.h"
 
 GPUBuffer::GPUBuffer(GPUBuffer&& other) noexcept
 {
@@ -35,6 +37,8 @@ GPUBuffer& GPUBuffer::operator=(GPUBuffer&& other) noexcept
 void GPUBuffer::createBuffer(const VulkanContext& inContext, const void* inData, VkDeviceSize size, VkBufferUsageFlags usage
     D_DEFN)
 {
+    SCOPE_CPU;
+
     // Clean up if this object wrapper is being reused
     if (buffer != VK_NULL_HANDLE)
     {
@@ -51,11 +55,7 @@ void GPUBuffer::createBuffer(const VulkanContext& inContext, const void* inData,
     VmaAllocationCreateInfo alloc_info{};
     alloc_info.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // CPU_TO_GPU for dynamic/staging data as it ensures host-visibility
 
-    if (vmaCreateBuffer(allocator, &buffer_info, &alloc_info, &buffer, &allocation, nullptr) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Anvil Engine: Failed to allocate VMA buffer.");
-    }
-
+    CHECK(vmaCreateBuffer(allocator, &buffer_info, &alloc_info, &buffer, &allocation, nullptr));
     SET_DNAME(inContext.device, buffer, VK_OBJECT_TYPE_BUFFER);
     SET_VMA_DNAME(allocator, allocation);
 
@@ -68,6 +68,8 @@ void GPUBuffer::createBuffer(const VulkanContext& inContext, const void* inData,
 
 void GPUBuffer::destroyBuffer()
 {
+    SCOPE_CPU;
+
     if (buffer != VK_NULL_HANDLE && allocation != VK_NULL_HANDLE)
     {
         vmaDestroyBuffer(allocator, buffer, allocation);

@@ -6,6 +6,9 @@
 #include <cassert>
 #include <iostream>
 
+#include "Logger.h"
+#include "Trace.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -16,7 +19,9 @@ RENDERDOC_API_1_1_2* RenderDoc::rdoc_api = nullptr;
 
 void RenderDoc::InitializeRenderDoc()
 {
-    std::cout << "Initializing RenderDoc." << std::endl;
+    SCOPE_CPU;
+    LOG_TRACE("Initializing RenderDoc.");
+    
     pRENDERDOC_GetAPI RENDERDOC_GetAPI = nullptr;
 
 #ifdef _WIN32
@@ -61,7 +66,7 @@ void RenderDoc::InitializeRenderDoc()
         int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, reinterpret_cast<void**>(&rdoc_api));
         assert(ret == 1);
 
-        std::cout << "[RenderDoc] API loaded successfully." << std::endl;
+        LOG_INFO("RenderDoc API loaded successfully.");
 
         // Hide RenderDoc onscreen UI
         rdoc_api->MaskOverlayBits(eRENDERDOC_Overlay_None, eRENDERDOC_Overlay_None);
@@ -70,18 +75,22 @@ void RenderDoc::InitializeRenderDoc()
 
 void RenderDoc::TriggerCapture()
 {
+    SCOPE_CPU;
+
     if (rdoc_api)
     {
+        LOG_INFO("Triggered RenderDoc Frame Capture.");
         rdoc_api->TriggerCapture();
 
         // If the UI isn't already open, launch it automatically and connect
         if (!rdoc_api->IsTargetControlConnected())
         {
+            LOG_INFO("Opening RenderDoc UI.");
             rdoc_api->LaunchReplayUI(1, "");
         }
     }
     else
     {
-        std::cerr << "[RenderDoc] Cannot capture: API not initialized or renderdoc.dll missing." << std::endl;
+        LOG_ERROR("Cannot capture: API not initialized or renderdoc.dll missing.");
     }
 }

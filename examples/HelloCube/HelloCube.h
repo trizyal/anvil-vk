@@ -9,7 +9,7 @@
 
 #include "GPUBuffer.h"
 #include "Camera.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "VulkanContext.h"
 #include "PipelineBuilder.h"
 #include "Scene.h"
@@ -42,7 +42,7 @@ private:
     Scene myScene;
 
     ShaderProgram myProgram; // Explicitly manage program layout
-    AnvilMaterial myMaterial;
+    Material myMaterial;
     MaterialInstance globalSet;
 
     GPUBuffer vertexBuffer;
@@ -52,7 +52,7 @@ public:
     void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
-    // Function that records commands to trigger in AnvilRenderer
+    // Function that records commands to trigger in Renderer
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();

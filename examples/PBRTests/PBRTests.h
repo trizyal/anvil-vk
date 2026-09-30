@@ -4,8 +4,8 @@
 #ifndef EXAMPLE_PBRTESTS_H
 #define EXAMPLE_PBRTESTS_H
 
-#include "AnvilMaterial.h"
-#include "AnvilRenderer.h"
+#include "Material.h"
+#include "Renderer.h"
 #include "Camera.h"
 #include "GBuffer.h"
 #include "Scene.h"
@@ -15,7 +15,7 @@
 class PBRTests
 {
 public:
-    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer);
+    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer);
     void cleanupProject();
 
     bool loadPipelines(std::string* outErrorMessage = nullptr);
@@ -31,7 +31,7 @@ private:
 
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
-    AnvilRenderer* pRenderer = nullptr;
+    Renderer* pRenderer = nullptr;
 
     SceneManager sceneManager;
     Camera camera;
@@ -41,11 +41,11 @@ private:
     ShaderCompiler shaderCompiler;
 
     ShaderProgram shaderProgram_Geo;
-    AnvilMaterial material_Geo;
+    Material material_Geo;
     AnvilPipeline pipeline_Geo;
 
     ShaderProgram shaderProgram_Light;
-    AnvilMaterial material_Light;
+    Material material_Light;
     AnvilPipeline pipeline_Light;
     MaterialInstance sceneLightingSet;
 };

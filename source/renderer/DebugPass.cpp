@@ -15,12 +15,14 @@
 bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
                                     VkFormat depthFormat, std::string* outError)
 {
+    SCOPE_CPU;
+
     pContext = &inContext;
     bool bSuccess = true;
 
     // Deferred Fullscreen Debug Pipeline
-    AnvilShaders::ShaderCompileRequest def_v{"DebugDeferred", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest def_f{"DebugDeferred", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest def_v{"DebugDeferred", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest def_f{"DebugDeferred", "fragmentMain", Shaders::ST_Fragment};
 
     if (program_Deferred.buildProgram(*pContext, inCompiler, def_v, def_f, outError))
     {
@@ -47,8 +49,8 @@ bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
     }
 
     // Forward Geometry Debug Pipelines
-    AnvilShaders::ShaderCompileRequest fwd_v{"DebugForward", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fwd_f{"DebugForward", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest fwd_v{"DebugForward", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fwd_f{"DebugForward", "fragmentMain", Shaders::ST_Fragment};
 
     if (program_Forward.buildProgram(*pContext, inCompiler, fwd_v, fwd_f, outError))
     {
@@ -200,6 +202,30 @@ AnvilPipeline DebugPass::getForwardPipeline(uint32_t mode) const
     return AnvilPipeline{.pipeline = VK_NULL_HANDLE};
 }
 
+const char* DebugPass::GetDebugModeName(DebugMode mode)
+{
+    switch (mode)
+    {
+    case DebugMode::None:                   return "None";
+    case DebugMode::BaseColor:              return "Base Color";
+    case DebugMode::GeometryNormal:         return "Geometry Normal";
+    case DebugMode::RawNormalMap:           return "Raw Normal Map";
+    case DebugMode::WorldNormal:            return "World Normal";
+    case DebugMode::Metallic:               return "Metallic";
+    case DebugMode::Roughness:              return "Roughness";
+    case DebugMode::Depth:                  return "Depth";
+    case DebugMode::Overdraw:               return "Overdraw";
+    case DebugMode::Overshading:            return "Overshading";
+    case DebugMode::Wireframe:              return "Wireframe";
+
+    case DebugMode::Count:                  return "Unknown";
+        // NO default case!
+    }
+
+    // Satisfies the compiler in case an invalid integer is cast to the enum
+    return "Unknown";
+}
+
 VkPipelineLayout DebugPass::getForwardLayout() const
 {
     return material_Forward.materialPipelineLayout;
@@ -207,6 +233,7 @@ VkPipelineLayout DebugPass::getForwardLayout() const
 
 void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos)
 {
+    SCOPE_CPU;
     // CRITICAL FIX: Only allocate from the pool if we haven't done it yet!
     if (set_Deferred.descriptorSet == VK_NULL_HANDLE)
     {

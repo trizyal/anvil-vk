@@ -7,10 +7,16 @@
 #include <stdexcept>
 #include <utility>
 
+#include "Ensure.h"
+#include "Logger.h"
+#include "Trace.h"
+
 Window::Window(const uint32_t inWidth, const uint32_t inHeight, std::string inTitle)
     : width(inWidth), height(inHeight), anvilTitle(std::move(inTitle))
 {
-    std::cout << "Creating AnvilWindow..." << std::endl;
+    SCOPE_CPU;
+
+    LOG_TRACE("Creating Window");
     glfwInit();
 
     // No OpenGL
@@ -24,11 +30,8 @@ Window::Window(const uint32_t inWidth, const uint32_t inHeight, std::string inTi
         nullptr,
         nullptr);
 
-    if (!glfwWindow)
-    {
-        throw std::runtime_error("Failed to create GLFW window");
-    }
-    std::cout << "Finishing creating AnvilWindow" << std::endl;
+    FATAL(glfwWindow, "Failed to create GLFW window");
+    LOG_TRACE("Finishing creating AnvilWindow");
 }
 
 Window::~Window()
@@ -39,11 +42,14 @@ Window::~Window()
 
 bool Window::bShouldClose() const
 {
+    SCOPE_CPU;
     return glfwWindowShouldClose(glfwWindow);
 }
 
 bool Window::isMinimised() const
 {
+    SCOPE_CPU;
+
     const VkExtent2D ext = getFramebufferExtent();
     if (ext.width == 0 || ext.height == 0)
     {
@@ -55,6 +61,8 @@ bool Window::isMinimised() const
 
 void Window::pollEvents()
 {
+    SCOPE_CPU;
+
     glfwPollEvents();
 }
 
@@ -70,12 +78,12 @@ GLFWwindow* Window::getGLFWWindow() const
 
 VkSurfaceKHR Window::createSurface(VkInstance inInstance) const
 {
+    SCOPE_CPU
+    LOG_TRACE("Creating Vulkan Surface.");
     VkSurfaceKHR surface;
 
-    if (glfwCreateWindowSurface(inInstance, glfwWindow, nullptr, &surface) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create GLFW surface");
-    }
+    const VkResult res = glfwCreateWindowSurface(inInstance, glfwWindow, nullptr, &surface);
+    FATAL(res == VK_SUCCESS, "Failed to create GLFW Vulkan Surface.");
 
     return surface;
 }

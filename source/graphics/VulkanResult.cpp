@@ -5,6 +5,9 @@
 
 #include <sstream>
 
+#include "Ensure.h"
+#include "Logger.h"
+
 namespace VulkanResult
 {
 	void CheckVulkanResult(const VkResult aResult, const char* functionName, const char* file, const int line)
@@ -12,24 +15,23 @@ namespace VulkanResult
     	if (aResult != VK_SUCCESS)
     	{
     		const std::string error_message = "Vulkan Error [" + ToString(aResult) + "]\n" +
-								   "File: " + file + ":" + std::to_string(line) + "\n" +
-								   "Call: " + functionName + "\n";
+			   "File: " + file + ":" + std::to_string(line) + "\n" +
+			   "Call: " + functionName + "\n";
 
-    		std::cerr << error_message << std::endl;
-
-    		// Avoid throwing errors
-    		// throw std::runtime_error(error_message);
-
-    		// Halt execution
-#if defined(_MSC_VER)
-    		__debugbreak(); // Triggers a breakpoint in MSVC
-#else
-    		__builtin_trap(); // Triggers a breakpoint in GCC/Clang
-#endif
-
-    		std::abort(); // Ensures the program terminates
+    		LOG_FATAL("{}", error_message);
+    		FATAL(false, "Vulkan Error");
     	}
     }
+
+	void CheckVkBootstrapResult(const std::string& errorMessage, const char* functionName, const char* file, int line)
+	{
+		const std::string error_message = "vk-bootstrap Error: " + errorMessage + "\n" +
+			"File: " + file + ":" + std::to_string(line) + "\n" +
+			"Variable: " + functionName + "\n";
+
+		LOG_FATAL("{}", errorMessage);
+		FATAL(false, "vk-bootstrap Error");
+	}
 
 	std::string ToString(const VkResult aResult)
     {

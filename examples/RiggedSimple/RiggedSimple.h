@@ -12,7 +12,7 @@
 #include "PipelineBuilder.h"
 #include "Camera.h"
 #include "Scene.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 
@@ -37,7 +37,7 @@ private:
     Scene riggedScene;
 
     ShaderProgram riggedProgram; // Explicitly manage program layout
-    AnvilMaterial riggedMaterial;
+    Material riggedMaterial;
     MaterialInstance globalSet;  // Manage the scene UBO
 
     CPUModel cpuModel;
@@ -49,7 +49,7 @@ public:
     void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain);
     void cleanupProject();
 
-    // Function that records commands to trigger in AnvilRenderer
+    // Function that records commands to trigger in Renderer
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);
 
     void loadPipeline();

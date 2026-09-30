@@ -12,9 +12,10 @@
 #include <slang-com-ptr.h>
 #include <slang-com-helper.h>
 
-#include "AnvilShaders.h"
+#include "Ensure.h"
+#include "Shaders.h"
 #include "Trace.h"
-using namespace AnvilShaders;
+using namespace Shaders;
 
 namespace
 {
@@ -51,6 +52,8 @@ namespace
 
 bool ShaderCompiler::initializeShaderCompiler()
 {
+    SCOPE_CPU;
+
     if (SLANG_FAILED(slang::createGlobalSession(globalSession.writeRef())))
     {
         std::cerr << "Failed to create Slang Global Session." << std::endl;
@@ -62,6 +65,8 @@ bool ShaderCompiler::initializeShaderCompiler()
 
 void ShaderCompiler::shutdownShaderCompiler()
 {
+    SCOPE_CPU;
+
     // Explicitly release the COM pointer to free Slang resources
     session.setNull();
     globalSession.setNull();
@@ -109,10 +114,7 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
     SCOPE_CPU;
 
     ShaderCompileResult shader_result = GetEmptyShaderByteCode();
-    if (!globalSession)
-    {
-        throw std::runtime_error("Slang Global Session is not initialized.");
-    }
+    FATAL(globalSession, "Slang Global Session is not initialized.");
 
     if (!session)
     {

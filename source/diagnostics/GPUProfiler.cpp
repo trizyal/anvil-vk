@@ -3,11 +3,14 @@
 
 #include "GPUProfiler.h"
 
+#include "Trace.h"
 #include "VulkanContext.h"
 #include "VulkanResult.h"
 
 void GPUProfiler::initializeGPUProfiler(VulkanContext* inContext, float inTimePeriod, uint32_t maxFramesInFlight)
 {
+    SCOPE_CPU;
+    
     pContext = inContext;
     timestampPeriod = inTimePeriod;
 

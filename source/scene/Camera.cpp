@@ -13,6 +13,8 @@
 
 Camera::Camera(const glm::vec3 inStartPosition)
 {
+    SCOPE_CPU;
+
     position = inStartPosition;
     yawDegree = -90.0f; // Look straight ahead (negative Z)
     pitchDegree = 0.0f;
@@ -22,11 +24,15 @@ Camera::Camera(const glm::vec3 inStartPosition)
 
 glm::mat4 Camera::getViewMatrix() const
 {
+    SCOPE_CPU;
+
     return glm::lookAt(position, position + front, up);
 }
 
 glm::mat4 Camera::getProjectionMatrix(const float aspectRatio) const
 {
+    SCOPE_CPU;
+
     glm::mat4 projection = glm::perspective(glm::radians(fovDegrees), aspectRatio, 0.1f, 100.0f);
 
     // Flip Y for Vulkan's coordinate system
@@ -38,6 +44,7 @@ glm::mat4 Camera::getProjectionMatrix(const float aspectRatio) const
 void Camera::updateCamera(float deltaTime)
 {
     SCOPE_CPU;
+
     float velocity = cameraSpeed * deltaTime;
 
     // Mouse Look
@@ -81,6 +88,8 @@ void Camera::updateCamera(float deltaTime)
 
 void Camera::updateCameraVectors()
 {
+    SCOPE_CPU;
+
     glm::vec3 newFront;
     newFront.x = cos(glm::radians(yawDegree)) * cos(glm::radians(pitchDegree));
     newFront.y = sin(glm::radians(pitchDegree));

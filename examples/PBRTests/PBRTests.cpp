@@ -6,7 +6,7 @@
 #include "Console.h"
 #include "UIElements.h"
 
-void PBRTests::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer)
+void PBRTests::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer)
 {
     pContext = &inContext;
     pSwapchain = &inSwapchain;
@@ -75,8 +75,8 @@ bool PBRTests::loadPipelines(std::string* outErrorMessage)
 
 bool PBRTests::loadGeometryPipeline(std::string* outErrorMessage)
 {
-    AnvilShaders::ShaderCompileRequest v_req{"PBRGeometry", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"PBRGeometry", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"PBRGeometry", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"PBRGeometry", "fragmentMain", Shaders::ST_Fragment};
 
     ShaderProgram new_program;
     if (!new_program.buildProgram(*pContext, shaderCompiler, v_req, f_req, outErrorMessage)) return false;
@@ -115,8 +115,8 @@ bool PBRTests::loadGeometryPipeline(std::string* outErrorMessage)
 
 bool PBRTests::loadLightingPipeline(std::string* outErrorMessage)
 {
-    AnvilShaders::ShaderCompileRequest v_req{"PBRLighting", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"PBRLighting", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"PBRLighting", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"PBRLighting", "fragmentMain", Shaders::ST_Fragment};
 
     ShaderProgram new_program;
     if (!new_program.buildProgram(*pContext, shaderCompiler, v_req, f_req, outErrorMessage))
@@ -174,11 +174,11 @@ void PBRTests::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& inSwap
     camera.updateCamera(deltaTime);
     sceneManager.gpuModel.updateTransforms(sceneManager.cpuModel);
 
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.depth.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     const auto color_attachments = gBuffer.getRenderingAttachments();
     const auto depth_attachment = gBuffer.getDepthAttachmentInfo();
@@ -192,25 +192,26 @@ void PBRTests::recordGeometryPass(VkCommandBuffer inCmd, const Swapchain& inSwap
     render_info.pDepthAttachment = &depth_attachment;
 
     vkCmdBeginRendering(inCmd, &render_info);
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
 
     pRenderer->drawModel(inCmd, sceneManager.gpuModel, camera, pipeline_Geo.pipeline, material_Geo.materialPipelineLayout, VK_NULL_HANDLE, true);
 
     vkCmdEndRendering(inCmd);
 
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    AnvilRenderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.albedo.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.normal.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.pbr.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    Renderer::TransitionImageLayout(inCmd, gBuffer.worldPosition.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void PBRTests::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
     pbrScene.updateGPUBuffer();
     UI::RenderWorldAxes(camera.getViewMatrix());
 
     uint32_t debugMode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    uint32_t cachedDebugMode = debugMode;
     int activeSceneIdx = sceneManager.activeSceneIndex;
     uint32_t selectedSceneIdx = 0;
 
@@ -222,8 +223,13 @@ void PBRTests::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
             // sceneManager.loadScene(selectedSceneIdx, *pContext, material_Geo, camera, pbrScene);
             pendingSceneIndex = static_cast<int>(selectedSceneIdx);
         }
+
+        if (cachedDebugMode != debugMode)
+        {
+            Console::SetCVarInt("r.debugmode", static_cast<int>(debugMode));
+            cachedDebugMode = debugMode;
+        }
     }
-    Console::SetCVarInt("r.debugmode", static_cast<int>(debugMode));
 
     if (DebugPass::isForwardMode(debugMode))
     {

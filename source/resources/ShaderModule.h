@@ -12,7 +12,7 @@
 #include <volk.h>
 
 #include "VulkanContext.h"
-#include "AnvilShaders.h"
+#include "Shaders.h"
 #include "DebugNames.h"
 
 /**
@@ -56,11 +56,9 @@ public:
      * @param aDebugName Optional debug name for Vulkan object.
      * @param aDbgSrcLoc Automatic.
      *
-     * @throws std::runtime_error If shader module creation failed.
-     *
      * @see ShaderCompileResult
      */
-    void createShaderModule(const VulkanContext& inContext, const AnvilShaders::ShaderCompileResult& inSPIRV D_DECL());
+    void createShaderModule(const VulkanContext& inContext, const Shaders::ShaderCompileResult& inSPIRV D_DECL());
 
     /**
      * @brief Destroys the underlying Vulkan shader module using the cached logical device.

@@ -5,6 +5,9 @@
 
 #include <stdexcept>
 
+#include "Trace.h"
+#include "VulkanResult.h"
+
 PipelineBuilder::PipelineBuilder()
 {
     // Initialise standard structs to safe zero values
@@ -167,6 +170,8 @@ PipelineBuilder& PipelineBuilder::enableAdditiveBlending()
 
 AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout D_DEFN) const
 {
+    SCOPE_CPU;
+
     // Viewport state setup
     // Using dynamic states so we can resize the window
     VkPipelineViewportStateCreateInfo viewport_state_info{};
@@ -197,11 +202,7 @@ AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkP
 
     AnvilPipeline returnAnvilPipeline{};
 
-    if (vkCreateGraphicsPipelines(inDevice, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &returnAnvilPipeline.pipeline) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create graphics pipeline!");
-    }
-
+    CHECK(vkCreateGraphicsPipelines(inDevice, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &returnAnvilPipeline.pipeline));
     SET_DNAME(inDevice, returnAnvilPipeline.pipeline, VK_OBJECT_TYPE_PIPELINE);
 
     return returnAnvilPipeline;

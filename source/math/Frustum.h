@@ -8,6 +8,8 @@
  * @file Frustum.h
  */
 
+#include "Trace.h"
+
 /**
  * @brief Axis-Aligned Bounding Box used for spatial partitioning and frustum culling.
  */
@@ -53,6 +55,8 @@ struct Frustum
      */
     void extractPlanes(const glm::mat4& vp)
     {
+        SCOPE_CPU;
+
         for (int i = 0; i < 4; ++i) planes[0][i] = vp[i][3] + vp[i][0]; // Left
         for (int i = 0; i < 4; ++i) planes[1][i] = vp[i][3] - vp[i][0]; // Right
         for (int i = 0; i < 4; ++i) planes[2][i] = vp[i][3] - vp[i][1]; // Top (Vulkan inverted Y)
@@ -75,6 +79,8 @@ struct Frustum
      */
     bool contains(const AABB& aabb)
     {
+        SCOPE_CPU;
+        
         const glm::vec3 center = aabb.getCenter();
         const glm::vec3 extents = aabb.getExtents();
 

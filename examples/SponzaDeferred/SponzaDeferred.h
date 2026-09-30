@@ -4,8 +4,8 @@
 #ifndef EXAMPLE_SPONZADEFERRED_H
 #define EXAMPLE_SPONZADEFERRED_H
 
-#include "AnvilMaterial.h"
-#include "AnvilRenderer.h"
+#include "Material.h"
+#include "Renderer.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "Scene.h"
@@ -21,7 +21,7 @@ class SponzaDeferred
 private:
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
-    AnvilRenderer* pRenderer = nullptr;
+    Renderer* pRenderer = nullptr;
 
     ShaderCompiler shaderCompiler;
 
@@ -32,12 +32,12 @@ private:
 
     // Geometry Pass
     ShaderProgram shaderProgram_Geo;
-    AnvilMaterial material_Geo;
+    Material material_Geo;
     AnvilPipeline pipeline_Geo;
 
     // Lighting Pass
     ShaderProgram shaderProgram_Light;
-    AnvilMaterial material_Light;
+    Material material_Light;
     AnvilPipeline pipeline_Light;
 
     MaterialInstance sceneLightingSet; // Manages set 0 : GlobalSceneData
@@ -46,7 +46,7 @@ private:
     Camera camera;
 
 public:
-    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer);
+    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer);
     void cleanupProject();
     bool loadPipelines(std::string* outErrorMessage = nullptr);
 

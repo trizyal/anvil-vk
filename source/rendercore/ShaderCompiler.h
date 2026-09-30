@@ -12,7 +12,7 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 
-#include "AnvilShaders.h"
+#include "Shaders.h"
 
 /**
  * @brief Runtime compiler wrapper around the Slang compilation API.
@@ -111,9 +111,9 @@ public:
      * @param request Struct containing source file path, entry point name, and target stage.
      * @return Result structure containing the compiled SPIR-V buffer and reflection data.
      *
-     * @bug Should throw a runtime_error instead of an empty return.
+     * @bug Should error instead of an empty return.
      */
-    AnvilShaders::ShaderCompileResult compileToSPIRV(const AnvilShaders::ShaderCompileRequest& request);
+    Shaders::ShaderCompileResult compileToSPIRV(const Shaders::ShaderCompileRequest& request);
 
 private:
     /**

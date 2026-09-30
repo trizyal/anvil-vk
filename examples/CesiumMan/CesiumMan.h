@@ -4,7 +4,7 @@
 #ifndef EXAMPLE_CESIUMMAN_H
 #define EXAMPLE_CESIUMMAN_H
 
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "Scene.h"
@@ -35,7 +35,7 @@ private:
     GPUModel gpuModel;
 
     ShaderProgram cesiumProgram;
-    AnvilMaterial cesiumMaterial;
+    Material cesiumMaterial;
     MaterialInstance globalSet;
     Scene cesiumScene;
     Camera camera;

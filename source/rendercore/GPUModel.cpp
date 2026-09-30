@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "Logger.h"
 #include "Trace.h"
 
 GPUModel::GPUModel(GPUModel&& other) noexcept
@@ -35,9 +36,10 @@ GPUModel& GPUModel::operator=(GPUModel&& other) noexcept
     return *this;
 }
 
-void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const AnvilMaterial& inMaterial)
+void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel, const Material& inMaterial)
 {
     SCOPE_CPU;
+    
     // Destroy the old vulkan objects
     destroyGPUModel();
 
@@ -54,6 +56,7 @@ void GPUModel::createGPUModel(VulkanContext& inContext, const CPUModel& inModel,
 void GPUModel::destroyGPUModel()
 {
     SCOPE_CPU;
+
     if (!pContext)
     {
         return;
@@ -86,6 +89,7 @@ void GPUModel::destroyGPUModel()
 void GPUModel::updateTransforms(const CPUModel& inModel)
 {
     SCOPE_CPU;
+
     if (drawItems.empty() || modelMatricesBuffer.buffer == VK_NULL_HANDLE)
     {
         return;
@@ -114,6 +118,7 @@ void GPUModel::updateTransforms(const CPUModel& inModel)
 void GPUModel::updateJoints(const CPUModel& inModel) const
 {
     SCOPE_CPU;
+
     if (jointBuffer.buffer != VK_NULL_HANDLE && !inModel.skins.empty())
     {
         std::vector<glm::mat4> jointMatrices;
@@ -150,6 +155,7 @@ void GPUModel::updateJoints(const CPUModel& inModel) const
 void GPUModel::createTextures(const CPUModel& inModel)
 {
     SCOPE_CPU;
+
     defaultWhiteTexture.createSolidColorTexture(*pContext, WhiteColor);
     defaultNormalTexture.createSolidColorTexture(*pContext, NormalColor);
     defaultTransparentTexture.createSolidColorTexture(*pContext, TransparentColor);
@@ -157,31 +163,26 @@ void GPUModel::createTextures(const CPUModel& inModel)
     textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
     {
-        try
+        GPUTexture tex;
+        if (tex.createTexture(*pContext, cpu_texture.imagePath, cpu_texture.isSRGB))
         {
-            GPUTexture tex;
-            tex.createTexture(*pContext, cpu_texture.imagePath, cpu_texture.isSRGB);
             textures.push_back(std::move(tex));
         }
-        catch (...)
+        else
         {
-            std::cout << "Texture load failed for " << cpu_texture.name << ". Falling back to default." << std::endl;
-            std::cout << "Color Space for "<< cpu_texture.name << " is " << (cpu_texture.isSRGB ? "SRGB" : "UNORM") << std::endl;
+            LOG_WARN("Texture load failed for {}. Falling back to default.",cpu_texture.name);
+            LOG_WARN("Color Space for {} is {}.", cpu_texture.name, (cpu_texture.isSRGB ? "SRGB" : "UNORM"));
 
             // Push an empty shell texture to maintain index alignment
             textures.emplace_back();
-#if 0 // Creates copies of default texture which we don't want
-            GPUTexture fallback;
-            fallback.createSolidColorTexture(*pContext, WhiteColor);
-            textures.push_back(std::move(fallback));
-#endif
         }
     }
 }
 
-void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const AnvilMaterial& inMaterial)
+void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Material& inMaterial)
 {
     SCOPE_CPU;
+
     // Configure Set 1 - Model Data
     if (inMaterial.hasSet(1))
     {
@@ -259,6 +260,7 @@ void GPUModel::createMaterialDescriptorSets(const CPUModel& inModel, const Anvil
 void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 {
     SCOPE_CPU;
+
     gpuMeshes.clear();
     drawItems.clear();
 
@@ -339,6 +341,7 @@ void GPUModel::createMeshesAndDrawItems(const CPUModel& inCPUModel)
 void GPUModel::createJointBuffer()
 {
     SCOPE_CPU;
+
     // We must provide initial data because GPUBuffer::createBuffer always calls std::memcpy.
     // Initializing with Identity Matrices means vertices won't stretch to infinity on frame 0.
     std::vector<glm::mat4> initial_matrices(MAX_BONES, glm::mat4(1.0f));
@@ -358,6 +361,7 @@ void GPUModel::createJointBuffer()
 void GPUModel::createModelMatricesBuffer()
 {
     SCOPE_CPU;
+
     if (drawItems.empty())
     {
         return;

@@ -5,11 +5,11 @@
 
 #include <iostream>
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "Console.h"
 #include "UIElements.h"
 
-void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer)
+void Sponza::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer)
 {
     std::cout << "Initialize project" << std::endl;
     pContext = &inContext;
@@ -68,8 +68,8 @@ bool Sponza::loadPipeline(std::string* outErrorMessage)
     std::cout << "Loading Pipeline." << std::endl;
     shaderCompiler.resetSession();
 
-    AnvilShaders::ShaderCompileRequest v_req{"Sponza", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest f_req{"Sponza", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest v_req{"Sponza", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest f_req{"Sponza", "fragmentMain", Shaders::ST_Fragment};
 
     // Try building new program into a temporary instance
     ShaderProgram new_program;
@@ -123,7 +123,7 @@ bool Sponza::loadPipeline(std::string* outErrorMessage)
 
 void Sponza::recordCommands(VkCommandBuffer inCmd, Swapchain& inSwapchain)
 {
-    AnvilRenderer::SetViewportScissor(inCmd, inSwapchain);
+    Renderer::SetViewportScissor(inCmd, inSwapchain);
 
     static auto lastFrameTime = std::chrono::high_resolution_clock::now();
     auto currentTime = std::chrono::high_resolution_clock::now();

@@ -8,7 +8,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "GPUMesh.h"
 #include "CPUModel.h"
 #include "ShaderCompiler.h"
@@ -68,8 +68,8 @@ void ShaderReflectionCube::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"ShaderReflectionCube", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"ShaderReflectionCube", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"ShaderReflectionCube", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"ShaderReflectionCube", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

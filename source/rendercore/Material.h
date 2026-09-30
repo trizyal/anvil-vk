@@ -5,7 +5,7 @@
 #define ANVIL_VK_MATERIAL_H
 
 /**
- * @file AnvilMaterial.h
+ * @file Material.h
  * @brief Factory class managing Slang shader compilation, reflection, and Vulkan layouts.
  */
 
@@ -23,23 +23,23 @@
  *
  * Owns the vertex and fragment shader modules. Uses Slang reflection metadata during build time
  * to automatically generate Vulkan descriptor set layouts, pipeline layouts, and descriptor pools.
- * Creates and dispenses `AnvilMaterialInstance` objects for rendering.
+ * Creates and dispenses `MaterialInstance` objects for rendering.
  *
  * @note This class in non-copyable. Moving is allowed.
  *
  * @warning Only stores one pair of vertex and fragment shaders, may need re-architecting.
  */
-class AnvilMaterial
+class Material
 {
 public:
-    AnvilMaterial() = default;
-    ~AnvilMaterial() = default;
+    Material() = default;
+    ~Material() = default;
 
-    AnvilMaterial(const AnvilMaterial&) = delete;
-    AnvilMaterial& operator=(const AnvilMaterial&) = delete;
+    Material(const Material&) = delete;
+    Material& operator=(const Material&) = delete;
 
-    AnvilMaterial(AnvilMaterial&&) noexcept = default;
-    AnvilMaterial& operator=(AnvilMaterial&&) noexcept = default;
+    Material(Material&&) noexcept = default;
+    Material& operator=(Material&&) noexcept = default;
 
     /** Reflected layouts for the material's descriptor sets (Index 0 = Set 0, etc). */
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
@@ -89,8 +89,6 @@ public:
 
     /**
      * @brief Retrieves reflected binding metadata by shader variable name.
-     *
-     * @throws std::runtime_error If the binding does not exist.
      */
     [[nodiscard]]
     ShaderBinding getBinding(const std::string& name) const;

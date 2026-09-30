@@ -51,5 +51,8 @@ tools/tracy
 # scripts
 scripts/output
 
+# logs
+saved/logs
+
 # RenderDoc
 *.rdc

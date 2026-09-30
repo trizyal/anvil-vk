@@ -9,12 +9,16 @@
 #include <VkBootstrap.h>
 
 #include "DebugNames.h"
+#include "Logger.h"
+#include "Trace.h"
 #include "VulkanContext.h"
 #include "VulkanResult.h"
 
 void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent)
 {
-    std::cout << "Creating AnvilSwapchain" << std::endl;
+    SCOPE_CPU;
+    LOG_TRACE("Creating Swapchain");
+
     pContext = &inAnvilContext;
 
     vkb::SwapchainBuilder vkb_swapchain_builder{
@@ -27,14 +31,7 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
     vkb_swapchain_builder.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR); // vsync
     vkb_swapchain_builder.set_desired_extent(inExtent.width, inExtent.height);
     vkb::Result<vkb::Swapchain> vkb_swapchain_result = vkb_swapchain_builder.build();
-
-    if (!vkb_swapchain_result)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to create Swapchain via vk-bootstrap:" << std::endl;
-        error_stream << "  Primary error: " << vkb_swapchain_result.error().message() << std::endl;
-        throw std::runtime_error(error_stream.str());
-    }
+    VKB_CHECK(vkb_swapchain_result);
 
     vkb::Swapchain vkb_swapchain = vkb_swapchain_result.value();
     anvilSwapchain = vkb_swapchain.swapchain;
@@ -63,12 +60,13 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
 
     createDepthAttachment();
 
-    std::cout << "Finished creating AnvilSwapchain" << std::endl;
+    LOG_TRACE("Finished creating AnvilSwapchain");
 }
 
 void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 {
-    std::cout << "Re-Creating AnvilSwapchain" << std::endl;
+    SCOPE_CPU;
+    LOG_TRACE("Re-creating AnvilSwapchain");
 
     // Wait for GPU to finish
     vkDeviceWaitIdle(pContext->device);
@@ -108,14 +106,7 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
     vkb_swapchain_builder.set_old_swapchain(old_swapchain);
 
     vkb::Result<vkb::Swapchain> vkb_swapchain_result = vkb_swapchain_builder.build();
-
-    if (!vkb_swapchain_result)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to create Swapchain via vk-bootstrap:" << std::endl;
-        error_stream << "  Primary error: " << vkb_swapchain_result.error().message() << std::endl;
-        throw std::runtime_error(error_stream.str());
-    }
+    VKB_CHECK(vkb_swapchain_result);
 
     vkb::Swapchain vkb_swapchain = vkb_swapchain_result.value();
     anvilSwapchain = vkb_swapchain.swapchain;
@@ -129,16 +120,14 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 
     for (size_t i = 0; i < swapchainImages.size(); ++i)
     {
-        std::string image_name = "SwapchainImage[" + std::to_string(i) + "]";
         SET_DNAME_HERE(pContext->device, swapchainImages[i],
-            VK_OBJECT_TYPE_IMAGE, image_name.c_str());
+            VK_OBJECT_TYPE_IMAGE, ("SwapchainImage[" + std::to_string(i) + "]").c_str());
     }
 
     for (size_t i = 0; i < swapchainImageViews.size(); ++i)
     {
-        std::string image_view_name = "SwapchainImageView[" + std::to_string(i) + "]";
         SET_DNAME_HERE(pContext->device, swapchainImageViews[i],
-            VK_OBJECT_TYPE_IMAGE_VIEW, image_view_name.c_str());
+            VK_OBJECT_TYPE_IMAGE_VIEW, ("SwapchainImageView[" + std::to_string(i) + "]").c_str());
     }
 
     createDepthAttachment();
@@ -150,14 +139,16 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 
     if (old_format != swapchainFormat)
     {
-        std::cerr << "Swapchain format has changed!" << std::endl;
+        LOG_ERROR("Swapchain format has changed!");
     }
 
-    std::cout << "Finished creating AnvilSwapchain" << std::endl;
+    LOG_TRACE("Finished re-creating AnvilSwapchain");
 }
 
 void Swapchain::createDepthAttachment()
 {
+    SCOPE_CPU;
+
     // Create depth image via VMA
     VkImageCreateInfo depth_image_info{};
     depth_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -191,7 +182,6 @@ void Swapchain::createDepthAttachment()
     depth_image_view_info.subresourceRange.layerCount = 1;
 
     CHECK(vkCreateImageView(pContext->device, &depth_image_view_info, nullptr, &depthImageView));
-
     SET_DNAME_HERE(pContext->device, depthImage, VK_OBJECT_TYPE_IMAGE, "SwapchainDepthImage");
 }
 

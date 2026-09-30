@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "GPUMesh.h"
 #include "GPUModel.h"
 #include "VulkanContext.h"
@@ -37,7 +37,7 @@ private:
     Scene boxScene;
 
     ShaderProgram boxProgram; // Explicitly manage program layout
-    AnvilMaterial boxMaterial;
+    Material boxMaterial;
     MaterialInstance globalSet; // Manage the scene UBO
 
     CPUModel cpuModel;
@@ -49,7 +49,7 @@ public:
     void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain);
     void cleanupProject();
 
-    // Function that records commands to trigger in AnvilRenderer
+    // Function that records commands to trigger in Renderer
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);
 
     void loadPipeline();

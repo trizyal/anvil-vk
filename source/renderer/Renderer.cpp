@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 
 #include <iostream>
 #include <fstream>
@@ -17,6 +17,7 @@
 #include "Window.h"
 #include "DebugNames.h"
 #include "GPUModel.h"
+#include "Logger.h"
 #include "PushConstants.h"
 #include "ScreenLogger.h"
 #include "UIElements.h"
@@ -37,11 +38,11 @@ CVAR_INT("r.debugmode",
 CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
 CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
 
-void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
+void Renderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain)
 {
-    SCOPE_CPU_NAME("AnvilRenderer::initializeRenderer");
+    SCOPE_CPU;
+    LOG_TRACE("Initializing Renderer");
 
-    std::cout << "Initializing AnvilRenderer" << std::endl;
     this->pContext = inAnvilContext;
     this->pSwapchain = inAnvilSwapchain;
 
@@ -50,6 +51,8 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
 
     pContext->immediateSubmit([this]([[maybe_unused]]VkCommandBuffer cmd)
     {
+        SCOPE_CPU_NAME("TracyContext(immediateSubmit)");
+        LOG_INFO("Creating Tracy Context");
         tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);
     });
 
@@ -61,14 +64,14 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
     debugPass.initializeDebugPass(*pContext, engineCompiler, pSwapchain->swapchainFormat, pSwapchain->depthFormat);
 
     COMMAND("freezerendering",
-    "Freezes the rendering state.",
-    [](const std::vector<std::string>&)
-    {
-        bool current = Console::GetCVarBool("r.freezerendering");
-        Console::SetCVarBool("r.freezerendering", !current);
-        Console::Print(current ? "Rendering un-frozen." : "Rendering frozen.");
-    }
-);
+        "Freezes the rendering state.",
+        [](const std::vector<std::string>&)
+        {
+            bool current = Console::GetCVarBool("r.freezerendering");
+            Console::SetCVarBool("r.freezerendering", !current);
+            Console::Print(current ? "Rendering un-frozen." : "Rendering frozen.");
+        }
+    );
 
     COMMAND("vmastats",
         "Dumps VMA memory stats to vma_dumps.json.",
@@ -98,10 +101,10 @@ void AnvilRenderer::initializeRenderer(VulkanContext* inAnvilContext, Swapchain*
         }
     );
 
-    std::cout << "Finished Initializing AnvilRenderer" << std::endl;
+    LOG_TRACE("Finished initializing Renderer");
 }
 
-AnvilRenderer::~AnvilRenderer()
+Renderer::~Renderer()
 {
     // Wait for GPU
     if (pContext && pContext->device)
@@ -131,9 +134,10 @@ AnvilRenderer::~AnvilRenderer()
     }
 }
 
-void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
+void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 {
-    SCOPE_CPU_NAME("AnvilRenderer::drawFrame");
+    SCOPE_CPU;
+
     // Recreate swapchain maybe
     if (recreateSwapchain)
     {
@@ -144,15 +148,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 
     AnvilFrame& frame = getCurrentFrame();
 
-    // Wait for previous frame
-    VkResult fence_result = vkWaitForFences(pContext->device, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX);
-    if (fence_result != VK_SUCCESS)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to Wait for frameDoneFence:" << std::endl;
-        error_stream << "   Error: " << VulkanResult::ToString(fence_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
-    }
+    CHECK(vkWaitForFences(pContext->device, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX));
 
     // Request image from swapchain
     uint32_t image_index = 0;
@@ -166,7 +162,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     if (acquired_result == VK_ERROR_OUT_OF_DATE_KHR /*|| acquiredResult == VK_SUBOPTIMAL_KHR*/)
     {
         // Recreate Swapchain
-        std::cout << "VK_ERROR_OUT_OF_DATE_KHR" << std::endl;
+        LOG_DEBUG("Recreate swapchain. vkAcquireNextImageKHR = VK_ERROR_OUT_OF_DATE_KHR.");
         recreateSwapchain = true;
         return;
     }
@@ -176,18 +172,11 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
         std::ostringstream error_stream;
         error_stream << "Failed to Acquire Next Image:" << std::endl;
         error_stream << "   Error: " << VulkanResult::ToString(acquired_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
+        LOG_FATAL("{}", error_stream.str());
     }
 
     // Reset fences after vkAcquireNextImageKHR
-    fence_result = vkResetFences(pContext->device, 1, &frame.frameDoneFence);
-    if (fence_result != VK_SUCCESS)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to Reset frameDoneFence:" << std::endl;
-        error_stream << "   Error: " << VulkanResult::ToString(fence_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
-    }
+    CHECK(vkResetFences(pContext->device, 1, &frame.frameDoneFence));
 
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
     assert(image_index < pSwapchain->swapchainImages.size());
@@ -270,9 +259,12 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     vkCmdEndRendering(cmd);
 
     // Transition image to present layout
-    TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    {
+        SCOPE_GPU(tracyVkCtx, cmd, "Transition to Present");
+        TransitionImageLayout(cmd, pSwapchain->swapchainImages[image_index],
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    }
 
     gpuProfiler.endGPUProfilerFrame(cmd, anvilFrameIndex);
 
@@ -318,7 +310,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 
     if (present_result == VK_ERROR_OUT_OF_DATE_KHR || present_result == VK_SUBOPTIMAL_KHR)
     {
-        std::cout << "VK_ERROR_OUT_OF_DATE_KHR || VK_SUBOPTIMAL_KHR" << std::endl;
+        LOG_DEBUG("Recreate swapchain. vkQueuePresentKHR = VK_ERROR_OUT_OF_DATE_KHR || VK_SUBOPTIMAL_KHR.");
         recreateSwapchain = true;
     }
     else if (present_result != VK_SUCCESS)
@@ -326,7 +318,7 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
         std::ostringstream error_stream;
         error_stream << "Failed to Present Swapchain Image:" << std::endl;
         error_stream << "   Error: " << VulkanResult::ToString(present_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
+        LOG_FATAL("{}", error_stream.str());
     }
 
     engineStats.gpuTime = gpuProfiler.getGPUTime(anvilFrameIndex);
@@ -339,9 +331,9 @@ void AnvilRenderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     SCOPE_FRAME;
 }
 
-void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
+void Renderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0, bool isGBufferPass) const
 {
-    SCOPE_CPU_NAME("AnvilRenderer::drawModel");
+    SCOPE_CPU;
     SCOPE_GPU(tracyVkCtx, inCmd, "Draw Model");
 
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
@@ -466,12 +458,14 @@ void AnvilRenderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, cons
     }
 }
 
-void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0)
+void Renderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, const Camera& camera, VkPipeline userPipeline, VkPipelineLayout userLayout, VkDescriptorSet userSet0)
 {
+    SCOPE_CPU;
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
 
     if (static_cast<DebugMode>(debug_mode) == DebugMode::None)
     {
+        SCOPE_GPU(tracyVkCtx, inCmd, "Deferred Lighting");
         vkCmdBindPipeline(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userPipeline);
         vkCmdBindDescriptorSets(inCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, userLayout, 0, 1, &userSet0, 0, nullptr);
 
@@ -484,13 +478,17 @@ void AnvilRenderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer
     }
     else if (DebugPass::isDeferredMode(debug_mode))
     {
+        SCOPE_GPU(tracyVkCtx, inCmd, "Deferred Debug");
         debugPass.drawDeferredResolve(inCmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
     }
 }
 
 
-void AnvilRenderer::setupCommandBuffers()
+void Renderer::setupCommandBuffers()
 {
+    SCOPE_CPU;
+    LOG_TRACE("Setting up Command Buffers");
+
     VkCommandPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -499,11 +497,7 @@ void AnvilRenderer::setupCommandBuffers()
     for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
     {
         AnvilFrame& anvil_frame = anvilFrames[i];
-        if (vkCreateCommandPool(pContext->device, &pool_info, nullptr, &anvil_frame.cmdPool) != VK_SUCCESS)
-        {
-            // TODO: Provide better error message
-            throw std::runtime_error("Failed to create command pool.");
-        }
+        CHECK(vkCreateCommandPool(pContext->device, &pool_info, nullptr, &anvil_frame.cmdPool));
 
         VkCommandBufferAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -514,6 +508,7 @@ void AnvilRenderer::setupCommandBuffers()
         CHECK(vkAllocateCommandBuffers(pContext->device, &alloc_info, &anvil_frame.cmdBuffer));
 
 #if ANVIL_DEBUG
+        LOG_DEBUG("Debug names for Command Buffer data set.");
         // When function structure doesn't allow ANVIL_DEBUG_NAME, we can directly use the SetAutoName function
         std::string pool_name = "AnvilFrame[" + std::to_string(i) + "]_CommandPool";
         std::string cmd_name  = "AnvilFrame[" + std::to_string(i) + "]_CommandBuffer";
@@ -523,10 +518,15 @@ void AnvilRenderer::setupCommandBuffers()
         SET_DNAME_HERE(pContext->device, anvil_frame.cmdBuffer, VK_OBJECT_TYPE_COMMAND_BUFFER, cmd_name.c_str());
 #endif
     }
+
+    LOG_TRACE("Command Buffers setup finished.");
 }
 
-void AnvilRenderer::setupSyncStructures()
+void Renderer::setupSyncStructures()
 {
+    SCOPE_CPU;
+    LOG_TRACE("Setting up Sync Structures");
+
     VkSemaphoreCreateInfo semaphore_info{};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -538,41 +538,34 @@ void AnvilRenderer::setupSyncStructures()
     {
         AnvilFrame& anvil_frame = anvilFrames[i];
 
-        if (vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &anvil_frame.imageAvailableSemaphore) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create imageAvailableSemaphore.");
-        }
-        std::string debug_name = "Frame[" + std::to_string(i) + "]_ImageAvailableSemaphore";
-        SET_DNAME_HERE(pContext->device, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE, debug_name.c_str());
+        CHECK(vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &anvil_frame.imageAvailableSemaphore));
+        SET_DNAME_HERE(pContext->device, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE,
+            ("Frame[" + std::to_string(i) + "]_ImageAvailableSemaphore").c_str());
 
-        if (vkCreateFence(pContext->device, &fence_info, nullptr, &anvil_frame.frameDoneFence) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create frameDoneFence.");
-        }
-        debug_name = "Frame[" + std::to_string(i) + "]_FrameDoneFence";
-        SET_DNAME_HERE(pContext->device, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE, debug_name.c_str());
+        CHECK(vkCreateFence(pContext->device, &fence_info, nullptr, &anvil_frame.frameDoneFence));
+        SET_DNAME_HERE(pContext->device, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE,
+            ("Frame[" + std::to_string(i) + "]_FrameDoneFence").c_str());
     }
 
     // Create semaphores based on swapchain images count
     renderFinishedSemaphores.resize(pSwapchain->swapchainImages.size());
     for (uint32_t i = 0; i < renderFinishedSemaphores.size(); i++)
     {
-        if (vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create renderFinishedSemaphore.");
-        }
-        std::string render_finished_name = "SwapchainImage[" + std::to_string(i) + "]_RenderFinishedSemaphore";
-        SET_DNAME_HERE(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, render_finished_name.c_str());
+        CHECK(vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &renderFinishedSemaphores[i]));
+        SET_DNAME_HERE(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE,
+            ("SwapchainImage[" + std::to_string(i) + "]_RenderFinishedSemaphore").c_str());
     }
 }
 
-AnvilFrame& AnvilRenderer::getCurrentFrame()
+AnvilFrame& Renderer::getCurrentFrame()
 {
     return anvilFrames[anvilFrameIndex % FRAMES_IN_FLIGHT];
 }
 
-void AnvilRenderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
+void Renderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
+    SCOPE_CPU;
+
     VkImageMemoryBarrier image_barrier{};
     image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     image_barrier.oldLayout = oldLayout;
@@ -627,14 +620,17 @@ void AnvilRenderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage
     }
     else
     {
-        throw std::invalid_argument("Unsupported layout transition!");
+        LOG_ERROR("Unsupported layout transition!");
+        ENSURE(false, "Unsupported layout transition");
     }
     
     vkCmdPipelineBarrier(inCmd, src_stage_flags, dst_stage_mask, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);
 }
 
-void AnvilRenderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
+void Renderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
 {
+    SCOPE_CPU;
+
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -650,8 +646,11 @@ void AnvilRenderer::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& i
     vkCmdSetScissor(inCmd, 0, 1, &scissor);
 }
 
-bool AnvilRenderer::reloadDebugShaders(std::string* outError)
+bool Renderer::reloadDebugShaders(std::string* outError)
 {
+    SCOPE_CPU;
+    LOG_DEBUG("Reloading Debug Shaders.");
+
     // Force Slang to drop its module cache and read from disk again
     engineCompiler.resetSession();
 

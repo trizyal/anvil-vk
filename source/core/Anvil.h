@@ -16,7 +16,7 @@
 #include "Window.h"
 #include "VulkanContext.h"
 #include "Swapchain.h"
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "UIRenderer.h"
 
 /**
@@ -60,7 +60,7 @@ private:
     std::unique_ptr<Window> window;
     VulkanContext context;
     Swapchain swapchain;
-    AnvilRenderer renderer;
+    Renderer renderer;
     UIRenderer uiRenderer;
 
     /** Tracks whether the engine has been successfully bootstrapped. */
@@ -88,7 +88,6 @@ public:
      * Initializes GLFW, creates the Vulkan instance, device, memory allocator and debug utils,
      * sets up the swapchain, and initializes the renderer.
      * @param inCreateInfo Optional window and startup configuration struct.
-     * @throws std::runtime_error If GLFW or any core Vulkan subsystems fail to initialize.
      */
     void initializeAnvil(const AnvilCreateInfo& inCreateInfo = {});
 
@@ -99,7 +98,6 @@ public:
      * Automatically polls OS events, processes any queued shader reloads, and invokes
      * the provided render callback every frame.
      * @param renderHooks Struct containing optional pre-pass and main-pass callbacks.
-     * @throws std::runtime_error If the AnvilApplication is uninitialized or `drawFrame` throws.
      * @attention Shader reloading happening here is not ideal.
      */
     void runAnvil(const RenderHooks& renderHooks);
@@ -147,7 +145,7 @@ public:
      * @note The reference cannot be discarded.
      */
     [[nodiscard]]
-    AnvilRenderer& getRenderer();
+    Renderer& getRenderer();
 
 private:
     /**

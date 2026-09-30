@@ -15,7 +15,7 @@
 #include <glm/glm.hpp>
 #include <volk.h>
 
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "CPUModel.h"
 #include "GPUTexture.h"
 #include "GPUMesh.h"
@@ -114,7 +114,7 @@ public:
     void createGPUModel(
         VulkanContext& inContext,
         const CPUModel& inModel,
-        const AnvilMaterial& inMaterial
+        const Material& inMaterial
     );
 
     /**
@@ -159,7 +159,7 @@ private:
      */
     void createMaterialDescriptorSets(
         const CPUModel& inModel,
-        const AnvilMaterial& inMaterial
+        const Material& inMaterial
     );
 
     /**

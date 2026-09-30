@@ -100,14 +100,11 @@ target_link_libraries(imgui PUBLIC volk glfw)
 # -- tracy
 option(TRACY "Enable Tracy Profiler" ON)
 if(TRACY)
-    option (TRACY_ENABLE "" ON)
-    option (TRACY_ON_DEMAND "" ON)
-
     add_library(tracy_client STATIC tracy/TracyClient.cpp)
-    target_include_directories(tracy_client PUBLIC tracy)
+    target_include_directories(tracy_client SYSTEM PUBLIC tracy)
 
-    # PUBLIC definitions propagate automatically to your engine when linked!
-    # target_compile_definitions(tracy_client PUBLIC TRACY_ENABLE)
+    target_compile_definitions(tracy_client PUBLIC TRACY_ENABLE)
+    # TRACY_ON_DEMAND starts the capture only after the tracy executable is launched.
 
     # Disable all warnings for Tracy's internal code
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

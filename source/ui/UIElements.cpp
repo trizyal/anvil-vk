@@ -16,6 +16,7 @@
 #include "DebugModes.h"
 #include "DebugPass.h"
 #include "RenderDoc.h"
+#include "Trace.h"
 
 namespace
 {
@@ -49,12 +50,12 @@ namespace
     } //Axis
 
     int ConsoleInputCallback(ImGuiInputTextCallbackData* data);
-
-    const char* GetDebugModeName(DebugMode mode);
 }
 
 void UI::LoadFonts()
 {
+    SCOPE_CPU;
+
     ImGuiIO& io = ImGui::GetIO();
 
     base = io.Fonts->AddFontFromFileTTF(FontPath, 22.0f);
@@ -68,6 +69,8 @@ void UI::LoadFonts()
 
 void UI::ApplyAnvilTheme()
 {
+    SCOPE_CPU;
+
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
@@ -78,6 +81,8 @@ void UI::ApplyAnvilTheme()
 
 void UI::FrameStats(const ::FrameStats& stats, bool* pOpen)
 {
+    SCOPE_CPU;
+
     const float PAD = 10.0f;
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 workPos = viewport->WorkPos;
@@ -143,6 +148,8 @@ void UI::FrameStats(const ::FrameStats& stats, bool* pOpen)
 
 void UI::RenderWorldAxes(const glm::mat4& viewMatrix)
 {
+    SCOPE_CPU;
+
     // TODO: Clean up the DrawDebugAxis function
 
     // Position a small transparent window in the bottom right
@@ -225,6 +232,8 @@ void UI::RenderWorldAxes(const glm::mat4& viewMatrix)
 void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry,
                           const std::function<void()>& onAbort)
 {
+    SCOPE_CPU;
+
     ImGui::OpenPopup("Shader Compilation Error");
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -269,6 +278,8 @@ void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<v
 
 bool UI::DrawDebugMenu(uint32_t& currentMode)
 {
+    SCOPE_CPU;
+
     bool bChanged = false;
     if (ImGui::BeginMainMenuBar())
     {
@@ -277,7 +288,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode)
             for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
             {
                 bool is_selected = (currentMode == i);
-                if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
                 {
                     currentMode = i;
                     bChanged = true;
@@ -295,6 +306,8 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
                        int& activeSceneIdx,
                        uint32_t& outSelectedScene)
 {
+    SCOPE_CPU;
+
     bool bChanged = false;
     outSelectedScene = static_cast<uint32_t>(activeSceneIdx);
 
@@ -321,9 +334,10 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
             for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
             {
                 bool is_selected = (currentMode == i);
-                if (ImGui::MenuItem(GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
                 {
                     currentMode = i;
+                    bChanged = true;
                 }
             }
             ImGui::EndMenu();
@@ -374,6 +388,8 @@ static int s_HistoryPosition = -1;
 
 void UI::DrawConsoleWindow(const int* pState)
 {
+    SCOPE_CPU;
+
     if (*pState == 0)
     {
         return;
@@ -484,6 +500,8 @@ namespace
 {
     int ConsoleInputCallback(ImGuiInputTextCallbackData* data)
     {
+        SCOPE_CPU;
+
         // Block the grave accent (`) and tilde (~) from being typed
         if (data->EventFlag == ImGuiInputTextFlags_CallbackCharFilter)
         {
@@ -532,29 +550,5 @@ namespace
             }
         }
         return 0;
-    }
-
-    const char* GetDebugModeName(DebugMode mode)
-    {
-        switch (mode)
-        {
-        case DebugMode::None:                   return "None";
-        case DebugMode::BaseColor:              return "Base Color";
-        case DebugMode::GeometryNormal:         return "Geometry Normal";
-        case DebugMode::RawNormalMap:           return "Raw Normal Map";
-        case DebugMode::WorldNormal:            return "World Normal";
-        case DebugMode::Metallic:               return "Metallic";
-        case DebugMode::Roughness:              return "Roughness";
-        case DebugMode::Depth:                  return "Depth";
-        case DebugMode::Overdraw:               return "Overdraw";
-        case DebugMode::Overshading:            return "Overshading";
-        case DebugMode::Wireframe:              return "Wireframe";
-
-        case DebugMode::Count:                  return "Unknown";
-            // NO default case!
-        }
-
-        // Satisfies the compiler in case an invalid integer is cast to the enum
-        return "Unknown";
     }
 }

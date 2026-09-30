@@ -170,7 +170,6 @@ DNAME(std::source_location const aDbgSrcLoc)
 
 #   define SET_VMA_DNAME(allocator, allocation) do {} while (0)
 #   define SET_VMA_DNAME_HERE(allocator, allocation, aDebugName) do {} while (0)
-#define
 #endif
 
 /**

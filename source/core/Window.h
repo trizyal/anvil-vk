@@ -91,7 +91,6 @@ public:
      * @brief Creates a Vulkan surface for this window.
      * @param inInstance Vulkan instance used to create the surface.
      * @return Vulkan surface.
-     * @throws std::runtime_error If surface creation fails.
      */
     [[nodiscard]]
     VkSurfaceKHR createSurface(VkInstance inInstance) const;

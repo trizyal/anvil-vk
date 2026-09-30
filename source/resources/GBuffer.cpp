@@ -3,8 +3,12 @@
 
 #include "GBuffer.h"
 
+#include "Trace.h"
+
 void GBuffer::create(const VulkanContext& inContext, VkExtent2D extent)
 {
+    SCOPE_CPU;
+
     destroy();
     currentExtent = extent;
 
@@ -29,6 +33,8 @@ void GBuffer::destroy()
 
 std::vector<VkRenderingAttachmentInfo> GBuffer::getRenderingAttachments()
 {
+    SCOPE_CPU;
+
     std::vector<VkRenderingAttachmentInfo> colors;
         colors.push_back(getAttachmentInfo(albedo));
         colors.push_back(getAttachmentInfo(normal));
@@ -40,6 +46,8 @@ std::vector<VkRenderingAttachmentInfo> GBuffer::getRenderingAttachments()
 
 VkRenderingAttachmentInfo GBuffer::getAttachmentInfo(const GPUTexture& texture)
 {
+    SCOPE_CPU;
+
     VkRenderingAttachmentInfo attachment_info{};
     attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     attachment_info.imageView = texture.imageView;
@@ -53,6 +61,8 @@ VkRenderingAttachmentInfo GBuffer::getAttachmentInfo(const GPUTexture& texture)
 
 VkRenderingAttachmentInfo GBuffer::getDepthAttachmentInfo()
 {
+    SCOPE_CPU;
+
     VkRenderingAttachmentInfo attachment_info{};
     attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     attachment_info.imageView = depth.imageView;

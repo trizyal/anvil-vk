@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "UIElements.h"
 
 void RiggedSimple::initializeProject(VulkanContext& inContext, Swapchain& inSwapchain)
@@ -70,8 +70,8 @@ void RiggedSimple::loadPipeline()
     }
 
     // Create shader compilation request
-    AnvilShaders::ShaderCompileRequest vReq{"RiggedSimple", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"RiggedSimple", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"RiggedSimple", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"RiggedSimple", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     riggedProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

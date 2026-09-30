@@ -65,10 +65,8 @@ public:
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
      * @param filepath  Absolute or relative filesystem path to the source image file.
      * @param bIsSRGB true means we load with sRGB, otherwise UNORM.
-     *
-     * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
-    void createTexture(const VulkanContext& inContext, const std::string& filepath, bool bIsSRGB = true);
+    bool createTexture(const VulkanContext& inContext, const std::string& filepath, bool bIsSRGB = true);
 
     /**
      * @brief Create a solid texture image, upload it to device-local GPU memory.
@@ -76,8 +74,6 @@ public:
      * @param color The rgba value in unsigned 8-bit format.
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
      * @return A fully populated AnvilTexture ready for descriptor set binding.
-     *
-     * @throws std::runtime_error If texture creation fails, or if buffer/image creation commands fail.
      */
     void createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4]);
 

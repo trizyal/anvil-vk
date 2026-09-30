@@ -5,7 +5,7 @@
 #define ANVIL_VK_SHADERS_H
 
 /**
- * @file AnvilShaders.h
+ * @file Shaders.h
  * @brief Data types and helper functions for Slang shader compilation requests and SPIR-V results.
  */
 
@@ -19,7 +19,7 @@
 /**
  * @brief Functions and structures to support shader compilation
  */
-namespace AnvilShaders
+namespace Shaders
 {
     /**
      * @brief Supported pipeline shader execution stages.
@@ -85,6 +85,6 @@ namespace AnvilShaders
      * @return Corresponding SlangStage value required by the Slang API.
      */
     SlangStage ConvertToSlangStage(ShaderType inShaderType);
-} //AnvilShaders
+} //Shaders
 
 #endif //ANVIL_VK_SHADERS_H

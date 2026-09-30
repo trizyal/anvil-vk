@@ -4,8 +4,8 @@
 #ifndef EXAMPLE_SPONZA_H
 #define EXAMPLE_SPONZA_H
 
-#include "AnvilMaterial.h"
-#include "AnvilRenderer.h"
+#include "Material.h"
+#include "Renderer.h"
 #include "CPUModel.h"
 #include "GPUModel.h"
 #include "Scene.h"
@@ -20,7 +20,7 @@ class Sponza
 private:
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;
-    AnvilRenderer* pRenderer = nullptr;
+    Renderer* pRenderer = nullptr;
 
     ShaderCompiler shaderCompiler;
 
@@ -28,7 +28,7 @@ private:
     GPUModel gpuModel;
 
     ShaderProgram sponzaProgram;
-    AnvilMaterial sponzaMaterial;
+    Material sponzaMaterial;
     MaterialInstance globalSet; // Manages Set 0
     Scene sponzaScene;
     Camera camera;
@@ -36,7 +36,7 @@ private:
     AnvilPipeline pipeline;
 
 public:
-    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, AnvilRenderer& inRenderer);
+    void initializeProject(VulkanContext& inContext, Swapchain& inSwapchain, Renderer& inRenderer);
     void cleanupProject();
     bool loadPipeline(std::string* outErrorMessage = nullptr);
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inSwapchain);

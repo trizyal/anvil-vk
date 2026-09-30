@@ -1,7 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "AnvilMaterial.h"
+#include "Material.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -10,10 +10,12 @@
 #include <unordered_map>
 
 #include "DebugNames.h"
+#include "Ensure.h"
+#include "Logger.h"
 #include "Trace.h"
 #include "VulkanResult.h"
 
-void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram)
+void Material::buildMaterialFromProgram(VulkanContext& inContext, const ShaderProgram& inProgram)
 {
     SCOPE_CPU;
 
@@ -108,8 +110,10 @@ void AnvilMaterial::buildMaterialFromProgram(VulkanContext& inContext, const Sha
     SET_DNAME_HERE(pContext->device, materialPipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, inProgram.name.c_str());
 }
 
-MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
+MaterialInstance Material::allocateSet(const uint32_t setIndex) const
 {
+    SCOPE_CPU;
+
     MaterialInstance instance;
     instance.pContext = pContext;
     instance.pParentMaterial = this;
@@ -130,32 +134,41 @@ MaterialInstance AnvilMaterial::allocateSet(const uint32_t setIndex) const
     return instance;
 }
 
-bool AnvilMaterial::hasBinding(const std::string& name) const
+bool Material::hasBinding(const std::string& name) const
 {
+    SCOPE_CPU;
+
     return pActiveProgram && pActiveProgram->bindingMap.contains(name);
 }
 
-ShaderBinding AnvilMaterial::getBinding(const std::string& name) const
+ShaderBinding Material::getBinding(const std::string& name) const
 {
+    SCOPE_CPU;
+
     return pActiveProgram->bindingMap.at(name);
 
-#if 0 // not sure which way is better yet
+#if DEPRECATED // not sure which way is better yet
     const auto it = pActiveProgram->bindingMap.find(name);
     if (it == pActiveProgram->bindingMap.end())
     {
-        throw std::runtime_error("AnvilMaterial binding does not exist: " + name);
+        LOG_FATAL("Material binding does not exist: {}", name);
+        FATAL(false, "Material binding does not exist.");
     }
     return it->second;
 #endif
 }
 
-bool AnvilMaterial::hasSet(uint32_t setIndex) const
+bool Material::hasSet(uint32_t setIndex) const
 {
+    SCOPE_CPU;
+
     return setIndex < descriptorSetLayouts.size() && descriptorSetLayouts[setIndex] != VK_NULL_HANDLE;
 }
 
-void AnvilMaterial::destroyMaterial()
+void Material::destroyMaterial()
 {
+    SCOPE_CPU;
+
     if (pContext)
     {
         if (materialDescriptorPool)

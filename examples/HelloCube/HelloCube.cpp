@@ -8,7 +8,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AnvilRenderer.h"
+#include "Renderer.h"
 #include "UIElements.h"
 
 // 24 vertices (4 per face) to prevent color interpolation
@@ -146,8 +146,8 @@ void HelloCube::loadPipeline()
         myProgram.destroyProgram();
     }
 
-    AnvilShaders::ShaderCompileRequest vReq{"HelloCube", "vertexMain", AnvilShaders::ST_Vertex};
-    AnvilShaders::ShaderCompileRequest fReq{"HelloCube", "fragmentMain", AnvilShaders::ST_Fragment};
+    Shaders::ShaderCompileRequest vReq{"HelloCube", "vertexMain", Shaders::ST_Vertex};
+    Shaders::ShaderCompileRequest fReq{"HelloCube", "fragmentMain", Shaders::ST_Fragment};
 
     // Split build process to build Program then Material
     myProgram.buildProgram(*pContext, shaderCompiler, vReq, fReq);

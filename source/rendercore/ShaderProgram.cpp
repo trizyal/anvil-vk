@@ -5,10 +5,14 @@
 
 #include <iostream>
 
+#include "Ensure.h"
+#include "Logger.h"
 #include "Trace.h"
 
 void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderStageFlagBits stage)
 {
+    SCOPE_CPU;
+
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
 
     if (!reflection)
@@ -18,8 +22,6 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
     }
 
     const uint32_t param_count = reflection->getParameterCount();
-    std::cout << "ParamCount received in AnvilMaterial: " << param_count << std::endl;
-
     for (uint32_t i = 0; i < param_count; i++)
     {
         slang::VariableLayoutReflection* var_layout = reflection->getParameterByIndex(i);
@@ -43,8 +45,6 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
             }
 
             rawReflectedPushConstants.push_back(range);
-
-            std::cout << "Reflected Push Constant: " << param_name << " Size: " << range.size << "\n";
             continue;
         }
 
@@ -95,8 +95,8 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
     }
 }
 
-bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCompiler, const AnvilShaders::ShaderCompileRequest& inVertReq,
-    const AnvilShaders::ShaderCompileRequest& inFragReq, std::string* outErrorMessage)
+bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCompiler, const Shaders::ShaderCompileRequest& inVertReq,
+    const Shaders::ShaderCompileRequest& inFragReq, std::string* outErrorMessage)
 {
     SCOPE_CPU;
 
@@ -118,7 +118,8 @@ bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCom
         }
         else
         {
-            throw std::runtime_error(err);
+            LOG_FATAL("{}", err);
+            FATAL(false, "Shader Program Failed");
         }
         return false;
     }
@@ -145,6 +146,8 @@ bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCom
 
 void ShaderProgram::destroyProgram()
 {
+    SCOPE_CPU;
+    
     if (pContext)
     {
         vertexShader.destroyShaderModule();

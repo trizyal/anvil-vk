@@ -5,7 +5,7 @@
 #define EXAMPLE_HELLOTRIANGLE_H
 
 #include "VulkanContext.h"
-#include "AnvilMaterial.h"
+#include "Material.h"
 #include "PipelineBuilder.h"
 #include "ShaderCompiler.h"
 #include "Swapchain.h"
@@ -20,14 +20,14 @@ private:
     ShaderCompiler shaderCompiler;
 
     ShaderProgram myProgram; // Explicitly manage program layout
-    AnvilMaterial myMaterial;
+    Material myMaterial;
     AnvilPipeline pipeline = {};
 
 public:
     void initializeProject(VulkanContext& inAnvilContext, Swapchain& inAnvilSwapchain);
     void cleanupProject();
 
-    // Function that records commands to trigger in AnvilRenderer
+    // Function that records commands to trigger in Renderer
     void recordCommands(VkCommandBuffer inCmd, Swapchain &inAnvilSwapchain);
 
     void loadPipeline();
