@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "Trace.h"
+#include "VulkanResult.h"
 
 PipelineBuilder::PipelineBuilder()
 {
@@ -201,11 +202,7 @@ AnvilPipeline PipelineBuilder::buildPipeline(const VkDevice& inDevice, const VkP
 
     AnvilPipeline returnAnvilPipeline{};
 
-    if (vkCreateGraphicsPipelines(inDevice, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &returnAnvilPipeline.pipeline) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create graphics pipeline!");
-    }
-
+    CHECK(vkCreateGraphicsPipelines(inDevice, VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &returnAnvilPipeline.pipeline));
     SET_DNAME(inDevice, returnAnvilPipeline.pipeline, VK_OBJECT_TYPE_PIPELINE);
 
     return returnAnvilPipeline;

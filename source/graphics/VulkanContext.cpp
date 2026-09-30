@@ -7,7 +7,7 @@
 #include "Ensure.h"
 
 #ifndef NDEBUG
-    // Fills new allocations with a bit pattern to catch uninitialized memory reads
+    // Fills new allocations with a bit pattern to find uninitialized memory reads
     #define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
 
     // Adds a 16-byte margin around allocations to detect buffer overruns/underruns

@@ -30,10 +30,7 @@ Window::Window(const uint32_t inWidth, const uint32_t inHeight, std::string inTi
         nullptr,
         nullptr);
 
-    if (!glfwWindow)
-    {
-        throw std::runtime_error("Failed to create GLFW window");
-    }
+    FATAL(glfwWindow, "Failed to create GLFW window");
     LOG_TRACE("Finishing creating AnvilWindow");
 }
 

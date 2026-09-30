@@ -127,8 +127,6 @@ public:
      *
      * @param inAnvilContext Pointer to the initialized Anvil Vulkan context.
      * @param inAnvilSwapchain Pointer to the active swapchain to render into.
-     *
-     * @throws std::runtime_error If command pools, buffers, or sync objects fail to create.
      */
     void initializeRenderer(VulkanContext* inAnvilContext, Swapchain* inAnvilSwapchain);
 

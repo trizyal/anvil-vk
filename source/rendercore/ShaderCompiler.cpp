@@ -12,6 +12,7 @@
 #include <slang-com-ptr.h>
 #include <slang-com-helper.h>
 
+#include "Ensure.h"
 #include "Shaders.h"
 #include "Trace.h"
 using namespace Shaders;
@@ -113,10 +114,7 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
     SCOPE_CPU;
 
     ShaderCompileResult shader_result = GetEmptyShaderByteCode();
-    if (!globalSession)
-    {
-        throw std::runtime_error("Slang Global Session is not initialized.");
-    }
+    FATAL(globalSession, "Slang Global Session is not initialized.");
 
     if (!session)
     {

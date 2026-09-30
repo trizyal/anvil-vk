@@ -148,15 +148,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 
     AnvilFrame& frame = getCurrentFrame();
 
-    // Wait for previous frame
-    VkResult fence_result = vkWaitForFences(pContext->device, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX);
-    if (fence_result != VK_SUCCESS)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to Wait for frameDoneFence:" << std::endl;
-        error_stream << "   Error: " << VulkanResult::ToString(fence_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
-    }
+    CHECK(vkWaitForFences(pContext->device, 1, &frame.frameDoneFence, VK_TRUE, UINT64_MAX));
 
     // Request image from swapchain
     uint32_t image_index = 0;
@@ -180,18 +172,11 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
         std::ostringstream error_stream;
         error_stream << "Failed to Acquire Next Image:" << std::endl;
         error_stream << "   Error: " << VulkanResult::ToString(acquired_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
+        LOG_FATAL("{}", error_stream.str());
     }
 
     // Reset fences after vkAcquireNextImageKHR
-    fence_result = vkResetFences(pContext->device, 1, &frame.frameDoneFence);
-    if (fence_result != VK_SUCCESS)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to Reset frameDoneFence:" << std::endl;
-        error_stream << "   Error: " << VulkanResult::ToString(fence_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
-    }
+    CHECK(vkResetFences(pContext->device, 1, &frame.frameDoneFence));
 
     assert(anvilFrameIndex < FRAMES_IN_FLIGHT);
     assert(image_index < pSwapchain->swapchainImages.size());
@@ -333,7 +318,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
         std::ostringstream error_stream;
         error_stream << "Failed to Present Swapchain Image:" << std::endl;
         error_stream << "   Error: " << VulkanResult::ToString(present_result) << std::endl;
-        throw std::runtime_error(error_stream.str());
+        LOG_FATAL("{}", error_stream.str());
     }
 
     engineStats.gpuTime = gpuProfiler.getGPUTime(anvilFrameIndex);
@@ -512,11 +497,7 @@ void Renderer::setupCommandBuffers()
     for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
     {
         AnvilFrame& anvil_frame = anvilFrames[i];
-        if (vkCreateCommandPool(pContext->device, &pool_info, nullptr, &anvil_frame.cmdPool) != VK_SUCCESS)
-        {
-            // TODO: Provide better error message
-            throw std::runtime_error("Failed to create command pool.");
-        }
+        CHECK(vkCreateCommandPool(pContext->device, &pool_info, nullptr, &anvil_frame.cmdPool));
 
         VkCommandBufferAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -557,31 +538,22 @@ void Renderer::setupSyncStructures()
     {
         AnvilFrame& anvil_frame = anvilFrames[i];
 
-        if (vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &anvil_frame.imageAvailableSemaphore) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create imageAvailableSemaphore.");
-        }
-        std::string debug_name = "Frame[" + std::to_string(i) + "]_ImageAvailableSemaphore";
-        SET_DNAME_HERE(pContext->device, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE, debug_name.c_str());
+        CHECK(vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &anvil_frame.imageAvailableSemaphore));
+        SET_DNAME_HERE(pContext->device, anvil_frame.imageAvailableSemaphore, VK_OBJECT_TYPE_SEMAPHORE,
+            ("Frame[" + std::to_string(i) + "]_ImageAvailableSemaphore").c_str());
 
-        if (vkCreateFence(pContext->device, &fence_info, nullptr, &anvil_frame.frameDoneFence) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create frameDoneFence.");
-        }
-        debug_name = "Frame[" + std::to_string(i) + "]_FrameDoneFence";
-        SET_DNAME_HERE(pContext->device, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE, debug_name.c_str());
+        CHECK(vkCreateFence(pContext->device, &fence_info, nullptr, &anvil_frame.frameDoneFence));
+        SET_DNAME_HERE(pContext->device, anvil_frame.frameDoneFence, VK_OBJECT_TYPE_FENCE,
+            ("Frame[" + std::to_string(i) + "]_FrameDoneFence").c_str());
     }
 
     // Create semaphores based on swapchain images count
     renderFinishedSemaphores.resize(pSwapchain->swapchainImages.size());
     for (uint32_t i = 0; i < renderFinishedSemaphores.size(); i++)
     {
-        if (vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create renderFinishedSemaphore.");
-        }
-        std::string render_finished_name = "SwapchainImage[" + std::to_string(i) + "]_RenderFinishedSemaphore";
-        SET_DNAME_HERE(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, render_finished_name.c_str());
+        CHECK(vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &renderFinishedSemaphores[i]));
+        SET_DNAME_HERE(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE,
+            ("SwapchainImage[" + std::to_string(i) + "]_RenderFinishedSemaphore").c_str());
     }
 }
 
@@ -648,7 +620,8 @@ void Renderer::TransitionImageLayout(VkCommandBuffer inCmd, VkImage inImage, VkI
     }
     else
     {
-        throw std::invalid_argument("Unsupported layout transition!");
+        LOG_ERROR("Unsupported layout transition!");
+        ENSURE(false, "Unsupported layout transition");
     }
     
     vkCmdPipelineBarrier(inCmd, src_stage_flags, dst_stage_mask, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);

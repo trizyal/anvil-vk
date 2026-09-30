@@ -5,6 +5,7 @@
 
 #include <utility>
 
+#include "Ensure.h"
 #include "Trace.h"
 #include "VulkanResult.h"
 
@@ -32,10 +33,8 @@ void ShaderModule::createShaderModule(const VulkanContext& inContext, const Shad
     SCOPE_CPU;
 
     device = inContext.device;
-    if (!inSPIRV.isValid())
-    {
-        throw std::runtime_error("Cannot create shader module from invalid SPIR-V bytecode.");
-    }
+
+    FATAL(inSPIRV.isValid(), "Cannot create shader module from invalid SPIR-V bytecode.");
 
     VkShaderModuleCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -44,7 +43,6 @@ void ShaderModule::createShaderModule(const VulkanContext& inContext, const Shad
     create_info.pCode = inSPIRV.spirv.data();
 
     CHECK(vkCreateShaderModule(device, &create_info, nullptr, &shaderModule));
-
     SET_DNAME(device, shaderModule, VK_OBJECT_TYPE_SHADER_MODULE);
 }
 

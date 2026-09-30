@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include "Ensure.h"
+#include "Logger.h"
 #include "Trace.h"
 
 void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderStageFlagBits stage)
@@ -116,7 +118,8 @@ bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCom
         }
         else
         {
-            throw std::runtime_error(err);
+            LOG_FATAL("{}", err);
+            FATAL(false, "Shader Program Failed");
         }
         return false;
     }

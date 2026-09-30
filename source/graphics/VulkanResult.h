@@ -33,7 +33,7 @@ namespace VulkanResult
      *
      * If `aResult` evaluates to an error code, this function formats a descriptive diagnostic
      * message containing the Vulkan error string, the literal function call expression, and the
-     * originating file and line number before throwing a runtime exception.
+     * originating file and line number before aborting.
      *
      * @param aResult      The Vulkan return code evaluated from an API call.
      * @param functionName Stringified representation of the evaluated expression (e.g., "vkCreateDevice(...)").
@@ -49,13 +49,13 @@ namespace VulkanResult
      *
      * If `aResult` evaluates to an error code, this function formats a descriptive diagnostic
      * message containing the Vulkan error string, the literal function call expression, and the
-     * originating file and line number before throwing a runtime exception.
+     * originating file and line number before aborting.
      */
     void CheckVkBootstrapResult(const std::string& errorMessage, const char* functionName, const char* file, int line);
 } //VulkanResult
 
 /**
- * @brief Macro wrapper around Vulkan API calls that automatically checks for errors and throws on failure.
+ * @brief Macro wrapper around Vulkan API calls that automatically checks for errors and aborts on failure.
  *
  * Captures the exact source code text of the expression (`#x`), the current file (`__FILE__`), and the
  * line number (`__LINE__`) to provide precise stack-trace-style context in exception messages.

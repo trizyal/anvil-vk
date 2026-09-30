@@ -91,8 +91,6 @@ public:
      *
      * @param inAnvilContext Reference to the root Vulkan context, for surface and device.
      * @param inExtent Pixel dimensions of the rendering surface.
-     *
-     * @throws std::runtime_error If swapchain, image view, or depth buffer creation fails.
      */
     void initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D inExtent);
 
@@ -102,10 +100,7 @@ public:
      * Safely destroys existing swapchain image views and depth attachments before allocating new
      * resources matching the updated extent.
      *
-     * @param inAnvilContext Reference to the root Vulkan context, for surface and device.
      * @param inExtent Pixel dimensions of the rendering surface.
-     *
-     * @throws std::runtime_error If swapchain, image view, or depth buffer creation fails.
      */
     void recreateSwapchain(VkExtent2D inExtent);
 
@@ -115,8 +110,6 @@ private:
      *
      * Allocates a device-local image via VMA matching the current swapchain resolution
      * and creates a depth aspect image view for pipeline attachment.
-     *
-     * @throws std::runtime_error If VMA image allocation or image view creation fails.
      */
     void createDepthAttachment();
 };

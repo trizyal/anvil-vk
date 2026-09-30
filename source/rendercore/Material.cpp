@@ -10,6 +10,8 @@
 #include <unordered_map>
 
 #include "DebugNames.h"
+#include "Ensure.h"
+#include "Logger.h"
 #include "Trace.h"
 #include "VulkanResult.h"
 
@@ -145,11 +147,12 @@ ShaderBinding Material::getBinding(const std::string& name) const
 
     return pActiveProgram->bindingMap.at(name);
 
-#if 0 // not sure which way is better yet
+#if DEPRECATED // not sure which way is better yet
     const auto it = pActiveProgram->bindingMap.find(name);
     if (it == pActiveProgram->bindingMap.end())
     {
-        throw std::runtime_error("Material binding does not exist: " + name);
+        LOG_FATAL("Material binding does not exist: {}", name);
+        FATAL(false, "Material binding does not exist.");
     }
     return it->second;
 #endif

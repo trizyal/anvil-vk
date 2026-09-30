@@ -89,8 +89,6 @@ public:
 
     /**
      * @brief Retrieves reflected binding metadata by shader variable name.
-     *
-     * @throws std::runtime_error If the binding does not exist.
      */
     [[nodiscard]]
     ShaderBinding getBinding(const std::string& name) const;

@@ -66,8 +66,6 @@ public:
      * @param inMaterial The AnvilMaterial factory used for descriptor sets.
      * @param camera Reference to the active camera.
      * @param scene Reference to the active Scene object.
-     *
-     * @throws std::runtime_error If called while activeSceneIndex is invalid.
      */
     void reloadActiveScene(VulkanContext& inContext, const Material& inMaterial,
         Camera& camera, Scene& scene);

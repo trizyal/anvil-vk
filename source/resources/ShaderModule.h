@@ -56,8 +56,6 @@ public:
      * @param aDebugName Optional debug name for Vulkan object.
      * @param aDbgSrcLoc Automatic.
      *
-     * @throws std::runtime_error If shader module creation failed.
-     *
      * @see ShaderCompileResult
      */
     void createShaderModule(const VulkanContext& inContext, const Shaders::ShaderCompileResult& inSPIRV D_DECL());
