@@ -184,8 +184,6 @@ public:
      * disk I/O and parsing only; it does not allocate any Vulkan GPU resources.
      *
      * @param filePath Path to the `.gltf` or `.glb` file on disk.
-     *
-     * @throws std::runtime_error If the file cannot be read, or if parsing fails.
      */
     void loadGLTF(const std::string& filePath);
 

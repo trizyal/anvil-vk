@@ -9,9 +9,7 @@
  * @brief Error handling and diagnostic utilities for checking Vulkan API return codes.
  */
 
-#include <stdexcept>
 #include <string>
-#include <iostream>
 
 #include <volk.h>
 
@@ -31,7 +29,7 @@ namespace VulkanResult
     std::string ToString(VkResult aResult);
 
     /**
-     * @brief Verifies that a Vulkan API operation succeeded, throwing an exception on failure.
+     * @brief Verifies that a Vulkan API operation succeeded.
      *
      * If `aResult` evaluates to an error code, this function formats a descriptive diagnostic
      * message containing the Vulkan error string, the literal function call expression, and the
@@ -42,7 +40,7 @@ namespace VulkanResult
      * @param file         Source filename where the check was executed (__FILE__).
      * @param line         Source line number where the check was executed (__LINE__).
      *
-     * @throws std::runtime_error If aResult is not VK_SUCCESS.
+     * @note Aborts engine if VKResult is not VK_SUCCESS.
      */
     void CheckVulkanResult(VkResult aResult, const char* functionName, const char* file, int line);
 } //VulkanResult

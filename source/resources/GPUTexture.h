@@ -68,7 +68,7 @@ public:
      *
      * @throws std::runtime_error If file loading fails, or if buffer/image creation commands fail.
      */
-    void createTexture(const VulkanContext& inContext, const std::string& filepath, bool bIsSRGB = true);
+    bool createTexture(const VulkanContext& inContext, const std::string& filepath, bool bIsSRGB = true);
 
     /**
      * @brief Create a solid texture image, upload it to device-local GPU memory.

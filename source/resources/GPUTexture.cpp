@@ -10,6 +10,7 @@
 #include <stb_image.h>
 
 #include "GPUBuffer.h"
+#include "Logger.h"
 #include "Trace.h"
 #include "VulkanResult.h"
 
@@ -67,7 +68,7 @@ void GPUTexture::destroyTexture()
     image = VK_NULL_HANDLE;
 }
 
-void GPUTexture::createTexture(const VulkanContext& inContext, const std::string& filepath, const bool bIsSRGB)
+bool GPUTexture::createTexture(const VulkanContext& inContext, const std::string& filepath, const bool bIsSRGB)
 {
     SCOPE_CPU;
 
@@ -79,7 +80,8 @@ void GPUTexture::createTexture(const VulkanContext& inContext, const std::string
     stbi_uc* pixels = stbi_load(filepath.c_str(), &tex_width, &tex_height, &tex_channels, 4);
     if (!pixels)
     {
-        throw std::runtime_error("Failed to load texture image: " + filepath);
+        LOG_WARN("Failed to load texture image: {}", filepath);
+        return false;
     }
 
     VkDeviceSize image_size = static_cast<VkDeviceSize>(tex_width * tex_height * 4);
@@ -209,6 +211,8 @@ void GPUTexture::createTexture(const VulkanContext& inContext, const std::string
 
     createImageView(mip_levels, texture_format DNAME(image_name.c_str()));
     createSampler(mip_levels DNAME(image_name.c_str()));
+
+    return true;
 }
 
 void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4])

@@ -112,7 +112,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
         Window::pollEvents();
         Input::UpdateInputs();
 
-        // FIX: Catch the minimized window state
+        // FIX: Check for minimized window state
        if (window->isMinimised())
        {
            // Skip the rest of the loop entirely!

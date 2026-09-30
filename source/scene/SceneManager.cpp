@@ -56,52 +56,43 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
         return false;
     }
 
-    try
-    {
-        // Tear down the old model and load the new model
-        gpuModel.destroyGPUModel();
-        cpuModel = CPUModel();
+    // Tear down the old model and load the new model
+    gpuModel.destroyGPUModel();
+    cpuModel = CPUModel();
 
-        // FIX: Prepend the absolute ASSETS_DIR macro so it ignores the Working Directory
-        // TODO: Need to find a better way to do this
-        std::string absoluteModelPath = std::string(ASSETS_DIR) + "/" + scene_config.modelPath;
+    // FIX: Prepend the absolute ASSETS_DIR macro so it ignores the Working Directory
+    // TODO: Need to find a better way to do this
+    std::string absoluteModelPath = std::string(ASSETS_DIR) + "/" + scene_config.modelPath;
 
-        cpuModel.loadGLTF(absoluteModelPath);
-        gpuModel.createGPUModel(inContext, cpuModel, inMaterial);
+    cpuModel.loadGLTF(absoluteModelPath);
+    gpuModel.createGPUModel(inContext, cpuModel, inMaterial);
 
-        // Reset camera
-        camera = Camera();
-        if (scene_config.cameraPosition)
-            camera.position = *scene_config.cameraPosition;
-        if (scene_config.cameraSpeed)
-            camera.cameraSpeed = *scene_config.cameraSpeed;
-        if (scene_config.cameraFovDegrees)
-            camera.fovDegrees = *scene_config.cameraFovDegrees;
+    // Reset camera
+    camera = Camera();
+    if (scene_config.cameraPosition)
+        camera.position = *scene_config.cameraPosition;
+    if (scene_config.cameraSpeed)
+        camera.cameraSpeed = *scene_config.cameraSpeed;
+    if (scene_config.cameraFovDegrees)
+        camera.fovDegrees = *scene_config.cameraFovDegrees;
 
-        // Reset lighting data
-        GlobalSceneData light_data{};
-        if (scene_config.lightDirection)
-            light_data.lightDirection = *scene_config.lightDirection;
-        if (scene_config.lightColor)
-            light_data.lightColor = *scene_config.lightColor;
-        if (scene_config.ambientColor)
-            light_data.ambientColor = *scene_config.ambientColor;
+    // Reset lighting data
+    GlobalSceneData light_data{};
+    if (scene_config.lightDirection)
+        light_data.lightDirection = *scene_config.lightDirection;
+    if (scene_config.lightColor)
+        light_data.lightColor = *scene_config.lightColor;
+    if (scene_config.ambientColor)
+        light_data.ambientColor = *scene_config.ambientColor;
 
-        scene.setGPUSceneData(light_data);
-        scene.updateGPUBuffer();
+    scene.setGPUSceneData(light_data);
+    scene.updateGPUBuffer();
 
-        activeSceneIndex = static_cast<int>(sceneIndex);
+    activeSceneIndex = static_cast<int>(sceneIndex);
 
-        LOG_INFO("Loaded Scene: {}", scene_config.sceneName);
-        LOGUI("[SceneManager] Loaded Scene: " + scene_config.sceneName, AnvilColor::Blue);
+    LOG_INFO("Loaded Scene: {}", scene_config.sceneName);
+    LOGUI("[SceneManager] Loaded Scene: " + scene_config.sceneName, AnvilColor::Blue);
         return true;
-    }
-    catch (const std::exception& e)
-    {
-        LOG_ERROR("Fatal Exception while loading: {}", e.what());
-        LOGUI("[SceneManager] Failed to load scene: " + scene_config.sceneName, AnvilColor::Red);
-        return false;
-    }
 }
 
 void SceneManager::reloadActiveScene(VulkanContext& inContext, const Material& inMaterial, Camera& camera, Scene& scene)

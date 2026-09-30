@@ -118,13 +118,15 @@ void CPUModel::loadGLTF(const std::string& filePath)
 
     if (cgltf_parse_file(&options, filePath.c_str(), &gltf_data) != cgltf_result_success)
     {
-        throw std::runtime_error("Failed to parse glTF file: " + filePath);
+        LOG_FATAL("Failed to parse glTF file: {}", filePath);
+        FATAL(false, "Failed to parse glTF file");
     }
 
     if (cgltf_load_buffers(&options, gltf_data, filePath.c_str()) != cgltf_result_success)
     {
         cgltf_free(gltf_data);
-        throw std::runtime_error("Failed to load GLTF file: " + filePath);
+        LOG_FATAL("Failed to load glTF file: {}", filePath);
+        FATAL(false, "Failed to load glTF file");
     }
 
     const std::string base_directory = GetBaseDirectory(filePath);

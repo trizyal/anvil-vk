@@ -163,25 +163,18 @@ void GPUModel::createTextures(const CPUModel& inModel)
     textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)
     {
-        try
+        GPUTexture tex;
+        if (tex.createTexture(*pContext, cpu_texture.imagePath, cpu_texture.isSRGB))
         {
-            GPUTexture tex;
-            tex.createTexture(*pContext, cpu_texture.imagePath, cpu_texture.isSRGB);
             textures.push_back(std::move(tex));
         }
-        catch (...)
+        else
         {
             LOG_WARN("Texture load failed for {}. Falling back to default.",cpu_texture.name);
             LOG_WARN("Color Space for {} is {}.", cpu_texture.name, (cpu_texture.isSRGB ? "SRGB" : "UNORM"));
 
             // Push an empty shell texture to maintain index alignment
             textures.emplace_back();
-
-#if DEPRECATED // Creates copies of default texture which we don't want
-            GPUTexture fallback;
-            fallback.createSolidColorTexture(*pContext, WhiteColor);
-            textures.push_back(std::move(fallback));
-#endif
         }
     }
 }
