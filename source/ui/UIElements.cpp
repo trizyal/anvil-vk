@@ -337,6 +337,7 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
                 if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
                 {
                     currentMode = i;
+                    bChanged = true;
                 }
             }
             ImGui::EndMenu();

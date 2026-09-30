@@ -3,11 +3,12 @@
 
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
-#include "Trace.h"
 
 /**
  * @file Frustum.h
  */
+
+#include "Trace.h"
 
 /**
  * @brief Axis-Aligned Bounding Box used for spatial partitioning and frustum culling.

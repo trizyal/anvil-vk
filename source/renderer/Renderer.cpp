@@ -170,7 +170,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     if (acquired_result == VK_ERROR_OUT_OF_DATE_KHR /*|| acquiredResult == VK_SUBOPTIMAL_KHR*/)
     {
         // Recreate Swapchain
-        std::cout << "VK_ERROR_OUT_OF_DATE_KHR" << std::endl;
+        LOG_DEBUG("Recreate swapchain. vkAcquireNextImageKHR = VK_ERROR_OUT_OF_DATE_KHR.");
         recreateSwapchain = true;
         return;
     }
@@ -325,7 +325,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
 
     if (present_result == VK_ERROR_OUT_OF_DATE_KHR || present_result == VK_SUBOPTIMAL_KHR)
     {
-        std::cout << "VK_ERROR_OUT_OF_DATE_KHR || VK_SUBOPTIMAL_KHR" << std::endl;
+        LOG_DEBUG("Recreate swapchain. vkQueuePresentKHR = VK_ERROR_OUT_OF_DATE_KHR || VK_SUBOPTIMAL_KHR.");
         recreateSwapchain = true;
     }
     else if (present_result != VK_SUCCESS)

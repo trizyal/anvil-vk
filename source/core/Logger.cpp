@@ -75,9 +75,7 @@ int Logger::GetMaxVerbosity()
         return Console::GetCVarInt("a.logverbosity");
     }
 
-    // Should never get here.
-    ENSURE(false, "Reached unexpected scope.");
-    return 3;
+    return 5;
 }
 
 const char* Logger::LevelToString(LogLevel level)

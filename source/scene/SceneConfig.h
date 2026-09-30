@@ -12,11 +12,11 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <optional>
 
 #include <glm/glm.hpp>
 
+#include "Logger.h"
 #include "Trace.h"
 
 /**
@@ -61,11 +61,12 @@ struct SceneConfig
     static bool LoadFromFile(const std::string filePath, SceneConfig& outConfig)
     {
         SCOPE_CPU;
+        LOG_TRACE("Loading Scene Config from file: {}", filePath);
 
         std::ifstream file(filePath);
         if (!file.is_open())
         {
-            std::cerr << "[SceneConfig] Could not open config file: " << filePath << std::endl;
+            LOG_WARN("Could not open config file: {}", filePath);
             return false;
         }
 

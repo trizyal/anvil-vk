@@ -75,12 +75,14 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     initialized = true;
     const auto cpuEnd = std::chrono::high_resolution_clock::now();
     const auto initTime = std::chrono::duration<float, std::milli>(cpuEnd - cpuStart).count();
-    LOG_INFO("Anvil initialization complete!");
+    LOG_INFO("Anvil initialization complete.");
     LOG_INFO("Initialization took: {}ms", initTime);
 }
 
 void Anvil::shutdownAnvil()
 {
+    LOG_TRACE("Shutting down Anvil.");
+
     if (!initialized)
     {
         return;
@@ -103,7 +105,7 @@ void Anvil::runAnvil(const RenderHooks& renderHooks)
 
     while (!window->bShouldClose())
     {
-        SCOPE_CPU;
+        SCOPE_CPU_NAME("AnvilFrame");
         
         auto frame_start = std::chrono::high_resolution_clock::now();
 

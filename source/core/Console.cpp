@@ -4,6 +4,9 @@
 #include "Console.h"
 #include <sstream>
 
+#include "Ensure.h"
+#include "Logger.h"
+#include "stox.h"
 #include "Trace.h"
 
 /**
@@ -37,6 +40,9 @@ std::vector<std::string>& Console::GetCommandHistory()
 
 void Console::Initialize()
 {
+    SCOPE_CPU;
+    LOG_TRACE("Initialize Console.");
+
     RegisterCommand("clear", "Clears the console log history.", [](const std::vector<std::string>&)
     {
         ClearLog();
@@ -62,16 +68,19 @@ void Console::Initialize()
 
 void Console::RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue)
 {
+    LOG_DEBUG("Registering CVar: {} {}", name, defaultValue);
     GetCVars()[name] = {.type = CVarType::Int, .description = description, .value = defaultValue};
 }
 
 void Console::RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue)
 {
+    LOG_DEBUG("Registering CVar: {} {}", name, defaultValue);
     GetCVars()[name] = {.type = CVarType::Float, .description = description, .value = defaultValue};
 }
 
 void Console::RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue)
 {
+    LOG_DEBUG("Registering CVar: {} {}", name, defaultValue);
     GetCVars()[name] = {.type = CVarType::Bool, .description = description, .value = defaultValue};
 }
 
@@ -106,6 +115,7 @@ void Console::SetCVarInt(const std::string& name, int value)
 {
     if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Int)
     {
+        LOG_DEBUG("Updating CVar: {} {}", name, value);
         GetCVars()[name].value = value;
     }
 }
@@ -114,6 +124,7 @@ void Console::SetCVarFloat(const std::string& name, float value)
 {
     if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Float)
     {
+        LOG_DEBUG("Updating CVar: {} {}", name, value);
         GetCVars()[name].value = value;
     }
 }
@@ -122,12 +133,14 @@ void Console::SetCVarBool(const std::string& name, bool value)
 {
     if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Bool)
     {
+        LOG_DEBUG("Updating CVar: {} {}", name, value);
         GetCVars()[name].value = value;
     }
 }
 
 void Console::RegisterCommand(const std::string& name, const std::string& description, CommandCallback callback)
 {
+    LOG_DEBUG("Registering Command: {}", name);
     GetCommands()[name] = {description, callback};
 }
 
@@ -139,6 +152,7 @@ void Console::Print(const std::string& message)
 
 void Console::ClearLog()
 {
+    LOG_DEBUG("Clear Console Log.");
     GetLogHistory().clear();
 }
 
@@ -155,6 +169,7 @@ void Console::ClearScroll()
 void Console::Execute(const std::string& commandLine)
 {
     SCOPE_CPU;
+    LOG_DEBUG("Executing command: {}", commandLine);
 
     Print("] " + commandLine);
 
@@ -172,8 +187,15 @@ void Console::Execute(const std::string& commandLine)
     std::string token;
     std::vector<std::string> args;
 
-    while (stream >> token) args.push_back(token);
-    if (args.empty()) return;
+    while (stream >> token)
+    {
+        args.push_back(token);
+    }
+
+    if (args.empty())
+    {
+        return;
+    }
 
     std::string cmdName = args[0];
     args.erase(args.begin());
@@ -184,7 +206,8 @@ void Console::Execute(const std::string& commandLine)
         return;
     }
 
-    if (GetCVars().contains(cmdName)) {
+    if (GetCVars().contains(cmdName))
+    {
         CVar& cvar = GetCVars()[cmdName];
 
         if (args.empty())
@@ -204,24 +227,46 @@ void Console::Execute(const std::string& commandLine)
             return;
         }
 
-        try {
-            if (cvar.type == CVarType::Int)
+        bool b_success = false;
+        switch (cvar.type)
+        {
+        case CVarType::Int:
+            if (auto ret = tml::SToInt(args[0]))
             {
-                cvar.value = std::stoi(args[0]);
+                cvar.value = ret.value();
+                b_success = true;
             }
-            else if (cvar.type == CVarType::Float)
+            break;
+
+        case CVarType::Float:
+            if (auto ret = tml::SToFloat(args[0]))
             {
-                cvar.value = std::stof(args[0]);
+                cvar.value = ret.value();
+                b_success = true;
             }
-            else if (cvar.type == CVarType::Bool)
-            {
-                cvar.value = (args[0] == "1" || args[0] == "true");
-            }
+            break;
+
+        case CVarType::Bool:
+            cvar.value = (args[0] == "1" || args[0] == "true");
+            b_success = true;
+            break;
+
+        case CVarType::String:
+            LOG_ERROR("CVarType::String is unimplemented.");
+            ENSURE(false, "Reached unexpected scope.");
+            break;
+        }
+
+        if (b_success)
+        {
             Print(cmdName + " updated.");
-        } catch (...) {
+        }
+        else
+        {
             Print("Error: Invalid argument format.");
         }
         return;
     }
+
     Print("Unknown command or CVar: " + cmdName);
 }

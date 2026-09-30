@@ -211,6 +211,7 @@ void PBRTests::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
     UI::RenderWorldAxes(camera.getViewMatrix());
 
     uint32_t debugMode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    uint32_t cachedDebugMode = debugMode;
     int activeSceneIdx = sceneManager.activeSceneIndex;
     uint32_t selectedSceneIdx = 0;
 
@@ -222,8 +223,13 @@ void PBRTests::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
             // sceneManager.loadScene(selectedSceneIdx, *pContext, material_Geo, camera, pbrScene);
             pendingSceneIndex = static_cast<int>(selectedSceneIdx);
         }
+
+        if (cachedDebugMode != debugMode)
+        {
+            Console::SetCVarInt("r.debugmode", static_cast<int>(debugMode));
+            cachedDebugMode = debugMode;
+        }
     }
-    Console::SetCVarInt("r.debugmode", static_cast<int>(debugMode));
 
     if (DebugPass::isForwardMode(debugMode))
     {

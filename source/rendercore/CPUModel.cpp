@@ -10,6 +10,7 @@
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
 
+#include "Logger.h"
 #include "Trace.h"
 
 namespace
@@ -300,7 +301,7 @@ void CPUModel::computeJointMatrices(const Index32 nodeIndex, std::vector<glm::ma
     // If this node not have a skin, we do not neet joint matrices
     if (node.skinIndex < 0 || node.skinIndex >= skins.size())
     {
-        std::cout << "[Anim Error] Node skin index is invalid!" << std::endl;
+        LOG_WARN("Animation: Node skin index is invalid.");
         matrices.clear();
         return;
     }
