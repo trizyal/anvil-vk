@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "Console.h"
+#include "Ensure.h"
 #include "Input.h"
 #include "Logger.h"
 #include "RenderDoc.h"
@@ -49,6 +50,7 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     const auto cpuStart = std::chrono::high_resolution_clock::now();
     if (initialized)
     {
+        LOG_WARN("Anvil is already initialized");
         return;
     }
 
@@ -98,10 +100,7 @@ void Anvil::shutdownAnvil()
 
 void Anvil::runAnvil(const RenderHooks& renderHooks)
 {
-    if (!initialized)
-    {
-        throw std::runtime_error("AnvilApplication::runAnvil() called before initialization");
-    }
+    FATAL(initialized, "AnvilApplication::runAnvil() called before initialization");
 
     while (!window->bShouldClose())
     {

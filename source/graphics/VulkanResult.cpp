@@ -15,13 +15,23 @@ namespace VulkanResult
     	if (aResult != VK_SUCCESS)
     	{
     		const std::string error_message = "Vulkan Error [" + ToString(aResult) + "]\n" +
-								   "File: " + file + ":" + std::to_string(line) + "\n" +
-								   "Call: " + functionName + "\n";
+			   "File: " + file + ":" + std::to_string(line) + "\n" +
+			   "Call: " + functionName + "\n";
 
     		LOG_FATAL("{}", error_message);
     		FATAL(false, "Vulkan Error");
     	}
     }
+
+	void CheckVkBootstrapResult(const std::string& errorMessage, const char* functionName, const char* file, int line)
+	{
+		const std::string error_message = "vk-bootstrap Error: " + errorMessage + "\n" +
+			"File: " + file + ":" + std::to_string(line) + "\n" +
+			"Variable: " + functionName + "\n";
+
+		LOG_FATAL("{}", errorMessage);
+		FATAL(false, "vk-bootstrap Error");
+	}
 
 	std::string ToString(const VkResult aResult)
     {

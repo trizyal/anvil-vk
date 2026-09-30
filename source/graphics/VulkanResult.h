@@ -43,6 +43,15 @@ namespace VulkanResult
      * @note Aborts engine if VKResult is not VK_SUCCESS.
      */
     void CheckVulkanResult(VkResult aResult, const char* functionName, const char* file, int line);
+
+    /**
+     * @brief Verifies that a vk-bootstrap operation succeeded, crashing and logging on failure.
+     *
+     * If `aResult` evaluates to an error code, this function formats a descriptive diagnostic
+     * message containing the Vulkan error string, the literal function call expression, and the
+     * originating file and line number before throwing a runtime exception.
+     */
+    void CheckVkBootstrapResult(const std::string& errorMessage, const char* functionName, const char* file, int line);
 } //VulkanResult
 
 /**
@@ -54,5 +63,15 @@ namespace VulkanResult
  * @note Example: `CHECK(vkCreateFence(device, &fenceInfo, nullptr, &fence));`
  */
 #define CHECK(x) VulkanResult::CheckVulkanResult((x), #x, __FILE__, __LINE__)
+
+#define VKB_CHECK(x) \
+    do \
+    { \
+        if (!x) \
+        { \
+            VulkanResult::CheckVkBootstrapResult(x.error().message(), #x, __FILE__, __LINE__); \
+        } \
+    } \
+    while (0)
 
 #endif //ANVIL_VK_VULKANRESULT_H

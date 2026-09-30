@@ -5,6 +5,9 @@
 
 #include <iostream>
 #include <stdexcept>
+
+#include "Ensure.h"
+#include "Logger.h"
 #include "Material.h"
 #include "Trace.h"
 #include "VulkanContext.h"
@@ -39,7 +42,7 @@ void MaterialInstance::bindTexture(const std::string& name, const GPUTexture& in
 
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
-        std::cerr << "Binding not found for: " << name << std::endl;
+        LOG_WARN("Binding not found for: {}", name);
         return;
     }
 
@@ -50,7 +53,8 @@ void MaterialInstance::bindTexture(const std::string& name, const GPUTexture& in
             + std::to_string(pParentMaterial->getBinding(name).setIndex)
             + " but this instance is managing Set " + std::to_string(setIndex);
 
-        throw std::runtime_error(err);
+        LOG_FATAL("{}", err);
+        FATAL(false, err);
     }
 
     pendingTextures.push_back({.name = name, .texture = &inTexture});
@@ -62,16 +66,20 @@ void MaterialInstance::bindUniformBuffer(const std::string& name, const GPUBuffe
 
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
+        LOG_WARN("Binding not found for: {}", name);
         return;
     }
+
     if (pParentMaterial->getBinding(name).setIndex != setIndex)
     {
         const std::string err = "MaterialInstance Error: '" + name + "' belongs to Set "
             + std::to_string(pParentMaterial->getBinding(name).setIndex)
             + " but this instance is managing Set " + std::to_string(setIndex);
 
-        throw std::runtime_error(err);
+        LOG_FATAL("{}", err);
+        FATAL(false, err);
     }
+
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
 
@@ -81,6 +89,7 @@ void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffe
 
     if (!pParentMaterial || !pParentMaterial->hasBinding(name))
     {
+        LOG_WARN("Binding not found for: {}", name);
         return;
     }
     if (pParentMaterial->getBinding(name).setIndex != setIndex)
@@ -89,8 +98,10 @@ void MaterialInstance::bindStorageBuffer(const std::string& name, const GPUBuffe
             + std::to_string(pParentMaterial->getBinding(name).setIndex)
             + " but this instance is managing Set " + std::to_string(setIndex);
 
-        throw std::runtime_error(err);
+        LOG_FATAL("{}", err);
+        FATAL(false, err);
     }
+
     pendingBuffers.push_back({.name = name, .buffer = &inBuffer});
 }
 
@@ -100,7 +111,7 @@ void MaterialInstance::updateDescriptorSets()
 
     if (pendingTextures.empty() && pendingBuffers.empty())
     {
-        std::cerr << "No textures and buffers to bind." << std::endl;
+        LOG_WARN("No textures and buffers to bind.");
         return;
     }
 

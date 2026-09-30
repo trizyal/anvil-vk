@@ -4,6 +4,8 @@
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
+#include "Ensure.h"
+
 #ifndef NDEBUG
     // Fills new allocations with a bit pattern to catch uninitialized memory reads
     #define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
@@ -21,7 +23,6 @@
         } while(false)
     #endif // UNIMPLEMENTED
 
-#include <Ensure.h>
     // Pipe VMA corruption checks to your engine's crash handler
     #define VMA_ASSERT(expr) FATAL((expr), "VMA Internal Assertion Failed: " #expr)
 #endif // NDEBUG
@@ -31,8 +32,6 @@
 
 #include "VulkanContext.h"
 
-#include <stdexcept>
-#include <iostream>
 #include <sstream>
 
 #include <VkBootstrap.h>
@@ -53,10 +52,8 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     // --------------------------------
     // Initialise Volk
-    if (const VkResult volk_result = volkInitialize(); volk_result != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to initialise Volk. Error code: " + std::to_string(volk_result));
-    }
+    LOG_TRACE("Initializing volk.");
+    CHECK(volkInitialize());
 
     // --------------------------------
     // Create Instance
@@ -65,6 +62,8 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     vkb_instance_builder.require_api_version(AnvilVulkan::API_VERSION);
 
 #ifndef NDEBUG
+    LOG_DEBUG("Requesting Validation Layers and Debug Callback.");
+
     vkb_instance_builder.request_validation_layers(true);
     vkb_instance_builder.set_debug_callback(VulkanDebug::DebugCallback);
 
@@ -94,15 +93,9 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 #endif // NDEBUG
 
     vkb::Result<vkb::Instance> vkb_instance_result = vkb_instance_builder.build();
+    VKB_CHECK(vkb_instance_result);
 
-    if (!vkb_instance_result)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to create Vulkan instance via vk-bootstrap:" << std::endl;
-        error_stream << "    Primary error: " << vkb_instance_result.error().message() << std::endl;
-        throw std::runtime_error(error_stream.str());
-    }
-
+    LOG_TRACE("Creating vulkan instance.");
     const vkb::Instance vkb_instance = vkb_instance_result.value();
     instance = vkb_instance.instance;
     debugMessenger = vkb_instance.debug_messenger;
@@ -117,6 +110,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     // --------------------------------
     // Select Physical Device
+    LOG_TRACE("Selecting vulkan physical device.");
     VkPhysicalDeviceFeatures base_features{};
     base_features.samplerAnisotropy = VK_TRUE;
     base_features.fillModeNonSolid = VK_TRUE; // Enable wireframe support
@@ -140,6 +134,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     if (!vkb_physical_device_result)
     {
+        // Cannot use VKB_CHECK as we do a detailed failure reason log here
         std::ostringstream error_stream;
         error_stream << "Failed to select a suitable GPU physical device:" << std::endl;
         error_stream << "   Primary error: " << vkb_physical_device_result.error().message() << std::endl;
@@ -153,7 +148,9 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
                 error_stream << "    - " << reason << std::endl;
             }
         }
-        throw std::runtime_error(error_stream.str());
+
+        LOG_FATAL("{}", error_stream.str());
+        FATAL(false, "Failed to select physical device.");
     }
 
     const vkb::PhysicalDevice& vkb_physical_device = vkb_physical_device_result.value();
@@ -162,16 +159,10 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     // --------------------------------
     // Build Logical Device
+    LOG_TRACE("Creating vulkan logical device.");
     vkb::DeviceBuilder vkb_device_builder{vkb_physical_device};
     vkb::Result<vkb::Device> vkb_device_result = vkb_device_builder.build();
-
-    if (!vkb_device_result)
-    {
-        std::ostringstream error_stream;
-        error_stream << "Failed to build logical Vulkan device:" << std::endl;
-        error_stream << "   Primary error: " << vkb_device_result.error().message();
-        throw std::runtime_error(error_stream.str());
-    }
+    VKB_CHECK(vkb_device_result);
 
     const vkb::Device& vkb_device = vkb_device_result.value();
     device = vkb_device.device;
@@ -187,6 +178,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     // --------------------------------
     // Initialise Vulkan Memory Allocator
+    LOG_TRACE("Creating vulkan memory allocator.");
     VmaVulkanFunctions vma_vulkan_functions = {};
     vma_vulkan_functions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
     vma_vulkan_functions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
@@ -197,34 +189,21 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     allocator_create_info.instance = instance;
     allocator_create_info.pVulkanFunctions = &vma_vulkan_functions;
     allocator_create_info.vulkanApiVersion = AnvilVulkan::API_VERSION;
-
-    const VkResult vma_result = vmaCreateAllocator(&allocator_create_info, &allocator);
-    if (vma_result != VK_SUCCESS)
-    {
-        throw std::runtime_error(std::string("Failed to create Vulkan Memory Allocator. VkResult: ") + VulkanResult::ToString(vma_result));
-    }
+    CHECK(vmaCreateAllocator(&allocator_create_info, &allocator));
 
     // --------------------------------
     // Initialize pool and fence for ImmediateSubmit logic
+    LOG_TRACE("Creating vulkan command pool for ImmediateSubmit.");
     VkCommandPoolCreateInfo upload_pool_info{};
     upload_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     upload_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     upload_pool_info.queueFamilyIndex = graphicsQueueIndex;
+    CHECK(vkCreateCommandPool(device, &upload_pool_info, nullptr, &uploadCommandPool));
 
-    const VkResult pool_result = vkCreateCommandPool(device, &upload_pool_info, nullptr, &uploadCommandPool);
-    if (pool_result != VK_SUCCESS)
-    {
-        throw std::runtime_error(std::string("Failed to create upload command pool. VkResult: ") + VulkanResult::ToString(pool_result));
-    }
-
+    LOG_TRACE("Creating vulkan fence for ImmediateSubmit.");
     VkFenceCreateInfo upload_fence_info{};
     upload_fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
-    const VkResult fence_result = vkCreateFence(device, &upload_fence_info, nullptr, &uploadFence);
-    if (fence_result != VK_SUCCESS)
-    {
-        throw std::runtime_error(std::string("Failed to create upload fence. VkResult: ") + VulkanResult::ToString(fence_result));
-    }
+    CHECK(vkCreateFence(device, &upload_fence_info, nullptr, &uploadFence));
 
     LOG_TRACE("Finished Initializing VulkanContext");
 }

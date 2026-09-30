@@ -61,7 +61,7 @@ struct SceneConfig
     static bool LoadFromFile(const std::string filePath, SceneConfig& outConfig)
     {
         SCOPE_CPU;
-        LOG_TRACE("Loading Scene Config from file: {}", filePath);
+        LOG_DEBUG("Loading Scene Config from file: {}", filePath);
 
         std::ifstream file(filePath);
         if (!file.is_open())

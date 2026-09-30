@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cstring>
 
+#include "Logger.h"
 #include "Trace.h"
 
 namespace VulkanDebug

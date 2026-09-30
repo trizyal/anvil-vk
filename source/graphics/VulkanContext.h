@@ -73,8 +73,6 @@ public:
     /**
      * @brief Initializes the Vulkan instance, device, VMA, and rendering surface.
      * @param inWindow Reference to the application window used to create the Vulkan surface.
-     *
-     * @throws std::runtime_error If Vulkan instance creation, device selection, or VMA initialization fails.
      */
     void initializeVulkanContext(Window& inWindow);
 
@@ -99,8 +97,6 @@ public:
      * Ideal for staging buffer uploads, shader layout transitions, or one-off GPU initialization commands.
      *
      * @param callbackFunction Lambda or functor receiving an active `VkCommandBuffer` to record commands into.
-     *
-     * @throws std::runtime_error If command buffer allocation, submission, or fence waiting fails.
      */
     void immediateSubmit(std::function<void(VkCommandBuffer inCmd)>&& callbackFunction) const;
 };

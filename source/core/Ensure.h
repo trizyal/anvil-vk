@@ -40,7 +40,7 @@
                       << "File: " << __FILE__ << ":" << __LINE__ << std::endl; \
             BREAK(); \
         } \
-    } while (false)
+    } while (0)
 
 /**
  * @brief Fatal assertion: Logs an error, triggers a breakpoint, and crashes the app.
@@ -59,6 +59,6 @@
             BREAK(); \
             std::abort(); \
         } \
-    } while (false)
+    } while (0)
 
 #endif //ENSURE_H
