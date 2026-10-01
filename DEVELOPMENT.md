@@ -33,6 +33,8 @@ anvil-vk/
 ├── CMakeLists.txt
 │
 ├── external/
+│   ├── CMakeLists.txt
+│   │ 
 │   ├── cgltf/
 │   ├── glfw/
 │   ├── glm/
@@ -64,6 +66,12 @@ anvil-vk/
 │   ├── SponzaDeferred/        
 │   ├── PBRTests/        
 │   └── # More to come   
+│ 
+├── projects/
+│   ├── CMakeLists.txt
+│   │ 
+│   ├── RenderGraphStub/
+│   └── # More to come
 │ 
 ├── scripts/          
 │   ├── consolidate_code_one_file.py
@@ -151,7 +159,9 @@ anvil-vk/
     │   ├── DebugPass.cpp
     │   ├── DebugPass.h
     │   ├── Renderer.cpp
-    │   └── Renderer.h
+    │   ├── Renderer.h
+    │   ├── RenderGraph.cpp
+    │   └── RenderGraph.h
     │
     ├── resources/
     │   ├── GBuffer.cpp

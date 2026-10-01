@@ -6,6 +6,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 source_dir = os.path.abspath(os.path.join(script_dir, '..', 'source'))
 shaders_dir = os.path.abspath(os.path.join(script_dir, '..', 'shaders'))
 examples_dir = os.path.abspath(os.path.join(script_dir, '..', 'examples'))
+projects_dir = os.path.abspath(os.path.join(script_dir, '..', 'projects'))
 output_dir = os.path.abspath(os.path.join(script_dir, 'output'))
 
 def read_cmake(in_filename, in_outfile):
@@ -30,22 +31,27 @@ if len(sys.argv) > 1:
     arg = sys.argv[1]
 
     if arg in ('-all', '--all'):
-        output_filename = 'AllExamplesAnvilCodebase.txt'
-        print(f"Targeting source and all example projects under: {examples_dir}")
-        if os.path.exists(examples_dir):
-            directories_to_walk.append(examples_dir)
+        output_filename = 'AllProjectsAnvilCodebase.txt'
+        print(f"Targeting source and all example projects under: {projects_dir}")
+        if os.path.exists(projects_dir):
+            directories_to_walk.append(projects_dir)
         else:
-            print(f"Warning: Examples directory '{examples_dir}' not found.")
+            print(f"Warning: Projects directory '{projects_dir}' not found.")
     else:
         project_name = arg
-        project_dir = os.path.join(examples_dir, project_name)
+        project_dir1 = os.path.join(examples_dir, project_name)
+        project_dir2 = os.path.join(projects_dir, project_name)
 
-        if os.path.exists(project_dir):
-            directories_to_walk.append(project_dir)
+        if os.path.exists(project_dir1):
+            directories_to_walk.append(project_dir1)
             output_filename = f"{project_name}AnvilCodebase.txt"
-            print(f"Targeting additional project directory: {project_dir}")
+            print(f"Targeting additional project directory: {project_dir1}")
+        elif os.path.exists(project_dir2):
+            directories_to_walk.append(project_dir2)
+            output_filename = f"{project_name}AnvilCodebase.txt"
+            print(f"Targeting additional project directory: {project_dir2}")
         else:
-            print(f"Warning: Project directory '{project_dir}' not found. Skipping.")
+            print(f"Warning: Project directory '{project_dir1}' or '{project_dir2}' not found. Skipping.")
 
 # Ensure the output directory exists before creating the file
 os.makedirs(output_dir, exist_ok=True)
@@ -79,15 +85,32 @@ with open(output_file, 'w', encoding='utf-8') as outfile:
                             outfile.write(infile.read() + '\n')
                     except Exception as e:
                         outfile.write(f"// Could not read file: {e}\n")
+                elif file == "CMakeLists.txt":
+                    filepath = os.path.join(root, file)
+
+                    # Write the header
+                    outfile.write(f"\n// {'=' * 42}\n")
+                    outfile.write(f"// {filepath}\n")
+                    outfile.write(f"// {'=' * 42}\n\n")
+
+                    # Write the source code
+                    try:
+                        with open(filepath, 'r', encoding='utf-8') as infile:
+                            outfile.write(infile.read() + '\n')
+                    except Exception as e:
+                        outfile.write(f"// Could not read file: {e}\n")
+
 
     # Get the CMakeLists.txts
 
     filename1 = "../CMakeLists.txt"
     filename2 = "../external/CMakeLists.txt"
     filename3 = "../examples/CMakeLists.txt"
+    filename4 = "../projects/CMakeLists.txt"
     read_cmake(filename1, outfile)
     read_cmake(filename2, outfile)
     read_cmake(filename3, outfile)
+    read_cmake(filename4, outfile)
 
 
 print(f"Successfully combined files into {output_file}")
