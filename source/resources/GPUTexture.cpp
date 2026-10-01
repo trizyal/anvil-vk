@@ -84,8 +84,10 @@ bool GPUTexture::createTexture(const VulkanContext& inContext, const std::string
         return false;
     }
 
-    VkDeviceSize image_size = static_cast<VkDeviceSize>(tex_width * tex_height * 4);
-    VkFormat texture_format = bIsSRGB ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
+    // Cannot convert from int to VkDeviceSize directly
+    const auto step_up = static_cast<uint32_t>(tex_width * tex_height * 4);
+    const auto image_size = static_cast<VkDeviceSize>(step_up);
+    const Format texture_format = bIsSRGB ? Format::RGBA8_SRGB : Format::RGBA8_UNORM;
 
     // Calculate how many mip levels we need
     uint32_t mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
@@ -230,7 +232,7 @@ void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const u
         sizeof(uint8_t) * 4,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
-    createImage(1, 1, 1, VK_FORMAT_R8G8B8A8_UNORM);
+    createImage(1, 1, 1, Format::RGBA8_UNORM);
 
     inContext.immediateSubmit([&](VkCommandBuffer cmd)
     {
@@ -268,26 +270,29 @@ void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const u
 
     staging_buffer.destroyBuffer();
 
-    createImageView(1, VK_FORMAT_R8G8B8A8_UNORM);
+    createImageView(1, Format::RGBA8_UNORM);
     createSampler(1);
 }
 
-void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage D_DEFN)
+void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t inWidth, uint32_t inHeight, Format inFormat, VkImageUsageFlags usage D_DEFN)
 {
     SCOPE_CPU;
 
     destroyTexture();
     pContext = &inContext;
 
+    width = inWidth;
+    height = inHeight;
+
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     image_info.imageType = VK_IMAGE_TYPE_2D;
-    image_info.extent.width = width;
-    image_info.extent.height = height;
+    image_info.extent.width = inWidth;
+    image_info.extent.height = inHeight;
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
-    image_info.format = format;
+    image_info.format = static_cast<VkFormat>(inFormat);
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = usage;
@@ -302,14 +307,14 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width
     SET_DNAME(pContext->device, image, VK_OBJECT_TYPE_IMAGE);
     SET_VMA_DNAME(pContext->allocator, allocation);
 
-    VkImageAspectFlags aspect_mask = (format == VK_FORMAT_D32_SFLOAT) ?
+    VkImageAspectFlags aspect_mask = (inFormat == Format::D32_SFLOAT) ?
                                      VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 
     VkImageViewCreateInfo image_view_info{};
     image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     image_view_info.image = image;
     image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    image_view_info.format = format;
+    image_view_info.format = static_cast<VkFormat>(inFormat);
     image_view_info.subresourceRange.aspectMask = aspect_mask;
     image_view_info.subresourceRange.baseMipLevel = 0;
     image_view_info.subresourceRange.levelCount = 1;
@@ -336,20 +341,24 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t width
     SET_DNAME(pContext->device, sampler, VK_OBJECT_TYPE_SAMPLER);
 }
 
-void GPUTexture::createImage(const uint32_t width, const uint32_t height, const uint32_t mipLevels,
-                             const VkFormat format D_DEFN)
+void GPUTexture::createImage(const uint32_t inWidth, const uint32_t inHeight, const uint32_t mipLevels,
+                             const Format inFormat D_DEFN)
 {
     SCOPE_CPU;
+
+    width = inWidth;
+    height = inHeight;
+    format = inFormat;
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     image_info.imageType = VK_IMAGE_TYPE_2D;
-    image_info.extent.width = width;
-    image_info.extent.height = height;
+    image_info.extent.width = inWidth;
+    image_info.extent.height = inHeight;
     image_info.extent.depth = 1;
     image_info.mipLevels = mipLevels;
     image_info.arrayLayers = 1;
-    image_info.format = format;
+    image_info.format = static_cast<VkFormat>(inFormat);
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -364,7 +373,7 @@ void GPUTexture::createImage(const uint32_t width, const uint32_t height, const 
     SET_VMA_DNAME(pContext->allocator, allocation);
 }
 
-void GPUTexture::createImageView(const uint32_t mipLevels, const VkFormat format D_DEFN)
+void GPUTexture::createImageView(const uint32_t mipLevels, const Format inFormat D_DEFN)
 {
     SCOPE_CPU;
 
@@ -372,7 +381,7 @@ void GPUTexture::createImageView(const uint32_t mipLevels, const VkFormat format
     image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     image_view_info.image = image;
     image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    image_view_info.format = format;
+    image_view_info.format = static_cast<VkFormat>(inFormat);
     image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     image_view_info.subresourceRange.baseMipLevel = 0;
     image_view_info.subresourceRange.levelCount = mipLevels;

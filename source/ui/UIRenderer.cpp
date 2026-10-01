@@ -83,11 +83,13 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     colorFormat = inSwapchain->swapchainFormat;
     depthFormat = inSwapchain->depthFormat;
 
+    VkFormat vkColorFormat = vk(colorFormat);
+
     VkPipelineRenderingCreateInfo pipeline_rendering_create_info{};
     pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     pipeline_rendering_create_info.colorAttachmentCount = 1;
-    pipeline_rendering_create_info.pColorAttachmentFormats = &colorFormat;
-    pipeline_rendering_create_info.depthAttachmentFormat = depthFormat;
+    pipeline_rendering_create_info.pColorAttachmentFormats = &vkColorFormat;
+    pipeline_rendering_create_info.depthAttachmentFormat = vk(depthFormat);
 
     // Assign it to both the main window and any secondary OS windows you drag out
     init_info.PipelineInfoMain.PipelineRenderingCreateInfo = pipeline_rendering_create_info;

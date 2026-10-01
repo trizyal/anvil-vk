@@ -5,6 +5,7 @@
 
 #include <stdexcept>
 
+#include "RenderGraph.h"
 #include "Trace.h"
 #include "VulkanResult.h"
 
@@ -61,17 +62,22 @@ PipelineBuilder& PipelineBuilder::setShaders(VkShaderModule inVertexShader, VkSh
     return *this;
 }
 
-PipelineBuilder& PipelineBuilder::setColorAttachmentFormats(const std::vector<VkFormat>& inColorFormats)
+PipelineBuilder& PipelineBuilder::setColorAttachmentFormats(const std::vector<Format>& inColorFormats)
 {
-    colorAttachmentFormats = inColorFormats;
+    colorAttachmentFormats.clear();
+    for (const Format f : inColorFormats)
+    {
+        colorAttachmentFormats.push_back(vk(f));
+    }
+
     dynamicRendering.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentFormats.size());
     dynamicRendering.pColorAttachmentFormats = colorAttachmentFormats.data();
     return *this;
 }
 
-PipelineBuilder& PipelineBuilder::setDepthAttachmentFormat(VkFormat inDepthFormat)
+PipelineBuilder& PipelineBuilder::setDepthAttachmentFormat(Format inDepthFormat)
 {
-    depthAttachmentFormat = inDepthFormat;
+    depthAttachmentFormat = vk(inDepthFormat);
 
     // Hook it into the dynamic rendering struct
     dynamicRendering.depthAttachmentFormat = depthAttachmentFormat;

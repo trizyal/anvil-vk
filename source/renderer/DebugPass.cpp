@@ -12,8 +12,8 @@
 #include "Trace.h"
 #include "VulkanContext.h"
 
-bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
-                                    VkFormat depthFormat, std::string* outError)
+bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, Format swapchainFormat,
+                                    Format depthFormat, std::string* outError)
 {
     SCOPE_CPU;
 

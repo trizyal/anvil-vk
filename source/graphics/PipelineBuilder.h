@@ -16,6 +16,7 @@
 #include "DebugNames.h"
 #include "VulkanContext.h"
 
+enum class Format : uint32_t;
 /**
  * @brief Simple container wrapping a compiled Vulkan graphics pipeline handle.
  * @note Maybe needs pipeline layouts too.
@@ -119,14 +120,14 @@ public:
      * @param inColorFormats Vector of Vulkan format of the color attachments.
      * @return Reference to this builder for method chaining.
      */
-    PipelineBuilder& setColorAttachmentFormats(const std::vector<VkFormat>& inColorFormats);
+    PipelineBuilder& setColorAttachmentFormats(const std::vector<Format>& inColorFormats);
 
     /**
      * @brief Sets the format of the depth attachment used by dynamic rendering.
      * @param inDepthFormat Vulkan format of the depth attachment.
      * @return Reference to this builder for method chaining.
      */
-    PipelineBuilder& setDepthAttachmentFormat(VkFormat inDepthFormat);
+    PipelineBuilder& setDepthAttachmentFormat(Format inDepthFormat);
 
     /**
      * @brief Enables depth testing and configures depth writes and comparison.

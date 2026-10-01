@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 
 #include "DebugNames.h"
+#include "RenderGraph.h"
 
 class VulkanContext;
 class Swapchain;
@@ -46,10 +47,10 @@ public:
     UIRenderer& operator=(UIRenderer&&) = delete;
 
     /** Target color attachment pixel format for UI rendering. */
-    VkFormat colorFormat = VK_FORMAT_UNDEFINED;
+    Format colorFormat = Format::Undefined;
 
     /** Target depth attachment pixel format for UI rendering. */
-    VkFormat depthFormat = VK_FORMAT_UNDEFINED;
+    Format depthFormat = Format::Undefined;
 
 private:
     VulkanContext* pContext = nullptr;

@@ -81,8 +81,8 @@ public:
      * @param outError Optional pointer to a string that will be populated with compiler output if compilation fails.
      * @return True if all shaders compiled and pipelines initialized successfully, false otherwise.
      */
-    bool initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, VkFormat swapchainFormat,
-                             VkFormat depthFormat, std::string* outError = nullptr);
+    bool initializeDebugPass(VulkanContext& inContext, ShaderCompiler& inCompiler, Format swapchainFormat,
+                             Format depthFormat, std::string* outError = nullptr);
 
     /**
      * @brief Destroys all debug pipelines and layouts.

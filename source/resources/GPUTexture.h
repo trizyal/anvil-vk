@@ -15,6 +15,7 @@
 
 #include "VulkanContext.h"
 #include "DebugNames.h"
+#include "RenderGraph.h"
 
 /**
  * @brief Manages the lifecycle of a Vulkan Image, ImageView, Sampler and its backing VMA memory allocation.
@@ -46,7 +47,11 @@ public:
     VkImageView imageView = VK_NULL_HANDLE;
     VkSampler sampler = VK_NULL_HANDLE;
 
-    mutable VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    Format format = Format::Undefined;
+
+    mutable ImageLayout currentLayout = ImageLayout::Undefined;
 
 private:
     /** Cached context used for self-contained destruction. */
@@ -81,12 +86,12 @@ public:
     /**
      * @brief Creates a blank texture for use as a render target/attachment.
      * @param inContext Core Vulkan context.
-     * @param width Width in pixels.
-     * @param height Height in pixels.
-     * @param format Pixel format.
+     * @param inWidth Width in pixels.
+     * @param inHeight Height in pixels.
+     * @param inFormat Pixel format.
      * @param usage Usage flags (e.g., VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT).
      */
-    void createAttachment(const VulkanContext& inContext, uint32_t width, uint32_t height, VkFormat format,
+    void createAttachment(const VulkanContext& inContext, uint32_t inWidth, uint32_t inHeight, Format inFormat,
         VkImageUsageFlags usage D_DECL());
 
     /**
@@ -99,19 +104,19 @@ public:
 
     /**
      * @brief Internal helper to allocate and create the base Vulkan Image.
-     * @param width Width in pixels.
-     * @param height Height in pixels.
+     * @param inWidth Width in pixels.
+     * @param inHeight Height in pixels.
      * @param mipLevels Number of mipmap levels to allocate.
-     * @param format Vulkan format to use for the image.
+     * @param inFormat Vulkan format to use for the image.
      */
-    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format D_DECL());
+    void createImage(uint32_t inWidth, uint32_t inHeight, uint32_t mipLevels, Format inFormat D_DECL());
 
     /**
      * @brief Internal helper to create the Vulkan ImageView for the texture.
      * @param mipLevels Number of mipmap levels to expose to the view.
-     * @param format Vulkan format to interpret the image as.
+     * @param inFormat Vulkan format to interpret the image as.
      */
-    void createImageView(uint32_t mipLevels, VkFormat format D_DECL());
+    void createImageView(uint32_t mipLevels, Format inFormat D_DECL());
 
     /**
      * @brief Internal helper to create the default linear Vulkan Sampler for the texture.

@@ -3,7 +3,6 @@
 
 #include "Swapchain.h"
 
-#include <iostream>
 #include <sstream>
 
 #include <VkBootstrap.h>
@@ -39,12 +38,12 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
     SET_DNAME_HERE(inAnvilContext.device, anvilSwapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, "AnvilSwapchain");
 
     swapchainExtent = vkb_swapchain.extent;
-    swapchainFormat = vkb_swapchain.image_format;
+    swapchainFormat = static_cast<Format>(vkb_swapchain.image_format);
 
     swapchainImages = vkb_swapchain.get_images().value();
     swapchainImageViews = vkb_swapchain.get_image_views().value();
 
-    swapchainImageLayouts.assign(swapchainImages.size(), VK_IMAGE_LAYOUT_UNDEFINED);
+    swapchainImageLayouts.assign(swapchainImages.size(), ImageLayout::Undefined);
 
     // Setting debug names
     for (size_t i = 0; i < swapchainImages.size(); ++i)
@@ -76,7 +75,7 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 
     // Save old swapchain handle
     VkSwapchainKHR old_swapchain = anvilSwapchain;
-    [[maybe_unused]] VkFormat old_format = swapchainFormat;
+    [[maybe_unused]] Format old_format = swapchainFormat;
     [[maybe_unused]] VkExtent2D old_extent = swapchainExtent;
 
     // Destroy old images views
@@ -117,12 +116,12 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
     SET_DNAME_HERE(pContext->device, anvilSwapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, "AnvilSwapchain");
 
     swapchainExtent = vkb_swapchain.extent;
-    swapchainFormat = vkb_swapchain.image_format;
+    swapchainFormat = static_cast<Format>(vkb_swapchain.image_format);
 
     swapchainImages = vkb_swapchain.get_images().value();
     swapchainImageViews = vkb_swapchain.get_image_views().value();
 
-    swapchainImageLayouts.assign(swapchainImages.size(), VK_IMAGE_LAYOUT_UNDEFINED);
+    swapchainImageLayouts.assign(swapchainImages.size(), ImageLayout::Undefined);
 
     for (size_t i = 0; i < swapchainImages.size(); ++i)
     {
@@ -159,7 +158,7 @@ void Swapchain::createDepthAttachment()
     VkImageCreateInfo depth_image_info{};
     depth_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     depth_image_info.imageType = VK_IMAGE_TYPE_2D;
-    depth_image_info.format = depthFormat;
+    depth_image_info.format = static_cast<VkFormat>(depthFormat);
     depth_image_info.extent = {swapchainExtent.width, swapchainExtent.height, 1};
     depth_image_info.mipLevels = 1;
     depth_image_info.arrayLayers = 1;
@@ -180,7 +179,7 @@ void Swapchain::createDepthAttachment()
     depth_image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     depth_image_view_info.image = depthImage;
     depth_image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    depth_image_view_info.format = depthFormat;
+    depth_image_view_info.format = static_cast<VkFormat>(depthFormat);
     depth_image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     depth_image_view_info.subresourceRange.baseMipLevel = 0;
     depth_image_view_info.subresourceRange.levelCount = 1;
