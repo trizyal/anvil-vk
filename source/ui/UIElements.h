@@ -9,12 +9,15 @@
  * @brief Free functions for different UI elements.
  */
 
-#include <glm/glm.hpp>
-#include <imgui.h>
 #include <string>
+
+#include <glm/glm.hpp>
 
 #include "SceneConfig.h"
 #include "FrameStats.h"
+
+struct ImFont;
+class Camera;
 
 namespace UI
 {
@@ -94,6 +97,14 @@ namespace UI
      * @param pState Pointer to the state integer (0 = Closed, 1 = Mini, 2 = Full).
      */
     void DrawConsoleWindow(const int* pState);
+
+    /**
+     * @brief Renders a debug window showing live camera coordinates and rotation.
+     *
+     * @param camera The active camera to inspect and edit.
+     * @param pOpen Optional boolean pointer to toggle the window.
+     */
+    void DrawCameraDebug(Camera& camera, bool* pOpen = nullptr);
 }
 
 

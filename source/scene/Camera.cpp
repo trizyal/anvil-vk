@@ -86,6 +86,14 @@ void Camera::updateCamera(float deltaTime)
     }
 }
 
+void Camera::setTransform(const glm::vec3& newPos, const float newPitch, const float newYaw)
+{
+    position = newPos;
+    pitchDegree = std::clamp(newPitch, -89.0f, 89.0f);
+    yawDegree = newYaw;
+    updateCameraVectors();
+}
+
 void Camera::updateCameraVectors()
 {
     SCOPE_CPU;

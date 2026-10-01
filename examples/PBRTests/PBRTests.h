@@ -28,6 +28,7 @@ private:
     bool loadLightingPipeline(std::string* outErrorMessage);
 
     int pendingSceneIndex = -1;
+    bool cameraDebug = true;
 
     VulkanContext* pContext = nullptr;
     Swapchain* pSwapchain = nullptr;

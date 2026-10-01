@@ -116,6 +116,18 @@ public:
      */
     [[nodiscard]] glm::mat4 getProjectionMatrix(float aspectRatio) const;
 
+    /**
+     * @return Current pitch (vertical rotation) in degrees.
+     */
+    [[nodiscard]] float getPitch() const { return pitchDegree; }
+
+    /**
+     * @return Current yaw (horizontal rotation) in degrees.
+     */
+    [[nodiscard]] float getYaw() const {return yawDegree; }
+
+    void setTransform(const glm::vec3& newPos, float newPitch, float newYaw);
+
 private:
     /**
      * @brief Recalculates the front, right, and up direction vectors based on the current yaw and pitch.

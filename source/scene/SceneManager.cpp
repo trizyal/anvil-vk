@@ -3,6 +3,7 @@
 
 #include "SceneManager.h"
 
+#include "Console.h"
 #include "Logger.h"
 #include "ScreenLogger.h"
 #include "Trace.h"
@@ -89,6 +90,15 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
     scene.updateGPUBuffer();
 
     activeSceneIndex = static_cast<int>(sceneIndex);
+
+    COMMAND("cameralocation", "Prints current camera position and rotation", [&camera](const std::vector<std::string>&)
+    {
+        std::string loc = std::format("Camera Loc: {:.3f} {:.3f} {:.3f} | Pitch: {:.3f} | Yaw: {:.3f}",
+            camera.position.x, camera.position.y, camera.position.z,
+            camera.getPitch(), camera.getYaw());
+
+        Console::Print(loc);
+    });
 
     LOG_INFO("Loaded Scene: {}", scene_config.sceneName);
     LOGUI("[SceneManager] Loaded Scene: " + scene_config.sceneName, AnvilColor::Blue);

@@ -231,6 +231,8 @@ void PBRTests::recordLightingPass(VkCommandBuffer inCmd, Swapchain& inSwapchain)
         }
     }
 
+    UI::DrawCameraDebug(camera, &cameraDebug);
+
     if (DebugPass::isForwardMode(debugMode))
     {
         pRenderer->drawModel(inCmd, sceneManager.gpuModel, camera, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE, false);

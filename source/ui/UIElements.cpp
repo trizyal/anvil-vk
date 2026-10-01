@@ -12,6 +12,7 @@
 
 #include <imgui.h>
 
+#include "Camera.h"
 #include "Console.h"
 #include "DebugModes.h"
 #include "DebugPass.h"
@@ -493,6 +494,45 @@ void UI::DrawConsoleWindow(const int* pState)
     }
 
     ImGui::PopStyleVar(2);
+    ImGui::End();
+}
+
+void UI::DrawCameraDebug(Camera& camera, bool* pOpen)
+{
+    if (pOpen && !*pOpen)
+    {
+        // Pointer exists and is false
+        return;
+    }
+
+    if (ImGui::Begin("Camera Debug", pOpen))
+    {
+        ImGui::Text("Position: %.3f, %.3f, %.3f",
+                    static_cast<double>(camera.position.x),
+                    static_cast<double>(camera.position.y),
+                    static_cast<double>(camera.position.z));
+
+        ImGui::Text("Rotation: Pitch %.3f, Yaw %.3f",
+                    static_cast<double>(camera.getPitch()),
+                    static_cast<double>(camera.getYaw()));
+
+        ImGui::Separator();
+
+        // Allow live editing right in the UI
+        glm::vec3 pos = camera.position;
+        if (ImGui::DragFloat3("Set Position", &pos.x, 0.1f))
+        {
+            camera.position = pos;
+        }
+
+        float pitch = camera.getPitch();
+        float yaw = camera.getYaw();
+        if (ImGui::DragFloat("Set Pitch", &pitch, 0.5f, -89.0f, 89.0f) ||
+            ImGui::DragFloat("Set Yaw", &yaw, 0.5f))
+        {
+            camera.setTransform(pos, pitch, yaw);
+        }
+    }
     ImGui::End();
 }
 
