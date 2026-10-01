@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_SWAPCHAIN_H
-#define ANVIL_VK_SWAPCHAIN_H
+#pragma once
 
 /**
  * @file Swapchain.h
@@ -64,6 +63,8 @@ public:
     /** 2D image views created for each presentation image in anvilImages. */
     std::vector<VkImageView> swapchainImageViews;
 
+    std::vector<VkImageLayout> swapchainImageLayouts;
+
     // ------------------------------------------------------------------------
     // Depth Attachment Properties
     // ------------------------------------------------------------------------
@@ -75,6 +76,8 @@ public:
 
     /** 2D image view used to bind the depth image to rendering pipelines. */
     VkImageView depthImageView = VK_NULL_HANDLE;
+
+    VkImageLayout depthImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     /** VMA memory allocation backing the depth image. */
     VmaAllocation depthImageAllocation = VK_NULL_HANDLE;
@@ -113,5 +116,3 @@ private:
      */
     void createDepthAttachment();
 };
-
-#endif //ANVIL_VK_SWAPCHAIN_H

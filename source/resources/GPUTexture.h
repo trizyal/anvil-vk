@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_GPUTEXTURE_H
-#define ANVIL_VK_GPUTEXTURE_H
+#pragma once
 
 /**
  * @file GPUTexture.h
@@ -46,6 +45,8 @@ public:
     VmaAllocation allocation = VK_NULL_HANDLE;
     VkImageView imageView = VK_NULL_HANDLE;
     VkSampler sampler = VK_NULL_HANDLE;
+
+    mutable VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 private:
     /** Cached context used for self-contained destruction. */
@@ -118,6 +119,3 @@ public:
      */
     void createSampler(uint32_t mipLevels D_DECL());
 };
-
-
-#endif //ANVIL_VK_GPUTEXTURE_H

@@ -93,86 +93,94 @@ anvil-vk/
     │   ├── Anvil.h
     │   ├── Console.cpp
     │   ├── Console.h
+    │   ├── EngineConfig.h
+    │   ├── Ensure.h
     │   ├── Input.cpp
     │   ├── Input.h
+    │   ├── Logger.cpp
+    │   ├── Logger.h
     │   ├── Window.cpp
     │   └── Window.h
     │
-    ├── programs/
+    ├── diagnostics/
+    │   ├── FrameStats.h
+    │   ├── GPUProfiler.cpp
+    │   ├── GPUProfiler.h
     │   ├── RenderDoc.cpp
     │   ├── RenderDoc.h
-    │   └── # More to come
-    │
-    ├── diagnostics/
     │   ├── Trace.h
     │   └── # More to come
     │
+    ├── graphics/
+    │   ├── DebugNames.cpp
+    │   ├── DebugNames.h
+    │   ├── PipelineBuilder.cpp
+    │   ├── PipelineBuilder.h
+    │   ├── Swapchain.cpp
+    │   ├── Swapchain.h
+    │   ├── VulkanConfig.h
+    │   ├── VulkanContext.cpp
+    │   ├── VulkanContext.h
+    │   ├── VulkanResult.cpp
+    │   └── VulkanResult.h
+    │
+    ├── math/
+    │   ├── Frustum.h
+    │   ├── Index32.h
+    │   ├── stox.cpp
+    │   ├── stox.h
+    │   └── # More to come
+    │
     ├── rendercore/
-    │   ├── AnvilMaterial.cpp
-    │   ├── AnvilMaterial.h
-    │   ├── AnvilShaders.cpp
-    │   ├── AnvilShaders.h
     │   ├── CPUModel.cpp
     │   ├── CPUModel.h
     │   ├── GPUModel.cpp
     │   ├── GPUModel.h
+    │   ├── Material.cpp
+    │   ├── Material.h
     │   ├── MaterialInstance.cpp
     │   ├── MaterialInstance.h
     │   ├── ShaderCompiler.cpp
     │   ├── ShaderCompiler.h
     │   ├── ShaderProgram.cpp
     │   ├── ShaderProgram.h
-    │   ├── TextureLoader.cpp
-    │   ├── TextureLoader.h
-    │   │
-    │   ├── context/
-    │   │   ├── DebugNames.cpp
-    │   │   ├── DebugNames.h
-    │   │   ├── Swapchain.cpp
-    │   │   ├── Swapchain.h
-    │   │   ├── VulkanConfig.h
-    │   │   ├── VulkanContext.cpp
-    │   │   ├── VulkanContext.h
-    │   │   ├── VulkanResult.cpp
-    │   │   └── VulkanResult.h
-    │   │
-    │   └── resources/
-    │       ├── GBuffer.cpp
-    │       ├── GBuffer.h
-    │       ├── GPUBuffer.cpp
-    │       ├── GPUBuffer.h
-    │       ├── GPUMesh.cpp
-    │       ├── GPUMesh.h
-    │       ├── GPUTexture.cpp
-    │       ├── GPUTexture.h
-    │       ├── PipelineBuilder.cpp
-    │       ├── PipelineBuilder.h
-    │       ├── ShaderModule.cpp
-    │       └── ShaderModule.h
+    │   ├── Shaders.cpp
+    │   └── Shaders.h
     │
     ├── renderer/
-    │   ├── AnvilRenderer.cpp
-    │   ├── AnvilRenderer.h
     │   ├── DebugPass.cpp
     │   ├── DebugPass.h
-    │   ├── FrameStats.h
-    │   ├── GPUProfiler.cpp
-    │   ├── GPUProfiler.h
-    │   ├── ScreenLogger.cpp
-    │   ├── ScreenLogger.h
-    │   ├── UIElements.cpp
-    │   ├── UIElements.h
-    │   ├── UIRenderer.cpp
-    │   └── UIRenderer.h
+    │   ├── Renderer.cpp
+    │   └── Renderer.h
     │
-    └── scene/
-        ├── Camera.cpp
-        ├── Camera.h
-        ├── Scene.cpp
-        ├── Scene.h
-        ├── SceneConfig.h
-        ├── SceneManager.cpp
-        └── SceneManager.h
+    ├── resources/
+    │   ├── GBuffer.cpp
+    │   ├── GBuffer.h
+    │   ├── GPUBuffer.cpp
+    │   ├── GPUBuffer.h
+    │   ├── GPUMesh.cpp
+    │   ├── GPUMesh.h
+    │   ├── GPUTexture.cpp
+    │   ├── GPUTexture.h
+    │   ├── ShaderModule.cpp
+    │   └── ShaderModule.h
+    │
+    ├── scene/
+    │    ├── Camera.cpp
+    │    ├── Camera.h
+    │    ├── Scene.cpp
+    │    ├── Scene.h
+    │    ├── SceneConfig.h
+    │    ├── SceneManager.cpp
+    │    └── SceneManager.h
+    │
+    └── ui/
+         ├── ScreenLogger.cpp
+         ├── ScreenLogger.h
+         ├── UIElements.cpp
+         ├── UIElements.h
+         ├── UIRenderer.cpp
+         └── UIRenderer.h
 ```
 
 ## Conventions

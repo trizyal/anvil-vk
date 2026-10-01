@@ -28,7 +28,8 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
     };
 
     vkb_swapchain_builder.use_default_format_selection();
-    vkb_swapchain_builder.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR); // vsync
+    // vkb_swapchain_builder.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR); // vsync
+    vkb_swapchain_builder.set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR); // no vsync
     vkb_swapchain_builder.set_desired_extent(inExtent.width, inExtent.height);
     vkb::Result<vkb::Swapchain> vkb_swapchain_result = vkb_swapchain_builder.build();
     VKB_CHECK(vkb_swapchain_result);
@@ -42,6 +43,8 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
 
     swapchainImages = vkb_swapchain.get_images().value();
     swapchainImageViews = vkb_swapchain.get_image_views().value();
+
+    swapchainImageLayouts.assign(swapchainImages.size(), VK_IMAGE_LAYOUT_UNDEFINED);
 
     // Setting debug names
     for (size_t i = 0; i < swapchainImages.size(); ++i)
@@ -100,7 +103,8 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
     vkb_swapchain_builder.use_default_format_selection();
 
     // TODO: Swapchain present mode should be configurable.
-    vkb_swapchain_builder.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR); // vsync
+    // vkb_swapchain_builder.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR); // vsync
+    vkb_swapchain_builder.set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR); // vsync
     vkb_swapchain_builder.set_desired_extent(inExtent.width, inExtent.height);
 
     vkb_swapchain_builder.set_old_swapchain(old_swapchain);
@@ -117,6 +121,8 @@ void Swapchain::recreateSwapchain(VkExtent2D inExtent)
 
     swapchainImages = vkb_swapchain.get_images().value();
     swapchainImageViews = vkb_swapchain.get_image_views().value();
+
+    swapchainImageLayouts.assign(swapchainImages.size(), VK_IMAGE_LAYOUT_UNDEFINED);
 
     for (size_t i = 0; i < swapchainImages.size(); ++i)
     {
