@@ -134,9 +134,6 @@ public:
  */
 class RenderGraph
 {
-    using enum ImageLayout;
-    using enum LoadOp;
-
 public:
     RenderGraph() = default;
     ~RenderGraph() = default;

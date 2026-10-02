@@ -180,9 +180,73 @@ void RenderGraph::transitionImage(VkCommandBuffer cmd, VkImage image, ImageLayou
 
 void RenderGraph::execute(VkCommandBuffer cmd)
 {
-    ZoneScoped;
+    SCOPE_CPU;
     for (GraphPassNode& pass : passes)
     {
+        SCOPE_CPU_NAME("Should say the pass.name");
+        for (const GraphAttachment& read : pass.reads)
+        {
+            transitionImage(cmd, read.image, *read.currentLayout, ImageLayout::ShaderReadOnly, read.isDepth);
+        }
 
+        std::vector<VkRenderingAttachmentInfo> color_attachments;
+        VkExtent2D render_extent = {0, 0};
+
+        for (GraphAttachment& write : pass.colorWrites)
+        {
+            transitionImage(cmd, write.image, *write.currentLayout, ImageLayout::ColorAttachment, false);
+
+            VkRenderingAttachmentInfo color_info{};
+            color_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+            color_info.imageView = write.imageView;
+            color_info.imageLayout = vk(ImageLayout::ColorAttachment);
+            color_info.loadOp = vk(write.loadOp);
+            color_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            color_info.clearValue = write.clearValue;
+            color_attachments.push_back(color_info);
+
+            if (render_extent.width == 0)
+            {
+                render_extent = write.extent;
+            }
+        }
+
+        VkRenderingAttachmentInfo depth_info{};
+        depth_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        if (pass.depthWrite)
+        {
+            transitionImage(cmd, pass.depthWrite->image, *pass.depthWrite->currentLayout, ImageLayout::DepthAttachment, true);
+
+            depth_info.imageView = pass.depthWrite->imageView;
+            depth_info.imageLayout = vk(ImageLayout::DepthAttachment);
+            depth_info.loadOp = vk(pass.depthWrite->loadOp);
+            depth_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            depth_info.clearValue = pass.depthWrite->clearValue;
+
+            if (render_extent.width == 0)
+            {
+                render_extent = pass.depthWrite->extent;
+            }
+        }
+
+        VkRenderingInfo render_info{};
+        render_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        render_info.renderArea = {{0, 0}, render_extent};
+        render_info.layerCount = 1;
+        render_info.colorAttachmentCount = static_cast<uint32_t>(color_attachments.size());
+        render_info.pColorAttachments = color_attachments.data();
+        if (pass.depthWrite)
+        {
+            render_info.pDepthAttachment = &depth_info;
+        }
+
+        vkCmdBeginRendering(cmd, &render_info);
+
+        if (pass.executeCallback)
+        {
+            pass.executeCallback(cmd);
+        }
+
+        vkCmdEndRendering(cmd);
     }
 }
