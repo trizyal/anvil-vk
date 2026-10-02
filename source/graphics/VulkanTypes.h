@@ -10,15 +10,6 @@
 #include <volk.h>
 
 /**
- * @brief Macro to create CustomType casting functions.
- */
-#define DEF_VK_CAST(CustomType, VulkanType) \
-    constexpr VulkanType vk(CustomType e) { \
-        return static_cast<VulkanType>(e); \
-    }
-
-
-/**
  * @brief Concise wrapper for commonly used Vulkan load operations.
  */
 enum class LoadOp : uint32_t
@@ -77,6 +68,14 @@ enum class Format : uint32_t
     // 32-bit 1-channel signed float
     D32_SFLOAT          = VK_FORMAT_D32_SFLOAT
 };
+
+/**
+ * @brief Macro to create CustomType casting functions.
+ */
+#define DEF_VK_CAST(CustomType, VulkanType) \
+    constexpr VulkanType vk(CustomType e) { \
+        return static_cast<VulkanType>(e); \
+    }
 
 DEF_VK_CAST(LoadOp, VkAttachmentLoadOp);
 DEF_VK_CAST(ImageLayout, VkImageLayout);

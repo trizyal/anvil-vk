@@ -23,16 +23,17 @@
 #include "UIElements.h"
 #include "VulkanResult.h"
 #include "Trace.h"
+#include "VulkanStrings.h"
 
 CVAR_INT("r.debugmode",
-    "0: None"
-    "1: Base Color"
-    "2: Raw Normal Maps"
-    "3: World Normal"
-    "4: Metallic"
-    "5: Roughness"
-    "6: Depth",
-    0
+         "0: None"
+         "1: Base Color"
+         "2: Raw Normal Maps"
+         "3: World Normal"
+         "4: Metallic"
+         "5: Roughness"
+         "6: Depth",
+         0
 );
 
 CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
@@ -171,7 +172,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     {
         std::ostringstream error_stream;
         error_stream << "Failed to Acquire Next Image:" << std::endl;
-        error_stream << "   Error: " << VulkanResult::ToString(acquired_result) << std::endl;
+        error_stream << "   Error: " << vk_str(acquired_result) << std::endl;
         LOG_FATAL("{}", error_stream.str());
     }
 
@@ -317,7 +318,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     {
         std::ostringstream error_stream;
         error_stream << "Failed to Present Swapchain Image:" << std::endl;
-        error_stream << "   Error: " << VulkanResult::ToString(present_result) << std::endl;
+        error_stream << "   Error: " << vk_str(present_result) << std::endl;
         LOG_FATAL("{}", error_stream.str());
     }
 
