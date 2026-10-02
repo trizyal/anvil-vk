@@ -16,9 +16,9 @@
   - SPDX-License-Identifier: MIT
 - vk-bootstrap @ v1.4.341 (Jan 2026)
   - SPDX-License-Identifier: MIT
-- volk @ 1.4.304 (Jan 2025)
+- volk @ 1.4.350 (May 2026)
   - SPDX-License-Identifier: MIT
-- Vulkan-Headers @ v1.4.342 (Jan 2026)
+- Vulkan-Headers @ v1.4.350 (May 2026)
   - SPDX-License-Identifier: Apache-2.0 OR MIT
 - VulkanMemoryAllocator @ v3.3.0 (May 2025)
   - SPDX-License-Identifier: MIT
