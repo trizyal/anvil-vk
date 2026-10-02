@@ -14,7 +14,7 @@
 #include <glm/glm.hpp>
 
 #include "DebugNames.h"
-#include "RenderGraph.h"
+#include "VulkanTypes.h"
 
 class VulkanContext;
 class Swapchain;

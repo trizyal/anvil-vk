@@ -16,91 +16,10 @@
 #include <glm/glm.hpp>
 #include <volk.h>
 
+#include "VulkanTypes.h"
+
 class Swapchain;
 class GPUTexture;
-
-/**
- * @brief Concise wrapper for commonly used Vulkan load operations.
- */
-enum class LoadOp : uint32_t
-{
-    Clear    = VK_ATTACHMENT_LOAD_OP_CLEAR,
-    Load     = VK_ATTACHMENT_LOAD_OP_LOAD,
-    DontCare = VK_ATTACHMENT_LOAD_OP_DONT_CARE
-};
-
-/**
- * @brief Helper function to quickly cast the ImageLayout enum back to a VkImageLayout.
- */
-inline VkAttachmentLoadOp vk(LoadOp o)
-{
-    return static_cast<VkAttachmentLoadOp>(o);
-}
-
-/**
- * @brief Concise wrapper for commonly used Vulkan image layouts.
- */
-enum class ImageLayout : uint32_t
-{
-    Undefined       = VK_IMAGE_LAYOUT_UNDEFINED,
-    ColorAttachment = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    DepthAttachment = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-    ShaderReadOnly  = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-    Present         = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-    TransferSrc     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    TransferDst     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-};
-
-/**
- * @brief Helper function to quickly cast the ImageLayout enum back to a VkImageLayout.
- */
-inline VkImageLayout vk(ImageLayout l)
-{
-    return static_cast<VkImageLayout>(l);
-}
-
-/**
- * @brief Concise wrapper for commonly used Vulkan image and buffer formats.
- */
-enum class Format : uint32_t
-{
-    Undefined           = VK_FORMAT_UNDEFINED,
-
-    // --(Standard Color / Textures)--
-    // 8-bit 4-channels unsigned normalised integers (0-255)
-    RGBA8_UNORM      = VK_FORMAT_R8G8B8A8_UNORM,
-
-    // 8-bit 4-channels unsigned integers (0-255)
-    RGBA8_SRGB       = VK_FORMAT_R8G8B8A8_SRGB,
-
-    // (HDR / G-Buffer Normals & World Pos)
-    // 16-bit 4-channels signed floats
-    RGBA16_SFLOAT       = VK_FORMAT_R16G16B16A16_SFLOAT,
-
-    // --(Vertex attributes 32-bits)--
-    // 32-bit 2-channels signed floats
-    RG32_SFLOAT       = VK_FORMAT_R32G32_SFLOAT,
-
-    // 32-bit 3-channels signed floats
-    RGB32_SFLOAT    = VK_FORMAT_R32G32B32_SFLOAT,
-
-    // 32-bit 4-channels signed floats
-    RGBA32_SFLOAT = VK_FORMAT_R32G32B32A32_SFLOAT,
-
-    // 32-bit 4-channels unsigned integers
-    RGBA32_UINT   = VK_FORMAT_R32G32B32A32_UINT,
-
-    // --(Depth Stencil)--
-    // 32-bit 1-channel signed float
-    D32_SFLOAT          = VK_FORMAT_D32_SFLOAT
-};
-
-/**
- * @brief Helper function to quickly cast the Format enum back to a VkFormat.
- */
-inline VkFormat vk(Format f) {
-    return static_cast<VkFormat>(f);
-}
 
 /**
  * @brief Represents a single GPU image attachment declared within a render pass.
@@ -204,7 +123,7 @@ public:
      * @brief Assigns the application execution callback containing command buffer draw logic.
      * @param callback Lambda or function receiving an active VkCommandBuffer to record draw calls.
      */
-    void execute(std::function<void(VkCommandBuffer)> callback);
+    void execute(std::function<void(VkCommandBuffer)> callback) const;
 };
 
 /**

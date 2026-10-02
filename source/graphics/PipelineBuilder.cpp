@@ -5,7 +5,7 @@
 
 #include <stdexcept>
 
-#include "RenderGraph.h"
+#include "VulkanTypes.h"
 #include "Trace.h"
 #include "VulkanResult.h"
 

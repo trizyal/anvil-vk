@@ -13,7 +13,7 @@
 #include <volk.h>
 #include <vk_mem_alloc.h>
 
-#include "RenderGraph.h"
+#include "VulkanTypes.h"
 
 class VulkanContext;
 

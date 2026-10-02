@@ -15,7 +15,7 @@
 
 #include "VulkanContext.h"
 #include "DebugNames.h"
-#include "RenderGraph.h"
+#include "VulkanTypes.h"
 
 /**
  * @brief Manages the lifecycle of a Vulkan Image, ImageView, Sampler and its backing VMA memory allocation.

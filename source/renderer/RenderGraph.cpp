@@ -4,6 +4,10 @@
 #include "RenderGraph.h"
 
 #include "GPUTexture.h"
+#include "Logger.h"
+#include "Swapchain.h"
+
+// RenderPassBuilder
 
 RenderPassBuilder& RenderPassBuilder::read(const GPUTexture& tex)
 {
@@ -42,4 +46,79 @@ RenderPassBuilder& RenderPassBuilder::writeColor(const GPUTexture& tex, LoadOp l
     color_write_attachment.isDepth = false;
 
     node.colorWrites.push_back(std::move(color_write_attachment));
+
+    return *this;
+}
+
+RenderPassBuilder& RenderPassBuilder::writeDepth(const GPUTexture& tex, LoadOp loadOp, float clearDepth)
+{
+    VkClearValue clearValue;
+    clearValue.depthStencil = {.depth = clearDepth, .stencil = 0};
+
+    GraphAttachment depth_write_attachment;
+    depth_write_attachment.image = tex.image;
+    depth_write_attachment.imageView = tex.imageView;
+    depth_write_attachment.format = tex.format;
+
+    depth_write_attachment.extent = {tex.width, tex.height};
+    depth_write_attachment.currentLayout = &tex.currentLayout;
+
+    depth_write_attachment.loadOp = loadOp;
+    depth_write_attachment.clearValue = clearValue;
+    depth_write_attachment.isDepth = true;
+
+    node.colorWrites.push_back(std::move(depth_write_attachment));
+
+    return *this;
+}
+
+RenderPassBuilder& RenderPassBuilder::writeSwapchain(Swapchain& swapchain, uint32_t imageIndex, LoadOp loadOp, glm::vec4 clearColor)
+{
+    VkClearValue clearValue;
+    clearValue.color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
+
+    GraphAttachment swapchain_attachment;
+    swapchain_attachment.image = swapchain.swapchainImages[imageIndex];
+    swapchain_attachment.imageView = swapchain.swapchainImageViews[imageIndex];
+    swapchain_attachment.format = swapchain.swapchainFormat;
+
+    swapchain_attachment.extent = swapchain.swapchainExtent;
+    swapchain_attachment.currentLayout = &swapchain.swapchainImageLayouts[imageIndex];
+
+    swapchain_attachment.loadOp = loadOp;
+    swapchain_attachment.clearValue = clearValue;
+    swapchain_attachment.isDepth = false;
+
+    node.colorWrites.push_back(std::move(swapchain_attachment));
+
+    return *this;
+}
+
+void RenderPassBuilder::execute(std::function<void(VkCommandBuffer)> callback) const
+{
+    node.executeCallback = std::move(callback);
+}
+
+
+// RenderGraph
+
+RenderPassBuilder RenderGraph::addPass(const std::string& name)
+{
+    GraphPassNode node;
+    node.name = name;
+    node.reads = {};
+    node.colorWrites = {};
+    node.depthWrite = std::nullopt;
+    node.executeCallback = nullptr;
+
+    passes.push_back(std::move(node));
+    return RenderPassBuilder(passes.back());
+}
+
+void RenderGraph::transitionImage(VkCommandBuffer cmd, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth)
+{
+    if (currentLayout == newLayout)
+    {
+
+    }
 }
