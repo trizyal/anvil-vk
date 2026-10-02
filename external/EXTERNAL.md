@@ -20,6 +20,8 @@
   - SPDX-License-Identifier: MIT
 - Vulkan-Headers @ v1.4.350 (May 2026)
   - SPDX-License-Identifier: Apache-2.0 OR MIT
+- Vulkan-Utility-Libraries @ v1.4.350 (May 2026)
+  - SPDX-License-Identifier: Apache-2.0
 - VulkanMemoryAllocator @ v3.3.0 (May 2025)
   - SPDX-License-Identifier: MIT
 

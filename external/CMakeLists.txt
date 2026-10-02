@@ -14,6 +14,8 @@ target_compile_definitions(volk PUBLIC
         VK_ENABLE_BETA_EXTENSIONS
 )
 
+add_subdirectory(Vulkan-Utility-Libraries SYSTEM)
+
 # GLFW Configuration
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

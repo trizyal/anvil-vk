@@ -141,6 +141,7 @@ endif ()
 target_link_libraries(${PROJECT_NAME} PUBLIC
         glfw
         volk
+        Vulkan::UtilityHeaders
         vk-bootstrap::vk-bootstrap
         vma
         glm

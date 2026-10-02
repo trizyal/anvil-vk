@@ -46,6 +46,7 @@ anvil-vk/
 │   ├── vk-bootstrap/
 │   ├── volk/
 │   ├── Vulkan-Headers/
+│   ├── Vulkan-Utility-Libraries/
 │   ├── VulkanMemoryAllocator/
 │   └── # More to come
 │ 
