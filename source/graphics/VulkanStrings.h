@@ -4,11 +4,13 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 
 #include <volk.h>
 #include <vulkan/vk_enum_string_helper.h>
 
 #include "VulkanTypes.h"
+#include "Ensure.h"
 
 /**
  * @brief Macro to create overloaded functions vk_str to convert Vulkan Enums to strings.

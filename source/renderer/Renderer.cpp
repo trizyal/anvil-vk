@@ -383,6 +383,9 @@ void Renderer::drawModel(VkCommandBuffer inCmd, const GPUModel& model, const Cam
     {
         const GPUModelDrawItem& draw_item = model.drawItems[i];
         SCOPE_GPU(tracyVkCtx, inCmd, "Draw Item");
+        TracyVkZoneTransient(tracyVkCtx, boo,inCmd, DebugPass::GetDebugModeName(static_cast<DebugMode>(debug_mode)), true);
+
+
         if (draw_item.gpuMeshIndex >= model.gpuMeshes.size())
         {
             continue;
@@ -480,6 +483,7 @@ void Renderer::drawDeferredLighting(VkCommandBuffer inCmd, GBuffer& gBuffer, con
     else if (DebugPass::isDeferredMode(debug_mode))
     {
         SCOPE_GPU(tracyVkCtx, inCmd, "Deferred Debug");
+        TracyVkZoneTransient(tracyVkCtx, boo,inCmd, DebugPass::GetDebugModeName(static_cast<DebugMode>(debug_mode)), true);
         debugPass.drawDeferredResolve(inCmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
     }
 }
