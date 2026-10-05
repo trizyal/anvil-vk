@@ -279,19 +279,17 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore wait_semaphores[] = { frame.imageAvailableSemaphore };
-    VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
     submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = wait_semaphores;
-    submit_info.pWaitDstStageMask = wait_stages;
+    submit_info.pWaitSemaphores = &frame.imageAvailableSemaphore;
+    submit_info.pWaitDstStageMask = &wait_stage;
 
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd;
 
-    VkSemaphore signal_semaphores[] = { renderFinishedSemaphores[image_index] };
     submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores = signal_semaphores;
+    submit_info.pSignalSemaphores = &renderFinishedSemaphores[image_index];
 
     CHECK(vkQueueSubmit(pContext->graphicsQueue, 1, &submit_info, frame.frameDoneFence));
 
@@ -300,7 +298,7 @@ void Renderer::drawFrame(Window& inWindow, const RenderHooks& renderHooks)
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
     present_info.waitSemaphoreCount = 1;
-    present_info.pWaitSemaphores = signal_semaphores;
+    present_info.pWaitSemaphores = &renderFinishedSemaphores[image_index];;
 
     VkSwapchainKHR swapchain = {pSwapchain->anvilSwapchain};
     present_info.swapchainCount = 1;
