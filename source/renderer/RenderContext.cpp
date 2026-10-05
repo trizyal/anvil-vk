@@ -9,6 +9,7 @@
 #include "VulkanContext.h"
 #include "VulkanResult.h"
 #include "VulkanStrings.h"
+#include "VulkanUtilities.h"
 #include "Window.h"
 
 void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain* inSwapchain)
@@ -176,5 +177,28 @@ void RenderContext::endFrame()
 
     const Frame& frame = getCurrentFrame();
     VkCommandBuffer cmd = frame.cmdBuffer;
+
+    SCOPE_GPU(tracyVkCtx, cmd, "EndFrame");
+
+    VulkanUtils::TransitionImage(cmd, pSwapchain->swapchainImages[imageIndex], pSwapchain->swapchainImageLayouts[imageIndex], ImageLayout::Present);
+
+    gpuProfiler.endGPUProfilerFrame(cmd, frameIndex);
+    CHECK(vkEndCommandBuffer(cmd));
+
+    VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd;
+
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = &frame.imageAvailableSemaphore;
+    submit_info.pWaitDstStageMask = &wait_stage;
+
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = &renderFinishedSemaphores[imageIndex];
+
+    CHECK(vkQueueSubmit(pContext->graphicsQueue, 1, &submit_info, frame.frameDoneFence));
 }
 
