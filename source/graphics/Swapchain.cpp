@@ -48,16 +48,12 @@ void Swapchain::initializeSwapchain(VulkanContext& inAnvilContext, VkExtent2D in
     // Setting debug names
     for (size_t i = 0; i < swapchainImages.size(); ++i)
     {
-        std::string image_name = "SwapchainImage[" + std::to_string(i) + "]";
-        SET_DNAME_HERE(pContext->device, swapchainImages[i],
-            VK_OBJECT_TYPE_IMAGE, image_name.c_str());
+        SET_DNAME_HERE(pContext->device, swapchainImages[i], VK_OBJECT_TYPE_IMAGE, ( "SwapchainImage" + std::to_string(i)).c_str());
     }
 
     for (size_t i = 0; i < swapchainImageViews.size(); ++i)
     {
-        std::string image_view_name = "SwapchainImageView[" + std::to_string(i) + "]";
-        SET_DNAME_HERE(pContext->device, swapchainImageViews[i],
-            VK_OBJECT_TYPE_IMAGE_VIEW, image_view_name.c_str());
+        SET_DNAME_HERE(pContext->device, swapchainImageViews[i], VK_OBJECT_TYPE_IMAGE_VIEW, ("SwapchainImageView" + std::to_string(i)).c_str());
     }
 
     createDepthAttachment();

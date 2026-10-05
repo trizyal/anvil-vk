@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ENSURE_H
-#define ENSURE_H
+#pragma once
 
 /**
  * @file Ensure.h
@@ -18,7 +17,7 @@
  * Halts execution if a debugger is attached. If no debugger is attached,
  * behavior depends on the OS (often terminates the program or ignores).
  */
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
     #define BREAK() __debugbreak()
 #else
     #define BREAK() __builtin_trap()
@@ -61,4 +60,3 @@
         } \
     } while (0)
 
-#endif //ENSURE_H
