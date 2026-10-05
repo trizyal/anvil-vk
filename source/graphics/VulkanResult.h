@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_VULKANRESULT_H
-#define ANVIL_VK_VULKANRESULT_H
+#pragma once
 
 /**
  * @file VulkanResult.h
@@ -69,5 +68,3 @@ namespace VulkanResult
         } \
     } \
     while (0)
-
-#endif //ANVIL_VK_VULKANRESULT_H

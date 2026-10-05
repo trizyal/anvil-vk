@@ -85,10 +85,10 @@ inline std::string vk_str(const ImageLayout layout)
 /**
  * @brief Converts a Format enums into a human-readable string literal.
  *
- * @see ImageLayout
+ * @see Format
  *
  * @param format The Image Format value.
- * @return A string matching the ImageLayout enum name (e.g., "RGBA8_SRGB").
+ * @return A string matching the Format enum name (e.g., "RGBA8_SRGB").
  */
 inline std::string vk_str(const Format format)
 {
