@@ -172,6 +172,9 @@ VkCommandBuffer RenderContext::beginFrame(const Window& inWindow)
 
 void RenderContext::endFrame()
 {
+    SCOPE_CPU;
 
+    const Frame& frame = getCurrentFrame();
+    VkCommandBuffer cmd = frame.cmdBuffer;
 }
 
