@@ -154,16 +154,5 @@ public:
      * @param cmd Active primary command buffer recorded during the frame.
      */
     void execute(VkCommandBuffer cmd);
-
-private:
-    /**
-     * @brief Evaluates current and required layouts and inserts a VkImageMemoryBarrier if a transition is needed.
-     * @param cmd Active Vulkan command buffer.
-     * @param image Target Vulkan image handle.
-     * @param currentLayout Reference to the tracked layout state variable (updated upon barrier emission).
-     * @param newLayout Target ImageLayout required for the upcoming operation.
-     * @param isDepth True if evaluating a depth aspect image transition.
-     */
-    void transitionImage(VkCommandBuffer cmd, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth);
 };
 

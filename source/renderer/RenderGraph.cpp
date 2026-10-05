@@ -10,6 +10,7 @@
 #include "Swapchain.h"
 #include "Trace.h"
 #include "VulkanStrings.h"
+#include "VulkanUtilities.h"
 
 // RenderPassBuilder
 
@@ -119,65 +120,6 @@ RenderPassBuilder RenderGraph::addPass(const std::string& name)
     return RenderPassBuilder(passes.back());
 }
 
-void RenderGraph::transitionImage(VkCommandBuffer cmd, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth)
-{
-    if (currentLayout == newLayout)
-    {
-        LOG_WARN("Transition layouts are the same: {}", vk_str(newLayout));
-        return;
-    }
-
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.image = image;
-    barrier.oldLayout = vk(currentLayout);
-    barrier.newLayout = vk(newLayout);
-    barrier.subresourceRange.aspectMask = isDepth ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
-
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-    VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-    VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-
-    switch (newLayout)
-    {
-    using enum ImageLayout;
-
-    case ColorAttachment:
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        break;
-
-    case DepthAttachment:
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        break;
-
-    case ShaderReadOnly:
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        break;
-
-    case Present:
-        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        barrier.dstAccessMask = 0;
-        break;
-
-    default: break;
-    }
-
-    vkCmdPipelineBarrier(cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-    currentLayout = newLayout;
-}
-
 void RenderGraph::execute(VkCommandBuffer cmd)
 {
     SCOPE_CPU;
@@ -186,7 +128,7 @@ void RenderGraph::execute(VkCommandBuffer cmd)
         SCOPE_CPU_NAME("Should say the pass.name");
         for (const GraphAttachment& read : pass.reads)
         {
-            transitionImage(cmd, read.image, *read.currentLayout, ImageLayout::ShaderReadOnly, read.isDepth);
+            VulkanUtils::TransitionImage(cmd, read.image, *read.currentLayout, ImageLayout::ShaderReadOnly, read.isDepth);
         }
 
         std::vector<VkRenderingAttachmentInfo> color_attachments;
@@ -194,7 +136,7 @@ void RenderGraph::execute(VkCommandBuffer cmd)
 
         for (GraphAttachment& write : pass.colorWrites)
         {
-            transitionImage(cmd, write.image, *write.currentLayout, ImageLayout::ColorAttachment, false);
+            VulkanUtils::TransitionImage(cmd, write.image, *write.currentLayout, ImageLayout::ColorAttachment, false);
 
             VkRenderingAttachmentInfo color_info{};
             color_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -215,7 +157,7 @@ void RenderGraph::execute(VkCommandBuffer cmd)
         depth_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         if (pass.depthWrite)
         {
-            transitionImage(cmd, pass.depthWrite->image, *pass.depthWrite->currentLayout, ImageLayout::DepthAttachment, true);
+            VulkanUtils::TransitionImage(cmd, pass.depthWrite->image, *pass.depthWrite->currentLayout, ImageLayout::DepthAttachment, true);
 
             depth_info.imageView = pass.depthWrite->imageView;
             depth_info.imageLayout = vk(ImageLayout::DepthAttachment);
