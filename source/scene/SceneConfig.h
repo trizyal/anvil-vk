@@ -116,9 +116,9 @@ struct SceneConfig
             std::string val = line.substr(eq_pos + 1, std::string::npos);
 
             // clean up the key and val
-            key.erase(key.find_last_not_of(" \t") + 1, std::string::npos);
-            val.erase(0, val.find_first_not_of(" \t"));
-            val.erase(val.find_last_not_of(" \t") + 1, std::string::npos);
+            key.erase(key.find_last_not_of(" \t\r\n") + 1, std::string::npos);
+            val.erase(0, val.find_first_not_of(" \t\r\n"));
+            val.erase(val.find_last_not_of(" \t\r\n") + 1, std::string::npos);
 
             if      (key == "name")             outConfig.sceneName = val;
             else if (key == "model")            outConfig.modelPath = val;
