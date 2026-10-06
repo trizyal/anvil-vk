@@ -79,7 +79,7 @@ if (WIN32)
     target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/windows/lib/slang.lib)
 elseif (UNIX)
     target_include_directories(slang SYSTEM INTERFACE slang/linux/include)
-    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/linux/lib/libslang.so)
+    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/linux/lib/libslang-compiler.so.0.2026.18.2)
 endif ()
 
 # -- imgui
@@ -95,7 +95,7 @@ set(IMGUI_SOURCES
 add_library(imgui STATIC ${IMGUI_SOURCES})
 # disable default vulkan function prototypes
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
-target_include_directories(imgui PUBLIC imgui imgui/backends)
+target_include_directories(imgui SYSTEM PUBLIC imgui imgui/backends)
 # imgui uses volk and glfw
 target_link_libraries(imgui PUBLIC volk glfw)
 

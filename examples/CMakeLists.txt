@@ -37,6 +37,11 @@ macro(add_anvil_example EXAMPLE_NAME)
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 ${EXTERNAL_DIR}/slang/windows/bin $<TARGET_FILE_DIR:${EXAMPLE_NAME}>
         )
+    elseif((UNIX))
+        add_custom_command(TARGET ${EXAMPLE_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${EXTERNAL_DIR}/slang/linux/bin $<TARGET_FILE_DIR:${EXAMPLE_NAME}>
+        )
     endif ()
 
     if (MINGW)
