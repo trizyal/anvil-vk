@@ -73,13 +73,13 @@ target_include_directories(renderdoc SYSTEM INTERFACE renderdoc)
 
 # -- slang
 add_library(slang INTERFACE)
-target_include_directories(slang SYSTEM INTERFACE slang/include)
 # linking slang with the precompiled library
 if (WIN32)
-    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/lib/slang.lib)
+    target_include_directories(slang SYSTEM INTERFACE slang/windows/include)
+    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/windows/lib/slang.lib)
 elseif (UNIX)
-    # unsure
-    target_link_libraries(slang INTERFACE slang/lib/libslang.so)
+    target_include_directories(slang SYSTEM INTERFACE slang/linux/include)
+    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/linux/lib/libslang.so)
 endif ()
 
 # -- imgui
