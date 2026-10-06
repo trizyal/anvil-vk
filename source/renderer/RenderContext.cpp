@@ -155,7 +155,7 @@ VkCommandBuffer RenderContext::beginFrame(const Window& inWindow)
 
     CHECK(vkResetFences(pContext->device, 1, &frame.frameDoneFence));
     ENSURE(frameIndex < FRAMES_IN_FLIGHT, "Frame index should not be greater that the maximum frames in flight allowed.");
-    ENSURE(imageIndex < pSwapchain->swapchainImages.size(), "Image index should not be grater than the total swapchain images avilable.");
+    ENSURE(imageIndex < pSwapchain->swapchainImages.size(), "Image index should not be grater than the total swapchain images available.");
 
     VkCommandBuffer cmd = frame.cmdBuffer;
     CHECK(vkResetCommandBuffer(cmd, 0));
@@ -198,7 +198,30 @@ void RenderContext::endFrame()
 
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = &renderFinishedSemaphores[imageIndex];
-
     CHECK(vkQueueSubmit(pContext->graphicsQueue, 1, &submit_info, frame.frameDoneFence));
+
+    VkPresentInfoKHR present_info{};
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = &renderFinishedSemaphores[imageIndex];
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = &pSwapchain->anvilSwapchain;
+    present_info.pImageIndices = &imageIndex;
+
+    VkResult present_result = vkQueuePresentKHR(pContext->graphicsQueue, &present_info);
+
+    if (present_result == VK_ERROR_OUT_OF_DATE_KHR || present_result == VK_SUBOPTIMAL_KHR)
+    {
+        LOG_INFO("Recreate swapchain. vkQueuePresentKHR = {}.", vk_str(present_result));
+        recreateSwapchain = true;
+    }
+    else if (present_result != VK_SUCCESS)
+    {
+        LOG_ERROR("Failed to present image: {}.", vk_str(present_result));
+    }
+
+    frameIndex = (frameIndex + 1) % FRAMES_IN_FLIGHT;
+    ENSURE(sizeof(frames) / sizeof(Frame) == FRAMES_IN_FLIGHT, "Number of frames prepared too large.");
+    ENSURE(frameIndex < FRAMES_IN_FLIGHT, "Frame index should be less that max frames in fight.");
 }
 
