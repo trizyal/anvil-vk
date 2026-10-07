@@ -15,11 +15,7 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
 
     slang::ShaderReflection* reflection = linkedProgram->getLayout();
 
-    if (!reflection)
-    {
-        std::cerr << "Failed to get Slang reflection layout!" << std::endl;
-        return;
-    }
+    FATAL(reflection, "Failed to get Slang reflection layout");
 
     const uint32_t param_count = reflection->getParameterCount();
     for (uint32_t i = 0; i < param_count; i++)
@@ -38,9 +34,12 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
 
             // SLANG FIX: A ConstantBuffer<T> is a wrapper. We need the size of 'T' (the element).
             slang::TypeLayoutReflection* element_type = type_layout->getElementTypeLayout();
-            if (element_type != nullptr) {
+            if (element_type != nullptr)
+            {
                 range.size = static_cast<uint32_t>(element_type->getSize());
-            } else {
+            }
+            else
+            {
                 range.size = static_cast<uint32_t>(type_layout->getSize());
             }
 
@@ -49,10 +48,11 @@ void ShaderProgram::reflectStage(slang::IComponentType* linkedProgram, VkShaderS
         }
 
         if (category == slang::ParameterCategory::DescriptorTableSlot ||
+            category == slang::ParameterCategory::ConstantBuffer ||
             category == slang::ParameterCategory::Mixed)
         {
             VkDescriptorSetLayoutBinding layout_binding{};
-            layout_binding.binding = static_cast<uint32_t>(var_layout->getBindingIndex());
+            layout_binding.binding = var_layout->getBindingIndex();
             layout_binding.descriptorCount = 1;
             layout_binding.stageFlags = stage;
 
@@ -119,7 +119,7 @@ bool ShaderProgram::buildProgram(VulkanContext& inContext, ShaderCompiler& inCom
         else
         {
             LOG_FATAL("{}", err);
-            FATAL(false, "Shader Program Failed");
+            FATAL(false, "Shader Program Failed.");
         }
         return false;
     }

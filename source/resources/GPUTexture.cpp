@@ -359,7 +359,7 @@ void GPUTexture::createImage(const uint32_t inWidth, const uint32_t inHeight, co
     image_info.extent.depth = 1;
     image_info.mipLevels = mipLevels;
     image_info.arrayLayers = 1;
-    image_info.format = static_cast<VkFormat>(inFormat);
+    image_info.format = vk(inFormat);
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -382,7 +382,7 @@ void GPUTexture::createImageView(const uint32_t mipLevels, const Format inFormat
     image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     image_view_info.image = image;
     image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    image_view_info.format = static_cast<VkFormat>(inFormat);
+    image_view_info.format = vk(inFormat);
     image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     image_view_info.subresourceRange.baseMipLevel = 0;
     image_view_info.subresourceRange.levelCount = mipLevels;
