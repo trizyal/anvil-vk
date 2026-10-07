@@ -31,6 +31,8 @@ void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain*
         tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);
     });
 
+    FATAL(tracyVkCtx != nullptr, "Tracy Context creation failed.");
+
     const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
     gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
 }
@@ -178,11 +180,14 @@ void RenderContext::endFrame()
     const Frame& frame = getCurrentFrame();
     VkCommandBuffer cmd = frame.cmdBuffer;
 
-    SCOPE_GPU(tracyVkCtx, cmd, "EndFrame");
+    {
+        SCOPE_GPU(tracyVkCtx, cmd, "EndFrame");
 
-    VulkanUtils::TransitionImage(cmd, pSwapchain->swapchainImages[imageIndex], pSwapchain->swapchainImageLayouts[imageIndex], ImageLayout::Present);
+        VulkanUtils::TransitionImage(cmd, pSwapchain->swapchainImages[imageIndex], pSwapchain->swapchainImageLayouts[imageIndex], ImageLayout::Present);
 
-    gpuProfiler.endGPUProfilerFrame(cmd, frameIndex);
+        gpuProfiler.endGPUProfilerFrame(cmd, frameIndex);
+    }
+
     CHECK(vkEndCommandBuffer(cmd));
 
     VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
