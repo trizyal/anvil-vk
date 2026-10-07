@@ -283,6 +283,7 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t inWid
 
     width = inWidth;
     height = inHeight;
+    format = inFormat;
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -292,7 +293,7 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t inWid
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
-    image_info.format = static_cast<VkFormat>(inFormat);
+    image_info.format = vk(inFormat);
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = usage;
@@ -314,7 +315,7 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t inWid
     image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     image_view_info.image = image;
     image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    image_view_info.format = static_cast<VkFormat>(inFormat);
+    image_view_info.format = vk(inFormat);
     image_view_info.subresourceRange.aspectMask = aspect_mask;
     image_view_info.subresourceRange.baseMipLevel = 0;
     image_view_info.subresourceRange.levelCount = 1;
