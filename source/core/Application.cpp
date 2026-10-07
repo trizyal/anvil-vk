@@ -11,7 +11,7 @@
 #include "Trace.h"
 #include "UIElements.h"
 
-// TODO: Should move these tp relevant files.
+// TODO: Should move these to relevant files.
 CVAR_BOOL("attachrenderdoc", "Start the executable with RenderDoc attached.", true);
 CVAR_BOOL("attachtracy", "Start the executable with Tracy attached.", true);
 CVAR_INT("r.shadowmapsize", "Resolution of shadow maps.", 1048);

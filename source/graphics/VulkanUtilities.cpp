@@ -64,3 +64,20 @@ void VulkanUtils::TransitionImage(VkCommandBuffer cmd, VkImage image, ImageLayou
     vkCmdPipelineBarrier(cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     currentLayout = newLayout;
 }
+
+void VulkanUtils::SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain)
+{
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(inSwapchain.swapchainExtent.width);
+    viewport.height = static_cast<float>(inSwapchain.swapchainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(inCmd, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = inSwapchain.swapchainExtent;
+    vkCmdSetScissor(inCmd, 0, 1, &scissor);
+}

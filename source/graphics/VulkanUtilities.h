@@ -5,6 +5,7 @@
 
 #include <volk.h>
 
+#include "Swapchain.h"
 #include "VulkanTypes.h"
 
 /**
@@ -23,4 +24,12 @@ namespace VulkanUtils
      * @param isDepth True if evaluating a depth aspect image transition.
      */
     void TransitionImage(VkCommandBuffer cmd, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth = false);
+
+    /**
+     * @brief Helper to dynamically set the viewport and scissor rect to match the swapchain.
+     *
+     * @param inCmd Active command buffer.
+     * @param inSwapchain The swapchain to pull the extent from.
+     */
+    void SetViewportScissor(VkCommandBuffer inCmd, const Swapchain& inSwapchain);
 }
