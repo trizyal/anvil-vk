@@ -7,7 +7,9 @@
 #include "Input.h"
 #include "Logger.h"
 #include "RenderDoc.h"
+#include "ScreenLogger.h"
 #include "Trace.h"
+#include "UIElements.h"
 
 // TODO: Should move these tp relevant files.
 CVAR_BOOL("attachrenderdoc", "Start the executable with RenderDoc attached.", true);
@@ -57,6 +59,115 @@ void Application::initialize(const CreateInfo& info)
     const auto init_time = std::chrono::duration<float, std::milli>(cpu_end - cpu_start).count();
     LOG_INFO("Anvil initialization complete.");
     LOG_INFO("Initialization took: {}ms", init_time);
+}
+
+void Application::shutdown()
+{
+    SCOPE_CPU;
+    LOG_INFO("Shutting Down application.");
+
+    ENSURE(applicationInitialized, "Application is not initialized.");
+
+    vkDeviceWaitIdle(context.device);
+
+    debugPass.cleanupDebugPass();
+    shaderCompiler.shutdownShaderCompiler();
+    Logger::ShutdownLogger();
+    window.reset();
+
+    applicationInitialized = false;
+}
+
+void Application::run(const RenderHooks& renderHooks)
+{
+    FATAL(applicationInitialized, "Application is not initialized.");
+
+    while (!window->bShouldClose())
+    {
+        SCOPE_CPU_NAME("FRAME");
+        const auto frame_start = std::chrono::high_resolution_clock::now();
+
+        Window::pollEvents();
+        Input::UpdateInputs();
+
+        // FIX: Check for minimized window state.
+        if (window->isMinimised())
+        {
+            // Skip the rest of the loop entirely.
+            // ImGui never starts, rendering never happens.
+            continue;
+        }
+
+        UIRenderer::BeginUIFrame();
+
+        // TODO: Remove the UI calls from ScreenLogger and move that to the UI files.
+        ScreenLogger::DrawOverlay();
+        UI::DrawConsoleWindow(&consoleState);
+
+        // Toggle Developer Console with the tilde key (~)
+        if (Input::IsKeyPressed_Frame(GLFW_KEY_GRAVE_ACCENT))
+        {
+            consoleState = (consoleState + 1) % 3;
+        }
+
+        // Check for Shader Reload
+        if (Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressed_Frame(GLFW_KEY_PERIOD))
+        {
+            triggerShaderHotReload();
+        }
+
+        // Render Error Dialog if hot reload fails.
+        if (bShaderErrorModalOpen)
+        {
+            UI::DrawShaderErrorModal(activeShaderErrorLog,
+                [this]()
+                {
+                    // Try again
+                    triggerShaderHotReload();
+                },
+                [this]()
+                {
+                    // Abort and use previous setup
+                    bShaderErrorModalOpen = false;
+                    activeShaderErrorLog.clear();
+                }
+            );
+        }
+
+        // Core Orchestration
+        {
+            SCOPE_CPU_NAME("Rendering");
+            VkCommandBuffer cmd = renderContext.beginFrame(*window);
+            FATAL(cmd != VK_NULL_HANDLE, "Command Buffer Invalid.");
+
+            engineStats.resetFrameStats();
+
+            // RenderGraph
+            if (renderHooks.onRecordFrame)
+            {
+                renderHooks.onRecordFrame(cmd);
+            }
+
+            // UI
+            {
+                SCOPE_GPU(renderContext.tracyVkCtx, cmd, "UI RenderPass");
+                engineStats.fps = 1000.f / engineStats.frameTime;
+                UI::FrameStats(engineStats);
+                UIRenderer::RecordUICommands(cmd);
+            }
+
+            renderContext.endFrame();
+        }
+
+        UIRenderer::EndUIFrame();
+
+        auto frame_end = std::chrono::high_resolution_clock::now();
+        engineStats.frameTime = std::chrono::duration<float, std::milli>(frame_end - frame_start).count();
+        engineStats.cpuTime = engineStats.frameTime; // Rough approximation, fine for now
+        engineStats.gpuTime = renderContext.gpuProfiler.getGPUTime(renderContext.frameIndex);
+    }
+
+    vkDeviceWaitIdle(context.device);
 }
 
 bool Application::reloadDebugShaders(std::string* outError)
