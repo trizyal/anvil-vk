@@ -31,6 +31,8 @@
  *
  * @param condition The expression that is expected to evaluate to true.
  * @param message The diagnostic message to print if the condition is false.
+ *
+ * @todo Unify the logging with logger.
  */
 #define ENSURE(condition, message) \
     do { \
@@ -49,6 +51,8 @@
  *
  * @param condition The expression that is expected to evaluate to true.
  * @param message The diagnostic message to print if the condition is false.
+ *
+ * @todo Unify the logging with logger.
  */
 #define FATAL(condition, message) \
     do { \

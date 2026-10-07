@@ -60,8 +60,8 @@ public:
     RenderContext& operator=(RenderContext&&) = delete;
 
 private:
-    VulkanContext* pContext;
-    Swapchain* pSwapchain;
+    VulkanContext* pContext = nullptr;
+    Swapchain* pSwapchain = nullptr;
 
     /** Array of frame-sync structures for flighted rendering. */
     Frame frames[FRAMES_IN_FLIGHT];

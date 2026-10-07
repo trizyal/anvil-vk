@@ -138,19 +138,8 @@ ShaderCompileResult ShaderCompiler::compileToSPIRV(const ShaderCompileRequest& r
             search_paths.push_back(path.c_str());
         }
 
-        // Needs to be initialized outside the .empty() block
-        const char* defaultPath[] = {SHADER_DIR};
-
-        if (search_paths.empty())
-        {
-            session_desc.searchPaths = defaultPath;
-            session_desc.searchPathCount = 1;
-        }
-        else
-        {
-            session_desc.searchPaths = search_paths.data();
-            session_desc.searchPathCount = static_cast<uint32_t>(search_paths.size());
-        }
+        session_desc.searchPaths = search_paths.data();
+        session_desc.searchPathCount = static_cast<uint32_t>(search_paths.size());
 
         // Apply Optimization level
         const slang::CompilerOptionEntry options = {
