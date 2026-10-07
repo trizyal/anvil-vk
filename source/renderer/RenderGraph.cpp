@@ -72,7 +72,7 @@ RenderPassBuilder& RenderPassBuilder::writeDepth(const GPUTexture& tex, LoadOp l
     depth_write_attachment.clearValue = clearValue;
     depth_write_attachment.isDepth = true;
 
-    node.colorWrites.push_back(std::move(depth_write_attachment));
+    node.depthWrite = std::move(depth_write_attachment);
 
     return *this;
 }
