@@ -170,6 +170,47 @@ void Application::run(const RenderHooks& renderHooks)
     vkDeviceWaitIdle(context.device);
 }
 
+void Application::triggerShaderHotReload()
+{
+    SCOPE_CPU;
+
+    if (shaderReloadQueue.empty())
+    {
+        LOG_INFO("Shader reload queue is empty.");
+        return;
+    }
+
+    LOGUI("Shader reload triggered. Pausing GPU.");
+    vkDeviceWaitIdle(context.device);
+
+    bool b_success = true;
+    std::string errors;
+
+    for (auto& callback : shaderReloadQueue)
+    {
+        std::string err;
+        if (!callback(&err))
+        {
+            b_success = false;
+            errors += err + "\n";
+        }
+    }
+
+    if (b_success)
+    {
+        bShaderErrorModalOpen = false;
+        activeShaderErrorLog.clear();
+        LOGUI("Shaders successfully reloaded.");
+    }
+    else
+    {
+        bShaderErrorModalOpen = true;
+        activeShaderErrorLog = errors;
+        LOG_ERROR("Shader hot-reload failed.");
+        LOGUI("Shader hot-reload failed!", AnvilColor::Red);
+    }
+}
+
 bool Application::reloadDebugShaders(std::string* outError)
 {
     SCOPE_CPU;

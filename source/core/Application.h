@@ -116,7 +116,10 @@ public:
      * @brief Queues a callback function to be executed when a shader reload event occurs.
      * @param shaderCallback Callback returning bool (true = success) and filling error output string.
      */
-    void addShaderReloadCallback(const std::function<bool(std::string*)>& shaderCallback);
+    void addShaderReloadCallback(const std::function<bool(std::string*)>& shaderCallback)
+    {
+        shaderReloadQueue.push_back(shaderCallback);
+    }
 
     /**
      * @brief Retrieves a reference to the active application window.
