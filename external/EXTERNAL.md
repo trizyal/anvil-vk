@@ -14,15 +14,15 @@
 - stb @ 31c1ad3 (July 2026)
   - Only 1 file `stb_image.h` 
   - SPDX-License-Identifier: MIT
-- vk-bootstrap @ v1.4.350 (May 2026)
+- vk-bootstrap @ v1.4.365 (Oct 2026)
   - SPDX-License-Identifier: MIT
-- volk @ 1.4.350 (May 2026)
+- volk @ vulkan-sdk-1.4.363.0 (Sept 2026)
   - SPDX-License-Identifier: MIT
-- Vulkan-Headers @ v1.4.350 (May 2026)
+- Vulkan-Headers @ v1.4.365 (Oct 2026)
   - SPDX-License-Identifier: Apache-2.0 OR MIT
-- Vulkan-Utility-Libraries @ v1.4.350 (May 2026)
+- Vulkan-Utility-Libraries @ v1.4.365 (Oct 2026)
   - SPDX-License-Identifier: Apache-2.0
-- VulkanMemoryAllocator @ v3.3.0 (May 2025)
+- VulkanMemoryAllocator @ v3.4.0 (June 2026)
   - SPDX-License-Identifier: MIT
 
 
