@@ -123,4 +123,6 @@ private:
      * @brief Creates semaphores and fences for CPU/GPU and Queue synchronization.
      */
     void setupSyncStructures();
+
+    void createTracyContext();
 };

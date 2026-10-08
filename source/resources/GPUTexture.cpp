@@ -66,6 +66,7 @@ void GPUTexture::destroyTexture()
     sampler = VK_NULL_HANDLE;
     imageView = VK_NULL_HANDLE;
     image = VK_NULL_HANDLE;
+    currentLayout = ImageLayout::Undefined;
 }
 
 bool GPUTexture::createTexture(const VulkanContext& inContext, const std::string& filepath, const bool bIsSRGB)
@@ -284,6 +285,7 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t inWid
     width = inWidth;
     height = inHeight;
     format = inFormat;
+    currentLayout = ImageLayout::Undefined;
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -295,7 +297,7 @@ void GPUTexture::createAttachment(const VulkanContext& inContext, uint32_t inWid
     image_info.arrayLayers = 1;
     image_info.format = vk(inFormat);
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.initialLayout = vk(ImageLayout::Undefined);
     image_info.usage = usage;
     image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -350,6 +352,7 @@ void GPUTexture::createImage(const uint32_t inWidth, const uint32_t inHeight, co
     width = inWidth;
     height = inHeight;
     format = inFormat;
+    currentLayout = ImageLayout::Undefined;
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -361,7 +364,7 @@ void GPUTexture::createImage(const uint32_t inWidth, const uint32_t inHeight, co
     image_info.arrayLayers = 1;
     image_info.format = vk(inFormat);
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.initialLayout = vk(ImageLayout::Undefined);
     image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;

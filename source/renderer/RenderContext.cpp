@@ -23,6 +23,7 @@ void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain*
     setupCommandBuffers();
     setupSyncStructures();
 
+#if DEPRECATED
     pContext->immediateSubmit([this](VkCommandBuffer cmd)
     {
         SCOPE_CPU_NAME("TracyContext[immediateSubmit]");
@@ -32,6 +33,8 @@ void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain*
     });
 
     FATAL(tracyVkCtx != nullptr, "Tracy Context creation failed.");
+#endif
+    createTracyContext();
 
     const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
     gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);
@@ -120,6 +123,28 @@ void RenderContext::setupSyncStructures()
         CHECK(vkCreateSemaphore(pContext->device, &semaphore_info, nullptr, &renderFinishedSemaphores[i]));
         SET_DNAME_HERE(pContext->device, renderFinishedSemaphores[i], VK_OBJECT_TYPE_SEMAPHORE, ("RenderFinishedSemaphore:" + std::to_string(i)).c_str());
     }
+}
+
+void RenderContext::createTracyContext()
+{
+    LOG_DEBUG("Creating Tracy Context.");
+
+    // Allocate a pristine, unrecorded command buffer from our existing pool
+    VkCommandBufferAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    alloc_info.commandPool = frames[0].cmdPool;
+    alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    alloc_info.commandBufferCount = 1;
+
+    VkCommandBuffer tracyCmd;
+    CHECK(vkAllocateCommandBuffers(pContext->device, &alloc_info, &tracyCmd));
+
+    // Pass it to Tracy. Tracy will internally begin, record, end, submit, and wait.
+    tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, tracyCmd);
+    FATAL(tracyVkCtx != nullptr, "Tracy Context creation failed.");
+
+    // ree the command buffer now that Tracy is done calibrating
+    vkFreeCommandBuffers(pContext->device, frames[0].cmdPool, 1, &tracyCmd);
 }
 
 VkCommandBuffer RenderContext::beginFrame(const Window& inWindow)
