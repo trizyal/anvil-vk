@@ -253,5 +253,7 @@ void RenderContext::endFrame()
     frameIndex = (frameIndex + 1) % FRAMES_IN_FLIGHT;
     ENSURE(sizeof(frames) / sizeof(Frame) == FRAMES_IN_FLIGHT, "Number of frames prepared too large.");
     ENSURE(frameIndex < FRAMES_IN_FLIGHT, "Frame index should be less that max frames in fight.");
+
+    SCOPE_FRAME;
 }
 

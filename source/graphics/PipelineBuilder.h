@@ -14,6 +14,7 @@
 #include <volk.h>
 
 #include "DebugNames.h"
+#include "Material.h"
 #include "VulkanContext.h"
 
 enum class Format : uint32_t;
@@ -116,6 +117,13 @@ public:
     PipelineBuilder& setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader);
 
     /**
+     * @brief Sets the compiled vertex and fragment shader stages for the pipeline.
+     * @param material Reference to a Materail
+     * @return Reference to this builder for method chaining.
+     */
+    PipelineBuilder& setShaders(const Material& material);
+
+    /**
      * @brief Sets the format of the color attachments used by dynamic rendering.
      * @param inColorFormats Vector of Vulkan format of the color attachments.
      * @return Reference to this builder for method chaining.
@@ -188,6 +196,7 @@ public:
      *
      * @see AnvilPipeline
      */
+    [[nodiscard]]
     AnvilPipeline buildPipeline(const VkDevice& inDevice, const VkPipelineLayout& inPipelineLayout D_DECL()) const;
 };
 

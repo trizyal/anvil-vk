@@ -91,6 +91,15 @@ public:
     static VkVertexInputBindingDescription GetBindingDescription();
 
     /**
+     * @brief Returns the Vulkan vertex input binding description in a vector.
+     *
+     * Configures binding slot 0 to consume per-vertex data at a stride of sizeof(MeshVertex).
+     *
+     * @return A 1-element vector of VkVertexInputBindingDescription structure.
+     */
+    static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
+
+    /**
      * @brief Returns attribute descriptions mapping Vertex Attributes provided to shader locations.
      *
      * Configures a maximum of 6 vertex shader input attributes:

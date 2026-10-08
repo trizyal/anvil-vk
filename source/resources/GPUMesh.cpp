@@ -58,6 +58,11 @@ void GPUMesh::destroyGPUMesh()
     indexBuffer.destroyBuffer();
 }
 
+std::vector<VkVertexInputBindingDescription> GPUMesh::GetBindingDescriptions()
+{
+    return {GetBindingDescription()};
+}
+
 VkVertexInputBindingDescription GPUMesh::GetBindingDescription()
 {
     SCOPE_CPU;

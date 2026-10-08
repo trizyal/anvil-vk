@@ -39,6 +39,11 @@ PipelineBuilder& PipelineBuilder::setVertexInput(const std::vector<VkVertexInput
     return *this;
 }
 
+PipelineBuilder& PipelineBuilder::setShaders(const Material& material)
+{
+    return setShaders(material.getVertexShader(), material.getFragmentShader());
+}
+
 PipelineBuilder& PipelineBuilder::setShaders(VkShaderModule inVertexShader, VkShaderModule inFragmentShader)
 {
     // TODO: If there are more stages, need to figure out how that will go

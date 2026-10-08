@@ -69,6 +69,11 @@ public:
      */
     void reloadActiveScene(VulkanContext& inContext, const Material& inMaterial,
         Camera& camera, Scene& scene);
+
+    bool hasScenes() const
+    {
+        return !availableScenes.empty();
+    }
 };
 
 #endif //ANVIL_VK_SCENEMANAGER_H

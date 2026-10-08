@@ -65,6 +65,16 @@ public:
     void destroy();
 
     /**
+     * Should the gBuffers be recreated.
+     * @param extent Current swapchain extent.
+     * @return true if sizes don't match.
+     */
+    bool shouldRecreate(VkExtent2D extent) const
+    {
+        return extent.width != currentExtent.width || extent.height != currentExtent.height;
+    }
+
+    /**
      * @brief Retrieves rendering attachment infos for all color targets (Albedo, Normal, PBR, WorldPos).
      * @return A vector of Vulkan rendering attachment info structures.
      */
