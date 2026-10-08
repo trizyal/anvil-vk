@@ -10,7 +10,7 @@ void VulkanUtils::TransitionImage(VkCommandBuffer cmd, VkImage image, ImageLayou
 {
     if (currentLayout == newLayout)
     {
-        LOG_WARN("Transition layouts are the same: {}", vk_str(newLayout));
+        // LOG_WARN("Transition layouts are the same: {}", vk_str(newLayout));
         return;
     }
 

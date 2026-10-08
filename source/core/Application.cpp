@@ -153,7 +153,7 @@ void Application::run(const RenderHooks& renderHooks)
                 SCOPE_GPU(renderContext.tracyVkCtx, cmd, "UI RenderPass");
                 engineStats.fps = 1000.f / engineStats.frameTime;
                 UI::FrameStats(engineStats);
-                UIRenderer::RecordUICommands(cmd);
+                uiRenderer.recordUICommands(cmd, renderContext.imageIndex);
             }
 
             renderContext.endFrame();

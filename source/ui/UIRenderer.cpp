@@ -14,6 +14,7 @@
 #include "Swapchain.h"
 #include "VulkanContext.h"
 #include "DebugNames.h"
+#include "RenderGraph.h"
 #include "Trace.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
@@ -41,6 +42,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     SCOPE_CPU;
 
     pContext = inContext;
+    pSwapchain = inSwapchain;
 
     VkDevice device = inContext->device;
 
@@ -160,6 +162,22 @@ void UIRenderer::RecordUICommands(VkCommandBuffer inCmdBuffer)
 {
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), inCmdBuffer);
+}
+
+void UIRenderer::recordUICommands(VkCommandBuffer cmd, uint32_t imageIndex) const
+{
+    ImGui::Render();
+    ImDrawData* draw_data = ImGui::GetDrawData();
+
+    RenderGraph uiGraph;
+    uiGraph.addPass("UI Pass")
+        .writeSwapchain(*pSwapchain, imageIndex, LoadOp::Load)
+        .execute([draw_data](VkCommandBuffer passCmd)
+        {
+            ImGui_ImplVulkan_RenderDrawData(draw_data, passCmd);
+        });
+
+    uiGraph.execute(cmd);
 }
 
 void UIRenderer::createDescriptorPool(VkDevice inDevice D_DEFN)
