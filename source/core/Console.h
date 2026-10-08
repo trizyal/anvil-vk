@@ -52,7 +52,7 @@ class Console
     /**
      * @brief Boots the console and registers core inbuilt commands (e.g., help, clear).
      */
-    static void Initialize();
+    static void InitializeConsole();
 
     /**
      * @brief Safely retrieves the global CVar registry.

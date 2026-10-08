@@ -14,6 +14,8 @@ target_compile_definitions(volk PUBLIC
         VK_ENABLE_BETA_EXTENSIONS
 )
 
+add_subdirectory(Vulkan-Utility-Libraries SYSTEM)
+
 # GLFW Configuration
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -71,13 +73,13 @@ target_include_directories(renderdoc SYSTEM INTERFACE renderdoc)
 
 # -- slang
 add_library(slang INTERFACE)
-target_include_directories(slang SYSTEM INTERFACE slang/include)
 # linking slang with the precompiled library
 if (WIN32)
-    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/lib/slang.lib)
+    target_include_directories(slang SYSTEM INTERFACE slang/windows/include)
+    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/windows/lib/slang.lib)
 elseif (UNIX)
-    # unsure
-    target_link_libraries(slang INTERFACE slang/lib/libslang.so)
+    target_include_directories(slang SYSTEM INTERFACE slang/linux/include)
+    target_link_libraries(slang INTERFACE ${CMAKE_SOURCE_DIR}/external/slang/linux/lib/libslang-compiler.so.0.2026.18.2)
 endif ()
 
 # -- imgui
@@ -93,7 +95,7 @@ set(IMGUI_SOURCES
 add_library(imgui STATIC ${IMGUI_SOURCES})
 # disable default vulkan function prototypes
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
-target_include_directories(imgui PUBLIC imgui imgui/backends)
+target_include_directories(imgui SYSTEM PUBLIC imgui imgui/backends)
 # imgui uses volk and glfw
 target_link_libraries(imgui PUBLIC volk glfw)
 

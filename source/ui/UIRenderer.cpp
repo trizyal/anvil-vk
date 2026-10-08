@@ -14,6 +14,7 @@
 #include "Swapchain.h"
 #include "VulkanContext.h"
 #include "DebugNames.h"
+#include "RenderGraph.h"
 #include "Trace.h"
 #include "UIElements.h"
 #include "VulkanResult.h"
@@ -41,6 +42,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     SCOPE_CPU;
 
     pContext = inContext;
+    pSwapchain = inSwapchain;
 
     VkDevice device = inContext->device;
 
@@ -83,11 +85,13 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     colorFormat = inSwapchain->swapchainFormat;
     depthFormat = inSwapchain->depthFormat;
 
+    VkFormat vkColorFormat = vk(colorFormat);
+
     VkPipelineRenderingCreateInfo pipeline_rendering_create_info{};
     pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     pipeline_rendering_create_info.colorAttachmentCount = 1;
-    pipeline_rendering_create_info.pColorAttachmentFormats = &colorFormat;
-    pipeline_rendering_create_info.depthAttachmentFormat = depthFormat;
+    pipeline_rendering_create_info.pColorAttachmentFormats = &vkColorFormat;
+    pipeline_rendering_create_info.depthAttachmentFormat = vk(depthFormat);
 
     // Assign it to both the main window and any secondary OS windows you drag out
     init_info.PipelineInfoMain.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
@@ -158,6 +162,22 @@ void UIRenderer::RecordUICommands(VkCommandBuffer inCmdBuffer)
 {
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), inCmdBuffer);
+}
+
+void UIRenderer::recordUICommands(VkCommandBuffer cmd, uint32_t imageIndex) const
+{
+    ImGui::Render();
+    ImDrawData* draw_data = ImGui::GetDrawData();
+
+    RenderGraph uiGraph;
+    uiGraph.addPass("UI Pass")
+        .writeSwapchain(*pSwapchain, imageIndex, LoadOp::Load)
+        .execute([draw_data](VkCommandBuffer passCmd)
+        {
+            ImGui_ImplVulkan_RenderDrawData(draw_data, passCmd);
+        });
+
+    uiGraph.execute(cmd);
 }
 
 void UIRenderer::createDescriptorPool(VkDevice inDevice D_DEFN)

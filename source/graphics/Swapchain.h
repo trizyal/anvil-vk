@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_SWAPCHAIN_H
-#define ANVIL_VK_SWAPCHAIN_H
+#pragma once
 
 /**
  * @file Swapchain.h
@@ -13,6 +12,8 @@
 
 #include <volk.h>
 #include <vk_mem_alloc.h>
+
+#include "VulkanTypes.h"
 
 class VulkanContext;
 
@@ -56,7 +57,7 @@ public:
     VkExtent2D swapchainExtent{};
 
     /** Pixel format selected for presentation images (e.g., B8G8R8A8_SRGB). */
-    VkFormat swapchainFormat = VK_FORMAT_UNDEFINED;
+    Format swapchainFormat = Format::Undefined;
 
     /** Presentation image handles retrieved from the Vulkan swapchain. */
     std::vector<VkImage> swapchainImages;
@@ -64,17 +65,21 @@ public:
     /** 2D image views created for each presentation image in anvilImages. */
     std::vector<VkImageView> swapchainImageViews;
 
+    std::vector<ImageLayout> swapchainImageLayouts;
+
     // ------------------------------------------------------------------------
     // Depth Attachment Properties
     // ------------------------------------------------------------------------
     /** Set here itself because swapchain does not actually care about depth. */
-    VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+    Format depthFormat = Format::D32_SFLOAT;
 
     /** GPU image handle for the depth attachment. */
     VkImage depthImage = VK_NULL_HANDLE;
 
     /** 2D image view used to bind the depth image to rendering pipelines. */
     VkImageView depthImageView = VK_NULL_HANDLE;
+
+    ImageLayout depthImageLayout = ImageLayout::Undefined;
 
     /** VMA memory allocation backing the depth image. */
     VmaAllocation depthImageAllocation = VK_NULL_HANDLE;
@@ -113,5 +118,3 @@ private:
      */
     void createDepthAttachment();
 };
-
-#endif //ANVIL_VK_SWAPCHAIN_H

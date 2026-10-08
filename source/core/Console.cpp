@@ -38,7 +38,7 @@ std::vector<std::string>& Console::GetCommandHistory()
     return s_CommandHistory;
 }
 
-void Console::Initialize()
+void Console::InitializeConsole()
 {
     SCOPE_CPU;
     LOG_TRACE("Initialize Console.");

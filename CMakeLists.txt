@@ -141,6 +141,7 @@ endif ()
 target_link_libraries(${PROJECT_NAME} PUBLIC
         glfw
         volk
+        Vulkan::UtilityHeaders
         vk-bootstrap::vk-bootstrap
         vma
         glm
@@ -152,5 +153,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         tracy_client
 )
 
-# Examples
-add_subdirectory(examples)
+
+# Include examples directory
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+    add_subdirectory(examples)
+endif()
+
+
+# Include projects directory
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/projects")
+    add_subdirectory(projects)
+endif()

@@ -63,7 +63,7 @@ void Anvil::initializeAnvil(const AnvilCreateInfo& inCreateInfo)
     uiRenderer.initializeUIRenderer(&context, window->getGLFWWindow(), &swapchain);
 
     Input::InitializeInputSystem(window->getGLFWWindow());
-    Console::Initialize();
+    Console::InitializeConsole();
 
     // Register inbuilt exit command globally
     COMMAND("quit", "Exits the engine safely.", [this](const std::vector<std::string>&) {

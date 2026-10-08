@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef INDEX32_H
-#define INDEX32_H
+#pragma once
 
 /**
  * @file Index32.h
@@ -134,6 +133,25 @@ struct Index32
 
         return static_cast<size_t>(value) <=> rhs;
     }
-};
 
-#endif //INDEX32_H
+    /**
+     * @brief Safely checks equality against a 32-bit unsigned integer.
+     */
+    bool operator==(uint32_t rhs) const
+    {
+        return value >= 0 && static_cast<uint32_t>(value) == rhs;
+    }
+
+    /**
+     * @brief Safely performs relational comparisons (<, >) against a 32-bit unsigned integer.
+     */
+    auto operator<=>(uint32_t rhs) const
+    {
+        if (value < 0)
+        {
+            return std::strong_ordering::less;
+        }
+
+        return static_cast<uint32_t>(value) <=> rhs;
+    }
+};

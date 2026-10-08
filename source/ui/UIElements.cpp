@@ -366,11 +366,15 @@ bool UI::DrawDebugMenu(uint32_t& currentMode,
             {
                 // Launch the external Tracy profiler UI asynchronously.
 #ifdef _WIN32
-                std::string tracyPath = std::string(TOOLS_DIR) + "/tracy/tracy-profiler.exe";
+                std::string tracyPath = std::string(TOOLS_DIR) + "/tracy/windows/tracy-profiler.exe";
 
                 // ShellExecuteA(nullptr, "open", tracyPath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
                 std::system(("start " + tracyPath).c_str());
-#else
+#elif defined(__linux__)
+                const std::string tracyPath =
+                    std::string(TOOLS_DIR) + "/tracy/linux/tracy-profiler";
+
+                std::system(("\"" + tracyPath + "\" >/dev/null 2>&1 &").c_str());
                 // Unimplemented
 #endif
             }

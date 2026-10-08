@@ -88,11 +88,11 @@ bool PBRTests::loadGeometryPipeline(std::string* outErrorMessage)
     shaderProgram_Geo = std::move(new_program);
     material_Geo.buildMaterialFromProgram(*pContext, shaderProgram_Geo);
 
-    std::vector<VkFormat> attachments = {
-        VK_FORMAT_R8G8B8A8_UNORM,
-        VK_FORMAT_R16G16B16A16_SFLOAT,
-        VK_FORMAT_R8G8B8A8_UNORM,
-        VK_FORMAT_R16G16B16A16_SFLOAT
+    std::vector<Format> attachments = {
+        Format::RGBA8_UNORM,
+        Format::RGBA16_SFLOAT,
+        Format::RGBA8_UNORM,
+        Format::RGBA16_SFLOAT
     };
 
     auto bindings = {GPUMesh::GetBindingDescription()};

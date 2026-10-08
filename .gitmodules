@@ -22,3 +22,6 @@
 [submodule "external/cgltf"]
 	path = external/cgltf
 	url = git@github.com:jkuhlmann/cgltf.git
+[submodule "external/Vulkan-Utility-Libraries"]
+	path = external/Vulkan-Utility-Libraries
+	url = git@github.com:KhronosGroup/Vulkan-Utility-Libraries.git

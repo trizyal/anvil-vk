@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 
 #include "DebugNames.h"
+#include "VulkanTypes.h"
 
 class VulkanContext;
 class Swapchain;
@@ -46,13 +47,14 @@ public:
     UIRenderer& operator=(UIRenderer&&) = delete;
 
     /** Target color attachment pixel format for UI rendering. */
-    VkFormat colorFormat = VK_FORMAT_UNDEFINED;
+    Format colorFormat = Format::Undefined;
 
     /** Target depth attachment pixel format for UI rendering. */
-    VkFormat depthFormat = VK_FORMAT_UNDEFINED;
+    Format depthFormat = Format::Undefined;
 
 private:
     VulkanContext* pContext = nullptr;
+    Swapchain* pSwapchain = nullptr;
 
     /** Dedicated descriptor pool allocated for Dear ImGui internal resources. */
     VkDescriptorPool imguiPool = VK_NULL_HANDLE;
@@ -79,6 +81,14 @@ public:
      * @param inCmdBuffer Active Vulkan command buffer to record UI draw commands into.
      */
     static void RecordUICommands(VkCommandBuffer inCmdBuffer);
+
+    /**
+     * @brief Records generated ImGui draw data into the provided command buffer.
+     * @note Should be called inside an active rendering block after main scene geometry.
+     * @param inCmdBuffer Active Vulkan command buffer to record UI draw commands into.
+     * @param imageIndex Swapchain image index.
+     */
+    void recordUICommands(VkCommandBuffer inCmdBuffer, uint32_t imageIndex) const;
 
     /**
      * @brief Finalizes ImGui UI construction for the current frame.

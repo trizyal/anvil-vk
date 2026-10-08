@@ -7,23 +7,29 @@ import platform
 
 # --- Configuration ---
 # Update this string to pull a newer version in the future
-SLANG_VERSION = "2026.18"
+SLANG_VERSION = "2026.18.2"
 
 # Set up paths relative to this script (now located in root/scripts)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) # Steps back up to the project root
 EXTERNAL_DIR = os.path.join(PROJECT_ROOT, "external")
+
 SLANG_DIR = os.path.join(EXTERNAL_DIR, "slang")
-ZIP_PATH = os.path.join(EXTERNAL_DIR, "slang_download.zip")
 
-def get_download_url():
+def get_platform_key():
     system = platform.system().lower()
-
     if system == "windows":
-        filename = f"slang-{SLANG_VERSION}-windows-x86_64.zip"
+        return "windows"
+    elif system == "linux":
+        return "linux"
     else:
         print(f"Error: Unsupported operating system '{system}'.")
         sys.exit(1)
+        return None
+
+def get_download_url():
+    system = get_platform_key();
+    filename = f"slang-{SLANG_VERSION}-{system}-x86_64.zip"
 
     return f"https://github.com/shader-slang/slang/releases/download/v{SLANG_VERSION}/{filename}"
 
@@ -36,40 +42,46 @@ def download_progress(count, block_size, total_size):
 
 def main():
     print("--- Slang Dependency Fetcher ---")
-    url = get_download_url()
+    system = get_platform_key()
 
-    # 1. Ensure external directory exists
+    # Platform-specific subdirectory to prevent overwriting
+    slang_dir = os.path.join(SLANG_DIR, system)
+    zip_path = os.path.join(SLANG_DIR, f"slang_download{system}.zip")
+
+
+    # Ensure external directory exists
     os.makedirs(EXTERNAL_DIR, exist_ok=True)
 
-    # 2. Clean up existing Slang folder to prevent version collisions
-    if os.path.exists(SLANG_DIR):
-        print("Cleaning up old Slang directory...")
-        shutil.rmtree(SLANG_DIR)
+    # Clean up existing Slang folder to prevent version collisions
+    if os.path.exists(slang_dir):
+        print("Cleaning up old Slang directory for {system}...")
+        shutil.rmtree(slang_dir)
 
-    # 3. Download the ZIP
+    # Download the ZIP
+    url = get_download_url()
     try:
         print(f"Fetching from: {url}")
-        urllib.request.urlretrieve(url, ZIP_PATH, reporthook=download_progress)
+        urllib.request.urlretrieve(url, zip_path, reporthook=download_progress)
         print("\nDownload complete.")
     except Exception as e:
         print(f"\nError downloading file. Please check your internet connection or the version number: {e}")
         sys.exit(1)
 
-    # 4. Extract the ZIP
+    # Extract the ZIP
     try:
-        print(f"Extracting to {SLANG_DIR}...")
-        with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-            zip_ref.extractall(SLANG_DIR)
+        print(f"Extracting to {slang_dir}...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(slang_dir)
         print("Extraction complete.")
     except Exception as e:
         print(f"Error extracting file: {e}")
         sys.exit(1)
     finally:
-        # 5. Always clean up the downloaded ZIP
-        if os.path.exists(ZIP_PATH):
-            os.remove(ZIP_PATH)
+        # Always clean up the downloaded ZIP
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
 
-    print("Success! Slang has been installed to your external/slang directory.")
+    print(f"Success! Slang has been installed to your external/slang/{system} directory.")
 
 if __name__ == "__main__":
     main()

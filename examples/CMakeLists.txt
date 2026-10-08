@@ -32,10 +32,17 @@ macro(add_anvil_example EXAMPLE_NAME)
 
     # The Runtime Gotcha: Copy Slang dynamic libraries to output folder
     # Crucial: Copy dynamic libraries to executable directory so the .exe doesn't crash
-    add_custom_command(TARGET ${EXAMPLE_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${EXTERNAL_DIR}/slang/bin $<TARGET_FILE_DIR:${EXAMPLE_NAME}>
-    )
+    if(WIN32)
+        add_custom_command(TARGET ${EXAMPLE_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${EXTERNAL_DIR}/slang/windows/bin $<TARGET_FILE_DIR:${EXAMPLE_NAME}>
+        )
+    elseif((UNIX))
+        add_custom_command(TARGET ${EXAMPLE_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${EXTERNAL_DIR}/slang/linux/bin $<TARGET_FILE_DIR:${EXAMPLE_NAME}>
+        )
+    endif ()
 
     if (MINGW)
         # Automatically find where CLion/MinGW keeps its DLLs
@@ -54,16 +61,22 @@ endmacro()
 # Register Active Sandboxes / Examples
 # --------------------------------------------------
 # Just call the macro with the name of the folder containing the specific example.
-add_anvil_example(HelloTriangle)
-add_anvil_example(HelloCube)
-add_anvil_example(glTFBox)
-add_anvil_example(TextureCube)
-add_anvil_example(ShaderReflectionCube)
-add_anvil_example(DirectionalLight)
-add_anvil_example(glTFTruck)
-add_anvil_example(BoxAnimated)
-add_anvil_example(RiggedSimple)
-add_anvil_example(CesiumMan)
-add_anvil_example(Sponza)
-add_anvil_example(SponzaDeferred)
+
+option(EXAMPLES "Hook into the Examples" OFF)
+
+if(EXAMPLES)
+    add_anvil_example(HelloTriangle)
+    add_anvil_example(HelloCube)
+    add_anvil_example(glTFBox)
+    add_anvil_example(TextureCube)
+    add_anvil_example(ShaderReflectionCube)
+    add_anvil_example(DirectionalLight)
+    add_anvil_example(glTFTruck)
+    add_anvil_example(BoxAnimated)
+    add_anvil_example(RiggedSimple)
+    add_anvil_example(CesiumMan)
+    add_anvil_example(Sponza)
+    add_anvil_example(SponzaDeferred)
+endif()
+
 add_anvil_example(PBRTests)

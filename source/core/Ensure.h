@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ENSURE_H
-#define ENSURE_H
+#pragma once
 
 /**
  * @file Ensure.h
@@ -18,7 +17,7 @@
  * Halts execution if a debugger is attached. If no debugger is attached,
  * behavior depends on the OS (often terminates the program or ignores).
  */
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
     #define BREAK() __debugbreak()
 #else
     #define BREAK() __builtin_trap()
@@ -32,6 +31,8 @@
  *
  * @param condition The expression that is expected to evaluate to true.
  * @param message The diagnostic message to print if the condition is false.
+ *
+ * @todo Unify the logging with logger.
  */
 #define ENSURE(condition, message) \
     do { \
@@ -50,6 +51,8 @@
  *
  * @param condition The expression that is expected to evaluate to true.
  * @param message The diagnostic message to print if the condition is false.
+ *
+ * @todo Unify the logging with logger.
  */
 #define FATAL(condition, message) \
     do { \
@@ -61,4 +64,3 @@
         } \
     } while (0)
 
-#endif //ENSURE_H

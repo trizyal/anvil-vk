@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_VULKANRESULT_H
-#define ANVIL_VK_VULKANRESULT_H
+#pragma once
 
 /**
  * @file VulkanResult.h
@@ -18,16 +17,6 @@
  */
 namespace VulkanResult
 {
-    /**
-     * @brief Converts a Vulkan VkResult error code into a human-readable string literal.
-     *
-     * @see https://docs.vulkan.org/refpages/latest/refpages/source/VkResult.html
-     *
-     * @param aResult The Vulkan return code to decode.
-     * @return A string matching the Vulkan enum name (e.g., "VK_ERROR_OUT_OF_DEVICE_MEMORY").
-     */
-    std::string ToString(VkResult aResult);
-
     /**
      * @brief Verifies that a Vulkan API operation succeeded.
      *
@@ -64,6 +53,12 @@ namespace VulkanResult
  */
 #define CHECK(x) VulkanResult::CheckVulkanResult((x), #x, __FILE__, __LINE__)
 
+/**
+ * @brief Macro wrapper around VkBootstrap calls that automatically checks for errors and aborts on failure.
+ *
+ * Captures the exact source code text of the expression (`#x`), the current file (`__FILE__`), and the
+ * line number (`__LINE__`) to provide precise stack-trace-style context in exception messages.
+ */
 #define VKB_CHECK(x) \
     do \
     { \
@@ -73,5 +68,3 @@ namespace VulkanResult
         } \
     } \
     while (0)
-
-#endif //ANVIL_VK_VULKANRESULT_H

@@ -107,6 +107,36 @@ namespace
      * @param parent_matrix The computed world matrix of the parent node.
      */
     void ComputeWorldMatrices(CPUModel& cpu_model, Index32 node_index, const glm::mat4& parent_matrix);
+
+    std::string cgltf_str(const cgltf_result result)
+    {
+        switch (result)
+        {
+#           define CASE_(x) case x: return #x
+            CASE_(cgltf_result_success);
+            CASE_(cgltf_result_data_too_short);
+            CASE_(cgltf_result_unknown_format);
+            CASE_(cgltf_result_invalid_json);
+            CASE_(cgltf_result_invalid_gltf);
+            CASE_(cgltf_result_invalid_options);
+            CASE_(cgltf_result_file_not_found);
+            CASE_(cgltf_result_io_error);
+            CASE_(cgltf_result_out_of_memory);
+            CASE_(cgltf_result_legacy_gltf);
+#           undef CASE_
+            case cgltf_result_max_enum:
+            {
+                LOG_FATAL("Reached unexpected scope.");
+                FATAL(false, "cgltf_result_max_enum should not be reached.");
+            }
+        }
+
+        // Handle other values gracefully.
+        ENSURE(false, "cgltf_result not handled");
+        std::ostringstream oss;
+        oss << "cgltf_result(" << result << ")";
+        return oss.str();
+    }
 }
 
 void CPUModel::loadGLTF(const std::string& filePath)
@@ -116,16 +146,18 @@ void CPUModel::loadGLTF(const std::string& filePath)
     cgltf_options options{};
     cgltf_data* gltf_data = nullptr;
 
-    if (cgltf_parse_file(&options, filePath.c_str(), &gltf_data) != cgltf_result_success)
+    cgltf_result result = cgltf_parse_file(&options, filePath.c_str(), &gltf_data);
+    if (result != cgltf_result_success)
     {
-        LOG_FATAL("Failed to parse glTF file: {}", filePath);
+        LOG_FATAL("Failed to parse glTF file: '{}' (cgltf error: {}) ", filePath, cgltf_str(result));
         FATAL(false, "Failed to parse glTF file");
     }
 
-    if (cgltf_load_buffers(&options, gltf_data, filePath.c_str()) != cgltf_result_success)
+    result = cgltf_load_buffers(&options, gltf_data, filePath.c_str());
+    if (result != cgltf_result_success)
     {
         cgltf_free(gltf_data);
-        LOG_FATAL("Failed to load glTF file: {}", filePath);
+        LOG_FATAL("Failed to load glTF file: '{}' (cgltf error: {}", filePath, cgltf_str(result));
         FATAL(false, "Failed to load glTF file");
     }
 
