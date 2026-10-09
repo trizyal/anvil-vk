@@ -36,6 +36,7 @@ namespace VulkanDebug
         int& count = error_counts[pCallbackData->messageIdNumber];
 
         if (count < MAX_PRINTS) {
+            // TODO: This should be logged too, especially in the files.
             std::cerr << "[Vulkan Validation] " << pCallbackData->pMessageIdName << "\n";
 
             // Extract and print all debug names
