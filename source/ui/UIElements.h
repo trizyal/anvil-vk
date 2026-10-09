@@ -16,6 +16,7 @@
 #include "SceneConfig.h"
 #include "FrameStats.h"
 
+class SceneManager;
 struct ImFont;
 class Camera;
 
@@ -105,6 +106,9 @@ namespace UI
      * @param pOpen Optional boolean pointer to toggle the window.
      */
     void DrawCameraDebug(Camera& camera, bool* pOpen = nullptr);
+
+    void DrawMainMenuBar();
+    bool DrawScenesMenu(SceneManager& sceneManager);
 }
 
 

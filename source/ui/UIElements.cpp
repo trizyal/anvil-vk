@@ -8,6 +8,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <shellapi.h>
 #endif
 
 #include <imgui.h>
@@ -17,6 +18,7 @@
 #include "DebugModes.h"
 #include "DebugPass.h"
 #include "RenderDoc.h"
+#include "SceneManager.h"
 #include "Trace.h"
 
 namespace
@@ -538,6 +540,108 @@ void UI::DrawCameraDebug(Camera& camera, bool* pOpen)
         }
     }
     ImGui::End();
+}
+
+void UI::DrawMainMenuBar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Exit"))
+            {
+                Console::Execute("quit");
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Renderer"))
+        {
+            // Engine-level toggles
+            bool bFreeze = Console::GetCVarBool("r.freezerendering");
+            if (ImGui::MenuItem("Freeze Rendering", nullptr, &bFreeze))
+            {
+                Console::Execute("freezerendering");
+            }
+
+            bool bCulling = Console::GetCVarBool("r.frustumculling");
+            if (ImGui::MenuItem("Frustum Culling", nullptr, &bCulling))
+            {
+                Console::SetCVarBool("r.frustumculling", bCulling);
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Tools"))
+        {
+            if (ImGui::MenuItem("Dump VMA Stats"))
+            {
+                Console::Execute("vmastats");
+            }
+
+            if (RenderDoc::IsInitialized())
+            {
+                if (ImGui::MenuItem("Capture Frame (RenderDoc)"))
+                {
+                    RenderDoc::TriggerCapture();
+                }
+            }
+            else
+            {
+                // Greys out the item and prevents clicking
+                ImGui::BeginDisabled();
+                ImGui::MenuItem("RenderDoc not connected");
+                ImGui::EndDisabled();
+            }
+
+            if (ImGui::MenuItem("Open Tracy Profiler"))
+            {
+                // Launch the external Tracy profiler UI asynchronously.
+                #ifdef _WIN32
+                std::string tracyPath = std::string(TOOLS_DIR) + "/tracy/windows/tracy-profiler.exe";
+
+                ShellExecuteA(nullptr, "open", tracyPath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+                // std::system(("start " + tracyPath).c_str());
+                #elif defined(__linux__)
+                const std::string tracyPath =
+                    std::string(TOOLS_DIR) + "/tracy/linux/tracy-profiler";
+
+                std::system(("\"" + tracyPath + "\" >/dev/null 2>&1 &").c_str());
+                // Unimplemented
+                #endif
+            }
+            ImGui::EndMenu();
+        }
+
+        // Note: We don't call EndMainMenuBar() yet if we want other files to append to it,
+        // but ImGui safely allows calling BeginMainMenuBar/EndMainMenuBar multiple times.
+        ImGui::EndMainMenuBar();
+    }
+}
+
+bool UI::DrawScenesMenu(SceneManager& sceneManager)
+{
+    bool b_changed = false;
+    Index32 current_active_scene = sceneManager.activeSceneIndex;
+    auto scenes = sceneManager.availableScenes;
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("Scenes"))
+        {
+            for (size_t i = 0; i < scenes.size(); ++i)
+            {
+                bool is_selected = (current_active_scene == static_cast<int>(i));
+                if (ImGui::MenuItem(scenes[i].sceneName.c_str(), nullptr, is_selected))
+                {
+                    sceneManager.activeSceneIndex = static_cast<int>(i);
+                    b_changed = true;
+                }
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+    return b_changed;
 }
 
 namespace

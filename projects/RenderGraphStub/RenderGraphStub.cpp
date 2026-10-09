@@ -3,7 +3,11 @@
 
 #include "RenderGraphStub.h"
 
+#include "Console.h"
+#include "PushConstants.h"
 #include "RenderGraph.h"
+#include "UIElements.h"
+#include "VulkanUtilities.h"
 
 void RenderGraphApp::initialize()
 {
@@ -173,11 +177,22 @@ void RenderGraphApp::run()
         camera.updateCamera(Application::engineStats.frameTime/1000.f);
         recordRenderGraph(cmd);
     };
+    hooks.onDrawUI = [&]()
+    {
+        changeScene = UI::DrawScenesMenu(sceneManager);
+        UI::RenderWorldAxes(camera.getViewMatrix());
+    };
     app.run(hooks);
 }
 
 void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
 {
+    if (changeScene)
+    {
+        // Because the Scene Menu UI already changes the Active scene in SceneConfig
+        sceneManager.reloadActiveScene(app.getContext(), gBufferMaterial, camera, scene);
+    }
+
     SCOPE_CPU;
     SCOPE_GPU(app.getRenderContext().tracyVkCtx, cmd, "RenderGraph");
 
@@ -205,14 +220,14 @@ void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
     camera.updateCamera(Application::engineStats.frameTime/1000.f);
     sceneManager.gpuModel.updateTransforms(sceneManager.cpuModel);
 
-    const glm::vec4 black(0.0f, 0.0f, 0.0f, 1.0f);
+    const glm::vec4 grey(0.1f, 0.1f, 0.1f, 1.0f);
     RenderGraph graph;
 
     auto gbufferPass = graph.addPass("GBuffer Geometry Pass")
-        .writeColor(gBuffer.albedo, LoadOp::Clear, black)
-        .writeColor(gBuffer.normal, LoadOp::Clear, black)
-        .writeColor(gBuffer.pbr, LoadOp::Clear, black)
-        .writeColor(gBuffer.worldPosition, LoadOp::Clear, black)
+        .writeColor(gBuffer.albedo, LoadOp::Clear, grey)
+        .writeColor(gBuffer.normal, LoadOp::Clear, grey)
+        .writeColor(gBuffer.pbr, LoadOp::Clear, grey)
+        .writeColor(gBuffer.worldPosition, LoadOp::Clear, grey)
         .writeDepth(gBuffer.depth, LoadOp::Clear, 1.0f);
 
     gbufferPass.execute([this](VkCommandBuffer passCmd)
@@ -240,12 +255,124 @@ void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
 
 void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
 {
+    SCOPE_CPU;
 
+    uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    bool is_forward_debug = DebugPass::isForwardMode(debug_mode);
+    bool is_debug = static_cast<DebugMode>(debug_mode) > DebugMode::None;
+    bool is_frozen = Console::GetCVarBool("r.freezerendering");
+    bool is_culling = Console::GetCVarBool("r.frustumculling");
+
+    if (is_forward_debug) return;
+
+    bool use_debug_pipeline = is_debug;
+    VkPipeline active_pipeline = use_debug_pipeline ? app.getDebugPass().getForwardPipeline(debug_mode).pipeline : gBufferPipeline.pipeline;
+    VkPipelineLayout active_layout = use_debug_pipeline ? app.getDebugPass().getForwardLayout() : gBufferMaterial.materialPipelineLayout;
+
+    if (active_pipeline == VK_NULL_HANDLE) return;
+
+    VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
+
+    const float aspect = static_cast<float>(app.getSwapchain().swapchainExtent.width) / static_cast<float>(app.getSwapchain().swapchainExtent.height);
+    const glm::mat4 view_projection = camera.getProjectionMatrix(aspect) * camera.getViewMatrix();
+
+    static glm::mat4 frozen_vp = view_projection;
+    static bool was_frozen = false;
+    if (is_frozen && !was_frozen) frozen_vp = view_projection;
+    was_frozen = is_frozen;
+
+    Frustum camera_frustum{};
+    camera_frustum.extractPlanes(is_frozen ? frozen_vp : view_projection);
+
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_pipeline);
+
+    VkDeviceSize offset = 0;
+    GPUModel& gpuModel = sceneManager.gpuModel;
+    for (Index32 i = 0; i < gpuModel.drawItems.size(); ++i)
+    {
+        const GPUModelDrawItem& draw_item = gpuModel.drawItems[i];
+
+        if (draw_item.gpuMeshIndex >= gpuModel.gpuMeshes.size()) continue;
+
+        if (is_culling)
+        {
+            SCOPE_CPU_NAME("Frustum Culling");
+            glm::vec3 center = draw_item.localBounds.getCenter();
+            glm::vec3 extents = draw_item.localBounds.getExtents();
+            glm::vec3 worldCenter = glm::vec3(draw_item.worldMatrix * glm::vec4(center, 1.0f));
+            glm::mat3 absModel = glm::mat3(
+                glm::abs(draw_item.worldMatrix[0]),
+                glm::abs(draw_item.worldMatrix[1]),
+                glm::abs(draw_item.worldMatrix[2])
+            );
+            glm::vec3 worldExtents = absModel * extents;
+
+            AABB worldAABB{.min = worldCenter - worldExtents, .max = worldCenter + worldExtents};
+            if (!camera_frustum.contains(worldAABB)) continue;
+        }
+
+        std::vector<VkDescriptorSet> sets;
+        uint32_t first_set = 1;
+
+        VkDescriptorSet matSet = VK_NULL_HANDLE;
+        if (draw_item.gpuMaterialIndex >= 0 && draw_item.gpuMaterialIndex < static_cast<int>(gpuModel.gpuMaterials.size()))
+        {
+            matSet = gpuModel.gpuMaterials[draw_item.gpuMaterialIndex].instance.descriptorSet;
+        }
+        else if (!gpuModel.gpuMaterials.empty())
+        {
+            matSet = gpuModel.gpuMaterials[0].instance.descriptorSet;
+        }
+
+        if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE) sets.push_back(gpuModel.modelSet.descriptorSet);
+        if (matSet != VK_NULL_HANDLE) sets.push_back(matSet);
+
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_layout, first_set, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
+
+        PushConstants constants{};
+        constants.viewProjection = view_projection;
+        constants.cameraPosition = glm::vec4(camera.position, 1.0f);
+        constants.objectIndex = i;
+        constants.debugMode = static_cast<DebugMode>(debug_mode);
+        vkCmdPushConstants(cmd, active_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+
+        const GPUMesh& mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];
+        vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
+        vkCmdBindIndexBuffer(cmd, mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmd, mesh.indexCount, 1, 0, 0, 0);
+
+        Application::engineStats.drawCalls++;
+        Application::engineStats.primitiveCount += (mesh.indexCount / 3);
+    }
 }
 
 void RenderGraphApp::drawDeferredLighting(VkCommandBuffer cmd)
 {
+    SCOPE_CPU;
 
+    uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+
+    if (static_cast<DebugMode>(debug_mode) == DebugMode::None)
+    {
+        if (deferredLightingPipeline.pipeline == VK_NULL_HANDLE) return;
+
+        VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
+
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredLightingPipeline.pipeline);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredLightingMaterial.materialPipelineLayout, 0, 1, &lightingSet0.descriptorSet, 0, nullptr);
+
+        PushConstants pc{};
+        pc.cameraPosition = glm::vec4(camera.position, 1.0f);
+        pc.debugMode = DebugMode::None;
+        vkCmdPushConstants(cmd, deferredLightingMaterial.materialPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &pc);
+
+        vkCmdDraw(cmd, 3, 1, 0, 0); // Render fullscreen quad
+    }
+    else if (DebugPass::isDeferredMode(debug_mode))
+    {
+        VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
+        app.getDebugPass().drawDeferredResolve(cmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
+    }
 }
 
 

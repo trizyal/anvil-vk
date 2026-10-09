@@ -45,6 +45,8 @@ private:
     AnvilPipeline deferredLightingPipeline;
     MaterialInstance lightingSet0;
 
+    bool changeScene = false;
+
 public:
     /**
      * @brief Initializes application subsystems, GPU resources, pipelines, and loads scene assets.

@@ -32,7 +32,13 @@ void Application::initialize(const CreateInfo& info)
     const auto cpu_start = std::chrono::high_resolution_clock::now();
     ENSURE(!applicationInitialized, "Application is already initialized.");
 
+    // TODO: RenderDoc attach check.
+    // Need to connect before vulkan instance is created
+    RenderDoc::InitializeRenderDoc();
+    Console::InitializeConsole();
+
     window = std::make_unique<Window>(info.width, info.height, info.title);
+    Input::InitializeInputSystem(window->getGLFWWindow());
 
     // TODO: Unify whether we want to pass * or &.
     context.initializeVulkanContext(*window);
@@ -43,11 +49,6 @@ void Application::initialize(const CreateInfo& info)
 
     shaderCompiler.initializeShaderCompiler();
     debugPass.initializeDebugPass(context, shaderCompiler, swapchain.swapchainFormat, swapchain.depthFormat, &activeShaderErrorLog);
-
-    // TODO: RenderDoc attach check.
-    RenderDoc::InitializeRenderDoc();
-    Input::InitializeInputSystem(window->getGLFWWindow());
-    Console::InitializeConsole();
 
     addShaderReloadCallback([this](std::string* err) -> bool
     {
@@ -108,6 +109,13 @@ void Application::run(const RenderHooks& renderHooks)
         if (Input::IsKeyPressed_Frame(GLFW_KEY_GRAVE_ACCENT))
         {
             consoleState = (consoleState + 1) % 3;
+        }
+
+        UI::DrawMainMenuBar();
+
+        if (renderHooks.onDrawUI)
+        {
+            renderHooks.onDrawUI();
         }
 
         // Check for Shader Reload

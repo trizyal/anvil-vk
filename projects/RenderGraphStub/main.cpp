@@ -1,11 +1,15 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "Logger.h"
+#include "RenderGraphStub.h"
 
 int main()
 {
-    LOG_INFO("RenderGraphStub Initializing.");
+    RenderGraphApp app;
+
+    app.initialize();
+    app.run();
+    app.cleanup();
 
     return 0;
 }
