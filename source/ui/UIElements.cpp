@@ -19,6 +19,7 @@
 #include "DebugPass.h"
 #include "RenderDoc.h"
 #include "SceneManager.h"
+#include "ScreenLogger.h"
 #include "Trace.h"
 
 namespace
@@ -642,6 +643,74 @@ bool UI::DrawScenesMenu(SceneManager& sceneManager)
         ImGui::EndMainMenuBar();
     }
     return b_changed;
+}
+
+void UI::DrawViewsMenu()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("Views"))
+        {
+            const int current_mode = Console::GetCVarInt("r.debugmode");
+            for (int i = 0; i < static_cast<int>(DebugMode::Count); ++i)
+            {
+                const bool is_selected = (current_mode == i);
+                if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
+                {
+                    LOG_DEBUG("Updating debug mode to: {}", DebugPass::GetDebugModeName(static_cast<DebugMode>(i)));
+                    Console::SetCVarInt("r.debugmode", i);
+                }
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+}
+
+void UI::DrawLogOverlay(const std::vector<UILogMessage>& messages)
+{
+    if (messages.empty())
+    {
+        return;
+    }
+
+    // Get the position of the main application window
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    const ImVec2 overlay_position = ImVec2(main_viewport->WorkPos.x + 10.f, main_viewport->WorkPos.y + 10.f);
+
+    constexpr ImGuiWindowFlags logger_flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+        ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoBackground;
+
+    ImGui::SetNextWindowPos(overlay_position, ImGuiCond_Always);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+    if (ImGui::Begin("UILogOverlay", nullptr, logger_flags))
+    {
+        // We re-lock ONLY while reading the text to prevent data races if a thread pushed mid-draw.
+        // Because culling/erasing is already done, this iteration is lightning fast.
+
+        for (const UILogMessage& message : messages)
+        {
+            // Smooth fade out in the last second
+            ImVec4 draw_color = message.color;
+            if (message.timeRemaining < 1.0f)
+            {
+                draw_color.w *= message.timeRemaining;
+            }
+
+            // Draw the text
+            // Using ImGui::TextUnformatted is faster than ImGui::TextColored("%s")
+            // because it avoids C-style vararg parsing.
+            ImGui::PushStyleColor(ImGuiCol_Text, draw_color);
+            ImGui::TextUnformatted(message.text.data(), message.text.data() + message.text.size());
+            ImGui::PopStyleColor();
+        }
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
 }
 
 namespace

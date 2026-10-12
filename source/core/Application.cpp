@@ -34,7 +34,7 @@ void Application::initialize(const CreateInfo& info)
 
     // TODO: RenderDoc attach check.
     // Need to connect before vulkan instance is created
-    RenderDoc::InitializeRenderDoc();
+    // RenderDoc::InitializeRenderDoc();
     Console::InitializeConsole();
 
     window = std::make_unique<Window>(info.width, info.height, info.title);
@@ -102,7 +102,8 @@ void Application::run(const RenderHooks& renderHooks)
         UIRenderer::BeginUIFrame();
 
         // TODO: Remove the UI calls from ScreenLogger and move that to the UI files.
-        ScreenLogger::DrawOverlay();
+        ScreenLogger::UpdateAndGetMessages(engineStats.frameTime / 1000.0f);
+        UI::DrawLogOverlay(ScreenLogger::messages);
         UI::DrawConsoleWindow(&consoleState);
 
         // Toggle Developer Console with the tilde key (~)

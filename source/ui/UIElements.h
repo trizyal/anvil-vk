@@ -16,6 +16,7 @@
 #include "SceneConfig.h"
 #include "FrameStats.h"
 
+struct UILogMessage;
 class SceneManager;
 struct ImFont;
 class Camera;
@@ -109,6 +110,8 @@ namespace UI
 
     void DrawMainMenuBar();
     bool DrawScenesMenu(SceneManager& sceneManager);
+    void DrawLogOverlay(const std::vector<UILogMessage>& messages);
+    void DrawViewsMenu();
 }
 
 

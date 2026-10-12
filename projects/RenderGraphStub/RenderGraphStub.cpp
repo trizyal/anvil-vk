@@ -180,6 +180,7 @@ void RenderGraphApp::run()
     hooks.onDrawUI = [&]()
     {
         changeScene = UI::DrawScenesMenu(sceneManager);
+        UI::DrawViewsMenu();
         UI::RenderWorldAxes(camera.getViewMatrix());
     };
     app.run(hooks);
@@ -372,6 +373,10 @@ void RenderGraphApp::drawDeferredLighting(VkCommandBuffer cmd)
     {
         VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
         app.getDebugPass().drawDeferredResolve(cmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
+    }
+    else if (DebugPass::isForwardMode(debug_mode))
+    {
+        ENSURE_ONCE(false, "Forward Debug Shader not implemented yet.");
     }
 }
 

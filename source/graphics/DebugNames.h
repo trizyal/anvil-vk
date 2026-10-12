@@ -19,9 +19,9 @@
  * Automatically enabled in Debug builds (when NDEBUG is undefined) and stripped in Release builds.
  */
 #ifndef NDEBUG
-#   define ANVIL_DEBUG 1
+#   define ENGINE_DEBUG 1
 #else
-#   define ANVIL_DEBUG 0
+#   define ENGINE_DEBUG 0
 #endif
 
 namespace VulkanDebug
@@ -111,7 +111,7 @@ namespace VulkanDebug
 /**
  * @brief Comma-injection helper that appends a trailing parameter in Debug builds, or strips it in Release builds.
  */
-#if ANVIL_DEBUG
+#if ENGINE_DEBUG
 #define DNAME(x), x
 #else
 #define DNAME(x)
@@ -143,7 +143,7 @@ DNAME(std::source_location const aDbgSrcLoc)
  * @param handle Created Vulkan resource handle (e.g., VkBuffer, VkImage).
  * @param type   Vulkan object type enum (e.g., VK_OBJECT_TYPE_BUFFER).
  */
-#if ANVIL_DEBUG
+#if ENGINE_DEBUG
 #   define SET_DNAME(dev, handle, type) \
     VulkanDebug::SetAutoName(dev, handle, type, aDebugName, aDbgSrcLoc)
 
@@ -169,3 +169,5 @@ DNAME(std::source_location const aDbgSrcLoc)
  * @note Example: `DNAME_VAR(vertexBuffer)`.
  */
 #define DNAME_VAR(var) #var
+
+#undef ENGINE_DEBUG

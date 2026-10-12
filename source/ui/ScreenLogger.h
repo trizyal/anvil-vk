@@ -54,10 +54,10 @@ constexpr float LOG_DISPLAY_TIME = 5.0f;
 class ScreenLogger
 {
 private:
-    static std::vector<UILogMessage> messages;
     static std::mutex queueMutex;
 
 public:
+    static std::vector<UILogMessage> messages;
 
     /**
      * @brief Thread-safe submission of a new log message to the on-screen overlay queue.
@@ -68,12 +68,10 @@ public:
     static void AddLog(const std::string& inText, ImVec4 inColor = AnvilColor::Green);
 
     /**
-     * @brief Renders the active log queue inside an ImGui window overlay.
-     * @warning Must be called once per frame inside an active ImGui context (between ImGui::NewFrame()
-     * and ImGui::Render()).
+     * @brief Calulates and culls logs.
      * @note Automatically decrements message timers and culls expired entries.
      */
-    static void DrawOverlay();
+    static void UpdateAndGetMessages(float dt);
 };
 
 /**
