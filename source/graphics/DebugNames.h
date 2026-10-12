@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_DEBUGNAMES_H
-#define ANVIL_VK_DEBUGNAMES_H
+#pragma once
 
 /**
  * @file DebugNames.h
@@ -107,15 +106,7 @@ namespace VulkanDebug
         }
         SetAutoName(inDevice, handle, inObjectType, inName, location);
     }
-
-    /**
-     * @brief Converts a Vulkan object type enum into a human-readable string literal.
-     *
-     * @param[in] inObjectType Vulkan object type enum value.
-     * @return Null-terminated string matching the Vulkan enum name (e.g., "VK_OBJECT_TYPE_BUFFER").
-     */
-    const char* ObjectTypeToString(VkObjectType inObjectType);
-} //AnvilDebug
+} // VulkanDebug
 
 /**
  * @brief Comma-injection helper that appends a trailing parameter in Debug builds, or strips it in Release builds.
@@ -178,5 +169,3 @@ DNAME(std::source_location const aDbgSrcLoc)
  * @note Example: `DNAME_VAR(vertexBuffer)`.
  */
 #define DNAME_VAR(var) #var
-
-#endif //ANVIL_VK_DEBUGNAMES_H
