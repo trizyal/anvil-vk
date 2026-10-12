@@ -153,14 +153,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         tracy_client
 )
 
-
-# Include examples directory
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples")
-    add_subdirectory(examples)
-endif()
-
-
-# Include projects directory
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/projects")
-    add_subdirectory(projects)
-endif()
+add_subdirectory(projects)
