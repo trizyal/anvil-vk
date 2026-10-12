@@ -25,6 +25,7 @@
 DEF_VK_STRING(VkResult);
 DEF_VK_STRING(VkImageLayout);
 DEF_VK_STRING(VkFormat);
+DEF_VK_STRING(VkObjectType);
 
 /**
  * @brief Converts a LoadOp enums into a human-readable string literal.
