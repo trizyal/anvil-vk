@@ -24,6 +24,26 @@
 #endif
 
 /**
+ * @brief Soft assertion (Once): Logs an error and triggers a breakpoint only the first time the condition fails.
+ *
+ * Use this inside hot loops (like the render loop) for recoverable errors where you want to
+ * notify the developer but avoid freezing the engine every single frame.
+ *
+ * @param condition The expression that is expected to evaluate to true.
+ * @param message The diagnostic message to print if the condition is false.
+ */
+#define ENSURE_ONCE(condition, message) \
+    do { \
+        static bool s_hasTriggered = false; \
+        if (!s_hasTriggered && !(condition)) { \
+            s_hasTriggered = true; \
+            std::cerr << "[Ensure Failed (Once)] " << message << "\n" \
+                      << "File: " << __FILE__ << ":" << __LINE__ << std::endl; \
+            BREAK(); \
+        } \
+    } while (0)
+
+/**
  * @brief Soft assertion: Logs an error and triggers a breakpoint, but continues execution.
  *
  * Use this for recoverable errors where you want to notify the developer but

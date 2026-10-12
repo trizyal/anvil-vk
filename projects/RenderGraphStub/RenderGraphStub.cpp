@@ -267,8 +267,8 @@ void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
     if (is_forward_debug) return;
 
     bool use_debug_pipeline = is_debug;
-    VkPipeline active_pipeline = use_debug_pipeline ? app.getDebugPass().getForwardPipeline(debug_mode).pipeline : gBufferPipeline.pipeline;
-    VkPipelineLayout active_layout = use_debug_pipeline ? app.getDebugPass().getForwardLayout() : gBufferMaterial.materialPipelineLayout;
+    VkPipeline active_pipeline = gBufferPipeline.pipeline;
+    VkPipelineLayout active_layout = gBufferMaterial.materialPipelineLayout;
 
     if (active_pipeline == VK_NULL_HANDLE) return;
 
