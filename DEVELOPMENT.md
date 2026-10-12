@@ -50,24 +50,6 @@ anvil-vk/
 │   ├── VulkanMemoryAllocator/
 │   └── # More to come
 │ 
-├── examples/                    # How to use anvil
-│   ├── CMakeLists.txt
-│   │ 
-│   ├── HelloTriangle/           # Triangle vertices in shader, no buffers, no push contants
-│   ├── HelloCube/               # Hard coded cube, buffer creation, rotation push constants
-│   ├── glTFBox/                 # Load model from gltf, mesh buffers
-│   ├── TextureCube/             # Load texture from gltf, map uv
-│   ├── ShaderReflectionCube/    # Same as TextureCube, but using shader reflection instead
-│   ├── DirectionalLight/        # Load model, set up scene lighting and uniform buffers
-│   ├── glTFTruck
-│   ├── BoxAnimated/        
-│   ├── RiggedSimple/        
-│   ├── CesiumMan/        
-│   ├── Sponza/        
-│   ├── SponzaDeferred/        
-│   ├── PBRTests/        
-│   └── # More to come   
-│ 
 ├── projects/
 │   ├── CMakeLists.txt
 │   │ 

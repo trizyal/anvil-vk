@@ -46,11 +46,7 @@ Anvil is intended to be a starting point rather than a rigid, all-in-one rendere
 
 ## Examples
 
-The `examples/` directory contains sample projects demonstrating how to use the framework, 
-ranging from simple hardcoded geometry to loading glTF scenes.
-
-See [examples](examples/README.md) for detailed 
-descriptions of each example and third-party asset licenses.
+The `projects/` directory contains sample projects demonstrating how to use the framework.
 
 ## Documentation & Architecture
 
