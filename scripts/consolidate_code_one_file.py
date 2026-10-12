@@ -5,7 +5,6 @@ import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
 source_dir = os.path.abspath(os.path.join(script_dir, '..', 'source'))
 shaders_dir = os.path.abspath(os.path.join(script_dir, '..', 'shaders'))
-examples_dir = os.path.abspath(os.path.join(script_dir, '..', 'examples'))
 projects_dir = os.path.abspath(os.path.join(script_dir, '..', 'projects'))
 output_dir = os.path.abspath(os.path.join(script_dir, 'output'))
 
@@ -39,19 +38,14 @@ if len(sys.argv) > 1:
             print(f"Warning: Projects directory '{projects_dir}' not found.")
     else:
         project_name = arg
-        project_dir1 = os.path.join(examples_dir, project_name)
-        project_dir2 = os.path.join(projects_dir, project_name)
+        project_dir = os.path.join(projects_dir, project_name)
 
-        if os.path.exists(project_dir1):
-            directories_to_walk.append(project_dir1)
+        if os.path.exists(project_dir):
+            directories_to_walk.append(project_dir)
             output_filename = f"{project_name}AnvilCodebase.txt"
-            print(f"Targeting additional project directory: {project_dir1}")
-        elif os.path.exists(project_dir2):
-            directories_to_walk.append(project_dir2)
-            output_filename = f"{project_name}AnvilCodebase.txt"
-            print(f"Targeting additional project directory: {project_dir2}")
+            print(f"Targeting additional project directory: {project_dir}")
         else:
-            print(f"Warning: Project directory '{project_dir1}' or '{project_dir2}' not found. Skipping.")
+            print(f"Warning: Project directory '{project_dir}' not found. Skipping.")
 
 # Ensure the output directory exists before creating the file
 os.makedirs(output_dir, exist_ok=True)
@@ -105,12 +99,10 @@ with open(output_file, 'w', encoding='utf-8') as outfile:
 
     filename1 = "../CMakeLists.txt"
     filename2 = "../external/CMakeLists.txt"
-    filename3 = "../examples/CMakeLists.txt"
-    filename4 = "../projects/CMakeLists.txt"
+    filename3 = "../projects/CMakeLists.txt"
     read_cmake(filename1, outfile)
     read_cmake(filename2, outfile)
     read_cmake(filename3, outfile)
-    read_cmake(filename4, outfile)
 
 
 print(f"Successfully combined files into {output_file}")
