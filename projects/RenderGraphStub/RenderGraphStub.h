@@ -82,4 +82,6 @@ private:
      * @brief Lighting pass callback: Resolves G-Buffer lighting or executes deferred debug views.
      */
     void drawDeferredLighting(VkCommandBuffer cmd);
+
+    void drawModelGeometry(VkCommandBuffer& cmd, VkPipeline& pipeline, VkPipelineLayout& layout);
 };

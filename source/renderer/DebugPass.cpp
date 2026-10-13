@@ -72,7 +72,7 @@ bool DebugPass::initializeDebugPass(VulkanContext& inContext, ShaderCompiler& in
                 .disableBlending()
                 .buildPipeline(pContext->device, material_Forward.materialPipelineLayout DNAME("EngineForwardOpaqueDebug"));
 
-        pipeline_Forward_Overdraw = builder.enableDepthTest(false, VK_COMPARE_OP_LESS)
+        pipeline_Forward_Overdraw = builder.enableDepthTest(false, VK_COMPARE_OP_ALWAYS)
                 .enableAdditiveBlending()
                 .buildPipeline(pContext->device, material_Forward.materialPipelineLayout DNAME("EngineForwardOverdrawDebug"));
 

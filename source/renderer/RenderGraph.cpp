@@ -99,6 +99,28 @@ RenderPassBuilder& RenderPassBuilder::writeSwapchain(Swapchain& swapchain, uint3
     return *this;
 }
 
+RenderPassBuilder& RenderPassBuilder::writeSwapchainDepth(Swapchain& swapchain, LoadOp loadOp, float clearDepth)
+{
+    VkClearValue clearValue;
+    clearValue.depthStencil = {.depth = clearDepth, .stencil = 0};
+
+    GraphAttachment depth_write_attachment;
+    depth_write_attachment.image = swapchain.depthImage;
+    depth_write_attachment.imageView = swapchain.depthImageView;
+    depth_write_attachment.format = swapchain.depthFormat;
+
+    depth_write_attachment.extent = swapchain.swapchainExtent;
+    depth_write_attachment.currentLayout = &swapchain.depthImageLayout;
+
+    depth_write_attachment.loadOp = loadOp;
+    depth_write_attachment.clearValue = clearValue;
+    depth_write_attachment.isDepth = true;
+
+    node.depthWrite = std::move(depth_write_attachment);
+
+    return *this;
+}
+
 void RenderPassBuilder::execute(std::function<void(VkCommandBuffer)> callback) const
 {
     node.executeCallback = std::move(callback);

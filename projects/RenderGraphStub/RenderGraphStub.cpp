@@ -243,7 +243,8 @@ void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
         .read(gBuffer.pbr)
         .read(gBuffer.worldPosition)
         .read(gBuffer.depth)
-        .writeSwapchain(app.getSwapchain(), app.getRenderContext().imageIndex, LoadOp::Clear, glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
+        .writeSwapchain(app.getSwapchain(), app.getRenderContext().imageIndex, LoadOp::Clear, glm::vec4(0.05f, 0.05f, 0.05f, 1.0f))
+        .writeSwapchainDepth(app.getSwapchain(), LoadOp::Clear, 1.0f);
 
     lightingPass.execute([this](VkCommandBuffer passCmd)
     {
@@ -254,23 +255,11 @@ void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
     graph.execute(cmd);
 }
 
-void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
+void RenderGraphApp::drawModelGeometry(VkCommandBuffer& cmd, VkPipeline& pipeline, VkPipelineLayout& layout)
 {
-    SCOPE_CPU;
-
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
-    bool is_forward_debug = DebugPass::isForwardMode(debug_mode);
-    bool is_debug = static_cast<DebugMode>(debug_mode) > DebugMode::None;
     bool is_frozen = Console::GetCVarBool("r.freezerendering");
     bool is_culling = Console::GetCVarBool("r.frustumculling");
-
-    if (is_forward_debug) return;
-
-    bool use_debug_pipeline = is_debug;
-    VkPipeline active_pipeline = gBufferPipeline.pipeline;
-    VkPipelineLayout active_layout = gBufferMaterial.materialPipelineLayout;
-
-    if (active_pipeline == VK_NULL_HANDLE) return;
 
     VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
 
@@ -285,7 +274,7 @@ void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
     Frustum camera_frustum{};
     camera_frustum.extractPlanes(is_frozen ? frozen_vp : view_projection);
 
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_pipeline);
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
     VkDeviceSize offset = 0;
     GPUModel& gpuModel = sceneManager.gpuModel;
@@ -328,14 +317,14 @@ void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
         if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE) sets.push_back(gpuModel.modelSet.descriptorSet);
         if (matSet != VK_NULL_HANDLE) sets.push_back(matSet);
 
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, active_layout, first_set, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, first_set, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
 
         PushConstants constants{};
         constants.viewProjection = view_projection;
         constants.cameraPosition = glm::vec4(camera.position, 1.0f);
         constants.objectIndex = i;
         constants.debugMode = static_cast<DebugMode>(debug_mode);
-        vkCmdPushConstants(cmd, active_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdPushConstants(cmd, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
 
         const GPUMesh& mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];
         vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
@@ -345,6 +334,21 @@ void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
         Application::engineStats.drawCalls++;
         Application::engineStats.primitiveCount += (mesh.indexCount / 3);
     }
+}
+
+void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
+{
+    SCOPE_CPU;
+
+    uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
+    bool is_forward_debug = DebugPass::isForwardMode(debug_mode);
+    bool is_debug = static_cast<DebugMode>(debug_mode) > DebugMode::None;
+
+    if (is_forward_debug) return;
+
+    if (gBufferPipeline.pipeline == VK_NULL_HANDLE) return;
+
+    drawModelGeometry(cmd, gBufferPipeline.pipeline, gBufferMaterial.materialPipelineLayout);
 }
 
 void RenderGraphApp::drawDeferredLighting(VkCommandBuffer cmd)
@@ -376,7 +380,10 @@ void RenderGraphApp::drawDeferredLighting(VkCommandBuffer cmd)
     }
     else if (DebugPass::isForwardMode(debug_mode))
     {
-        ENSURE_ONCE(false, "Forward Debug Shader not implemented yet.");
+        VkPipeline active_pipeline = app.getDebugPass().getForwardPipeline(debug_mode).pipeline;
+        VkPipelineLayout active_layout = app.getDebugPass().getForwardLayout();
+
+        drawModelGeometry(cmd, active_pipeline, active_layout);
     }
 }
 

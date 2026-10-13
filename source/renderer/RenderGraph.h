@@ -120,6 +120,15 @@ public:
     RenderPassBuilder& writeSwapchain(Swapchain& swapchain, uint32_t imageIndex, LoadOp loadOp, glm::vec4 clearColor = glm::vec4(0.0f));
 
     /**
+     * @brief Helper method to declare <something> depth.
+     * @param swapchain Reference to the active application Swapchain instance.
+     * @param loadOp Operation performed on the swapchain attachment at pass start.
+     * @param clearDepth 0 - 1 clear color applied if loadOp is VK_ATTACHMENT_LOAD_OP_CLEAR.
+     * @return Reference to this builder for method chaining.
+     */
+    RenderPassBuilder& writeSwapchainDepth(Swapchain& swapchain, LoadOp loadOp, float clearDepth = 1.0f);
+
+    /**
      * @brief Assigns the application execution callback containing command buffer draw logic.
      * @param callback Lambda or function receiving an active VkCommandBuffer to record draw calls.
      */
