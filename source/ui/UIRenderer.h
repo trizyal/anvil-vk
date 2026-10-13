@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_UIRENDERER_H
-#define ANVIL_VK_UIRENDERER_H
+#pragma once
 
 /**
  * @file UIRenderer.h
@@ -67,20 +66,13 @@ public:
      * @param inSwapchain Pointer to the active swapchain to query color and depth attachment formats.
      * @return `true` if ImGui initialization succeeded, `false` otherwise.
      */
-    bool initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, Swapchain* inSwapchain);
+    bool initializeUIRenderer(VulkanContext& inContext, GLFWwindow& inWindow, Swapchain& inSwapchain);
 
     /**
      * @brief Starts a new ImGui frame for both the GLFW and Vulkan backends.
      * @note Must be called inside an active rendering block.
      */
     static void BeginUIFrame();
-
-    /**
-     * @brief Records generated ImGui draw data into the provided command buffer.
-     * @note Should be called inside an active rendering block after main scene geometry.
-     * @param inCmdBuffer Active Vulkan command buffer to record UI draw commands into.
-     */
-    static void RecordUICommands(VkCommandBuffer inCmdBuffer);
 
     /**
      * @brief Records generated ImGui draw data into the provided command buffer.
@@ -110,5 +102,3 @@ private:
      */
     void createDescriptorPool(VkDevice inDevice D_DECL());
 };
-
-#endif //ANVIL_VK_UIRENDERER_H

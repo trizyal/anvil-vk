@@ -33,20 +33,18 @@ namespace
         { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
         { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
         { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 },
     };
 }
 
-bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWindow, Swapchain* inSwapchain)
+bool UIRenderer::initializeUIRenderer(VulkanContext& inContext, GLFWwindow& inWindow, Swapchain& inSwapchain)
 {
     SCOPE_CPU;
 
-    pContext = inContext;
-    pSwapchain = inSwapchain;
+    pContext = &inContext;
+    pSwapchain = &inSwapchain;
 
-    VkDevice device = inContext->device;
-
-    createDescriptorPool(device DNAME("ImGuiDescriptorPool"));
+    createDescriptorPool(inContext.device DNAME("ImGuiDescriptorPool"));
 
     // Initialize ImGui Core
     IMGUI_CHECKVERSION();
@@ -62,15 +60,15 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
     UI::ApplyAnvilTheme();
 
     // 3. Initialize GLFW and Vulkan Backends
-    ImGui_ImplGlfw_InitForVulkan(inWindow, true);
+    ImGui_ImplGlfw_InitForVulkan(&inWindow, true);
 
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.ApiVersion = AnvilVulkan::API_VERSION;
-    init_info.Instance = inContext->instance;
-    init_info.PhysicalDevice = inContext->physicalDevice;
-    init_info.Device = device;
-    init_info.QueueFamily = inContext->graphicsQueueIndex;
-    init_info.Queue = inContext->graphicsQueue;
+    init_info.Instance = pContext->instance;
+    init_info.PhysicalDevice = pContext->physicalDevice;
+    init_info.Device = pContext->device;
+    init_info.QueueFamily = pContext->graphicsQueueIndex;
+    init_info.Queue = pContext->graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = imguiPool;
     init_info.MinImageCount = 2;
@@ -82,8 +80,8 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
 
     // CRITICAL: We must store the format in a static variable (or a class member)
     // because ImGui's Viewport system will read this pointer LATER when you drag a window!
-    colorFormat = inSwapchain->swapchainFormat;
-    depthFormat = inSwapchain->depthFormat;
+    colorFormat = pSwapchain->swapchainFormat;
+    depthFormat = pSwapchain->depthFormat;
 
     VkFormat vkColorFormat = vk(colorFormat);
 
@@ -102,7 +100,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext* inContext, GLFWwindow* inWi
         [](const char* function_name, void* user_data) {
             return glfwGetInstanceProcAddress(*static_cast<VkInstance*>(user_data), function_name);
         },
-        &inContext->instance
+        &pContext->instance
     );
 
     ImGui_ImplVulkan_Init(&init_info);
@@ -158,12 +156,6 @@ void UIRenderer::EndUIFrame()
     }
 }
 
-void UIRenderer::RecordUICommands(VkCommandBuffer inCmdBuffer)
-{
-    ImGui::Render();
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), inCmdBuffer);
-}
-
 void UIRenderer::recordUICommands(VkCommandBuffer cmd, uint32_t imageIndex) const
 {
     ImGui::Render();
@@ -190,6 +182,5 @@ void UIRenderer::createDescriptorPool(VkDevice inDevice D_DEFN)
     pool_info.pPoolSizes = ImGuiPoolSizes;
 
     CHECK(vkCreateDescriptorPool(inDevice, &pool_info, nullptr, &imguiPool));
-
     SET_DNAME(inDevice, imguiPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL);
 }

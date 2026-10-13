@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_UIELEMENTS_H
-#define ANVIL_VK_UIELEMENTS_H
+#pragma once
 
 /**
  * @file UIElements.h
@@ -69,28 +68,6 @@ namespace UI
     void DrawShaderErrorModal(const std::string& errorLog, const std::function<void()>& onRetry, const std::function<void()>& onAbort);
 
     /**
-     * @brief Renders a global debug view toggle menu.
-     *
-     * @param currentMode Reference to the active debug mode state.
-     * @return True if the mode was changed this frame.
-     */
-    bool DrawDebugMenu(uint32_t& currentMode);
-
-    /**
-     * @brief Renders the top menu bar containing Debug Views and Scene Selection.
-     *
-     * @param currentMode Reference to the active debug mode state, updated if changed by the user.
-     * @param scenes A vector of available scene configurations to populate the scene selector dropdown.
-     * @param activeSceneIdx Reference to the currently active scene index, used to highlight the active scene in the menu.
-     * @param outSelectedScene Output parameter populated with the index of the newly selected scene if the user changes it.
-     * @return True if either the Debug View or Active Scene was changed this frame, false otherwise.
-     */
-    bool DrawDebugMenu(uint32_t& currentMode,
-                       const std::vector<SceneConfig>& scenes,
-                       int& activeSceneIdx,
-                       uint32_t& outSelectedScene);
-
-    /**
      * @brief Renders the developer console overlay window.
      *
      * Reads directly from the static Console backend to display logs and handle
@@ -113,7 +90,3 @@ namespace UI
     void DrawLogOverlay(const std::vector<UILogMessage>& messages);
     void DrawViewsMenu();
 }
-
-
-
-#endif //ANVIL_VK_UIELEMENTS_H

@@ -12,7 +12,7 @@
 #include "UIElements.h"
 
 // TODO: Should move these to relevant files.
-CVAR_BOOL("attachrenderdoc", "Start the executable with RenderDoc attached.", true);
+CVAR_BOOL("attachrenderdoc", "Start the executable with RenderDoc attached.", false);
 CVAR_BOOL("attachtracy", "Start the executable with Tracy attached.", true);
 CVAR_INT("r.shadowmapsize", "Resolution of shadow maps.", 1048);
 CVAR_INT("a.logverbosity", "0: Fatal, 1: Error, 2: Warning, 3: Info, 4: Debug, 5: Trace", 5);
@@ -32,9 +32,11 @@ void Application::initialize(const CreateInfo& info)
     const auto cpu_start = std::chrono::high_resolution_clock::now();
     ENSURE(!applicationInitialized, "Application is already initialized.");
 
-    // TODO: RenderDoc attach check.
     // Need to connect before vulkan instance is created
-    // RenderDoc::InitializeRenderDoc();
+    if (Console::GetCVarBool("attachrenderdoc"))
+    {
+        RenderDoc::InitializeRenderDoc();
+    }
     Console::InitializeConsole();
 
     window = std::make_unique<Window>(info.width, info.height, info.title);
@@ -45,7 +47,7 @@ void Application::initialize(const CreateInfo& info)
     swapchain.initializeSwapchain(context, window->getFramebufferExtent());
 
     renderContext.initializeRenderContext(&context, &swapchain);
-    uiRenderer.initializeUIRenderer(&context, window->getGLFWWindow(), &swapchain);
+    uiRenderer.initializeUIRenderer(context, *window->getGLFWWindow(), swapchain);
 
     shaderCompiler.initializeShaderCompiler();
     debugPass.initializeDebugPass(context, shaderCompiler, swapchain.swapchainFormat, swapchain.depthFormat, &activeShaderErrorLog);
@@ -101,7 +103,6 @@ void Application::run(const RenderHooks& renderHooks)
 
         UIRenderer::BeginUIFrame();
 
-        // TODO: Remove the UI calls from ScreenLogger and move that to the UI files.
         ScreenLogger::UpdateAndGetMessages(engineStats.frameTime / 1000.0f);
         UI::DrawLogOverlay(ScreenLogger::messages);
         UI::DrawConsoleWindow(&consoleState);

@@ -280,116 +280,6 @@ void UI::DrawShaderErrorModal(const std::string& errorLog, const std::function<v
     ImGui::EndPopup();
 }
 
-bool UI::DrawDebugMenu(uint32_t& currentMode)
-{
-    SCOPE_CPU;
-
-    bool bChanged = false;
-    if (ImGui::BeginMainMenuBar())
-    {
-        if (ImGui::BeginMenu("View"))
-        {
-            for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
-            {
-                bool is_selected = (currentMode == i);
-                if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
-                {
-                    currentMode = i;
-                    bChanged = true;
-                }
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
-    return bChanged;
-}
-
-bool UI::DrawDebugMenu(uint32_t& currentMode,
-                       const std::vector<SceneConfig>& scenes,
-                       int& activeSceneIdx,
-                       uint32_t& outSelectedScene)
-{
-    SCOPE_CPU;
-
-    bool bChanged = false;
-    outSelectedScene = static_cast<uint32_t>(activeSceneIdx);
-
-    if (ImGui::BeginMainMenuBar())
-    {
-        // --- SCENE SELECTOR MENU ---
-        if (ImGui::BeginMenu("Scenes"))
-        {
-            for (size_t i = 0; i < scenes.size(); ++i)
-            {
-                bool is_selected = (activeSceneIdx == static_cast<int>(i));
-                if (ImGui::MenuItem(scenes[i].sceneName.c_str(), nullptr, is_selected))
-                {
-                    outSelectedScene = static_cast<uint32_t>(i);
-                    bChanged = true;
-                }
-            }
-            ImGui::EndMenu();
-        }
-
-        // --- DEBUG VIEW MENU ---
-        if (ImGui::BeginMenu("View"))
-        {
-            for (uint32_t i = 0; i < static_cast<uint32_t>(DebugMode::Count); ++i)
-            {
-                bool is_selected = (currentMode == i);
-                if (ImGui::MenuItem(DebugPass::GetDebugModeName(static_cast<DebugMode>(i)), nullptr, is_selected))
-                {
-                    currentMode = i;
-                    bChanged = true;
-                }
-            }
-            ImGui::EndMenu();
-        }
-
-        // --- TOOLS MENU ---
-        if (ImGui::BeginMenu("Tools"))
-        {
-            if (RenderDoc::IsInitialized())
-            {
-                if (ImGui::MenuItem("Capture Frame (RenderDoc)"))
-                {
-                    RenderDoc::TriggerCapture();
-                }
-            }
-            else
-            {
-                // Greys out the item and prevents clicking
-                ImGui::BeginDisabled();
-                ImGui::MenuItem("RenderDoc not connected");
-                ImGui::EndDisabled();
-            }
-
-            if (ImGui::MenuItem("Open Tracy Profiler"))
-            {
-                // Launch the external Tracy profiler UI asynchronously.
-#ifdef _WIN32
-                std::string tracyPath = std::string(TOOLS_DIR) + "/tracy/windows/tracy-profiler.exe";
-
-                // ShellExecuteA(nullptr, "open", tracyPath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-                std::system(("start " + tracyPath).c_str());
-#elif defined(__linux__)
-                const std::string tracyPath =
-                    std::string(TOOLS_DIR) + "/tracy/linux/tracy-profiler";
-
-                std::system(("\"" + tracyPath + "\" >/dev/null 2>&1 &").c_str());
-                // Unimplemented
-#endif
-            }
-
-            ImGui::EndMenu();
-        }
-
-        ImGui::EndMainMenuBar();
-    }
-    return bChanged;
-}
-
 // Static UI state stored securely in the CPP file
 static char s_ConsoleInputBuffer[256] = "";
 static int s_HistoryPosition = -1;
@@ -575,6 +465,14 @@ void UI::DrawMainMenuBar()
 
         if (ImGui::BeginMenu("Tools"))
         {
+            // Greys out the item and prevents clicking
+            ImGui::BeginDisabled();
+            if (ImGui::MenuItem("Camera Debug"))
+            {
+
+            }
+            ImGui::EndDisabled();
+
             if (ImGui::MenuItem("Dump VMA Stats"))
             {
                 Console::Execute("vmastats");
