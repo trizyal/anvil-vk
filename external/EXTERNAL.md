@@ -31,3 +31,6 @@
 - slang @ v2026.18 (Sept 2026)
   - `python fetch_slang.py`
   - SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+- tracy @ 0.14.1 (Aug 2026)
+  - `python fetch_tracy.py`
+  - SPDX-License-Identifier: BSD-3-Clause

@@ -210,7 +210,7 @@ void RenderGraph::execute(CommandContext cmdCtx)
 
         if (pass.executeCallback)
         {
-            SCOPE_GPU(cmdCtx, "Execute Pass");
+            SCOPE_GPUCD(cmdCtx, pass.name.c_str(), Colors::Cyan);
             pass.executeCallback(cmdCtx);
         }
 

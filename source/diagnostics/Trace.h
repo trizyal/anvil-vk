@@ -28,7 +28,7 @@ struct GPUMarkerScope
 {
     VkCommandBuffer cmd;
 
-    GPUMarkerScope(VkCommandBuffer inCmd, const char* name)
+    GPUMarkerScope(VkCommandBuffer inCmd, const char* name, Color color)
         :cmd(inCmd)
     {
         if (vkCmdBeginDebugUtilsLabelEXT)
@@ -36,10 +36,10 @@ struct GPUMarkerScope
             VkDebugUtilsLabelEXT label_info{};
             label_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
             label_info.pLabelName = name;
-            label_info.color[0] = 0.2f;
-            label_info.color[1] = 0.6f;
-            label_info.color[2] = 1.0f;
-            label_info.color[3] = 1.0f;
+            label_info.color[0] = color.r;
+            label_info.color[1] = color.g;
+            label_info.color[2] = color.b;
+            label_info.color[3] = color.a;
             vkCmdBeginDebugUtilsLabelEXT(cmd, &label_info);
         }
     }
@@ -57,8 +57,22 @@ struct GPUMarkerScope
 #define CONCAT(x, y) CONCAT_IMPL(x, y)
 
 /**
- * @brief Combined GPU Zone macro: Emits a Tracy GPU timestamp and a RenderDoc Event Marker.
+ * @brief Combined GPU Zone macro: Emits a Tracy GPU timestamp and a RenderDoc Event Marker with default color.
  */
 #define SCOPE_GPU(cmdCtx, name) \
-    TracyVkNamedZone(cmdCtx.tracyCtx, CONCAT(_tracy_gpu_zone_, __LINE__), cmdCtx.cmd, name, true); \
-    GPUMarkerScope CONCAT(gpu_marker_, __LINE__)(cmdCtx.cmd, name)
+    TracyVkNamedZoneC(cmdCtx.tracyCtx, CONCAT(_tracy_gpu_zone_, __LINE__), cmdCtx.cmd, name, Colors::Gray.t24(), true); \
+    GPUMarkerScope CONCAT(gpu_marker_, __LINE__)(cmdCtx.cmd, name, Colors::Gray)
+
+/**
+ * @brief Combined GPU Zone macro: Emits a Tracy GPU timestamp and a RenderDoc Event Marker.
+ */
+#define SCOPE_GPUC(cmdCtx, name, color) \
+    TracyVkNamedZoneC(cmdCtx.tracyCtx, CONCAT(_tracy_gpu_zone_, __LINE__), cmdCtx.cmd, name, color.t24(), true); \
+    GPUMarkerScope CONCAT(gpu_marker_, __LINE__)(cmdCtx.cmd, name, color)
+
+/**
+ * @brief Dynamic runtime strings using Tracy Transient allocations.
+ */
+#define SCOPE_GPUCD(cmdCtx, name, color) \
+    TracyVkZoneTransient(cmdCtx.tracyCtx, CONCAT(_tracy_gpu_zone_, __LINE__), cmdCtx.cmd, name, true); \
+    GPUMarkerScope CONCAT(gpu_marker_, __LINE__)(cmdCtx.cmd, name, color)

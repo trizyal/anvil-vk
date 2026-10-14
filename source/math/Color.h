@@ -98,6 +98,16 @@ struct Color
     }
 
     /**
+     * @brief 4-element array of floats (R, G, B, A).
+     * @return A 4-element array of 32-bit float.
+     */
+    [[nodiscard]]
+    constexpr std::array<float, 4> f32() const
+    {
+        return{r, g, b, a};
+    }
+
+    /**
      * @brief Packs the normalized floats into ImU32, a 32-byte unsigned integer.
      * @return A ImU32.
      */
