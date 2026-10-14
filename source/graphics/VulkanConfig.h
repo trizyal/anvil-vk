@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_VULKANCONFIG_H
-#define ANVIL_VK_VULKANCONFIG_H
+#pragma once
 
 /**
  * @file VulkanConfig.h
@@ -12,7 +11,7 @@
 #include <cstdint>
 #include <volk.h>
 
-namespace AnvilVulkan
+namespace VulkanConfig
 {
     /** The major version of the Vulkan API targeted by the engine. */
     constexpr uint32_t API_VERSION_MAJOR = 1;
@@ -26,5 +25,3 @@ namespace AnvilVulkan
     /** The packed 32-bit integer representing the complete Vulkan API version target. */
     constexpr uint32_t API_VERSION = VK_MAKE_API_VERSION(0, API_VERSION_MAJOR, API_VERSION_MINOR, API_VERSION_PATCH);
 }
-
-#endif //ANVIL_VK_VULKANCONFIG_H

@@ -58,8 +58,8 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     // --------------------------------
     // Create Instance
     vkb::InstanceBuilder vkb_instance_builder;
-    vkb_instance_builder.set_app_name(inWindow.getWindowTitle().c_str());
-    vkb_instance_builder.require_api_version(AnvilVulkan::API_VERSION);
+    vkb_instance_builder.set_app_name(inWindow.getWindowTitle());
+    vkb_instance_builder.require_api_version(VulkanConfig::API_VERSION);
 
 #ifndef NDEBUG
     LOG_DEBUG("Requesting Validation Layers and Debug Callback.");
@@ -83,7 +83,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
         VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
     );
 
-#if 0
+#if UNIMPLEMENTED
     VkValidationFeatureEnableEXT enables[] = {VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT};
     vkb_instance_builder.add_validation_feature_enable(enables[0]);
 #endif
@@ -126,10 +126,14 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
 
     vkb::PhysicalDeviceSelector vkb_physical_device_selector{vkb_instance};
     vkb_physical_device_selector.set_surface(surface);
-    vkb_physical_device_selector.set_minimum_version(AnvilVulkan::API_VERSION_MAJOR, AnvilVulkan::API_VERSION_MINOR);
+    vkb_physical_device_selector.set_minimum_version(VulkanConfig::API_VERSION_MAJOR, VulkanConfig::API_VERSION_MINOR);
     vkb_physical_device_selector.set_required_features(base_features);
     vkb_physical_device_selector.add_required_extension_features(features13);
     vkb_physical_device_selector.add_required_extension_features(features11);
+
+    // Request hardware clock calibration
+    vkb_physical_device_selector.add_required_extension(VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME);
+
     vkb::Result<vkb::PhysicalDevice> vkb_physical_device_result = vkb_physical_device_selector.select();
 
     if (!vkb_physical_device_result)
@@ -188,7 +192,7 @@ void VulkanContext::initializeVulkanContext(Window& inWindow)
     allocator_create_info.device = device;
     allocator_create_info.instance = instance;
     allocator_create_info.pVulkanFunctions = &vma_vulkan_functions;
-    allocator_create_info.vulkanApiVersion = AnvilVulkan::API_VERSION;
+    allocator_create_info.vulkanApiVersion = VulkanConfig::API_VERSION;
     CHECK(vmaCreateAllocator(&allocator_create_info, &allocator));
 
     // --------------------------------

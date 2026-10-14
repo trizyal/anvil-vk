@@ -139,8 +139,24 @@ void RenderContext::createTracyContext()
     VkCommandBuffer tracyCmd;
     CHECK(vkAllocateCommandBuffers(pContext->device, &alloc_info, &tracyCmd));
 
-    // Pass it to Tracy. Tracy will internally begin, record, end, submit, and wait.
+#   if UNIMPLEMENTED
+    // Fetch the extension function pointers via volk
+    auto vkGetCalibratedTimestampsEXT = reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(vkGetInstanceProcAddr(pContext->instance, "vkGetPhysicalDeviceCalibrateableTimeDomainsEXT"));
+    auto vkGetPhysicalDeviceCalibrateableTimeDomainsEXT = reinterpret_cast<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>(vkGetInstanceProcAddr(pContext->instance, "vkGetPhysicalDeviceCalibrateableTimeDomainsEXT"));
+#   endif
+    // Use TracyVkContextCalibrated to align the hardware clocks perfectly
+    tracyVkCtx = TracyVkContextCalibrated(
+        pContext->physicalDevice,
+        pContext->device,
+        pContext->graphicsQueue,
+        tracyCmd,
+        vkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
+        vkGetCalibratedTimestampsEXT
+    );
+
+#   if DEPRECATED // Using calibrated version now
     tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, tracyCmd);
+#   endif
     FATAL(tracyVkCtx != nullptr, "Tracy Context creation failed.");
 
     // ree the command buffer now that Tracy is done calibrating

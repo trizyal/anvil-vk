@@ -63,7 +63,7 @@ bool UIRenderer::initializeUIRenderer(VulkanContext& inContext, GLFWwindow& inWi
     ImGui_ImplGlfw_InitForVulkan(&inWindow, true);
 
     ImGui_ImplVulkan_InitInfo init_info = {};
-    init_info.ApiVersion = AnvilVulkan::API_VERSION;
+    init_info.ApiVersion = VulkanConfig::API_VERSION;
     init_info.Instance = pContext->instance;
     init_info.PhysicalDevice = pContext->physicalDevice;
     init_info.Device = pContext->device;

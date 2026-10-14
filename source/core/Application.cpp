@@ -12,7 +12,7 @@
 #include "UIElements.h"
 
 // TODO: Should move these to relevant files.
-CVAR_BOOL("attachrenderdoc", "Start the executable with RenderDoc attached.", true);
+CVAR_BOOL("attachrenderdoc", "Start the executable with RenderDoc attached.", false);
 CVAR_BOOL("attachtracy", "Start the executable with Tracy attached.", true);
 CVAR_INT("r.shadowmapsize", "Resolution of shadow maps.", 1048);
 CVAR_INT("a.logverbosity", "0: Fatal, 1: Error, 2: Warning, 3: Info, 4: Debug, 5: Trace", 5);

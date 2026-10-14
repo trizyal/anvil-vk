@@ -150,6 +150,8 @@ void Swapchain::createDepthAttachment()
 {
     SCOPE_CPU;
 
+    depthImageLayout = ImageLayout::Undefined;
+
     // Create depth image via VMA
     VkImageCreateInfo depth_image_info{};
     depth_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
