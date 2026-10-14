@@ -14,6 +14,7 @@
 #include <imgui.h>
 
 #include "Camera.h"
+#include "Color.h"
 #include "Console.h"
 #include "DebugModes.h"
 #include "DebugPass.h"
@@ -24,28 +25,6 @@
 
 namespace
 {
-    namespace Color
-    {
-        // Avoid ImGui's C-style macro casts by doing the bitshift ourselves
-        constexpr ImU32 MakeCol32(ImU32 r, ImU32 g, ImU32 b, ImU32 a)
-        {
-            return (a << IM_COL32_A_SHIFT) | (b << IM_COL32_B_SHIFT) | (g << IM_COL32_G_SHIFT) | (r << IM_COL32_R_SHIFT);
-        }
-
-        /** Bright red for x axis. */
-        inline constexpr ImU32 X_AXIS = MakeCol32(255, 50, 50, 255);
-
-        /** Bright green for y axis. */
-        inline constexpr ImU32 Y_AXIS = MakeCol32(50, 255, 50, 255);
-
-        /** Light blue for z axis. Lighter to contrast with dark backgrounds */
-        inline constexpr ImU32 Z_AXIS = MakeCol32(50, 150, 255, 255);
-
-        ImVec4 BgGrey = ImVec4(0.7f, 0.7f, 0.7f, 0.4f);
-        ImVec4 BgDarkGrey = ImVec4(0.1f, 0.1f, 0.1f, 0.5f);
-        ImVec4 TextWhite = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    } //Color
-
     namespace Axis
     {
         inline constexpr glm::vec3 X = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -193,13 +172,13 @@ void UI::RenderWorldAxes(const glm::mat4& viewMatrix)
         struct AxisData
         {
             glm::vec3 dir;
-            ImU32 color;
+            Color color;
             const char* label;
         };
         AxisData axes[3] = {
-            {x_axis, Color::X_AXIS, "X"},
-            {y_axis, Color::Y_AXIS, "Y"},
-            {z_axis, Color::Z_AXIS, "Z"}
+            {x_axis, Colors::Red, "X"},
+            {y_axis, Colors::Green, "Y"},
+            {z_axis, Colors::Blue, "Z"}
         };
 
         // Sort by Z depth so the axis facing the camera draws ON TOP of the others
@@ -324,7 +303,7 @@ void UI::DrawConsoleWindow(const int* pState)
 
     if (!is_mini)
     {
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, Color::BgDarkGrey);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Colors::BgGrayDark.u32());
         const float footer_height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
         if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height), false, ImGuiWindowFlags_HorizontalScrollbar))
         {
@@ -332,11 +311,11 @@ void UI::DrawConsoleWindow(const int* pState)
             {
                 if (!item.empty() && item[0] == ']')
                 {
-                    ImGui::PushStyleColor(ImGuiCol_Text, Color::BgGrey);
+                    ImGui::PushStyleColor(ImGuiCol_Text, Colors::BgGray.u32());
                 }
                 else
                 {
-                    ImGui::PushStyleColor(ImGuiCol_Text, Color::TextWhite);
+                    ImGui::PushStyleColor(ImGuiCol_Text, Colors::White.u32());
                 }
 
                 ImGui::TextUnformatted(item.c_str());
@@ -361,11 +340,11 @@ void UI::DrawConsoleWindow(const int* pState)
     ImGui::Text(">");
     ImGui::SameLine();
 
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, Color::BgDarkGrey);
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Color::BgDarkGrey);
-    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, Color::BgDarkGrey);
-    ImGui::PushStyleColor(ImGuiCol_NavHighlight, Color::BgDarkGrey);
-    ImGui::PushStyleColor(ImGuiCol_Border, Color::BgDarkGrey);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, Colors::BgGrayDark.u32());
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Colors::BgGrayDark.u32());
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, Colors::BgGrayDark.u32());
+    ImGui::PushStyleColor(ImGuiCol_NavHighlight, Colors::BgGrayDark.u32());
+    ImGui::PushStyleColor(ImGuiCol_Border, Colors::BgGrayDark.u32());
     ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackCharFilter;
     if (ImGui::InputText("##ConsoleInput", s_ConsoleInputBuffer, std::size(s_ConsoleInputBuffer), input_flags, ConsoleInputCallback))
     {

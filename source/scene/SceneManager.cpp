@@ -101,8 +101,8 @@ bool SceneManager::loadScene(uint32_t sceneIndex, VulkanContext& inContext, cons
     });
 
     LOG_INFO("Loaded Scene: {}", scene_config.sceneName);
-    LOGUI("[SceneManager] Loaded Scene: " + scene_config.sceneName, AnvilColor::Blue);
-        return true;
+    LOGUI("[SceneManager] Loaded Scene: " + scene_config.sceneName, Colors::Cyan);
+    return true;
 }
 
 void SceneManager::reloadActiveScene(VulkanContext& inContext, const Material& inMaterial, Camera& camera, Scene& scene)

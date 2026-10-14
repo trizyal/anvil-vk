@@ -23,10 +23,6 @@
 
 class VulkanContext;
 
-constexpr uint8_t WhiteColor[4] = {255, 255, 255, 255};
-constexpr uint8_t NormalColor[4] = {128, 128, 255, 255}; // Flat Z-up normal
-constexpr uint8_t TransparentColor[4] = {0, 0, 0, 0}; //
-
 /**
  * @brief Max number of Joints allowed.
  * 256 glm::mat4 matrices (16KB total)

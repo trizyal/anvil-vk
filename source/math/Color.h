@@ -97,6 +97,19 @@ struct Color
         };
     }
 
+    /**
+     * @brief Packs the normalized floats into ImU32, a 32-byte unsigned integer.
+     * @return A ImU32.
+     */
+    [[nodiscard]]
+    constexpr ImU32 u32() const
+    {
+        return (static_cast<ImU32>(a * 255.0f) << IM_COL32_A_SHIFT) |
+               (static_cast<ImU32>(b * 255.0f) << IM_COL32_B_SHIFT) |
+               (static_cast<ImU32>(g * 255.0f) << IM_COL32_G_SHIFT) |
+               (static_cast<ImU32>(r * 255.0f) << IM_COL32_R_SHIFT);
+    }
+
     /** @brief Auto-converts to glm::vec4 when needed. */
     /* implicit */ constexpr operator glm::vec4() const
     {
@@ -124,7 +137,7 @@ static_assert(sizeof(Color) == 16, "Color struct must be exactly 16 bytes (4x 32
 /**
  * @brief Standardized global palette.
  */
-namespace UI
+namespace Colors
 {
 #   define COLOR inline constexpr Color
 

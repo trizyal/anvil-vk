@@ -11,7 +11,7 @@
 std::vector<UILogMessage> ScreenLogger::messages;
 std::mutex ScreenLogger::queueMutex;
 
-void ScreenLogger::AddLog(const std::string& inText, const ImVec4 inColor)
+void ScreenLogger::AddLog(const std::string& inText, const Color inColor)
 {
     std::lock_guard<std::mutex> lock(queueMutex);
     messages.push_back({.text = inText, .color = inColor, .timeRemaining = LOG_DISPLAY_TIME});

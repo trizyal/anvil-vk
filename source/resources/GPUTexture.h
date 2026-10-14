@@ -17,6 +17,7 @@
 #include "DebugNames.h"
 #include "VulkanTypes.h"
 
+struct Color;
 /**
  * @brief Manages the lifecycle of a Vulkan Image, ImageView, Sampler and its backing VMA memory allocation.
  *
@@ -77,11 +78,11 @@ public:
     /**
      * @brief Create a solid texture image, upload it to device-local GPU memory.
      *
-     * @param color The rgba value in unsigned 8-bit format.
+     * @param inColor The color value.
      * @param inContext Core Vulkan context used for staging command submission and VMA allocation.
      * @return A fully populated AnvilTexture ready for descriptor set binding.
      */
-    void createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4]);
+    void createSolidColorTexture(const VulkanContext& inContext, Color inColor);
 
     /**
      * @brief Creates a blank texture for use as a render target/attachment.

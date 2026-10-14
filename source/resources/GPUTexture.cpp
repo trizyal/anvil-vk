@@ -9,6 +9,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "Color.h"
 #include "GPUBuffer.h"
 #include "Logger.h"
 #include "Trace.h"
@@ -218,7 +219,7 @@ bool GPUTexture::createTexture(const VulkanContext& inContext, const std::string
     return true;
 }
 
-void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const uint8_t color[4])
+void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const Color inColor)
 {
     SCOPE_CPU;
 
@@ -229,7 +230,7 @@ void GPUTexture::createSolidColorTexture(const VulkanContext& inContext, const u
     GPUBuffer staging_buffer;
     staging_buffer.createBuffer(
         inContext,
-        color,
+        inColor.u8().data(),
         sizeof(uint8_t) * 4,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 

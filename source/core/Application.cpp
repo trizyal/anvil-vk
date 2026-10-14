@@ -217,7 +217,7 @@ void Application::triggerShaderHotReload()
         bShaderErrorModalOpen = true;
         activeShaderErrorLog = errors;
         LOG_ERROR("Shader hot-reload failed.");
-        LOGUI("Shader hot-reload failed!", AnvilColor::Red);
+        LOGUI("Shader hot-reload failed!", Colors::Red);
     }
 }
 

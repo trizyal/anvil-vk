@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "Color.h"
 #include "Logger.h"
 #include "Trace.h"
 
@@ -156,9 +157,9 @@ void GPUModel::createTextures(const CPUModel& inModel)
 {
     SCOPE_CPU;
 
-    defaultWhiteTexture.createSolidColorTexture(*pContext, WhiteColor);
-    defaultNormalTexture.createSolidColorTexture(*pContext, NormalColor);
-    defaultTransparentTexture.createSolidColorTexture(*pContext, TransparentColor);
+    defaultWhiteTexture.createSolidColorTexture(*pContext, Colors::White);
+    defaultNormalTexture.createSolidColorTexture(*pContext, Colors::Normal);
+    defaultTransparentTexture.createSolidColorTexture(*pContext, Colors::Transparent);
 
     textures.reserve(inModel.textures.size());
     for (const CPUTexture& cpu_texture : inModel.textures)

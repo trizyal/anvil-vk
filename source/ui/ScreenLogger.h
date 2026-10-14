@@ -13,20 +13,7 @@
 #include <vector>
 #include <mutex>
 
-#include <imgui.h>
-
-/**
- * @brief Predefined RGBA ImVec4 color constants for styling on-screen log messages.
- */
-namespace AnvilColor
-{
-    inline constexpr ImVec4 Green  = ImVec4(0.2f, 1.0f, 0.2f, 1.0f); /**< Default log color for general success/status messages. */
-    inline constexpr ImVec4 Red    = ImVec4(1.0f, 0.2f, 0.2f, 1.0f); /**< Error messages and fatal failures. */
-    inline constexpr ImVec4 Yellow = ImVec4(1.0f, 1.0f, 0.2f, 1.0f); /**< Warnings and non-fatal alerts. */
-    inline constexpr ImVec4 Blue   = ImVec4(0.3f, 0.7f, 1.0f, 1.0f); /**< Informational or verbose engine events. */
-    inline constexpr ImVec4 White  = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); /**< Neutral or unstyled text. */
-    inline constexpr ImVec4 Gray   = ImVec4(0.6f, 0.6f, 0.6f, 1.0f); /**< High-frequency debug spam or low-priority output. */
-} //AnvilColor
+#include "Color.h"
 
 /**
  * @brief Internal container representing a single timed log notification.
@@ -34,7 +21,7 @@ namespace AnvilColor
 struct UILogMessage
 {
     std::string text;    /**< Message string to display on screen. */
-    ImVec4 color;        /**< RGBA color for rendering the text in ImGui. */
+    Color color;         /**< RGBA color for rendering the text in ImGui. */
     float timeRemaining; /**< Remaining display time in seconds before being removed. */
 };
 
@@ -63,9 +50,9 @@ public:
      * @brief Thread-safe submission of a new log message to the on-screen overlay queue.
      *
      * @param inText The string text to display on screen.
-     * @param inColor The text display color (defaults to AnvilColor::Green).
+     * @param inColor The text display color (defaults to Colors::Green).
      */
-    static void AddLog(const std::string& inText, ImVec4 inColor = AnvilColor::Green);
+    static void AddLog(const std::string& inText, Color inColor = Colors::Green);
 
     /**
      * @brief Calulates and culls logs.
