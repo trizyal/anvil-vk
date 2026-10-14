@@ -35,6 +35,12 @@ struct Frame
     VkFence frameDoneFence = VK_NULL_HANDLE;
 };
 
+struct CommandContext
+{
+    VkCommandBuffer cmd = VK_NULL_HANDLE;
+    TracyVkCtx tracyCtx = nullptr;
+};
+
 /**
  * @brief Number of concurrent frames the CPU can submit ahead of the GPU.
  */
@@ -97,7 +103,7 @@ public:
      * @param inWindow Reference to the application window, used to query extents if the swapchain requires recreation.
      * @return A valid VkCommandBuffer ready for recording on success, or VK_NULL_HANDLE if the swapchain is out of date (e.g., window minimized/resized).
      */
-    VkCommandBuffer beginFrame(const Window& inWindow);
+    CommandContext beginFrame(const Window& inWindow);
 
     /**
      * @brief Ends command recording, transitions the swapchain image, submits the frame to the GPU, and presents it.

@@ -4,15 +4,19 @@
 #include "VulkanUtilities.h"
 
 #include "Logger.h"
+#include "RenderContext.h"
+#include "Trace.h"
 #include "VulkanStrings.h"
 
-void VulkanUtils::TransitionImage(VkCommandBuffer cmd, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth)
+void VulkanUtils::TransitionImage(CommandContext cmdCtx, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth)
 {
     if (currentLayout == newLayout)
     {
         // LOG_WARN("Transition layouts are the same: {}", vk_str(newLayout));
         return;
     }
+
+    SCOPE_GPU(cmdCtx, "Transition Image");
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -61,7 +65,7 @@ void VulkanUtils::TransitionImage(VkCommandBuffer cmd, VkImage image, ImageLayou
     default: break;
     }
 
-    vkCmdPipelineBarrier(cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+    vkCmdPipelineBarrier(cmdCtx.cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     currentLayout = newLayout;
 }
 

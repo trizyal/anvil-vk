@@ -7,6 +7,7 @@
 
 #include "GPUTexture.h"
 #include "Logger.h"
+#include "RenderContext.h"
 #include "Swapchain.h"
 #include "Trace.h"
 #include "VulkanStrings.h"
@@ -121,7 +122,7 @@ RenderPassBuilder& RenderPassBuilder::writeSwapchainDepth(Swapchain& swapchain, 
     return *this;
 }
 
-void RenderPassBuilder::execute(std::function<void(VkCommandBuffer)> callback) const
+void RenderPassBuilder::execute(std::function<void(CommandContext)> callback) const
 {
     node.executeCallback = std::move(callback);
 }
@@ -142,7 +143,7 @@ RenderPassBuilder RenderGraph::addPass(const std::string& name)
     return RenderPassBuilder(passes.back());
 }
 
-void RenderGraph::execute(VkCommandBuffer cmd)
+void RenderGraph::execute(CommandContext cmdCtx)
 {
     SCOPE_CPU;
     for (GraphPassNode& pass : passes)
@@ -150,7 +151,7 @@ void RenderGraph::execute(VkCommandBuffer cmd)
         SCOPE_CPU_NAME("Should say the pass.name");
         for (const GraphAttachment& read : pass.reads)
         {
-            VulkanUtils::TransitionImage(cmd, read.image, *read.currentLayout, ImageLayout::ShaderReadOnly, read.isDepth);
+            VulkanUtils::TransitionImage(cmdCtx, read.image, *read.currentLayout, ImageLayout::ShaderReadOnly, read.isDepth);
         }
 
         std::vector<VkRenderingAttachmentInfo> color_attachments;
@@ -158,7 +159,7 @@ void RenderGraph::execute(VkCommandBuffer cmd)
 
         for (GraphAttachment& write : pass.colorWrites)
         {
-            VulkanUtils::TransitionImage(cmd, write.image, *write.currentLayout, ImageLayout::ColorAttachment, false);
+            VulkanUtils::TransitionImage(cmdCtx, write.image, *write.currentLayout, ImageLayout::ColorAttachment, false);
 
             VkRenderingAttachmentInfo color_info{};
             color_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -179,7 +180,7 @@ void RenderGraph::execute(VkCommandBuffer cmd)
         depth_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         if (pass.depthWrite)
         {
-            VulkanUtils::TransitionImage(cmd, pass.depthWrite->image, *pass.depthWrite->currentLayout, ImageLayout::DepthAttachment, true);
+            VulkanUtils::TransitionImage(cmdCtx, pass.depthWrite->image, *pass.depthWrite->currentLayout, ImageLayout::DepthAttachment, true);
 
             depth_info.imageView = pass.depthWrite->imageView;
             depth_info.imageLayout = vk(ImageLayout::DepthAttachment);
@@ -204,13 +205,14 @@ void RenderGraph::execute(VkCommandBuffer cmd)
             render_info.pDepthAttachment = &depth_info;
         }
 
-        vkCmdBeginRendering(cmd, &render_info);
+        vkCmdBeginRendering(cmdCtx.cmd, &render_info);
 
         if (pass.executeCallback)
         {
-            pass.executeCallback(cmd);
+            SCOPE_GPU(cmdCtx, "Execute Pass");
+            pass.executeCallback(cmdCtx);
         }
 
-        vkCmdEndRendering(cmd);
+        vkCmdEndRendering(cmdCtx.cmd);
     }
 }

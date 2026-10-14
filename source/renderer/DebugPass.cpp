@@ -9,6 +9,7 @@
 #include "GPUMesh.h"
 #include "GBuffer.h"
 #include "GPUModel.h"
+#include "RenderContext.h"
 #include "Trace.h"
 #include "VulkanContext.h"
 
@@ -231,9 +232,10 @@ VkPipelineLayout DebugPass::getForwardLayout() const
     return material_Forward.materialPipelineLayout;
 }
 
-void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos)
+void DebugPass::drawDeferredResolve(CommandContext cmdCtx, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos)
 {
     SCOPE_CPU;
+    SCOPE_GPU(cmdCtx, "Debug Deferred Draw");
     // CRITICAL FIX: Only allocate from the pool if we haven't done it yet!
     if (set_Deferred.descriptorSet == VK_NULL_HANDLE)
     {
@@ -253,10 +255,10 @@ void DebugPass::drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, Debug
         cachedGBufferView = gBuffer.albedo.imageView;
     }
 
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Deferred.pipeline);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Deferred.materialPipelineLayout, 0, 1, &set_Deferred.descriptorSet, 0, nullptr);
+    vkCmdBindPipeline(cmdCtx.cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_Deferred.pipeline);
+    vkCmdBindDescriptorSets(cmdCtx.cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, material_Deferred.materialPipelineLayout, 0, 1, &set_Deferred.descriptorSet, 0, nullptr);
 
     DebugDeferredPushConstants pc = {camPos, debugMode };
-    vkCmdPushConstants(cmd, material_Deferred.materialPipelineLayout, material_Deferred.pushConstantStages, 0, sizeof(DebugDeferredPushConstants), &pc);
-    vkCmdDraw(cmd, 3, 1, 0, 0);
+    vkCmdPushConstants(cmdCtx.cmd, material_Deferred.materialPipelineLayout, material_Deferred.pushConstantStages, 0, sizeof(DebugDeferredPushConstants), &pc);
+    vkCmdDraw(cmdCtx.cmd, 3, 1, 0, 0);
 }

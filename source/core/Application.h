@@ -39,7 +39,7 @@ struct CreateInfo
 struct RenderHooks
 {
     /** Invoked every frame with a ready-to-record command buffer. */
-    std::function<void(VkCommandBuffer)> onRecordFrame = nullptr;
+    std::function<void(CommandContext)> onRecordFrame = nullptr;
 
     /** Invoked every frame to submit UI commands. */
     std::function<void()> onDrawUI = nullptr;

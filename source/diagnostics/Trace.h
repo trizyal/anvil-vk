@@ -1,8 +1,11 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_TRACE_H
-#define ANVIL_VK_TRACE_H
+#pragma once
+
+/**
+ * @file Trace.h
+ */
 
 #include <volk.h>
 #include <tracy/Tracy.hpp>
@@ -47,8 +50,6 @@ struct GPUMarkerScope
 /**
  * @brief Combined GPU Zone macro: Emits a Tracy GPU timestamp and a RenderDoc Event Marker.
  */
-#define SCOPE_GPU(tracyCtx, cmd, name) \
-    TracyVkNamedZone(tracyCtx, CONCAT(_tracy_gpu_zone_, __LINE__), cmd, name, true); \
-    GPUMarkerScope CONCAT(gpu_marker_, __LINE__)(cmd, name)
-
-#endif //ANVIL_VK_TRACE_H
+#define SCOPE_GPU(cmdCtx, name) \
+    TracyVkNamedZone(cmdCtx.tracyCtx, CONCAT(_tracy_gpu_zone_, __LINE__), cmdCtx.cmd, name, true); \
+    GPUMarkerScope CONCAT(gpu_marker_, __LINE__)(cmdCtx.cmd, name)

@@ -156,7 +156,7 @@ void UIRenderer::EndUIFrame()
     }
 }
 
-void UIRenderer::recordUICommands(VkCommandBuffer cmd, uint32_t imageIndex) const
+void UIRenderer::recordUICommands(CommandContext cmdCtx, uint32_t imageIndex) const
 {
     ImGui::Render();
     ImDrawData* draw_data = ImGui::GetDrawData();
@@ -164,12 +164,12 @@ void UIRenderer::recordUICommands(VkCommandBuffer cmd, uint32_t imageIndex) cons
     RenderGraph uiGraph;
     uiGraph.addPass("UI Pass")
         .writeSwapchain(*pSwapchain, imageIndex, LoadOp::Load)
-        .execute([draw_data](VkCommandBuffer passCmd)
+        .execute([draw_data](CommandContext cmdCtx)
         {
-            ImGui_ImplVulkan_RenderDrawData(draw_data, passCmd);
+            ImGui_ImplVulkan_RenderDrawData(draw_data, cmdCtx.cmd);
         });
 
-    uiGraph.execute(cmd);
+    uiGraph.execute(cmdCtx);
 }
 
 void UIRenderer::createDescriptorPool(VkDevice inDevice D_DEFN)

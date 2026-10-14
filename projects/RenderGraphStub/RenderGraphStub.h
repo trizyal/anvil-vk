@@ -71,17 +71,17 @@ private:
     /**
      * @brief Builds and executes the per-frame RenderGraph passes.
      */
-    void recordRenderGraph(VkCommandBuffer cmd);
+    void recordRenderGraph(CommandContext cmdctx);
 
     /**
      * @brief Geometry pass callback: Renders the GPU model into the G-Buffer attachments.
      */
-    void drawGBufferGeometry(VkCommandBuffer cmd);
+    void drawGBufferGeometry(CommandContext cmdctx);
 
     /**
      * @brief Lighting pass callback: Resolves G-Buffer lighting or executes deferred debug views.
      */
-    void drawDeferredLighting(VkCommandBuffer cmd);
+    void drawDeferredLighting(CommandContext cmdctx);
 
-    void drawModelGeometry(VkCommandBuffer& cmd, VkPipeline& pipeline, VkPipelineLayout& layout);
+    void drawModelGeometry(CommandContext cmdctx, VkPipeline& pipeline, VkPipelineLayout& layout);
 };

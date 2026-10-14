@@ -147,7 +147,7 @@ void RenderContext::createTracyContext()
     vkFreeCommandBuffers(pContext->device, frames[0].cmdPool, 1, &tracyCmd);
 }
 
-VkCommandBuffer RenderContext::beginFrame(const Window& inWindow)
+CommandContext RenderContext::beginFrame(const Window& inWindow)
 {
     SCOPE_CPU;
 
@@ -172,7 +172,7 @@ VkCommandBuffer RenderContext::beginFrame(const Window& inWindow)
     {
         LOG_INFO("Recreate Swapchain. vkAcquireNextImageKHR returned: {}", vk_str(acquired_result));
         recreateSwapchain = true;
-        return VK_NULL_HANDLE;
+        return {.cmd = VK_NULL_HANDLE, .tracyCtx = tracyVkCtx};
     }
 
     if (acquired_result != VK_SUCCESS && acquired_result != VK_SUBOPTIMAL_KHR)
@@ -195,7 +195,7 @@ VkCommandBuffer RenderContext::beginFrame(const Window& inWindow)
     TracyVkCollect(tracyVkCtx, cmd);
     gpuProfiler.beginGPUProfilerFrame(cmd, frameIndex);
 
-    return cmd;
+    return {.cmd = cmd, .tracyCtx = tracyVkCtx};
 }
 
 void RenderContext::endFrame()
@@ -206,9 +206,10 @@ void RenderContext::endFrame()
     VkCommandBuffer cmd = frame.cmdBuffer;
 
     {
-        SCOPE_GPU(tracyVkCtx, cmd, "EndFrame");
+        const CommandContext ctx{.cmd = cmd, .tracyCtx = tracyVkCtx};
+        SCOPE_GPU(ctx, "EndFrame");
 
-        VulkanUtils::TransitionImage(cmd, pSwapchain->swapchainImages[imageIndex], pSwapchain->swapchainImageLayouts[imageIndex], ImageLayout::Present);
+        VulkanUtils::TransitionImage(ctx, pSwapchain->swapchainImages[imageIndex], pSwapchain->swapchainImageLayouts[imageIndex], ImageLayout::Present);
 
         gpuProfiler.endGPUProfilerFrame(cmd, frameIndex);
     }

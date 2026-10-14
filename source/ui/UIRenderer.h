@@ -15,6 +15,7 @@
 #include "DebugNames.h"
 #include "VulkanTypes.h"
 
+struct CommandContext;
 class VulkanContext;
 class Swapchain;
 
@@ -77,10 +78,10 @@ public:
     /**
      * @brief Records generated ImGui draw data into the provided command buffer.
      * @note Should be called inside an active rendering block after main scene geometry.
-     * @param inCmdBuffer Active Vulkan command buffer to record UI draw commands into.
+     * @param cmdCtx Active Vulkan command buffer to record UI draw commands into.
      * @param imageIndex Swapchain image index.
      */
-    void recordUICommands(VkCommandBuffer inCmdBuffer, uint32_t imageIndex) const;
+    void recordUICommands(CommandContext cmdCtx, uint32_t imageIndex) const;
 
     /**
      * @brief Finalizes ImGui UI construction for the current frame.

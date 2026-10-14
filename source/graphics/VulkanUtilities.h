@@ -13,6 +13,8 @@
  * @brief Free functions for some vulkan utilities.
  */
 
+struct CommandContext;
+
 namespace VulkanUtils
 {
     /**
@@ -23,7 +25,7 @@ namespace VulkanUtils
      * @param newLayout Target ImageLayout required for the upcoming operation.
      * @param isDepth True if evaluating a depth aspect image transition.
      */
-    void TransitionImage(VkCommandBuffer cmd, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth = false);
+    void TransitionImage(CommandContext cmdCtx, VkImage image, ImageLayout& currentLayout, ImageLayout newLayout, bool isDepth = false);
 
     /**
      * @brief Helper to dynamically set the viewport and scissor rect to match the swapchain.

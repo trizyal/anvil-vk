@@ -147,23 +147,23 @@ void Application::run(const RenderHooks& renderHooks)
         // Core Orchestration
         {
             SCOPE_CPU_NAME("Rendering");
-            VkCommandBuffer cmd = renderContext.beginFrame(*window);
-            FATAL(cmd != VK_NULL_HANDLE, "Command Buffer Invalid.");
+            CommandContext ctx = renderContext.beginFrame(*window);
+            FATAL(ctx.cmd != VK_NULL_HANDLE, "Command Buffer Invalid.");
 
             engineStats.resetFrameStats();
 
             // RenderGraph
             if (renderHooks.onRecordFrame)
             {
-                renderHooks.onRecordFrame(cmd);
+                renderHooks.onRecordFrame(ctx);
             }
 
             // UI
             {
-                SCOPE_GPU(renderContext.tracyVkCtx, cmd, "UI RenderPass");
+                SCOPE_GPU(ctx, "UI RenderPass");
                 engineStats.fps = 1000.f / engineStats.frameTime;
                 UI::FrameStats(engineStats);
-                uiRenderer.recordUICommands(cmd, renderContext.imageIndex);
+                uiRenderer.recordUICommands(ctx, renderContext.imageIndex);
             }
 
             renderContext.endFrame();

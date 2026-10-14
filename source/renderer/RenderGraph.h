@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <volk.h>
 
+#include "RenderContext.h"
 #include "VulkanTypes.h"
 
 class Swapchain;
@@ -61,7 +62,7 @@ struct GraphPassNode
     std::optional<GraphAttachment> depthWrite;
 
     /** User callback recording actual draw commands. */
-    std::function<void(VkCommandBuffer)> executeCallback;
+    std::function<void(CommandContext)> executeCallback;
 };
 
 /**
@@ -132,7 +133,7 @@ public:
      * @brief Assigns the application execution callback containing command buffer draw logic.
      * @param callback Lambda or function receiving an active VkCommandBuffer to record draw calls.
      */
-    void execute(std::function<void(VkCommandBuffer)> callback) const;
+    void execute(std::function<void(CommandContext)> callback) const;
 };
 
 /**
@@ -162,6 +163,6 @@ public:
      * @brief Compiles barriers, sets up dynamic rendering attachments, and executes all declared passes.
      * @param cmd Active primary command buffer recorded during the frame.
      */
-    void execute(VkCommandBuffer cmd);
+    void execute(CommandContext cmdCtx);
 };
 

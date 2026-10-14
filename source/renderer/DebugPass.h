@@ -16,6 +16,7 @@
 #include "ShaderProgram.h"
 #include "glm/vec4.hpp"
 
+struct CommandContext;
 class VulkanContext;
 class ShaderCompiler;
 class GBuffer;
@@ -135,7 +136,7 @@ public:
      * @param debugMode The specific deferred debug view to render.
      * @param camPos World-space position of the camera, used for reconstructing depth visuals.
      */
-    void drawDeferredResolve(VkCommandBuffer cmd, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos);
+    void drawDeferredResolve(CommandContext cmdCtx, GBuffer& gBuffer, DebugMode debugMode, const glm::vec4& camPos);
 };
 
 

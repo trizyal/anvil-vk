@@ -172,10 +172,10 @@ bool RenderGraphApp::buildLightingPipeline(std::string* outErrorMessage)
 void RenderGraphApp::run()
 {
     RenderHooks hooks;
-    hooks.onRecordFrame = [this](VkCommandBuffer cmd)
+    hooks.onRecordFrame = [this](const CommandContext cmdctx)
     {
         camera.updateCamera(Application::engineStats.frameTime/1000.f);
-        recordRenderGraph(cmd);
+        recordRenderGraph(cmdctx);
     };
     hooks.onDrawUI = [&]()
     {
@@ -186,7 +186,7 @@ void RenderGraphApp::run()
     app.run(hooks);
 }
 
-void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
+void RenderGraphApp::recordRenderGraph(CommandContext cmdctx)
 {
     if (changeScene)
     {
@@ -195,12 +195,14 @@ void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
     }
 
     SCOPE_CPU;
-    SCOPE_GPU(app.getRenderContext().tracyVkCtx, cmd, "RenderGraph");
+    SCOPE_GPU(cmdctx, "RenderGraph");
 
     // Handle viewport/GBuffer resizing dynamically
     VkExtent2D current_extent = app.getSwapchain().swapchainExtent;
     if (gBuffer.shouldRecreate(current_extent))
     {
+        SCOPE_GPU(cmdctx, "Recreate GBuffer");
+
         // Safely wait for the GPU to idle before rebuilding the GBuffer
         // and updating descriptors while the previous frame is still in flight!
         vkDeviceWaitIdle(app.getContext().device);
@@ -231,10 +233,10 @@ void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
         .writeColor(gBuffer.worldPosition, LoadOp::Clear, grey)
         .writeDepth(gBuffer.depth, LoadOp::Clear, 1.0f);
 
-    gbufferPass.execute([this](VkCommandBuffer passCmd)
+    gbufferPass.execute([this](CommandContext ctx)
     {
-        SCOPE_GPU(app.getRenderContext().tracyVkCtx, passCmd, "GBuffer Geometry Pass");
-        drawGBufferGeometry(passCmd);
+        SCOPE_GPU(ctx, "GBuffer Geometry Pass");
+        drawGBufferGeometry(ctx);
     });
 
     auto lightingPass = graph.addPass("Deferred Lighting Pass")
@@ -246,22 +248,22 @@ void RenderGraphApp::recordRenderGraph(VkCommandBuffer cmd)
         .writeSwapchain(app.getSwapchain(), app.getRenderContext().imageIndex, LoadOp::Clear, glm::vec4(0.05f, 0.05f, 0.05f, 1.0f))
         .writeSwapchainDepth(app.getSwapchain(), LoadOp::Clear, 1.0f);
 
-    lightingPass.execute([this](VkCommandBuffer passCmd)
+    lightingPass.execute([this](CommandContext cmdCtx)
     {
-        SCOPE_GPU(app.getRenderContext().tracyVkCtx, passCmd, "Deferred Lighting Pass");
-        drawDeferredLighting(passCmd);
+        SCOPE_GPU(cmdCtx, "Deferred Lighting Pass");
+        drawDeferredLighting(cmdCtx);
     });
 
-    graph.execute(cmd);
+    graph.execute(cmdctx);
 }
 
-void RenderGraphApp::drawModelGeometry(VkCommandBuffer& cmd, VkPipeline& pipeline, VkPipelineLayout& layout)
+void RenderGraphApp::drawModelGeometry(CommandContext cmdctx, VkPipeline& pipeline, VkPipelineLayout& layout)
 {
     uint32_t debug_mode = static_cast<uint32_t>(Console::GetCVarInt("r.debugmode"));
     bool is_frozen = Console::GetCVarBool("r.freezerendering");
     bool is_culling = Console::GetCVarBool("r.frustumculling");
 
-    VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
+    VulkanUtils::SetViewportScissor(cmdctx.cmd, app.getSwapchain());
 
     const float aspect = static_cast<float>(app.getSwapchain().swapchainExtent.width) / static_cast<float>(app.getSwapchain().swapchainExtent.height);
     const glm::mat4 view_projection = camera.getProjectionMatrix(aspect) * camera.getViewMatrix();
@@ -274,7 +276,7 @@ void RenderGraphApp::drawModelGeometry(VkCommandBuffer& cmd, VkPipeline& pipelin
     Frustum camera_frustum{};
     camera_frustum.extractPlanes(is_frozen ? frozen_vp : view_projection);
 
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(cmdctx.cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
     VkDeviceSize offset = 0;
     GPUModel& gpuModel = sceneManager.gpuModel;
@@ -317,26 +319,26 @@ void RenderGraphApp::drawModelGeometry(VkCommandBuffer& cmd, VkPipeline& pipelin
         if (gpuModel.modelSet.descriptorSet != VK_NULL_HANDLE) sets.push_back(gpuModel.modelSet.descriptorSet);
         if (matSet != VK_NULL_HANDLE) sets.push_back(matSet);
 
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, first_set, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(cmdctx.cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, first_set, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
 
         PushConstants constants{};
         constants.viewProjection = view_projection;
         constants.cameraPosition = glm::vec4(camera.position, 1.0f);
         constants.objectIndex = i;
         constants.debugMode = static_cast<DebugMode>(debug_mode);
-        vkCmdPushConstants(cmd, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdPushConstants(cmdctx.cmd, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
 
         const GPUMesh& mesh = gpuModel.gpuMeshes[draw_item.gpuMeshIndex];
-        vkCmdBindVertexBuffers(cmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
-        vkCmdBindIndexBuffer(cmd, mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdDrawIndexed(cmd, mesh.indexCount, 1, 0, 0, 0);
+        vkCmdBindVertexBuffers(cmdctx.cmd, 0, 1, &mesh.vertexBuffer.buffer, &offset);
+        vkCmdBindIndexBuffer(cmdctx.cmd, mesh.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmdctx.cmd, mesh.indexCount, 1, 0, 0, 0);
 
         Application::engineStats.drawCalls++;
         Application::engineStats.primitiveCount += (mesh.indexCount / 3);
     }
 }
 
-void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
+void RenderGraphApp::drawGBufferGeometry(CommandContext cmdctx)
 {
     SCOPE_CPU;
 
@@ -348,10 +350,10 @@ void RenderGraphApp::drawGBufferGeometry(VkCommandBuffer cmd)
 
     if (gBufferPipeline.pipeline == VK_NULL_HANDLE) return;
 
-    drawModelGeometry(cmd, gBufferPipeline.pipeline, gBufferMaterial.materialPipelineLayout);
+    drawModelGeometry(cmdctx, gBufferPipeline.pipeline, gBufferMaterial.materialPipelineLayout);
 }
 
-void RenderGraphApp::drawDeferredLighting(VkCommandBuffer cmd)
+void RenderGraphApp::drawDeferredLighting(CommandContext cmdctx)
 {
     SCOPE_CPU;
 
@@ -361,29 +363,29 @@ void RenderGraphApp::drawDeferredLighting(VkCommandBuffer cmd)
     {
         if (deferredLightingPipeline.pipeline == VK_NULL_HANDLE) return;
 
-        VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
+        VulkanUtils::SetViewportScissor(cmdctx.cmd, app.getSwapchain());
 
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredLightingPipeline.pipeline);
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredLightingMaterial.materialPipelineLayout, 0, 1, &lightingSet0.descriptorSet, 0, nullptr);
+        vkCmdBindPipeline(cmdctx.cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredLightingPipeline.pipeline);
+        vkCmdBindDescriptorSets(cmdctx.cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, deferredLightingMaterial.materialPipelineLayout, 0, 1, &lightingSet0.descriptorSet, 0, nullptr);
 
         PushConstants pc{};
         pc.cameraPosition = glm::vec4(camera.position, 1.0f);
         pc.debugMode = DebugMode::None;
-        vkCmdPushConstants(cmd, deferredLightingMaterial.materialPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &pc);
+        vkCmdPushConstants(cmdctx.cmd, deferredLightingMaterial.materialPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &pc);
 
-        vkCmdDraw(cmd, 3, 1, 0, 0); // Render fullscreen quad
+        vkCmdDraw(cmdctx.cmd, 3, 1, 0, 0); // Render fullscreen quad
     }
     else if (DebugPass::isDeferredMode(debug_mode))
     {
-        VulkanUtils::SetViewportScissor(cmd, app.getSwapchain());
-        app.getDebugPass().drawDeferredResolve(cmd, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
+        VulkanUtils::SetViewportScissor(cmdctx.cmd, app.getSwapchain());
+        app.getDebugPass().drawDeferredResolve(cmdctx, gBuffer, static_cast<DebugMode>(debug_mode), glm::vec4(camera.position, 1.0f));
     }
     else if (DebugPass::isForwardMode(debug_mode))
     {
         VkPipeline active_pipeline = app.getDebugPass().getForwardPipeline(debug_mode).pipeline;
         VkPipelineLayout active_layout = app.getDebugPass().getForwardLayout();
 
-        drawModelGeometry(cmd, active_pipeline, active_layout);
+        drawModelGeometry(cmdctx, active_pipeline, active_layout);
     }
 }
 
