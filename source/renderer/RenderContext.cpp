@@ -26,7 +26,7 @@ void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain*
 #if DEPRECATED
     pContext->immediateSubmit([this](VkCommandBuffer cmd)
     {
-        SCOPE_CPU_NAME("TracyContext[immediateSubmit]");
+        SCOPE_CPUN("TracyContext[immediateSubmit]");
         LOG_DEBUG("Creating Tracy Context.");
 
         tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);

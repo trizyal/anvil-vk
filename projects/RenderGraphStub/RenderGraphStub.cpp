@@ -288,7 +288,7 @@ void RenderGraphApp::drawModelGeometry(CommandContext cmdctx, VkPipeline& pipeli
 
         if (is_culling)
         {
-            SCOPE_CPU_NAME("Frustum Culling");
+            SCOPE_CPUN("Frustum Culling");
             glm::vec3 center = draw_item.localBounds.getCenter();
             glm::vec3 extents = draw_item.localBounds.getExtents();
             glm::vec3 worldCenter = glm::vec3(draw_item.worldMatrix * glm::vec4(center, 1.0f));

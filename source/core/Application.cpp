@@ -87,7 +87,7 @@ void Application::run(const RenderHooks& renderHooks)
 
     while (!window->bShouldClose())
     {
-        SCOPE_CPU_NAME("FRAME");
+        SCOPE_CPUN("FRAME");
         const auto frame_start = std::chrono::high_resolution_clock::now();
 
         Window::pollEvents();
@@ -146,7 +146,7 @@ void Application::run(const RenderHooks& renderHooks)
 
         // Core Orchestration
         {
-            SCOPE_CPU_NAME("Rendering");
+            SCOPE_CPUN("Rendering");
             CommandContext ctx = renderContext.beginFrame(*window);
             FATAL(ctx.cmd != VK_NULL_HANDLE, "Command Buffer Invalid.");
 

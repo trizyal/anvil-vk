@@ -110,6 +110,18 @@ struct Color
                (static_cast<ImU32>(r * 255.0f) << IM_COL32_R_SHIFT);
     }
 
+    /**
+     * @brief Packs the color into a 24-bit 0xRRGGBB unsigned integer.
+     * @return A uint32_t, with 24-bits packed.
+     */
+    [[nodiscard]]
+    constexpr uint32_t t24() const
+    {
+        return (static_cast<uint32_t>(r * 255.0f) << 16) |
+               (static_cast<uint32_t>(g * 255.0f) << 8) |
+               (static_cast<uint32_t>(b * 255.0f));
+    }
+
     /** @brief Auto-converts to glm::vec4 when needed. */
     /* implicit */ constexpr operator glm::vec4() const
     {
@@ -158,6 +170,13 @@ namespace Colors
     COLOR Yellow    = {1.0f, 0.0f, 0.0f, 1.0f};
     COLOR Cyan      = {0.0f, 1.0f, 1.0f, 1.0f};
     COLOR Magenta   = {1.0f, 0.0f, 1.0f, 1.0f};
+
+    COLOR Pink          = {255, 96, 208};
+    COLOR Purple        = {160, 32, 255};
+    COLOR BlueLight     = {80, 208, 255};
+    COLOR YellowGreen   = {96, 255, 128};
+    COLOR Orange        = {255, 224, 128};
+    COLOR Brown         = {160, 128, 96};
 
     COLOR X = Red;
     COLOR Y = Green;

@@ -11,9 +11,18 @@
 #include <tracy/Tracy.hpp>
 #include <tracy/TracyVulkan.hpp>
 
+#include "Color.h"
+
 #define SCOPE_FRAME FrameMark
-#define SCOPE_CPU ZoneScoped
-#define SCOPE_CPU_NAME(name) ZoneScopedN(name)
+#define SCOPE_CPU ZoneScopedC(Colors::Pink.t24())
+#define SCOPE_CPUN(name) ZoneScopedNC(name, Colors::Purple.t24())
+#define SCOPE_CPUC(color) ZoneScopedC(color.t24())
+#define SCOPE_CPUNC(name, color) ZoneScopedNC(name, color.t24())
+
+/** @brief Dynamic runtime zone names. */
+#define SCOPE_CPUD(name, color) \
+    ZoneScopedC(color.t24()); \
+    ZoneName(name, strlen(name))
 
 struct GPUMarkerScope
 {

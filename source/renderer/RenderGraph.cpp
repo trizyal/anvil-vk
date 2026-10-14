@@ -148,7 +148,8 @@ void RenderGraph::execute(CommandContext cmdCtx)
     SCOPE_CPU;
     for (GraphPassNode& pass : passes)
     {
-        SCOPE_CPU_NAME("Should say the pass.name");
+        SCOPE_CPUD(pass.name.c_str(), Colors::Green);
+
         for (const GraphAttachment& read : pass.reads)
         {
             VulkanUtils::TransitionImage(cmdCtx, read.image, *read.currentLayout, ImageLayout::ShaderReadOnly, read.isDepth);
