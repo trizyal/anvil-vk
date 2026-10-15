@@ -84,8 +84,8 @@ const char* Logger::LevelToString(LogLevel level)
     {
     case LogLevel::Fatal:   return "FATAL";
     case LogLevel::Error:   return "ERROR";
-    case LogLevel::Warning: return "WARN";
-    case LogLevel::Info:    return "INFO";
+    case LogLevel::Warning: return "WARN ";
+    case LogLevel::Info:    return "INFO ";
     case LogLevel::Debug:   return "DEBUG";
     case LogLevel::Trace:   return "TRACE";
     }
@@ -98,7 +98,9 @@ const char* Logger::LevelToString(LogLevel level)
 std::string Logger::GetTimestamp()
 {
     auto now = std::chrono::system_clock::now();
-    return std::format("{:%Y-%m-%d %H:%M:%S}", now);
+    // Truncate the time down to centiseconds (2 decimal places)
+    auto now_cs = std::chrono::floor<std::chrono::duration<int64_t, std::centi>>(now);
+    return std::format("{:%H:%M:%S}", now_cs);
 }
 
 void Logger::LogMessage(LogLevel level, const std::source_location& location, const std::string& message)
@@ -119,8 +121,8 @@ void Logger::LogMessage(LogLevel level, const std::source_location& location, co
     filename = filename.substr(filename.find_last_of("/\\") + 1);
 
     // Format the final output string
-    // Format: [YYYY-MM-DD HH:MM:SS] [INFO] [File.cpp:42] Log message
-    std::string formatted_log = std::format("[{}] [{}] [{}:{}] {}",
+    // Format: [HH:MM:SS] [INFO] [File.cpp:42] Log message
+    std::string formatted_log = std::format("[{}] {} [{}:{}] {}",
         GetTimestamp(),
         LevelToString(level),
         filename,
