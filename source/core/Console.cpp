@@ -358,5 +358,41 @@ void Console::Execute(const std::string& commandLine)
 
 void Console::ParseCommandLine()
 {
+#   ifdef _WIN32
+    int argc;
+    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (argv)
+    {
+        if (argc > 0)
+        {
+            LOG_INFO("Found command Line argument(s):");
+        }
+        for (int i = 1; i < argc; ++i)
+        {
+            // Convert wide string to standard string
+            std::wstring warg (argv[i]);
+            std::string arg(warg.begin(), warg.end());
+            LOG_INFO("Command line: {}", arg);
 
+            if (arg.starts_with('-'))
+            {
+                arg.erase(0, arg.starts_with("--") ? 2 : 1);
+                std::string value = "1";
+
+                if (i + 1 < argc)
+                {
+                    std::wstring wnext(argv[i + 1]);
+                    std::string nextArg(wnext.begin(), wnext.end());
+                    if (!nextArg.starts_with('-'))
+                    {
+                        value = nextArg;
+                        i++; // Consume the value
+                    }
+                }
+                Execute(std::format("{} {}", arg, value));
+            }
+        }
+        LocalFree(argv);
+    }
+#   endif
 }

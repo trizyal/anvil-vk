@@ -446,13 +446,7 @@ void UI::DrawMainMenuBar()
 
         if (ImGui::BeginMenu("Tools"))
         {
-            // Greys out the item and prevents clicking
-            ImGui::BeginDisabled();
-            if (ImGui::MenuItem("Camera Debug"))
-            {
-
-            }
-            ImGui::EndDisabled();
+            ImGui::MenuItem("Camera Debug", nullptr, &bShowCameraDebug);
 
             if (ImGui::MenuItem("Dump VMA Stats"))
             {
@@ -490,13 +484,6 @@ void UI::DrawMainMenuBar()
                 // Unimplemented
                 #endif
             }
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Debug"))
-        {
-            // Toggles the UI::bShowCameraDebug flag directly
-            ImGui::MenuItem("Camera Debug", nullptr, &bShowCameraDebug);
             ImGui::EndMenu();
         }
 

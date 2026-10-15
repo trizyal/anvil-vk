@@ -24,6 +24,9 @@ void Application::initialize(const CreateInfo& info)
 {
     SCOPE_CPU;
 
+    Console::bIsBooting = true;
+    Console::ParseCommandLine();
+
     // TODO: This should come from a cvar/engineconfig.
     const std::string log_file = SAVED_DIR "/logs/log.txt";
     Logger::InitializeLogger(log_file);
