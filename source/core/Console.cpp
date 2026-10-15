@@ -256,6 +256,12 @@ void Console::Execute(const std::string& commandLine)
     std::string cmdName = args[0];
     args.erase(args.begin());
 
+    // FIX: Discard the '=' sign if used typed it with spaces (e.g. cvar = 100)
+    if (!args.empty() && args[0] == "=")
+    {
+        args.erase(args.begin());
+    }
+
     if (GetCommands().contains(cmdName))
     {
         GetCommands()[cmdName].second(args);
@@ -288,9 +294,18 @@ void Console::Execute(const std::string& commandLine)
         }
 
         // Block runtime modification of InitOnly variables
-        if (!bIsBooting && (cvar.flags & CVarFlags::Init))
+        if (!bIsBooting && (cvar.flags & CVarFlags::InitOnly))
         {
             Print("Error: '" + cmdName + "' is an initialization parameter and cannot be changed at runtime.");
+            LOG_INFO("CVar {} is an initialization parameter and cannot be changed at runtime.", cmdName);
+            return;
+        }
+
+        // Block modification of ReadOnly variables
+        if (cvar.flags & CVarFlags::ReadOnly)
+        {
+            Print("Error: '" + cmdName + "' is a read-only parameter and cannot be changed.");
+            LOG_INFO("CVar {} is  a read-only parameter and cannot be changed.", cmdName);
             return;
         }
 

@@ -1,8 +1,7 @@
 // Copyright (C) 2026 trizyal
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef ANVIL_VK_CONSOLE_H
-#define ANVIL_VK_CONSOLE_H
+#pragma once
 
 /**
  * @file Console.h
@@ -33,8 +32,8 @@ enum class CVarType
 enum class CVarFlags : uint8_t
 {
     None    = 0,
-    Init    = 1 << 0, /**< Cannot be changed via the in-game console after boot. */
-    Read    = 1 << 1,  /**< Can only be read, never manually set. */
+    InitOnly    = 1 << 0, /**< Cannot be changed via the in-game console after boot. */
+    ReadOnly    = 1 << 1,  /**< Can only be read, never manually set. */
 };
 
 inline CVarFlags operator|(CVarFlags lhs, CVarFlags rhs)
@@ -107,6 +106,7 @@ public:
      * @param name The unique identifier used to call this CVar from the console.
      * @param description Helpful text explaining what this variable controls.
      * @param defaultValue The initial value of the variable.
+     * @param flags Edit scope for the cvar.
      */
     static void RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue, CVarFlags flags = CVarFlags::None);
 
@@ -115,6 +115,7 @@ public:
      * @param name The unique identifier used to call this CVar from the console.
      * @param description Helpful text explaining what this variable controls.
      * @param defaultValue The initial value of the variable.
+     * @param flags Edit scope for the cvar.
      */
     static void RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue, CVarFlags flags = CVarFlags::None);
 
@@ -123,6 +124,7 @@ public:
      * @param name The unique identifier used to call this CVar from the console.
      * @param description Helpful text explaining what this variable controls.
      * @param defaultValue The initial value of the variable.
+     * @param flags Edit scope for the cvar.
      */
     static void RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue, CVarFlags flags = CVarFlags::None);
 
@@ -131,6 +133,7 @@ public:
      * @param name The unique identifier used to call this CVar from the console.
      * @param description Helpful text explaining what this variable controls.
      * @param defaultValue The initial value of the variable.
+     * @param flags Edit scope for the cvar.
      */
     static void RegisterCVarString(const std::string& name, const std::string& description, std::string& defaultValue, CVarFlags flags = CVarFlags::None);
 
@@ -234,24 +237,24 @@ public:
  */
 struct AutoRegisterCVar
 {
-    AutoRegisterCVar(const std::string& name, const std::string& description, int defaultValue)
+    AutoRegisterCVar(const std::string& name, const std::string& description, int defaultValue, CVarFlags flags = CVarFlags::None)
     {
-        Console::RegisterCVarInt(name, description, defaultValue);
+        Console::RegisterCVarInt(name, description, defaultValue, flags);
     }
 
-    AutoRegisterCVar(const std::string& name, const std::string& description, float defaultValue)
+    AutoRegisterCVar(const std::string& name, const std::string& description, float defaultValue, CVarFlags flags = CVarFlags::None)
     {
-        Console::RegisterCVarFloat(name, description, defaultValue);
+        Console::RegisterCVarFloat(name, description, defaultValue, flags);
     }
 
-    AutoRegisterCVar(const std::string& name, const std::string& description, bool defaultValue)
+    AutoRegisterCVar(const std::string& name, const std::string& description, bool defaultValue, CVarFlags flags = CVarFlags::None)
     {
-        Console::RegisterCVarBool(name, description, defaultValue);
+        Console::RegisterCVarBool(name, description, defaultValue, flags);
     }
 
-    AutoRegisterCVar(const std::string& name, const std::string& description, std::string& defaultValue)
+    AutoRegisterCVar(const std::string& name, const std::string& description, std::string& defaultValue, CVarFlags flags = CVarFlags::None)
     {
-        Console::RegisterCVarString(name, description, defaultValue);
+        Console::RegisterCVarString(name, description, defaultValue, flags);
     }
 };
 
@@ -301,9 +304,31 @@ struct AutoRegisterCommand
     static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<std::string>(defaultValue))
 
 /**
+ * @brief Macros to define global Int CVars with explicit CVarFlags.
+ */
+#define CVAR_INT_FLAG(name, description, defaultValue, flags) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<int>(defaultValue), flags)
+
+/**
+ * @brief Macros to define global Float CVars with explicit CVarFlags.
+ */
+#define CVAR_FLOAT_FLAG(name, description, defaultValue, flags) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<float>(defaultValue), flags)
+
+/**
+ * @brief Macros to define global Bool CVars with explicit CVarFlags.
+ */
+#define CVAR_BOOL_FLAG(name, description, defaultValue, flags) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<bool>(defaultValue), flags)
+
+/**
+ * @brief Macros to define global String CVars with explicit CVarFlags.
+ */
+#define CVAR_STRING_FLAG(name, description, defaultValue, flags) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, defaultValue, flags)
+
+/**
  * @brief Macro to define a global Console Command anywhere in the codebase.
  */
 #define COMMAND(name, description, callback) \
     static AutoRegisterCommand CONCAT(auto_cmd_, __LINE__)(name, description, callback)
-
-#endif //ANVIL_VK_CONSOLE_H
