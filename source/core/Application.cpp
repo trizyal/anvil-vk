@@ -12,10 +12,11 @@
 #include "UIElements.h"
 
 // TODO: Should move these to relevant files.
-CVAR_BOOL("attachrenderdoc", "Start the executable with RenderDoc attached.", false);
-CVAR_BOOL("attachtracy", "Start the executable with Tracy attached.", true);
-CVAR_INT_FLAG("r.shadowmapsize", "Resolution of shadow maps.", 1048, CVarFlags::InitOnly);
-CVAR_INT("a.logverbosity", "0: Fatal, 1: Error, 2: Warning, 3: Info, 4: Debug, 5: Trace", 5);
+CVAR_BOOL_FLAG("sys.attachrenderdoc", "Start the executable with RenderDoc attached.", false, CVarFlags::InitOnly);
+CVAR_BOOL_FLAG("sys.attachtracy", "Start the executable with Tracy attached.", true, CVarFlags::InitOnly);
+
+CVAR_INT("r.shadowmapsize", "Resolution of shadow maps.", 1048);
+CVAR_INT("e.logverbosity", "0: Fatal, 1: Error, 2: Warning, 3: Info, 4: Debug, 5: Trace", 5);
 CVAR_INT("r.debugmode", "0: None, 1: Base Color, 2: Raw Normal Maps, 3: World Normal, 4: Metallic, 5: Roughness, 6: Depth", 0);
 CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
 CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
@@ -38,7 +39,7 @@ void Application::initialize(const CreateInfo& info)
     Console::bIsBooting = false;
 
     // Need to connect before vulkan instance is created
-    if (Console::GetCVarBool("attachrenderdoc"))
+    if (Console::GetCVarBool("sys.attachrenderdoc"))
     {
         RenderDoc::InitializeRenderDoc();
     }

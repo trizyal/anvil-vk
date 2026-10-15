@@ -424,6 +424,7 @@ void UI::DrawMainMenuBar()
             {
                 Console::Execute("quit");
             }
+
             ImGui::EndMenu();
         }
 

@@ -70,9 +70,9 @@ void Logger::ShutdownLogger()
 
 int Logger::GetMaxVerbosity()
 {
-    if (Console::GetCVars().contains("a.logverbosity"))
+    if (Console::GetCVars().contains("e.logverbosity"))
     {
-        return Console::GetCVarInt("a.logverbosity");
+        return Console::GetCVarInt("e.logverbosity");
     }
 
     return 5;
