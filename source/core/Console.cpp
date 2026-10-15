@@ -68,19 +68,19 @@ void Console::InitializeConsole()
 
 void Console::RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue)
 {
-    LOG_DEBUG("Registering CVar: {} {}", name, defaultValue);
+    LOG_DEBUG("Registering CVar Int: {} {}", name, defaultValue);
     GetCVars()[name] = {.type = CVarType::Int, .description = description, .value = defaultValue};
 }
 
 void Console::RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue)
 {
-    LOG_DEBUG("Registering CVar: {} {}", name, defaultValue);
+    LOG_DEBUG("Registering CVar Float: {} {}", name, defaultValue);
     GetCVars()[name] = {.type = CVarType::Float, .description = description, .value = defaultValue};
 }
 
 void Console::RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue)
 {
-    LOG_DEBUG("Registering CVar: {} {}", name, defaultValue);
+    LOG_DEBUG("Registering CVar Bool: {} {}", name, defaultValue);
     GetCVars()[name] = {.type = CVarType::Bool, .description = description, .value = defaultValue};
 }
 
@@ -90,6 +90,7 @@ int Console::GetCVarInt(const std::string& name)
     {
         return std::get<int>(GetCVars()[name].value);
     }
+    LOG_WARN("CVar Int {} does not exist.", name);
     return 0;
 }
 
@@ -99,6 +100,7 @@ float Console::GetCVarFloat(const std::string& name)
     {
         return std::get<float>(GetCVars()[name].value);
     }
+    LOG_WARN("CVar Float {} does not exist.", name);
     return 0.0f;
 }
 
@@ -108,6 +110,7 @@ bool Console::GetCVarBool(const std::string& name)
     {
         return std::get<bool>(GetCVars()[name].value);
     }
+    LOG_WARN("CVar Bool {} does not exist.", name);
     return false;
 }
 
@@ -117,7 +120,9 @@ void Console::SetCVarInt(const std::string& name, int value)
     {
         LOG_DEBUG("Updating CVar: {} {}", name, value);
         GetCVars()[name].value = value;
+        return;
     }
+    LOG_WARN("CVar Int {} does not exist.", name);
 }
 
 void Console::SetCVarFloat(const std::string& name, float value)
@@ -126,7 +131,9 @@ void Console::SetCVarFloat(const std::string& name, float value)
     {
         LOG_DEBUG("Updating CVar: {} {}", name, value);
         GetCVars()[name].value = value;
+        return;
     }
+    LOG_WARN("CVar Float {} does not exist.", name);
 }
 
 void Console::SetCVarBool(const std::string& name, bool value)
@@ -135,7 +142,9 @@ void Console::SetCVarBool(const std::string& name, bool value)
     {
         LOG_DEBUG("Updating CVar: {} {}", name, value);
         GetCVars()[name].value = value;
+        return;
     }
+    LOG_WARN("CVar Bool {} does not exist.", name);
 }
 
 void Console::RegisterCommand(const std::string& name, const std::string& description, CommandCallback callback)
