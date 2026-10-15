@@ -12,7 +12,6 @@ void VulkanUtils::TransitionImage(CommandContext cmdCtx, VkImage image, ImageLay
 {
     if (currentLayout == newLayout)
     {
-        LOG_WARN("Transition layouts are the same: {}", vk_str(newLayout));
         return;
     }
 
@@ -39,30 +38,32 @@ void VulkanUtils::TransitionImage(CommandContext cmdCtx, VkImage image, ImageLay
     {
         using enum ImageLayout;
 
-    case ColorAttachment:
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        break;
+        case ColorAttachment:
+            barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            break;
 
-    case DepthAttachment:
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        break;
+        case DepthAttachment:
+            barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            break;
 
-    case ShaderReadOnly:
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        break;
+        case ShaderReadOnly:
+            barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            break;
 
-    case Present:
-        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        barrier.dstAccessMask = 0;
-        break;
+        case Present:
+            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = 0;
+            break;
 
-    default: break;
+        default:
+            LOG_WARN("Unhandled transition: {} to {}.", vk_str(currentLayout), vk_str(newLayout));
+            break;
     }
 
     vkCmdPipelineBarrier(cmdCtx.cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
