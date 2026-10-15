@@ -66,22 +66,28 @@ void Console::InitializeConsole()
     Print("Anvil Console Initialized. Type 'help' for commands.");
 }
 
-void Console::RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue)
+void Console::RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue, const CVarFlags flags)
 {
     LOG_DEBUG("Registering CVar Int: {} {}", name, defaultValue);
-    GetCVars()[name] = {.type = CVarType::Int, .description = description, .value = defaultValue};
+    GetCVars()[name] = {.type = CVarType::Int, .flags = flags, .description = description, .value = defaultValue};
 }
 
-void Console::RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue)
+void Console::RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue, const CVarFlags flags)
 {
     LOG_DEBUG("Registering CVar Float: {} {}", name, defaultValue);
-    GetCVars()[name] = {.type = CVarType::Float, .description = description, .value = defaultValue};
+    GetCVars()[name] = {.type = CVarType::Float, .flags = flags, .description = description, .value = defaultValue};
 }
 
-void Console::RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue)
+void Console::RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue, const CVarFlags flags)
 {
     LOG_DEBUG("Registering CVar Bool: {} {}", name, defaultValue);
-    GetCVars()[name] = {.type = CVarType::Bool, .description = description, .value = defaultValue};
+    GetCVars()[name] = {.type = CVarType::Bool, .flags = flags, .description = description, .value = defaultValue};
+}
+
+void Console::RegisterCVarString(const std::string& name, const std::string& description, std::string& defaultValue, const CVarFlags flags)
+{
+    LOG_DEBUG("Registering CVar String: {} {}", name, defaultValue);
+    GetCVars()[name] = {.type = CVarType::String, .flags = flags, .description = description, .value = defaultValue};
 }
 
 int Console::GetCVarInt(const std::string& name)
@@ -114,11 +120,26 @@ bool Console::GetCVarBool(const std::string& name)
     return false;
 }
 
+std::string Console::GetCVarString(const std::string& name)
+{
+    if (GetCVars().contains(name))
+    {
+        return std::get<std::string>(GetCVars()[name].value);
+    }
+    LOG_WARN("CVar String {} does not exist.", name);
+    return "";
+}
+
 void Console::SetCVarInt(const std::string& name, int value)
 {
     if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Int)
     {
-        LOG_DEBUG("Updating CVar: {} {}", name, value);
+        if (GetCVars()[name].flags != CVarFlags::None)
+        {
+            LOG_WARN("CVar Int {} cannot be changed in runtime.", name);
+        }
+
+        LOG_DEBUG("Updating CVar Int: {} {}", name, value);
         GetCVars()[name].value = value;
         return;
     }
@@ -129,7 +150,12 @@ void Console::SetCVarFloat(const std::string& name, float value)
 {
     if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Float)
     {
-        LOG_DEBUG("Updating CVar: {} {}", name, value);
+        if (GetCVars()[name].flags != CVarFlags::None)
+        {
+            LOG_WARN("CVar Float {} cannot be changed in runtime.", name);
+        }
+
+        LOG_DEBUG("Updating CVar Float: {} {}", name, value);
         GetCVars()[name].value = value;
         return;
     }
@@ -140,11 +166,32 @@ void Console::SetCVarBool(const std::string& name, bool value)
 {
     if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::Bool)
     {
-        LOG_DEBUG("Updating CVar: {} {}", name, value);
+        if (GetCVars()[name].flags != CVarFlags::None)
+        {
+            LOG_WARN("CVar Bool {} cannot be changed in runtime.", name);
+        }
+
+        LOG_DEBUG("Updating CVar Bool: {} {}", name, value);
         GetCVars()[name].value = value;
         return;
     }
     LOG_WARN("CVar Bool {} does not exist.", name);
+}
+
+void Console::SetCVarString(const std::string& name, std::string& value)
+{
+    if (GetCVars().contains(name) && GetCVars()[name].type == CVarType::String)
+    {
+        if (GetCVars()[name].flags != CVarFlags::None)
+        {
+            LOG_WARN("CVar String {} cannot be changed in runtime.", name);
+        }
+
+        LOG_DEBUG("Updating CVar String: {} {}", name, value);
+        GetCVars()[name].value = value;
+        return;
+    }
+    LOG_WARN("CVar String {} does not exist.", name);
 }
 
 void Console::RegisterCommand(const std::string& name, const std::string& description, CommandCallback callback)
@@ -233,6 +280,17 @@ void Console::Execute(const std::string& commandLine)
             {
                 Print(cmdName + " = " + (std::get<bool>(cvar.value) ? "true" : "false"));
             }
+            else if (cvar.type == CVarType::String)
+            {
+                Print(cmdName + " = " + std::get<std::string>(cvar.value));
+            }
+            return;
+        }
+
+        // Block runtime modification of InitOnly variables
+        if (!bIsBooting && (cvar.flags & CVarFlags::Init))
+        {
+            Print("Error: '" + cmdName + "' is an initialization parameter and cannot be changed at runtime.");
             return;
         }
 
@@ -261,8 +319,8 @@ void Console::Execute(const std::string& commandLine)
             break;
 
         case CVarType::String:
-            LOG_ERROR("CVarType::String is unimplemented.");
-            ENSURE(false, "Reached unexpected scope.");
+            cvar.value = args[0];
+            b_success = true;
             break;
         }
 

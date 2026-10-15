@@ -24,8 +24,28 @@ enum class CVarType
     Int, /**< Integer */
     Float, /**< Float */
     Bool, /**< Boolean */
-    String /**< String */
+    String, /**< String */
 };
+
+/**
+ * @brief Defines the underlying edit mode of a Console Variable.
+ */
+enum class CVarFlags : uint8_t
+{
+    None    = 0,
+    Init    = 1 << 0, /**< Cannot be changed via the in-game console after boot. */
+    Read    = 1 << 1,  /**< Can only be read, never manually set. */
+};
+
+inline CVarFlags operator|(CVarFlags lhs, CVarFlags rhs)
+{
+    return static_cast<CVarFlags>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+}
+
+inline bool operator&(CVarFlags lhs, CVarFlags rhs)
+{
+    return (static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs)) != 0;
+}
 
 /**
  * @brief Holds the metadata and current runtime value of a registered Console Variable.
@@ -33,6 +53,7 @@ enum class CVarType
 struct CVar
 {
     CVarType type;
+    CVarFlags flags;
     std::string description;
     std::variant<int, float, bool, std::string> value;
 };
@@ -45,9 +66,12 @@ struct CVar
  */
 class Console
 {
-    public:
+public:
     /** @brief Signature for console command callbacks, accepting a list of string arguments. */
     using CommandCallback = std::function<void(const std::vector<std::string>&)>;
+
+    /** @brief Tracks if the engine is currently booting, allowing InitOnly CVars to be modified. */
+    static inline bool bIsBooting = true;
 
     /**
      * @brief Boots the console and registers core inbuilt commands (e.g., help, clear).
@@ -84,7 +108,7 @@ class Console
      * @param description Helpful text explaining what this variable controls.
      * @param defaultValue The initial value of the variable.
      */
-    static void RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue);
+    static void RegisterCVarInt(const std::string& name, const std::string& description, int defaultValue, CVarFlags flags = CVarFlags::None);
 
     /**
      * @brief Registers a new float Console Variable.
@@ -92,7 +116,7 @@ class Console
      * @param description Helpful text explaining what this variable controls.
      * @param defaultValue The initial value of the variable.
      */
-    static void RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue);
+    static void RegisterCVarFloat(const std::string& name, const std::string& description, float defaultValue, CVarFlags flags = CVarFlags::None);
 
     /**
      * @brief Registers a new boolean Console Variable.
@@ -100,7 +124,15 @@ class Console
      * @param description Helpful text explaining what this variable controls.
      * @param defaultValue The initial value of the variable.
      */
-    static void RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue);
+    static void RegisterCVarBool(const std::string& name, const std::string& description, bool defaultValue, CVarFlags flags = CVarFlags::None);
+
+    /**
+     * @brief Registers a new string Console Variable.
+     * @param name The unique identifier used to call this CVar from the console.
+     * @param description Helpful text explaining what this variable controls.
+     * @param defaultValue The initial value of the variable.
+     */
+    static void RegisterCVarString(const std::string& name, const std::string& description, std::string& defaultValue, CVarFlags flags = CVarFlags::None);
 
     /**
      * @brief Retrieves the current value of an integer CVar.
@@ -124,6 +156,13 @@ class Console
     static bool GetCVarBool(const std::string& name);
 
     /**
+     * @brief Retrieves the current value of a boolean CVar.
+     * @param name The unique identifier of the CVar.
+     * @return The current string, or "" if not found.
+     */
+    static std::string GetCVarString(const std::string& name);
+
+    /**
      * @brief Updates the value of an existing integer CVar.
      * @param name The unique identifier of the CVar.
      * @param value The new integer value to set.
@@ -143,6 +182,13 @@ class Console
      * @param value The new boolean value to set.
      */
     static void SetCVarBool(const std::string& name, bool value);
+
+    /**
+     * @brief Updates the value of an existing string CVar.
+     * @param name The unique identifier of the CVar.
+     * @param value The new string value to set.
+     */
+    static void SetCVarString(const std::string& name, std::string& value);
 
     /**
      * @brief Registers a new executable command.
@@ -202,6 +248,11 @@ struct AutoRegisterCVar
     {
         Console::RegisterCVarBool(name, description, defaultValue);
     }
+
+    AutoRegisterCVar(const std::string& name, const std::string& description, std::string& defaultValue)
+    {
+        Console::RegisterCVarString(name, description, defaultValue);
+    }
 };
 
 /**
@@ -242,6 +293,12 @@ struct AutoRegisterCommand
  */
 #define CVAR_BOOL(name, description, defaultValue) \
     static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<bool>(defaultValue))
+
+/**
+ * @brief Macro to define a global string CVar anywhere in the codebase.
+ */
+#define CVAR_STRING(name, description, defaultValue) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<std::string>(defaultValue))
 
 /**
  * @brief Macro to define a global Console Command anywhere in the codebase.
