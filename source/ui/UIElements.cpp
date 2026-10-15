@@ -412,6 +412,8 @@ void UI::DrawCameraDebug(Camera& camera, bool* pOpen)
     ImGui::End();
 }
 
+bool UI::bShowCameraDebug = false;
+
 void UI::DrawMainMenuBar()
 {
     if (ImGui::BeginMainMenuBar())
@@ -491,8 +493,13 @@ void UI::DrawMainMenuBar()
             ImGui::EndMenu();
         }
 
-        // Note: We don't call EndMainMenuBar() yet if we want other files to append to it,
-        // but ImGui safely allows calling BeginMainMenuBar/EndMainMenuBar multiple times.
+        if (ImGui::BeginMenu("Debug"))
+        {
+            // Toggles the UI::bShowCameraDebug flag directly
+            ImGui::MenuItem("Camera Debug", nullptr, &bShowCameraDebug);
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 }

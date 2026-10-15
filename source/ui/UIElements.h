@@ -77,6 +77,8 @@ namespace UI
      */
     void DrawConsoleWindow(const int* pState);
 
+    extern bool bShowCameraDebug;
+
     /**
      * @brief Renders a debug window showing live camera coordinates and rotation.
      *

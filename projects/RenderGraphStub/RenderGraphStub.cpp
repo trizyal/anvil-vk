@@ -181,6 +181,7 @@ void RenderGraphApp::run()
     {
         changeScene = UI::DrawScenesMenu(sceneManager);
         UI::DrawViewsMenu();
+        UI::DrawCameraDebug(camera, &UI::bShowCameraDebug);
         UI::RenderWorldAxes(camera.getViewMatrix());
     };
     app.run(hooks);
