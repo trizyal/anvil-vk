@@ -2,6 +2,14 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "Console.h"
+
+#ifdef _WIN32
+#   include <windows.h>
+#   include <shellapi.h>
+#elif defined(__linux__)
+#   include <fstream>
+#endif
+
 #include <sstream>
 
 #include "Ensure.h"
@@ -38,7 +46,7 @@ std::vector<std::string>& Console::GetCommandHistory()
     return s_CommandHistory;
 }
 
-void Console::InitializeConsole()
+void Console::SetDefaultCommands()
 {
     SCOPE_CPU;
     LOG_TRACE("Initialize Console.");
@@ -225,7 +233,7 @@ void Console::ClearScroll()
 void Console::Execute(const std::string& commandLine)
 {
     SCOPE_CPU;
-    LOG_DEBUG("Executing command: {}", commandLine);
+    LOG_TRACE("Executing command: {}", commandLine);
 
     Print("] " + commandLine);
 
@@ -274,22 +282,12 @@ void Console::Execute(const std::string& commandLine)
 
         if (args.empty())
         {
-            if (cvar.type == CVarType::Int)
+            std::visit([&](const auto& activeValue)
             {
-                Print(cmdName + " = " + std::to_string(std::get<int>(cvar.value)));
-            }
-            else if (cvar.type == CVarType::Float)
-            {
-                Print(cmdName + " = " + std::to_string(std::get<float>(cvar.value)));
-            }
-            else if (cvar.type == CVarType::Bool)
-            {
-                Print(cmdName + " = " + (std::get<bool>(cvar.value) ? "true" : "false"));
-            }
-            else if (cvar.type == CVarType::String)
-            {
-                Print(cmdName + " = " + std::get<std::string>(cvar.value));
-            }
+                Print(std::format("{} = {}", cmdName, activeValue));
+                LOG_INFO("CVar: {} = {}", cmdName, activeValue);
+            }, cvar.value);
+
             return;
         }
 
@@ -341,14 +339,24 @@ void Console::Execute(const std::string& commandLine)
 
         if (b_success)
         {
-            Print(cmdName + " updated.");
+            std::visit([&](const auto& activeValue)
+            {
+                Print(std::format("{} updated to {}", cmdName, activeValue));
+                LOG_INFO("CVar {} updated to {}", cmdName, activeValue);
+            }, cvar.value);
         }
         else
         {
             Print("Error: Invalid argument format.");
+            LOG_INFO("Error: Invalid argument format.");
         }
         return;
     }
 
     Print("Unknown command or CVar: " + cmdName);
+}
+
+void Console::ParseCommandLine()
+{
+
 }

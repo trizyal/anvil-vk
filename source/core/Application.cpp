@@ -39,7 +39,7 @@ void Application::initialize(const CreateInfo& info)
     {
         RenderDoc::InitializeRenderDoc();
     }
-    Console::InitializeConsole();
+    Console::SetDefaultCommands();
 
     window = std::make_unique<Window>(info.width, info.height, info.title);
     Input::InitializeInputSystem(window->getGLFWWindow());

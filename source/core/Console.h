@@ -73,9 +73,14 @@ public:
     static inline bool bIsBooting = true;
 
     /**
+     * Set Initialisation time cvars from the commandline args.
+     */
+    static void ParseCommandLine();
+
+    /**
      * @brief Boots the console and registers core inbuilt commands (e.g., help, clear).
      */
-    static void InitializeConsole();
+    static void SetDefaultCommands();
 
     /**
      * @brief Safely retrieves the global CVar registry.
