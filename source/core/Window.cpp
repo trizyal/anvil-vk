@@ -22,9 +22,12 @@ Window::Window(const uint32_t inWidth, const uint32_t inHeight, std::string inTi
     // No OpenGL
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+    #if UNIMPLEMENTED
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_FALSE);
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    #endif
 
     glfwWindow = glfwCreateWindow(
         static_cast<int>(width),
