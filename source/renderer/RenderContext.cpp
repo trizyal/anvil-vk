@@ -186,7 +186,7 @@ CommandContext RenderContext::beginFrame(const Window& inWindow)
 
     if (acquired_result == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        LOG_INFO("Recreate Swapchain. vkAcquireNextImageKHR returned: {}", vk_str(acquired_result));
+        LOG_TRACE("Recreate Swapchain. vkAcquireNextImageKHR returned: {}", vk_str(acquired_result));
         recreateSwapchain = true;
         return {.cmd = VK_NULL_HANDLE, .tracyCtx = tracyVkCtx};
     }
@@ -259,7 +259,7 @@ void RenderContext::endFrame()
 
     if (present_result == VK_ERROR_OUT_OF_DATE_KHR || present_result == VK_SUBOPTIMAL_KHR)
     {
-        LOG_INFO("Recreate swapchain. vkQueuePresentKHR = {}.", vk_str(present_result));
+        LOG_TRACE("Recreate swapchain. vkQueuePresentKHR = {}.", vk_str(present_result));
         recreateSwapchain = true;
     }
     else if (present_result != VK_SUCCESS)

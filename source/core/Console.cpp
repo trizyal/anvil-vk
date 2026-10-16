@@ -354,6 +354,7 @@ void Console::Execute(const std::string& commandLine)
     }
 
     Print("Unknown command or CVar: " + cmdName);
+    LOG_WARN("Unknown command or CVar: {}", cmdName);
 }
 
 void Console::ParseCommandLine()

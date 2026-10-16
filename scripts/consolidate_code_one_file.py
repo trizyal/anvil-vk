@@ -5,6 +5,7 @@ import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
 source_dir = os.path.abspath(os.path.join(script_dir, '..', 'source'))
 shaders_dir = os.path.abspath(os.path.join(script_dir, '..', 'shaders'))
+config_path = os.path.abspath(os.path.join(script_dir, '..', 'config'))
 projects_dir = os.path.abspath(os.path.join(script_dir, '..', 'projects'))
 output_dir = os.path.abspath(os.path.join(script_dir, 'output'))
 
@@ -22,7 +23,7 @@ def read_cmake(in_filename, in_outfile):
         in_outfile.write(f"// Could not read file: {e}\n")
 
 # Default configuration
-directories_to_walk = [source_dir, shaders_dir]
+directories_to_walk = [source_dir, shaders_dir, config_path]
 output_filename = 'AnvilCodebase.txt'
 
 # Check for command-line arguments
@@ -53,7 +54,7 @@ os.makedirs(output_dir, exist_ok=True)
 # Save the output file directly in the scripts directory
 output_file = os.path.abspath(os.path.join(output_dir, output_filename))
 
-allowed_extensions = ('.cpp', '.h', '.slang')
+allowed_extensions = ('.cpp', '.h', '.slang', '.ini')
 # Folders to ignore so we don't grab third-party code
 exclude_folders = {'cmake-build-debug', 'cmake-build-release'}
 

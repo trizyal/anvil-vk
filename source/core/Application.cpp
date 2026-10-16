@@ -4,6 +4,7 @@
 #include "Application.h"
 
 #include "Console.h"
+#include "EngineConfig.h"
 #include "Input.h"
 #include "Logger.h"
 #include "RenderDoc.h"
@@ -26,6 +27,8 @@ void Application::initialize(const CreateInfo& info)
     SCOPE_CPU;
 
     Console::bIsBooting = true;
+    const std::string config_path = std::string(CONFIG_DIR) + "/Engine.ini";
+    EngineConfig::LoadAndApply(config_path);
     Console::ParseCommandLine();
 
     // TODO: This should come from a cvar/engineconfig.

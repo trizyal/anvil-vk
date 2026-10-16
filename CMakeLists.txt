@@ -66,6 +66,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
         ASSETS_DIR=\"${CMAKE_SOURCE_DIR}/assets\"
         TOOLS_DIR=\"${CMAKE_SOURCE_DIR}/tools\"
         SAVED_DIR=\"${CMAKE_SOURCE_DIR}/saved\"
+        CONFIG_DIR=\"${CMAKE_SOURCE_DIR}/config\"
 )
 
 # OS specific API rules
