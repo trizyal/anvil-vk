@@ -8,10 +8,13 @@
  */
 
 #include <array>
+#include <cstdint>
+#include <format>
+#include <string>
+
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include <volk.h>
-#include <cstdint>
 
 /**
  * @brief Universal engine color structure with seamless implicit conversions to GLM, ImGui, and Vulkan types.
@@ -132,6 +135,17 @@ struct Color
                (static_cast<uint32_t>(b * 255.0f));
     }
 
+    /**
+     * @brief Formats the color into a 24-bit True Color ANSI escape sequence for terminal output.
+     * @return A string formatted as "\x1b[38;2;R;G;Bm".
+     */
+    [[nodiscard]]
+    std::string ansi() const
+    {
+        auto bytes = u8();
+        return std::string(std::format("\x1b[38;2;{};{};{}m", bytes[0], bytes[1], bytes[2]));
+    }
+
     /** @brief Auto-converts to glm::vec4 when needed. */
     /* implicit */ constexpr operator glm::vec4() const
     {
@@ -177,7 +191,7 @@ namespace Colors
     COLOR Green = {0.0f, 1.0f, 0.0f, 1.0f};
     COLOR Blue  = {0.0f, 0.0f, 1.0f, 1.0f};
 
-    COLOR Yellow    = {1.0f, 0.0f, 0.0f, 1.0f};
+    COLOR Yellow    = {1.0f, 1.0f, 0.0f, 1.0f};
     COLOR Cyan      = {0.0f, 1.0f, 1.0f, 1.0f};
     COLOR Magenta   = {1.0f, 0.0f, 1.0f, 1.0f};
 
@@ -185,7 +199,7 @@ namespace Colors
     COLOR Purple        = {160, 32, 255};
     COLOR BlueLight     = {80, 208, 255};
     COLOR YellowGreen   = {96, 255, 128};
-    COLOR Orange        = {255, 224, 128};
+    COLOR Orange        = {255, 128, 0};
     COLOR Brown         = {160, 128, 96};
 
     COLOR X = Red;

@@ -16,6 +16,8 @@
 #include <mutex>
 #include <format>
 
+#include "Color.h"
+
 /**
  * @brief Defines the severity of a log message.
  */
@@ -77,7 +79,8 @@ private:
     static std::mutex s_LogMutex;
 
     static std::string GetTimestamp();
-    static const char* LevelToString(LogLevel level);
+    static std::string LevelToString(LogLevel level);
+    static Color GetLogColor(LogLevel level);
     static int GetMaxVerbosity();
 };
 

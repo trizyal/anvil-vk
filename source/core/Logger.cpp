@@ -78,7 +78,7 @@ int Logger::GetMaxVerbosity()
     return 5;
 }
 
-const char* Logger::LevelToString(LogLevel level)
+std::string Logger::LevelToString(LogLevel level)
 {
     switch (level)
     {
@@ -93,6 +93,24 @@ const char* Logger::LevelToString(LogLevel level)
     // Should never get here.
     ENSURE(false, "Reached unexpected scope.");
     return "UNKNOWN";
+}
+
+// Helper to retrieve the correct engine color per log level
+Color Logger::GetLogColor(LogLevel level)
+{
+    switch (level)
+    {
+        case LogLevel::Trace:   return Colors::GrayLight;
+        case LogLevel::Debug:   return Colors::White;
+        case LogLevel::Info:    return Colors::Green;
+        case LogLevel::Warning: return Colors::Yellow;
+        case LogLevel::Error:   return Colors::Red;
+        case LogLevel::Fatal:   return Colors::White; // Inverted with Red
+    }
+
+    // Should never get here.
+    ENSURE(false, "Reached unexpected scope.");
+    return Colors::White;
 }
 
 std::string Logger::GetTimestamp()
@@ -130,17 +148,27 @@ void Logger::LogMessage(LogLevel level, const std::source_location& location, co
         message
     );
 
+    std::string color_code = GetLogColor(level).ansi();
+    const std::string ansi_reset = "\x1b[0m";
+
+    // Use 24-bit True Color for the background (48;2;R;G;B)
+    // 1 = Bold, 97 = White Text, 48;2;150;0;0 = Dark Red Background
+    if (level == LogLevel::Fatal)
+    {
+        color_code = "\x1b[1;97;48;2;150;0;0m";
+    }
+
     // Lock the mutex so threads don't scramble standard out or file writes
     std::lock_guard lock(s_LogMutex);
 
     // Terminal output
     if (level == LogLevel::Fatal || level == LogLevel::Error)
     {
-        std::cerr << formatted_log << std::endl;
+        std::cerr << color_code << formatted_log << ansi_reset << std::endl;
     }
     else
     {
-        std::cout << formatted_log << std::endl;
+        std::cout << color_code << formatted_log << ansi_reset << std::endl;
     }
 
     // File output
