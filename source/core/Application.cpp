@@ -107,6 +107,7 @@ void Application::run(const RenderHooks& renderHooks)
         {
             // Skip the rest of the loop entirely.
             // ImGui never starts, rendering never happens.
+            glfwWaitEvents();
             continue;
         }
 

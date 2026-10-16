@@ -36,18 +36,10 @@ void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain*
     setupCommandBuffers();
     setupSyncStructures();
 
-#if DEPRECATED
-    pContext->immediateSubmit([this](VkCommandBuffer cmd)
+    if (Console::GetCVarBool("sys.attachtracy"))
     {
-        SCOPE_CPUN("TracyContext[immediateSubmit]");
-        LOG_DEBUG("Creating Tracy Context.");
-
-        tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, cmd);
-    });
-
-    FATAL(tracyVkCtx != nullptr, "Tracy Context creation failed.");
-#endif
-    createTracyContext();
+        createTracyContext();
+    }
 
     COMMAND("vmastats",
         "Dumps VMA memory stats to vma_dumps.json.",
@@ -182,11 +174,6 @@ void RenderContext::createTracyContext()
     VkCommandBuffer tracyCmd;
     CHECK(vkAllocateCommandBuffers(pContext->device, &alloc_info, &tracyCmd));
 
-#   if UNIMPLEMENTED
-    // Fetch the extension function pointers via volk
-    auto vkGetCalibratedTimestampsEXT = reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(vkGetInstanceProcAddr(pContext->instance, "vkGetPhysicalDeviceCalibrateableTimeDomainsEXT"));
-    auto vkGetPhysicalDeviceCalibrateableTimeDomainsEXT = reinterpret_cast<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>(vkGetInstanceProcAddr(pContext->instance, "vkGetPhysicalDeviceCalibrateableTimeDomainsEXT"));
-#   endif
     // Use TracyVkContextCalibrated to align the hardware clocks perfectly
     tracyVkCtx = TracyVkContextCalibrated(
         pContext->physicalDevice,
@@ -197,12 +184,9 @@ void RenderContext::createTracyContext()
         vkGetCalibratedTimestampsEXT
     );
 
-#   if DEPRECATED // Using calibrated version now
-    tracyVkCtx = TracyVkContext(pContext->physicalDevice, pContext->device, pContext->graphicsQueue, tracyCmd);
-#   endif
     FATAL(tracyVkCtx != nullptr, "Tracy Context creation failed.");
 
-    // ree the command buffer now that Tracy is done calibrating
+    // Free the command buffer now that Tracy is done calibrating
     vkFreeCommandBuffers(pContext->device, frames[0].cmdPool, 1, &tracyCmd);
 }
 
