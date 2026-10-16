@@ -3,6 +3,7 @@
 
 #include "RenderContext.h"
 
+#include "Console.h"
 #include "DebugNames.h"
 #include "Logger.h"
 #include "Trace.h"
@@ -11,6 +12,15 @@
 #include "VulkanStrings.h"
 #include "VulkanUtilities.h"
 #include "Window.h"
+
+CVAR_INT("r.debugmode", 0, CVarFlags::None,
+    "0: None, 1: Base Color, 2: Raw Normal Maps, 3: World Normal, 4: Metallic, 5: Roughness, 6: Depth");
+CVAR_BOOL("r.freezerendering", false, CVarFlags::None,
+    "Freezes the rendering state on the frame.");
+CVAR_BOOL("r.frustumculling", true, CVarFlags::None,
+    "Enable frustum culling.");
+CVAR_INT("r.shadowmapsize", 1048, CVarFlags::None,
+    "Resolution of shadow maps.");
 
 void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain* inSwapchain)
 {

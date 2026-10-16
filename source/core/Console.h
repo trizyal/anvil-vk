@@ -140,7 +140,7 @@ public:
      * @param defaultValue The initial value of the variable.
      * @param flags Edit scope for the cvar.
      */
-    static void RegisterCVarString(const std::string& name, const std::string& description, std::string& defaultValue, CVarFlags flags = CVarFlags::None);
+    static void RegisterCVarString(const std::string& name, const std::string& description, const std::string& defaultValue, CVarFlags flags = CVarFlags::None);
 
     /**
      * @brief Retrieves the current value of an integer CVar.
@@ -257,7 +257,7 @@ struct AutoRegisterCVar
         Console::RegisterCVarBool(name, description, defaultValue, flags);
     }
 
-    AutoRegisterCVar(const std::string& name, const std::string& description, std::string& defaultValue, CVarFlags flags = CVarFlags::None)
+    AutoRegisterCVar(const std::string& name, const std::string& description, const std::string& defaultValue, CVarFlags flags = CVarFlags::None)
     {
         Console::RegisterCVarString(name, description, defaultValue, flags);
     }
@@ -285,52 +285,28 @@ struct AutoRegisterCommand
 #define CONCAT(x, y) CONCAT_IMPL(x, y)
 
 /**
- * @brief Macro to define a global integer CVar anywhere in the codebase.
- */
-#define CVAR_INT(name, description, defaultValue) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<int>(defaultValue))
-
-/**
- * @brief Macro to define a global float CVar anywhere in the codebase.
- */
-#define CVAR_FLOAT(name, description, defaultValue) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<float>(defaultValue))
-
-/**
- * @brief Macro to define a global boolean CVar anywhere in the codebase.
- */
-#define CVAR_BOOL(name, description, defaultValue) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<bool>(defaultValue))
-
-/**
- * @brief Macro to define a global string CVar anywhere in the codebase.
- */
-#define CVAR_STRING(name, description, defaultValue) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<std::string>(defaultValue))
-
-/**
  * @brief Macros to define global Int CVars with explicit CVarFlags.
  */
-#define CVAR_INT_FLAG(name, description, defaultValue, flags) \
+#define CVAR_INT(name, defaultValue, flags, description) \
     static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<int>(defaultValue), flags)
 
 /**
  * @brief Macros to define global Float CVars with explicit CVarFlags.
  */
-#define CVAR_FLOAT_FLAG(name, description, defaultValue, flags) \
+#define CVAR_FLOAT(name, defaultValue, flags, description) \
     static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<float>(defaultValue), flags)
 
 /**
  * @brief Macros to define global Bool CVars with explicit CVarFlags.
  */
-#define CVAR_BOOL_FLAG(name, description, defaultValue, flags) \
+#define CVAR_BOOL(name, defaultValue, flags, description) \
     static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<bool>(defaultValue), flags)
 
 /**
  * @brief Macros to define global String CVars with explicit CVarFlags.
  */
-#define CVAR_STRING_FLAG(name, description, defaultValue, flags) \
-    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, defaultValue, flags)
+#define CVAR_STRING(name, defaultValue, flags, description) \
+    static AutoRegisterCVar CONCAT(auto_cvar_, __LINE__)(name, description, static_cast<std::string>(defaultValue), flags)
 
 /**
  * @brief Macro to define a global Console Command anywhere in the codebase.

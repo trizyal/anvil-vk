@@ -12,28 +12,28 @@
 #include "Trace.h"
 #include "UIElements.h"
 
-// TODO: Should move these to relevant files.
-CVAR_BOOL_FLAG("sys.attachrenderdoc", "Start the executable with RenderDoc attached.", false, CVarFlags::InitOnly);
-CVAR_BOOL_FLAG("sys.attachtracy", "Start the executable with Tracy attached.", true, CVarFlags::InitOnly);
+CVAR_BOOL("sys.attachrenderdoc", false, CVarFlags::InitOnly,
+    "Start the executable with RenderDoc attached.");
+CVAR_BOOL("sys.attachtracy", true, CVarFlags::InitOnly,
+    "Start the executable with Tracy attached.");
 
-CVAR_INT("r.shadowmapsize", "Resolution of shadow maps.", 1048);
-CVAR_INT("e.logverbosity", "0: Fatal, 1: Error, 2: Warning, 3: Info, 4: Debug, 5: Trace", 5);
-CVAR_INT("r.debugmode", "0: None, 1: Base Color, 2: Raw Normal Maps, 3: World Normal, 4: Metallic, 5: Roughness, 6: Depth", 0);
-CVAR_BOOL("r.freezerendering", "Freezes the rendering state on the frame.", false);
-CVAR_BOOL("r.frustumculling", "Enable frustum culling.", true);
+CVAR_STRING("sys.engineconfig", CONFIG_DIR "/Engine.ini", CVarFlags::ReadOnly,
+    "Path to the default engine config file.");
 
 void Application::initialize(const CreateInfo& info)
 {
     SCOPE_CPU;
 
     Console::bIsBooting = true;
-    const std::string config_path = std::string(CONFIG_DIR) + "/Engine.ini";
+
+    const std::string config_path = Console::GetCVarString("sys.engineconfig");
     EngineConfig::LoadAndApply(config_path);
+
+    // After Engine Config as CLI has a higher priority
     Console::ParseCommandLine();
 
-    // TODO: This should come from a cvar/engineconfig.
-    const std::string log_file = SAVED_DIR "/logs/log.txt";
-    Logger::InitializeLogger(log_file);
+    const std::string log_dir = Console::GetCVarString("sys.logdir");;
+    Logger::InitializeLogger(log_dir);
 
     LOG_INFO("Initializing Application.");
     const auto cpu_start = std::chrono::high_resolution_clock::now();

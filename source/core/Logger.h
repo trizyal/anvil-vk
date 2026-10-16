@@ -43,9 +43,9 @@ class Logger
 public:
     /**
      * @brief Boots the logging system and opens the output file.
-     * @param logFilePath Path to the desired output .log file.
+     * @param logDirectory Path to the desired output .log file.
      */
-    static void InitializeLogger(const std::string& logFilePath);
+    static void InitializeLogger(const std::string& logDirectory);
 
     /**
      * @brief Safely flushes and closes the output log file.

@@ -92,7 +92,7 @@ void Console::RegisterCVarBool(const std::string& name, const std::string& descr
     GetCVars()[name] = {.type = CVarType::Bool, .flags = flags, .description = description, .value = defaultValue};
 }
 
-void Console::RegisterCVarString(const std::string& name, const std::string& description, std::string& defaultValue, const CVarFlags flags)
+void Console::RegisterCVarString(const std::string& name, const std::string& description, const std::string& defaultValue, const CVarFlags flags)
 {
     LOG_DEBUG("Registering CVar String: {} {}", name, defaultValue);
     GetCVars()[name] = {.type = CVarType::String, .flags = flags, .description = description, .value = defaultValue};

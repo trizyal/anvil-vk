@@ -10,49 +10,60 @@
 #include "Ensure.h"
 #include "Trace.h"
 
+CVAR_INT("e.logverbosity",  5, CVarFlags::None,
+    "0: Fatal, 1: Error, 2: Warning, 3: Info, 4: Debug, 5: Trace");
+
+CVAR_STRING("sys.logdir", "/saved/logs", CVarFlags::InitOnly,
+    "Logs Directory");
+
 // Initialize static members
 std::ofstream Logger::s_FileStream;
 std::mutex Logger::s_LogMutex;
 
-void Logger::InitializeLogger(const std::string& logFilePath)
+void Logger::InitializeLogger(const std::string& logDirectory)
 {
     SCOPE_CPU;
     
     // Ensure the target directory exists before creating the file
-    std::filesystem::path path(logFilePath);
-    if (path.has_parent_path())
-    {
-        std::filesystem::path parent = path.parent_path();
-        std::error_code ec;
+    std::filesystem::path path(ENGINE_DIR + logDirectory);
+    std::error_code ec;
 
-        if (std::filesystem::exists(parent))
-        {
-            // It already exists. We can log this if we want, or just stay silent.
-            LOG_INFO("Log directory already exists: {}", parent.string());
-        }
-        else if (std::filesystem::create_directories(parent, ec))
-        {
-            LOG_INFO("Created log directory: {}", parent.string());
-        }
-        else
-        {
-            // ec.message() will tell us exactly why it failed (e.g., "Permission denied")
-            LOG_ERROR("Failed to create log directory: {} - {}", parent.string(), ec.message());
-        }
+    if (std::filesystem::exists(path))
+    {
+        // It already exists. We can log this if we want, or just stay silent.
+        LOG_INFO("Log directory already exists: {}", path.string());
+    }
+    else if (std::filesystem::create_directories(path, ec))
+    {
+        LOG_INFO("Created log directory: {}", path.string());
+    }
+    else
+    {
+        // ec.message() will tell us exactly why it failed (e.g., "Permission denied")
+        LOG_ERROR("Failed to create log directory: {} - {}", path.string(), ec.message());
     }
 
+    // Generate the timestamped filename (e.g., log2026-10-16-1336.txt)
+    const auto now = std::chrono::system_clock::now();
+    // Truncate to minutes to ensure clean formatting
+    auto now_mins = std::chrono::floor<std::chrono::minutes>(now);
+    const std::string file_name = std::format("log{:%Y-%m-%d-%H%M}.txt", now_mins);
+
+    // Combine the directory path with the generated filename
+    std::filesystem::path file_path = path / file_name;
+
     // Open the log file, truncating any previous run's data
-    s_FileStream.open(logFilePath, std::ios::out | std::ios::trunc);
+    s_FileStream.open(file_path.string(), std::ios::out | std::ios::trunc);
     if (!s_FileStream.is_open())
     {
         // If the log file doesn't open
         // logging is done just in the terminal
         // It should not change any of the usecase though
-        LOG_ERROR("Failed to open log file: {}.", logFilePath);
+        LOG_ERROR("Failed to open log file: {}.", file_path.string());
     }
     else
     {
-        LOG_INFO("Open log file: {}", logFilePath);
+        LOG_INFO("Open log file: {}", file_path.string());
     }
 
     LOG_INFO("Logger initialized.");
