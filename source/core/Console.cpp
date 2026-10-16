@@ -202,7 +202,7 @@ void Console::SetCVarString(const std::string& name, std::string& value)
     LOG_WARN("CVar String {} does not exist.", name);
 }
 
-void Console::RegisterCommand(const std::string& name, const std::string& description, CommandCallback callback)
+void Console::RegisterCommand(const std::string& name, const std::string& description, const CommandCallback& callback)
 {
     LOG_DEBUG("Registering Command: {}", name);
     GetCommands()[name] = {description, callback};

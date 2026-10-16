@@ -3,9 +3,12 @@
 
 #include "RenderContext.h"
 
+#include <filesystem>
+
 #include "Console.h"
 #include "DebugNames.h"
 #include "Logger.h"
+#include "ScreenLogger.h"
 #include "Trace.h"
 #include "VulkanContext.h"
 #include "VulkanResult.h"
@@ -45,6 +48,36 @@ void RenderContext::initializeRenderContext(VulkanContext* inContext, Swapchain*
     FATAL(tracyVkCtx != nullptr, "Tracy Context creation failed.");
 #endif
     createTracyContext();
+
+    COMMAND("vmastats",
+        "Dumps VMA memory stats to vma_dumps.json.",
+        [this](const std::vector<std::string>&)
+        {
+            char* stats_string;
+            vmaBuildStatsString(pContext->allocator, &stats_string, VK_TRUE);
+
+            // Write to file
+            std::string file_name = "/vma_dumps.json";
+            std::ofstream dump_file;
+            std::filesystem::path file_path(SAVED_DIR + file_name);
+
+            dump_file.open(file_path);
+            if (dump_file.is_open())
+            {
+                dump_file << stats_string;
+                dump_file.close();
+                Console::Print("Successfully dumped VMA stats to vma_dumps.json.");
+                LOGUI("VMA Stats Dumped", Colors::Blue);
+            }
+            else
+            {
+                Console::Print("Failed to open vma_dumps.json for writing.");
+                LOGUI("Failed to dump VMA Stats", Colors::Red);
+            }
+
+            vmaFreeStatsString(pContext->allocator, stats_string);
+        }
+    );
 
     const float timestamp_period = pContext->physicalDeviceProperties.limits.timestampPeriod;
     gpuProfiler.initializeGPUProfiler(pContext, timestamp_period, FRAMES_IN_FLIGHT);

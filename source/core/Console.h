@@ -204,7 +204,7 @@ public:
      * @param description Helpful text shown in the help menu.
      * @param callback The function executed when the command is invoked.
      */
-    static void RegisterCommand(const std::string& name, const std::string& description, CommandCallback callback);
+    static void RegisterCommand(const std::string& name, const std::string& description, const CommandCallback& callback);
 
     /**
      * @brief Parses and executes a raw string inputted from the console UI.

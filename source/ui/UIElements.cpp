@@ -434,7 +434,7 @@ void UI::DrawMainMenuBar()
             bool bFreeze = Console::GetCVarBool("r.freezerendering");
             if (ImGui::MenuItem("Freeze Rendering", nullptr, &bFreeze))
             {
-                Console::Execute("freezerendering");
+                Console::SetCVarBool("r.freezerendering", bFreeze);
             }
 
             bool bCulling = Console::GetCVarBool("r.frustumculling");
